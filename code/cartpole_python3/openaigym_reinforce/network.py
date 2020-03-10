@@ -7,13 +7,13 @@ def network_factory(in_size, num_actions, env):
     network = nn.Sequential(nn.Linear(in_size, 32), nn.ReLU(), nn.Linear(32, num_actions), nn.Softmax(dim=-1))
     return network
 
-    
+
 class PolicyNetwork(nn.Module):
     def __init__(self, network):
         super(PolicyNetwork, self).__init__()
         self.network = network
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+
     def forward(self, state):
         state = torch.tensor(state, device=self.device, dtype=torch.float32)
         action_probs = self.network(state)
@@ -29,7 +29,7 @@ class ValueNetwork(nn.Module):
         super(ValueNetwork, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.network_v = nn.Sequential(nn.Linear(in_size, 32, bias=True), nn.ReLU(), nn.Linear(32, 1, bias=True))
-        
+
     def forward(self, state):
         state = torch.tensor(state, device=self.device, dtype=torch.float32)
         return self.network_v(state)

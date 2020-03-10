@@ -42,11 +42,11 @@ def sliding_window(data, N):
             idx = N - 1
 
     return smoothed
-    
+
 
 def discount_returns(rewards, gamma=1.0):
     # Discounts rewards and stores their cumulative return in reverse
-    
+
     r = rewards[::-1] #rewards in reverse
     G = [r[0]] #last rewards
     for i in range(1,len(r)):
@@ -65,11 +65,11 @@ def reinforce(env, policy_estimator, value_estimator, num_episodes, # value_esti
     batch_actions = []
     batch_states = []
     batch_counter = 0
-    
+
     # Define optimizer
     optimizer =   optim.Adam(policy_estimator.network.parameters(),  lr=0.0025)
     optimizer_v = optim.Adam(value_estimator.network_v.parameters(), lr=0.001)
-    
+
     action_space = np.arange(env.action_space.n)
     flag = 1     # 1 for train, 0 for test
     for ep in range(num_episodes):
@@ -78,37 +78,37 @@ def reinforce(env, policy_estimator, value_estimator, num_episodes, # value_esti
         rewards = []
         actions = []
         complete = False
-        
+
         while complete == False:
-        
+
             # Gets reward and next state
-            
+
             action = policy_estimator.get_action(s_0)
             s_1, r, complete, _ = env.step(action)
-            
+
             states.append(s_0)
             rewards.append(r)
             actions.append(action)
             s_0 = s_1
 
             # Checks if episode is over
-                
+
             if complete:
-                
+
                 batch_counter += 1
                 batch_rewards.extend(discount_returns(rewards, gamma))
                 batch_states.extend(states)
                 batch_actions.extend(actions)
-                
+
                 total_rewards.append(sum(rewards))
-                
+
                 # Updates after batch of episodes, here batch is 1
-                
+
                 if batch_counter == batch_size:
                     if flag == 1:
-                    
+
                         # Value update
-                        
+
                         state_tensor_v = torch.tensor(batch_states, dtype=torch.float32)
                         reward_tensor_v = torch.tensor(batch_rewards, dtype=torch.float32)
                         value_estimates = value_estimator.forward(state_tensor_v)
@@ -116,10 +116,10 @@ def reinforce(env, policy_estimator, value_estimator, num_episodes, # value_esti
 
                         optimizer_v.zero_grad()
                         loss_v.backward(retain_graph=True)
-                        optimizer_v.step()                    
-                        
+                        optimizer_v.step()
+
                         # Policy update
-                        
+
                         state_tensor = torch.tensor(batch_states, dtype=torch.float32)
                         reward_tensor = torch.tensor(batch_rewards, dtype=torch.float32)
                         action_tensor = torch.tensor(batch_actions, dtype=torch.int32)
@@ -127,15 +127,15 @@ def reinforce(env, policy_estimator, value_estimator, num_episodes, # value_esti
                         optimizer.zero_grad()
                         loss.backward()
                         optimizer.step()
-                    
+
                     batch_rewards = []
                     batch_actions = []
                     batch_states = []
                     batch_counter = 0
-                    
+
                 print("Ep: {} Average of last 100: {:.2f}".format(
                     ep + 1, np.mean(total_rewards[-100:])))
-                
+
     return total_rewards
 
 if __name__ == '__main__':
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     numrun = 1
-    
+
     for run in range(numrun):
         env = make_env()
 
@@ -162,10 +162,10 @@ if __name__ == '__main__':
         network = network_factory(in_size, num_actions, env)
         network.to(device)
         pe = PolicyNetwork(network)
-        
+
         ve = ValueNetwork(in_size)
         ep_returns = reinforce(env, pe, ve, episodes)
-        
+
     window = 100
     plt.figure(figsize=(12,8))
     plt.plot(sliding_window(ep_returns, window))
