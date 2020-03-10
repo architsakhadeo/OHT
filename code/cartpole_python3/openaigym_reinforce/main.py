@@ -11,9 +11,6 @@ from network import PolicyNetwork
 from network import ValueNetwork
 import argparse
 import numpy as np
-import os
-import sys
-import pickle
 
 
 # prevents type-3 fonts, which some conferences disallow.
