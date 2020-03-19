@@ -22,7 +22,7 @@ class test(BaseExperiment):
 		self.num_steps = 0
 		self.num_episodes = 0
 		self.total_return = []
-			
+
 	def start(self):
 		self.num_steps = 0
 		self.total_reward = 0
@@ -30,7 +30,7 @@ class test(BaseExperiment):
 		obs = self.observationChannel(s)
 		self.last_action = self.agent.start(obs)
 		return (obs, self.last_action)
-			
+
 	def step(self):
 		(s, reward, term, _) = self.environment.step(self.last_action)
 		obs = self.observationChannel(s)
@@ -43,8 +43,12 @@ class test(BaseExperiment):
 		return term
 
 	def observationChannel(self, s):
-		return s	
+		return s
 
+
+save_dir = 'Data/'
+if not os.path.exists(save_dir):
+	os.makedirs(save_dir)
 
 total_episodes = 1500
 #epsilon_init_values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
@@ -68,6 +72,6 @@ for run in range(runs):
 				print(episode, experiment.total_reward)
 			experiment.total_return.append([ev])
 			experiment.total_return.append([lv])
-			
-			pickle.dump(experiment.total_return, open('Data/' + str(100*ev) + '_ev_' + str(100*lv) + '_lv' '.pkl','wb'))
-	
+
+			pickle.dump(experiment.total_return, open(save_dir + str(100*ev) + '_ev_' + str(100*lv) + '_lv' '.pkl','wb'))
+
