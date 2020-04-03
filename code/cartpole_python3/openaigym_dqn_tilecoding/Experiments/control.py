@@ -7,6 +7,7 @@ import numpy as np
 from importlib import import_module
 import torch
 import time
+import math
 from utils.collect_config import ParameterConfig, Sweeper
 from utils.collect_parser import CollectInput
 from utils.log_and_plot_func import write_param_log
@@ -45,15 +46,17 @@ class Experiment():
 
         num_action = 2 #self.env.num_action()
         self.dim_state = 4 #self.env.state_dim()
+        state_normalize = [4.8, 8, 2*12 * 2 * math.pi / 360, 7.0] #self.env.state_range()
         setattr(config.agent_params, "num_action", num_action)
         setattr(config.agent_params, "dim_state", self.dim_state)
+        setattr(config.agent_params, "state_normalize", state_normalize)
         self.config = config
 
         # define agent
         agent_code = import_module("Agents.{}".format(config.agent))
         self.agent = agent_code.init_agent()
         self.agent.set_param(config.agent_params)
-        self.gamma = config.agent_params.agent_gamma
+        self.gamma = config.agent_params.gamma
 
         self.num_steps = config.exp_params.num_steps
         if hasattr(config.exp_params, "max_step_ep") and config.exp_params.max_step_ep != 0:

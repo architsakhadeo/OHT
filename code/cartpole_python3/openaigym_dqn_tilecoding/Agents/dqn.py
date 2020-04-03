@@ -97,7 +97,7 @@ class DQN(BaseAgent):
 
         self.alpha = param.alpha
         self.epsilon = param.epsilon
-        self.gamma = param.agent_gamma
+        self.gamma = param.gamma
 
         self.num_planning = param.num_planning
 
@@ -122,6 +122,7 @@ class DQN(BaseAgent):
             self.alpha = param.alpha / float(self.div_actBit)
             self.num_tiling = self.param.num_tilings
             self.num_tile = self.param.num_tiles
+            self.state_normalize = self.param.state_normalize
             self.tc_mem_size = self.param.tc_mem_size
             self.iht = tc.IHT(self.tc_mem_size)
             self.dim_state = self.tc_mem_size * self.dim_observation  # representation dimension
@@ -393,7 +394,9 @@ class DQN(BaseAgent):
     def _separate_tc_rep(self, state):
         rep = np.zeros(self.dim_state)
         for i in range(self.dim_observation):
-            ind = np.array(tc.tiles(self.iht, self.num_tiling, float(self.num_tile) * np.array(state)))
+            normalized_bit = (np.array([state[i]]) / self.state_normalize[i] + 1) / 2
+            assert 1>= normalized_bit >= 0, normalized_bit
+            ind = np.array(tc.tiles(self.iht, self.num_tiling, float(self.num_tile) * normalized_bit))
             rep[ind + self.tc_mem_size * i] = 1
         # rep = self.obs_to_rep.state_representation(np.array(state))
         return rep

@@ -7,22 +7,22 @@
         "agent_params": {
             "rep_type": "sep_tc",
 
-            "dqn_sync": 100,
+            "dqn_sync": 25,
             "dqn_minibatch": 32,
             "dqn_beta": [0.9, 0.999],
 
             "nonLinearQ_node": [
-                    32, 32
+                    200, 200
             ],
 
             "tc_mem_size": 32,
             "num_tilings": 8,
             "num_tiles": 2,
 
-            "alpha": 0.25,
-            "agent_gamma": 1.0,
-            "epsilon": 0.1,
-            "num_planning": 10,
+            "alpha": 0.001,
+            "gamma": 0.9,
+            "epsilon": 0.3,
+            "num_planning": 1,
             "len_buffer": 1000,
             "pri_thrshd": 0,
 
@@ -30,8 +30,8 @@
         },
 
         "exp_params": {
-            "num_episodes": 100,
-            "num_steps": 100000,
+            "num_episodes": 20000,
+            "num_steps": 4000000,
             "num_runs": 1,
             "random_seed": 512
         }

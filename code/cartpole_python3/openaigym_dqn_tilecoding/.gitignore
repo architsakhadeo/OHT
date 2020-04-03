@@ -1,0 +1,19 @@
+# ignore .nfs
+.nfs*
+*/.nfs*
+*/*/.nfs*
+
+# ignore .idea/
+.idea/
+.idea/*
+
+# ignore cache
+*/*cache*
+
+# ignore log and cProfile
+*.log
+run_time*
+~*
+
+# exp_result
+Experiments/exp_result
