@@ -46,7 +46,7 @@ class Experiment():
 
         num_action = 2 #self.env.num_action()
         self.dim_state = 4 #self.env.state_dim()
-        state_normalize = [4.8, 8, 2*12 * 2 * math.pi / 360, 7.0] #self.env.state_range()
+        state_normalize = [4.8, 8.0, 2*12*2*math.pi/360.0, 7.0] #self.env.state_range()
         setattr(config.agent_params, "num_action", num_action)
         setattr(config.agent_params, "dim_state", self.dim_state)
         setattr(config.agent_params, "state_normalize", state_normalize)
@@ -73,7 +73,7 @@ class Experiment():
         self.count_total_step = None
         self.count_learning_step = None
         self.old_count_learning_step = None
-        self.log_interval = 100
+        self.log_interval = 200
 
     def save_log(self):
         path, name = saved_file_name(self.config, self.run_idx)
@@ -132,11 +132,11 @@ class Experiment():
 
         condition = self.count_total_step
 
-        # # change epsilon based on number of episodes
-        # if self.env_name == "PuddleWorld" and self.num_episode != 0:  # self.agent.learning_mode.vf_update == "DQN":
-        #     self.agent.epsilon = max(1.0 - 1.0 / (self.num_episode / 2) * self.count_ep,
-        #                              self.config.agent_params.epsilon)
-        #     # print(self.agent.epsilon)
+        # change epsilon based on number of episodes
+        if self.config.agent_params.decreasing_epsilon:
+            self.agent.epsilon = max(1.0 - 1.0 / (self.num_episode / 200) * self.count_ep,
+                                     self.config.agent_params.epsilon)
+            print("Changed epsilon:", self.agent.epsilon)
 
         # while (not end_of_ep) and (self.count_learning_step < self.num_steps):
         while (not end_of_ep) and \
@@ -158,8 +158,8 @@ class Experiment():
             # self.trajectory_log[self.count_total_step, self.dim_state+1: self.dim_state*2+1] = s_tp
             # self.trajectory_log[self.count_total_step, self.dim_state*2+1] = reward
             # self.trajectory_log[self.count_total_step, self.dim_state*2+2] = gamma
-            s_t = s_tp
-            a_t = self.prev_action
+            # s_t = s_tp
+            # a_t = self.prev_action
             if self.learning == False and reward != 0:
                 self.learning = True
 
@@ -173,7 +173,6 @@ class Experiment():
                     self.num_steps, time.time() - self.old_time))
                 self.old_time = time.time()
                 print("check q value", self.prev_state, self.agent.check_q_value())
-                # print("check epsilon", self.agent.epsilon)
 
             condition = self.count_total_step
 
