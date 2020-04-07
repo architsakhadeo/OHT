@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{algorithm}
+% \usepackage{algorithmic}
+\usepackage[noend]{algpseudocode}
+% \usepackage{algorithm2e}
+\usepackage{blindtext, graphicx}
+
+\algnewcommand{\LeftComment}[1]{\Statex \State \(\triangleright\) #1}
+\algnewcommand{\EmptyLine}[1]{\Statex #1}
+
+\begin{document}
+\begin{algorithm}
+\caption{DQN Agent}\label{dqn}
+
+$\alpha$: the stepsize \\
+$k$: the batch size\\
+$B$: the random buffer \\
+$N$: length of random buffer \\
+$Q$: the learning network \\
+$Q^-$: the target network, which has same architecture as $Q$ \\
+$\theta$: parameters of $Q$
+$\theta^-$: parameters of $Q^-$
+$c$: the frequency of synchronizing networks \\
+$\phi(\cdot)$: feature construction function\\
+
+\begin{algorithmic}[1]
+
+\State Obtain state $s$
+\State Choose action $a = 
+                        \begin{cases} 
+                            \arg\!\max_{a} Q(\phi(s), a, \theta) & \text{with probability 1-$\epsilon$} \\
+                            \text{random action} & \text{with probability $\epsilon$}
+                        \end{cases}$    
+\While {true}
+    \State Obtain $<s, a, s', r, \gamma>$
+    \State Add $<\phi(s), a, \phi(s'), r, \gamma>$ into random buffer $B$
+    \State Choose $k$ trajectories from $B$
+    \For {$j$ in $1...k$}
+        \State $y_j = r_j + \gamma_j * max_{a'} Q^-(\phi(s_j), a'; \theta^-)$
+    \EndFor
+    \State Update $Q$ with $avg(y_j - Q(\phi(s_j), a_j; \theta))^2)$
+    \State For every $c$ steps, set $Q^- = Q$
+    \State Choose action $a = 
+                        \begin{cases} 
+                            \arg\!\max_{a} Q(\phi(s), a, \theta) & \text{with probability 1-$\epsilon$} \\
+                            \text{random action} & \text{with probability $\epsilon$}
+                        \end{cases}$
+    \State $s \xleftarrow{} s'$
+\EndWhile
+
+
+% \State \textbf{end}
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\end{document}
