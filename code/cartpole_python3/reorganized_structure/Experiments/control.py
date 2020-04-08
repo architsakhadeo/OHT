@@ -16,14 +16,18 @@ def saved_file_name(config, run_idx):
     input_ = input_[0].upper() + input_[1:]
     if agent_params.rep_type in ["TC", "sepTC"]:
         input_ += "{}x{}".format(agent_params.num_tilings, agent_params.num_tiles)
-
-    file_path = "{}/{}_{}_B{}_sync{}_NN{}_alpha{}_input{}".format(
+    if config.agent == "dqn":
+        other_info = "_B{}_sync{}_NN{}".format(agent_params.len_buffer,
+                                             agent_params.dqn_sync,
+                                             str(agent_params.nonLinearQ_node),
+                                             )
+    else:
+        other_info = ""
+    file_path = "{}/{}_{}{}_alpha{}_input{}".format(
         agent_params.exp_result_path,
         config.environment,
         config.agent,
-        agent_params.len_buffer,
-        agent_params.dqn_sync,
-        str(agent_params.nonLinearQ_node),
+        other_info,
         agent_params.alpha,
         input_
     )

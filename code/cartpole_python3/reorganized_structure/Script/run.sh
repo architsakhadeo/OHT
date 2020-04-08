@@ -10,7 +10,7 @@
 #SBATCH --time=
 
 chmod +x task*
-cd ../Experiment
+cd ../Experiments/
 module load python/3.6
-source $HOME/gpu_env/bin/activate
+source $HOME/your_env_name/bin/activate
 '../Script/tasks_'"$SLURM_ARRAY_TASK_ID"'.sh'
