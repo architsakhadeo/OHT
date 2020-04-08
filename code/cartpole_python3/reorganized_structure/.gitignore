@@ -1,0 +1,22 @@
+# ignore .nfs
+.nfs*
+*/.nfs*
+*/*/.nfs*
+
+# ignore .idea/
+.idea/
+.idea/*
+
+# ignore cache
+*/*cache*
+
+# ignore log and cProfile
+*.log
+run_time*
+~*
+
+# ignore batch job files
+Script/tasks_*
+
+# ignore exp_result
+data/exp_result

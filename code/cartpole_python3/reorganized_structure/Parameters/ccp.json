@@ -1,0 +1,50 @@
+{
+    "default_param": {
+        "environment": "ContinuingCartpoleEnvironment",
+        "agent": "dqn",
+        "env_params": {
+        },
+        "agent_params": {
+            "rep_type": "obs",
+            "vf_update": "DQN",
+
+            "dqn_sync": 25,
+            "dqn_minibatch": 32,
+            "dqn_beta": [0.9, 0.999],
+
+            "nonLinearQ_node": [
+                    128, 128
+            ],
+
+            "tc_mem_size": 64,
+            "num_tilings": 8,
+            "num_tiles": 4,
+
+            "alpha": 0.001,
+            "gamma": 0.99,
+            "epsilon": 0.05,
+            "decreasing_epsilon": "step",
+            "num_planning": 1,
+            "len_buffer": 1000,
+            "pri_thrshd": 0,
+
+            "exp_result_path": "../data/exp_result/"
+        },
+
+        "exp_params": {
+            "num_episodes": 0,
+            "num_steps": 100000,
+            "num_runs": 1,
+            "random_seed": 15
+        }
+    },
+
+    "control_param": {
+        "agent_params": {
+            "rep_type": ["obs", "sepTC"],
+            "dqn_sync": [25, 100, 400],
+            "len_buffer": [1000, 500, 250],
+            "alpha": [0.002, 0.001, 0.0003]
+        }
+    }
+}
