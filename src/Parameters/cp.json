@@ -5,6 +5,7 @@
         "env_params": {
         },
         "agent_params": {
+            "offline_trajectory": null,
             "rep_type": "sepTC",
 
             "dqn_sync": 25,
