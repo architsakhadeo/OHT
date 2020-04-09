@@ -120,16 +120,15 @@ def control_exp_single_env(env_name, result_path):
             # one_setting = num_steps_per_ep_all_runs(folder, run_num)
             one_setting = accum_reward_all_runs(folder, run_num, num_steps)
             lim_y = [-500, 0]
+            # lim_y = [0, 500]
             lim_x = [1, 100000]
         else:
             raise NotImplemented
 
         if one_setting is not None:
-            key = "B{}_sync{}_lr{}_input{}".format(
+            key = "B{}_sync{}".format(
                 folder.split("_B")[1].split("_")[0],
-                folder.split("_sync")[1].split("_")[0],
-                folder.split("_alpha")[1].split("_")[0],
-                folder.split("_input")[1].split("_")[0],
+                folder.split("_sync")[1].split("_")[0]
             )
             if key in all_data.keys():
                 all_data[key].append(one_setting)
