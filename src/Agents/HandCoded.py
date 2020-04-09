@@ -91,8 +91,6 @@ class HandCoded(BaseAgent):
 	# select_actions chooses the next action series based on the current state.
 	def select_actions(self, state):
 		position, accel, angle, ang_accel = state
-		self.scaled_create_action_series(1)
-		return
 
 		# This code will try to keep the angle balanced, but ignores the position condition.
 		# I think it still usually fails to keep the pole up for more than 2–3s.
