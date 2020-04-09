@@ -1,10 +1,11 @@
 {
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
-        "agent": "SarsaTileCodingContinuing",
+        "agent": "dqn",
         "env_params": {
         },
         "agent_params": {
+            "offline_trajectory": null,
             "rep_type": "sepTC",
 
             "dqn_sync": 25,
@@ -41,13 +42,15 @@
 
     "control_param": {
         "agent_params": {
-            "rep_type": ["obs", "sepTC"],
+            "rep_type": ["obs"],
             "tc_mem_size": [64],
             "num_tilings": [8],
             "num_tiles": [4],
-            "dqn_sync": [25, 100, 400],
-            "len_buffer": [1000, 500, 250],
-            "alpha": [0.002, 0.001, 0.0003]
+            "dqn_sync": [25],
+            "len_buffer": [500],
+            "alpha": [0.002, 0.001, 0.0003, 0.0001, 3e-05, 1e-05]
         }
-    }
+    },
+            "dqn_sync": [25, 100, 400],
+            "len_buffer": [1000, 500, 250]
 }
