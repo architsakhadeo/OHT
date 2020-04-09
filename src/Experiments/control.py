@@ -48,7 +48,7 @@ class Experiment():
         self.domain = parsers.domain.lower()
         env_code = import_module("Environments.{}".format(config.environment))
         self.env_name = config.environment
-        self.env = env_code.init_env(run_seed)
+        self.env = env_code.init_env()
         self.env.set_param(config.env_params)
 
         num_action = self.env.num_action()

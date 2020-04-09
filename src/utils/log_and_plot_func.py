@@ -10,18 +10,11 @@ def get_color_by_lable(label, index):
                   '#bcbd22', '#17becf']
 
     color_dict = {
-        "new rep": new_colors[0],
-        "raw": new_colors[1],
-        "laplace rep": new_colors[2],
-        "supervised": new_colors[3],
-        "AE": new_colors[4],
-        "DQN": new_colors[5]
     }
-
     if label in color_dict.keys():
         return color_dict[label]
     else:
-        print("Key {} doesn't exist".format(label))
+        # print("Key {} doesn't exist".format(label))
         return new_colors[index%len(new_colors)]
 
 def write_param_log(agent_params, env_params, env, file_path, exp_params=None, save_pkl=False):
@@ -65,9 +58,6 @@ def write_param_log(agent_params, env_params, env, file_path, exp_params=None, s
 def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp_smooth=None, save_path=None, num_color=None):
     best_lrs = {}
     for k in all_data.keys():
-        # print(k)
-    # for k in ["nonLinearQ_newLegalv_beta0.0001_delta1.0", "nonLinearQ_noCons", "nonLinearQ_AE", "nonLinearQ_raw"]:
-    # for k in ["nonLinearQ_newLegalv_beta0.0001_delta1.0", "nonLinearQ_raw"]:
 
         plt.figure()
         plt.xlim(lim_x[0], lim_x[1])
@@ -132,8 +122,10 @@ def plot_control_exp_curve_single_key(canvas, all_data, labels, range_x, range_y
 
     print("All auc =", auc)
     best_i = np.argmax(auc)
-    mean, upper, lower = calculate_avg_ignoring_zero(all_data[best_i], exp_smooth=exp_smooth)
+    # mean, upper, lower = calculate_avg_ignoring_zero(all_data[best_i], exp_smooth=exp_smooth)
+    mean, upper, lower = calculate_avg_default(all_data[best_i], exp_smooth=exp_smooth)
     print("Best setting =", np.max(auc), labels[best_i])
+    # mean, upper, lower = -1*mean, -1*upper, -1*lower
     return mean, upper, lower, labels[best_i]
 
 def calculate_avg_ignoring_zero(data, exp_smooth=None):

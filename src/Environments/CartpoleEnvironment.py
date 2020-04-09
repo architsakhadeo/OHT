@@ -7,7 +7,7 @@ import math
 # action space = array([-1, +1])
 
 class CartpoleEnvironment(BaseEnvironment):
-	def __init__(self, seed):
+	def __init__(self):
 		self.gravity = 9.8
 		self.masscart = 1.0
 		self.masspole = 0.1
@@ -24,8 +24,8 @@ class CartpoleEnvironment(BaseEnvironment):
 		self.total_steps = 0
 		self.steps_beyond_done = None
 		self.max_episode_length = 200
-		self.seed = seed
-		np.random.seed(self.seed)
+		# self.seed = seed
+		# np.random.seed(self.seed)
 
 	def set_param(self, param):
 		"""
@@ -93,5 +93,5 @@ class CartpoleEnvironment(BaseEnvironment):
 		return [4.8, 8.0, 2*12*2*math.pi/360.0, 7.0]
 
 
-def init_env(seed):
-	return CartpoleEnvironment(seed)
+def init_env():
+	return CartpoleEnvironment()
