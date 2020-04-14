@@ -87,6 +87,7 @@ class DQN(BaseAgent):
 
     # Default values
     def __init__(self):
+        super().__init__()
         return
 
     def set_param(self, param):
@@ -151,6 +152,11 @@ class DQN(BaseAgent):
     def save(self, file_name):
         torch.save(self.nlq_learn.state_dict(), file_name + ".pth")
         print("model saved in " + file_name + ".pth")
+
+    def load(self, file_name):
+        self.nlq_learn.load_state_dict(torch.load(file_name + ".pth"))
+        self.nlq_target.load_state_dict(torch.load(file_name + ".pth"))
+        print("Load trained weight from", file_name)
 
     def check_q_value(self):
         with torch.no_grad():

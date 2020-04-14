@@ -17,6 +17,7 @@ import math
 
 class SarsaTileCodingContinuing(BaseAgent):
 	def __init__(self):
+		super().__init__()
 		return
 
 	def set_param(self, param):

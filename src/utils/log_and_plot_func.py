@@ -55,7 +55,7 @@ def write_param_log(agent_params, env_params, env, file_path, exp_params=None, s
 
     print("log saved in", file_path)
 
-def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp_smooth=None, save_path=None, num_color=None):
+def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp_smooth=None, save_path=None, num_color=None, handcode=None):
     best_lrs = {}
     for k in all_data.keys():
 
@@ -89,6 +89,10 @@ def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp
         plt.xticks(lim_x, lim_x)
         curve = np.clip(mean, lim_y[0], lim_y[1])
         # auc = np.sum(curve - lim_y[0])
+    if handcode is not None:
+        handcode = handcode.flatten()
+        x = np.linspace(1, len(handcode), len(handcode))
+        plt.plot(x, handcode, "--", label="hand_code")
     plt.title("best settings")
     plt.legend()
     plt.show()
