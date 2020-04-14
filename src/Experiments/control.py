@@ -11,20 +11,22 @@ import os
 
 
 def saved_file_name(config, run_idx):
+    learning = config.learning
     agent_params = config.agent_params
     input_ = agent_params.rep_type
     input_ = input_[0].upper() + input_[1:]
     if agent_params.rep_type in ["TC", "sepTC"]:
         input_ += "{}x{}".format(agent_params.num_tilings, agent_params.num_tiles)
-    if config.agent == "dqn":
+    if config.agent == "DQN":
         other_info = "_B{}_sync{}_NN{}".format(agent_params.len_buffer,
                                              agent_params.dqn_sync,
                                              str(agent_params.nonLinearQ_node),
                                              )
     else:
         other_info = ""
-    file_path = "{}/{}_{}{}_alpha{}_input{}".format(
+    file_path = "{}/{}/{}_{}{}_alpha{}_input{}".format(
         agent_params.exp_result_path,
+        learning,
         config.environment,
         config.agent,
         other_info,
@@ -60,8 +62,8 @@ class Experiment():
         self.config = config
 
         # define agent
-        agent_code = import_module("Agents.{}".format(config.agent))
-        self.agent = agent_code.init_agent()
+        self.agent_code = import_module("Agents.{}".format(config.agent))
+        self.agent = self.agent_code.init_agent()
         self.agent.set_param(config.agent_params)
         self.gamma = config.agent_params.gamma
 
@@ -82,22 +84,26 @@ class Experiment():
         self.old_count_learning_step = None
         self.log_interval = 200
 
-    def save_log(self):
+    def save_log(self, save_step=True, save_reward=True, save_traj=False, save_Q=False):
         path, name = saved_file_name(self.config, self.run_idx)
         if not os.path.exists(path):
             os.makedirs(path)
+        if save_step:
+            np.save(path+name+"_stepPerEp", self.step_log)
+        if save_reward:
+            np.save(path+name+"_rewardPerStep", self.reward_log)
+        if save_traj:
+            np.save(path+name+"_trajectory", self.trajectory_log)
+        if save_Q:
+            self.agent.save(path+name+"_Q")
 
-        np.save(path+name+"_stepPerEp", self.step_log)
-        np.save(path+name+"_rewardPerStep", self.reward_log)
-        # np.save(path+name+"_trajectory", self.trajectory_log)
-        # self.agent.save(path+name+"_Q")
-
-        if self.run_idx == 0:
+        if (save_step or save_reward) and (self.run_idx == 0):
             write_param_log(self.config.agent_params, self.config.env_params, self.config.environment, path,
                             exp_params=self.config.exp_params)
         print("File saved in", path)
+        return path, name
 
-    def run_exp(self):
+    def online_learning(self):
         for pair in self.config.env_params.__dict__:
             space = " " * (20 - len(str(pair))) + ": "
             print(str(pair), space, str(self.config.env_params.__dict__[pair]))
@@ -112,6 +118,74 @@ class Experiment():
             self.single_run()
         self.config.agent_params = self.agent.get_settings()
         self.save_log()
+
+    def eval_offline_agent(self):
+        # save online agent
+        eval_code = self.agent_code
+        eval_agent = self.agent
+        eval_name = self.config.agent
+
+        # Load hand coded controller
+        self.config.agent = "HandCoded"
+        agent_code = import_module("Agents.HandCoded")
+        self.agent = agent_code.init_agent()
+
+        self.learning = False
+        self.count_ep = 0
+        self.count_total_step = 0
+        self.count_learning_step = 0
+        self.old_count_learning_step = 0
+        self.old_count_total_step = 0
+        self.old_time = time.time()
+        self.single_run()
+        path, name = self.save_log(save_step=False, save_reward=False, save_traj=True, save_Q=False)
+
+        # Load saved trajectory
+        simulated_env = np.load(path+name+"_trajectory.npy")
+        st = simulated_env[:, :self.dim_state]
+        at = simulated_env[:, self.dim_state]
+        # stp = simulated_env[:, self.dim_state + 1: self.dim_state * 2 + 1]
+        reward = simulated_env[:, self.dim_state * 2 + 1]
+        gamma = simulated_env[:, self.dim_state * 2 + 2]
+
+        # Load offline agent
+        agent_code = import_module("Agents.OfflineAgent")
+        self.config.agent = eval_name
+        self.config.agent_params.offline_data = at
+        self.agent = agent_code.offline_agent(eval_name, self.config.agent_params)
+        self.agent.set_param(self.config.agent_params)
+        t = 0
+        while t < len(simulated_env)-1:
+            end = False
+            self.agent.offline_start(st[t], t)
+            while not end and t < len(simulated_env)-1:
+                self.agent.offline_step(reward[t], st[t+1], gamma[t], t+1)
+                if gamma[t] == 0:
+                    end = True
+                t += 1
+                if t % 5000 == 0:
+                    print("Step", t)
+        path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
+
+        # Evaluate agent with learned policy
+        self.agent_code = eval_code
+        self.config.agent = eval_name
+        self.agent = eval_code.init_agent()
+        self.config.agent_params.alpha = 0
+        self.agent.set_param(self.config.agent_params)
+        self.agent.load(path+name+"_Q")
+
+        self.learning = False
+        self.count_ep = 0
+        self.count_total_step = 0
+        self.count_learning_step = 0
+        self.old_count_learning_step = 0
+        self.old_count_total_step = 0
+        self.old_time = time.time()
+        self.single_run()
+        self.save_log()
+
+
 
     def single_run(self):
         print("Episode {} starts, total step {}, learning step {}/{}".format(self.count_ep, self.count_total_step,
@@ -148,13 +222,13 @@ class Experiment():
             self.prev_action, info = self.agent.step(reward, self.prev_state, end_of_ep)
 
             self.reward_log[self.count_total_step] = reward
-            # self.trajectory_log[self.count_total_step, :self.dim_state] = s_t
-            # self.trajectory_log[self.count_total_step, self.dim_state] = a_t
-            # self.trajectory_log[self.count_total_step, self.dim_state+1: self.dim_state*2+1] = s_tp
-            # self.trajectory_log[self.count_total_step, self.dim_state*2+1] = reward
-            # self.trajectory_log[self.count_total_step, self.dim_state*2+2] = gamma
-            # s_t = s_tp
-            # a_t = self.prev_action
+            self.trajectory_log[self.count_total_step, :self.dim_state] = s_t
+            self.trajectory_log[self.count_total_step, self.dim_state] = a_t
+            self.trajectory_log[self.count_total_step, self.dim_state+1: self.dim_state*2+1] = s_tp
+            self.trajectory_log[self.count_total_step, self.dim_state*2+1] = reward
+            self.trajectory_log[self.count_total_step, self.dim_state*2+2] = gamma
+            s_t = s_tp
+            a_t = self.prev_action
             if self.learning == False and reward != 0:
                 self.learning = True
 
@@ -196,4 +270,7 @@ if __name__ == '__main__':
     config = sweeper.parse(parsers.sweeper_idx)
 
     oml = Experiment(config, parsers)
-    oml.run_exp()
+    if config.learning == "online":
+        oml.online_learning()
+    else:
+        oml.eval_offline_agent()
