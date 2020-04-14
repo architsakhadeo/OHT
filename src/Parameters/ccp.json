@@ -1,7 +1,6 @@
 {
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
-
         "agent": "DQN",
         "learning": "online",
         "learn_from": "HandCoded",
@@ -9,6 +8,7 @@
         },
         "agent_params": {
             "offline_data": null,
+            "rep_type": "sepTC",
 
             "dqn_sync": 25,
             "dqn_minibatch": 32,
