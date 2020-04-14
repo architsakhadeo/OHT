@@ -17,7 +17,7 @@ def get_color_by_lable(label, index):
         # print("Key {} doesn't exist".format(label))
         return new_colors[index%len(new_colors)]
 
-def write_param_log(agent_params, env_params, env, file_path, exp_params=None, save_pkl=False):
+def write_param_log(agent_params, env_params, env, file_path, exp_params=None, save_pkl=False, print_log=False):
     if os.path.isfile(file_path + "/record.pkl"):
         print("Log exist")
 
@@ -35,21 +35,21 @@ def write_param_log(agent_params, env_params, env, file_path, exp_params=None, s
         est_len = 20
         for pair in agent_params.__dict__:
             space = " " * (est_len - len(str(pair))) + ": "
-            print(str(pair), space, str(agent_params.__dict__[pair]))
+            if print_log: print(str(pair), space, str(agent_params.__dict__[pair]))
             info = str(pair) + space + str(agent_params.__dict__[pair]) + "\n"
             param_record.write(info)
         param_record.write("\n\n------ Environment parameters ------\n\n")
         param_record.write("Env: " + str(env) + "\n\n")
         for pair in env_params.__dict__:
             space = " " * (est_len - len(str(pair))) + ": "
-            print(str(pair), space, str(env_params.__dict__[pair]))
+            if print_log: print(str(pair), space, str(env_params.__dict__[pair]))
             info = str(pair) + space + str(env_params.__dict__[pair]) + "\n"
             param_record.write(info)
         if exp_params is not None:
             param_record.write("\n\n------ Control exp parameters ------\n\n")
             for pair in exp_params.__dict__:
                 space = " " * (est_len - len(str(pair))) + ": "
-                print(str(pair), space, str(exp_params.__dict__[pair]))
+                if print_log: print(str(pair), space, str(exp_params.__dict__[pair]))
                 info = str(pair) + space + str(exp_params.__dict__[pair]) + "\n"
                 param_record.write(info)
 

@@ -67,22 +67,27 @@ class Experiment():
         self.agent.set_param(config.agent_params)
         self.gamma = config.agent_params.gamma
 
-        self.num_steps = config.exp_params.num_steps
-        if hasattr(config.exp_params, "max_step_ep") and config.exp_params.max_step_ep != 0:
-            self.max_step_ep = config.exp_params.max_step_ep
+        self.reset_exp()
+
+    def reset_exp(self):
+        self.num_steps = self.config.exp_params.num_steps
+        if hasattr(self.config.exp_params, "max_step_ep") and self.config.exp_params.max_step_ep != 0:
+            self.max_step_ep = self.config.exp_params.max_step_ep
         else:
             self.max_step_ep = np.inf
         self.step_log = []
         self.reward_log = np.zeros(self.num_steps)
         self.trajectory_log = np.zeros((self.num_steps, self.dim_state*2+3))
-        self.num_episode = config.exp_params.num_episodes
-        self.control_ep = False if config.exp_params.num_episodes == 0 else config.exp_params.num_episodes
-        self.learning = None
-        self.count_ep = None
-        self.count_total_step = None
-        self.count_learning_step = None
-        self.old_count_learning_step = None
+        self.num_episode = self.config.exp_params.num_episodes
+        self.control_ep = False if self.config.exp_params.num_episodes == 0 else self.config.exp_params.num_episodes
+        self.learning = False
+        self.count_ep = 0
+        self.count_total_step = 0
+        self.count_learning_step = 0
+        self.old_count_learning_step = 0
+        self.old_count_total_step = 0
         self.log_interval = 200
+        self.old_time = time.time()
 
     def save_log(self, save_step=True, save_reward=True, save_traj=False, save_Q=False):
         path, name = saved_file_name(self.config, self.run_idx)
@@ -108,47 +113,41 @@ class Experiment():
             space = " " * (20 - len(str(pair))) + ": "
             print(str(pair), space, str(self.config.env_params.__dict__[pair]))
         for run in range(1):
-            self.learning = False
-            self.count_ep = 0
-            self.count_total_step = 0
-            self.count_learning_step = 0
-            self.old_count_learning_step = 0
-            self.old_count_total_step = 0
-            self.old_time = time.time()
+            self.reset_exp()
             self.single_run()
         self.config.agent_params = self.agent.get_settings()
         self.save_log()
 
     def eval_offline_agent(self):
-        # save online agent
-        eval_code = self.agent_code
-        eval_agent = self.agent
+        # agent which will be evaluated
+        eval_code = import_module("Agents.{}".format(self.config.agent))
         eval_name = self.config.agent
 
-        # Load hand coded controller
-        self.config.agent = "HandCoded"
-        agent_code = import_module("Agents.HandCoded")
+        path, name = self.collect_trajectory()
+        q_path, q_name = self.learn_policy(path, name, eval_code, eval_name)
+        self.evaluation(q_path, q_name, eval_code, eval_name, 100000)
+
+    def collect_trajectory(self):
+        # Collect trajectories with some policy
+        self.config.agent = self.config.learn_from
+        agent_code = import_module("Agents.{}".format(self.config.learn_from))
         self.agent = agent_code.init_agent()
 
-        self.learning = False
-        self.count_ep = 0
-        self.count_total_step = 0
-        self.count_learning_step = 0
-        self.old_count_learning_step = 0
-        self.old_count_total_step = 0
-        self.old_time = time.time()
+        self.reset_exp()
         self.single_run()
         path, name = self.save_log(save_step=False, save_reward=False, save_traj=True, save_Q=False)
+        return path, name
 
+    def learn_policy(self, path, name, eval_code, eval_name):
         # Load saved trajectory
         simulated_env = np.load(path+name+"_trajectory.npy")
         st = simulated_env[:, :self.dim_state]
         at = simulated_env[:, self.dim_state]
-        # stp = simulated_env[:, self.dim_state + 1: self.dim_state * 2 + 1]
+        stp = simulated_env[:, self.dim_state + 1: self.dim_state * 2 + 1]
         reward = simulated_env[:, self.dim_state * 2 + 1]
         gamma = simulated_env[:, self.dim_state * 2 + 2]
 
-        # Load offline agent
+        # Learn the policy
         agent_code = import_module("Agents.OfflineAgent")
         self.config.agent = eval_name
         self.config.agent_params.offline_data = at
@@ -164,28 +163,30 @@ class Experiment():
                     end = True
                 t += 1
                 if t % 5000 == 0:
-                    print("Step", t)
-        path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
+                    path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
+                    print("\nEvaluating agent at step", t)
+                    learning_agent = self.agent
+                    self.evaluation(path, name, eval_code, eval_name, 200)
+                    self.agent = learning_agent
+                    print("\nEvaluation ends, keep learning...")
 
+        path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
+        return path, name
+
+    def evaluation(self, path, name, eval_code, eval_name, eval_step):
         # Evaluate agent with learned policy
         self.agent_code = eval_code
         self.config.agent = eval_name
+        self.config.exp_params.num_steps = eval_step # Evaluate for 500 steps
+        self.config.agent_params.alpha = 0 # Fixed weight
         self.agent = eval_code.init_agent()
-        self.config.agent_params.alpha = 0
         self.agent.set_param(self.config.agent_params)
         self.agent.load(path+name+"_Q")
 
-        self.learning = False
-        self.count_ep = 0
-        self.count_total_step = 0
-        self.count_learning_step = 0
-        self.old_count_learning_step = 0
-        self.old_count_total_step = 0
-        self.old_time = time.time()
+        self.reset_exp()
         self.single_run()
-        self.save_log()
-
-
+        # print(self.agent.check_q_value())
+        self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False)
 
     def single_run(self):
         print("Episode {} starts, total step {}, learning step {}/{}".format(self.count_ep, self.count_total_step,
