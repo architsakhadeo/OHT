@@ -59,7 +59,7 @@ class HandCoded(BaseAgent):
 			self.select_actions(state)
 
 		action = self.actions.pop(0)
-		print('\t James:', state, action)
+		# print('\t James:', state, action)
 		return action
 
 

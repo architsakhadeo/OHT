@@ -2,12 +2,12 @@
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
         "agent": "DQN",
-        "learning": "online",
+        "learning": "offline",
+        "learn_from": "HandCoded",
         "env_params": {
         },
         "agent_params": {
             "offline_data": null,
-            "rep_type": "sepTC",
 
             "dqn_sync": 25,
             "dqn_minibatch": 32,
@@ -35,7 +35,7 @@
 
         "exp_params": {
             "num_episodes": 0,
-            "num_steps": 100000,
+            "num_steps": 50000,
             "num_runs": 1,
             "random_seed": 15
         }
@@ -44,12 +44,9 @@
     "control_param": {
         "agent_params": {
             "rep_type": ["obs"],
-            "tc_mem_size": [64],
-            "num_tilings": [8],
-            "num_tiles": [4],
             "dqn_sync": [25],
             "len_buffer": [500],
-            "alpha": [0.002, 0.001, 0.0003, 0.0001, 3e-05, 1e-05]
+            "alpha": [0.0001, 3e-05, 1e-05]
         }
     },
             "dqn_sync": [25, 100, 400],
