@@ -2,13 +2,16 @@
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
         "agent": "DQN",
+<<<<<<< HEAD
         "learning": "online",
+=======
+        "learning": "offline",
+>>>>>>> fix bug: action saved in buffer by offline agent.
         "learn_from": "HandCoded",
         "env_params": {
         },
         "agent_params": {
             "offline_data": null,
-            "rep_type": "sepTC",
 
             "dqn_sync": 25,
             "dqn_minibatch": 32,
