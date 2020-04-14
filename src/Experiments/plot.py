@@ -15,7 +15,6 @@ def accumulate_reward(reward_step, num_steps):
     return accum
 def accum_reward_all_runs(folder, run_num, num_steps):
     one_setting = []
-    print(folder)
     run_count = 0
     for run_idx in range(run_num):
         name = "{}/run{}_rewardPerStep.npy".format(folder, str(run_idx))
@@ -88,10 +87,10 @@ def num_steps_per_ep_all_runs(folder, run_num):
     else:
         return None
 
-def control_exp(env_list, result_path):
-    for env in env_list:
-        control_exp_single_env(env, result_path)
-def control_exp_single_env(env_name, result_path):
+# def control_exp(env_list, result_path, handcode=None):
+#     for env in env_list:
+#         control_exp_single_env(env, result_path, handcode=handcode)
+def control_exp_single_env(env_name, result_path, handcode=None):
     sweeper = Sweeper('../Parameters/{}.json'.format(env_name.lower()), "control_param")
     total_comb = sweeper.get_total_combinations()
     run_num = 30
@@ -114,14 +113,17 @@ def control_exp_single_env(env_name, result_path):
             one_setting = return_per_ep_all_runs(folder, run_num, num_steps)
             lim_y = [0, 200]
             lim_x = [1, 10000]
+            if handcode:
+                handcode_data = return_per_ep_all_runs(handcode, run_num, num_steps)
         elif env_name.lower() in ["ccp"]:
             ignore_zero = False
             exp_smooth = None
-            # one_setting = num_steps_per_ep_all_runs(folder, run_num)
             one_setting = accum_reward_all_runs(folder, run_num, num_steps)
             lim_y = [-500, 0]
             # lim_y = [0, 500]
             lim_x = [1, 100000]
+            if handcode:
+                handcode_data = accum_reward_all_runs(handcode, run_num, num_steps)
         else:
             raise NotImplemented
 
@@ -137,7 +139,8 @@ def control_exp_single_env(env_name, result_path):
                 all_data[key] = [one_setting]
                 label[key] = [agent_params.alpha]
     save_path = "../data/plots/{}".format(env_name)
-    pf.plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=ignore_zero, exp_smooth=exp_smooth, save_path=None)
+    pf.plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=ignore_zero, exp_smooth=exp_smooth, save_path=None, handcode=handcode_data)
 
 if __name__ == '__main__':
-    control_exp(["CCP"], "../data/exp_result")
+    control_exp_single_env("CCP", "../data/exp_result",
+                           handcode="../data/exp_result/offline/ContinuingCartpoleEnvironment_DQN_B500_sync25_NN[128, 128]_alpha0_inputObs")

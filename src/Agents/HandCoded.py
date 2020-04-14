@@ -103,6 +103,9 @@ class HandCoded(BaseAgent):
 			# Just do a proportional movement in the same direction
 			self.scaled_create_action_series(angle/self.fail_angle)
 
+	def save(self, filename):
+		raise UserWarning("Hand Coded agent does not save Q")
+
 
 def init_agent():
 	agent = HandCoded()

@@ -17,6 +17,7 @@ import math
 
 class ExpectedSarsaTileCodingContinuing(BaseAgent):
 	def __init__(self):
+		super().__init__()
 		return
 
 	def set_param(self, param):
@@ -79,7 +80,7 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		return self.action_0
 
 		
-	def step(self, reward, observation, complete):
+	def step(self, reward, observation, complete=False):
 		#1self.state_0 = self.tilecoding(self.obs_0)
 		self.obs_1 = observation
 		self.state_1 = self.tilecoding(self.obs_1)
