@@ -5,12 +5,10 @@ from math import pi
 # The hand-coded agent chooses an action for 0.2s before reassessing.
 class HandCoded(BaseAgent):
 
-	def __init__(self):
+	 # Regarding plan duration: 0.2s is an appropriate human reaction time, which I'm also using as a the time it takes for a human to change plans, even
+	 # though that's not necessarily the same number.)
+	def __init__(self, plan_duration = 0.2):
 		tau = 0.02 # The OpenAI episodic cartpole-v1 has tau=0.02s between steps. Properly this should come from the environment.
-
-		 # 0.2s is an appropriate human reaction time, which I'm also using as a the time it takes for a human to change plans, even
-		 # though that's not necessarily the same number.)
-		plan_duration = 0.2
 
 		self.actions_per_step = max(1, round(plan_duration / tau)) # Number of actions that should be taken before looking at state again, minimum 1.
 		self.actions = []
