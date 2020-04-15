@@ -10,8 +10,10 @@ from utils.log_and_plot_func import write_param_log
 import os
 
 
-def saved_file_name(config, run_idx):
+def saved_file_name(config, run_idx, eval=False):
     learning = config.learning
+    if learning == "offline" and eval:
+        learning += "_eval"
     agent_params = config.agent_params
     input_ = agent_params.rep_type
     input_ = input_[0].upper() + input_[1:]
@@ -89,8 +91,8 @@ class Experiment():
         self.log_interval = 200
         self.old_time = time.time()
 
-    def save_log(self, save_step=True, save_reward=True, save_traj=False, save_Q=False):
-        path, name = saved_file_name(self.config, self.run_idx)
+    def save_log(self, save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=False):
+        path, name = saved_file_name(self.config, self.run_idx, eval=eval)
         if not os.path.exists(path):
             os.makedirs(path)
         if save_step:
@@ -118,7 +120,7 @@ class Experiment():
         self.config.agent_params = self.agent.get_settings()
         self.save_log()
 
-    def eval_offline_agent(self):
+    def offline_learning(self):
         # agent which will be evaluated
         eval_code = import_module("Agents.{}".format(self.config.agent))
         eval_name = self.config.agent
@@ -178,15 +180,20 @@ class Experiment():
         self.agent_code = eval_code
         self.config.agent = eval_name
         self.config.exp_params.num_steps = eval_step # Evaluate for 500 steps
+        learning_weight = self.config.agent_params.alpha
+        learning_epsilon = self.config.agent_params.epsilon
         self.config.agent_params.alpha = 0 # Fixed weight
+        self.config.agent_params.epsilon = 0
+        self.config.agent_params.decreasing_epsilon = False # Does not use epsilon greedy in evaluation
         self.agent = eval_code.init_agent()
         self.agent.set_param(self.config.agent_params)
         self.agent.load(path+name+"_Q")
 
         self.reset_exp()
         self.single_run()
-        # print(self.agent.check_q_value())
-        self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False)
+        self.config.agent_params.alpha = learning_weight
+        self.config.agent_params.epsilon = learning_epsilon
+        self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=True)
 
     def single_run(self):
         print("Episode {} starts, total step {}, learning step {}/{}".format(self.count_ep, self.count_total_step,
@@ -274,4 +281,4 @@ if __name__ == '__main__':
     if config.learning == "online":
         oml.online_learning()
     else:
-        oml.eval_offline_agent()
+        oml.offline_learning()
