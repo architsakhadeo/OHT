@@ -2,7 +2,7 @@
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
         "agent": "DQN",
-        "learning": "offline",
+        "learning": "online",
         "learn_from": "HandCoded",
         "env_params": {
         },
@@ -46,7 +46,7 @@
             "rep_type": ["obs"],
             "dqn_sync": [25],
             "len_buffer": [500],
-            "alpha": [0.0001, 3e-05, 1e-05]
+            "alpha": [0.001, 0.0003, 0.0001, 3e-05, 1e-05]
         }
     },
             "dqn_sync": [25, 100, 400],

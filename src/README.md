@@ -1,8 +1,14 @@
 Usage: 
 Run the following command in Experiment folder:
-python control.py --domain CCP --sweeper_idx 0 --run_idx 0
+
+run control experiment:
+    python control.py --domain CCP --sweeper_idx 0 --run_idx 0
+
+plotting code (You may need to modify plotting code or write new functions):
+    python plot.py 
 
 Parameters in json:
+
 learning: 
     "offline" - learn a policy from a given (handcoded) controller. Then evaluate the offline agent  
     "online" - learn a policy online
