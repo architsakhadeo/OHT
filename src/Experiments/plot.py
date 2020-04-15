@@ -112,31 +112,35 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
             lim_x = [1, 10000]
             if handcode:
                 handcode_data = return_per_ep_all_runs(handcode, run_num, num_steps)
-        elif env_name.lower() in ["ccp"]:
-            ignore_zero = False
-            exp_smooth = None
-            num_ep = 150
-            one_setting = num_steps_per_ep_all_runs(folder, run_num, num_ep)
-            lim_y = [0, 500]
-            lim_x = [1, num_ep]
-            if handcode:
-                handcode_data_temp = num_steps_per_ep_all_runs(handcode, run_num, num_ep)
-                fixed_length = num_ep
-                handcode_data = []
-                for i in handcode_data_temp:
-                    if len(i)>=fixed_length: handcode_data.append(i)
-                handcode_data = np.array(handcode_data)
-            else:
-                handcode_data = None
+        # # The following block plots steps per episode
         # elif env_name.lower() in ["ccp"]:
         #     ignore_zero = False
         #     exp_smooth = None
-        #     one_setting = accum_reward_all_runs(folder, run_num, num_steps)
-        #     lim_y = [-500, 0]
-        #     # lim_y = [0, 500]
-        #     lim_x = [1, 50000]
+        #     num_ep = 150
+        #     one_setting = num_steps_per_ep_all_runs(folder, run_num, num_ep)
+        #     lim_y = [0, 500]
+        #     lim_x = [1, num_ep]
         #     if handcode:
-        #         handcode_data = accum_reward_all_runs(handcode, run_num, num_steps)
+        #         handcode_data_temp = num_steps_per_ep_all_runs(handcode, run_num, num_ep)
+        #         fixed_length = num_ep
+        #         handcode_data = []
+        #         for i in handcode_data_temp:
+        #             if len(i)>=fixed_length: handcode_data.append(i)
+        #         handcode_data = np.array(handcode_data)
+        #     else:
+        #         handcode_data = None
+
+        # The following block plots the number of failure cases
+        elif env_name.lower() in ["ccp"]:
+            ignore_zero = False
+            exp_smooth = None
+            one_setting = accum_reward_all_runs(folder, run_num, num_steps)
+            one_setting *= -1 # number of failures = -1 * accumulate reward
+            lim_y = [0, 500]
+            lim_x = [1, 50000]
+            if handcode:
+                handcode_data = accum_reward_all_runs(handcode, run_num, num_steps)
+                handcode_data *= -1 # number of failures = -1 * accumulate reward
         else:
             raise NotImplemented
 
