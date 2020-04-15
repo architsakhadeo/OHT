@@ -2,11 +2,7 @@
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
         "agent": "DQN",
-<<<<<<< HEAD
         "learning": "online",
-=======
-        "learning": "offline",
->>>>>>> fix bug: action saved in buffer by offline agent.
         "learn_from": "HandCoded",
         "env_params": {
         },
