@@ -7,23 +7,24 @@ class HandCoded(BaseAgent):
 
 	"""
 	Inputs: [x, y]
-		plan_duration: 0.04 gives optimal behavior, insensitive to 'threshold'.
+		plan_duration: Number of actions that should be taken before looking at state again, minimum 1.
+			2 gives optimal behavior, insensitive to 'threshold'.
 			0.2s is an appropriate human reaction time, which could also be used as a the time it takes for a human to
 			change plans, even though that's not necessarily the same number.)
+			This would correspond to a plan duration of reaction_time/tau = 0.2/0.02 = 10.
 		threshold: A parameter between 0 and 1 to control behavior.
 		tau: The OpenAI episodic cartpole-v1 has tau=0.02s between steps.
 		fail_degrees: The angle at which the environment terminates the episode.
 		fail_position: The position at which the environment terminates the episode, whether it's positive or negative.
 	Return: None
 	"""
-	def __init__(self, plan_duration = 0.04, threshold = 0.9, tau = 0.02, fail_degrees = 15, fail_position = 2.4):
-		self.actions_per_step = max(1, round(plan_duration / tau)) # Number of actions that should be taken before looking at state again, minimum 1.
-		self.actions = []
-
+	def __init__(self, plan_duration = 2, threshold = 0.9, tau = 0.02, fail_degrees = 15, fail_position = 2.4):
+		self.actions_per_step = plan_duration
 		self.fail_angle = fail_degrees/180*pi
 		self.fail_position = fail_position
 		self.threshold = threshold
 
+		self.actions = []
 		return
 
 	def set_param(self, param):
