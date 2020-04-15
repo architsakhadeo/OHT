@@ -50,14 +50,10 @@ class HandCoded(BaseAgent):
 		# Tile into large tiles. Based on current tile, choose a pre-set action or action series and follow it for a while.
 		# Then see which tile I'm in and make a new choice.
 
-
-		# TODO every run will be the same if we don't have some source of randomness. Maybe add ±0.1 to the target level.
-
 		if len(self.actions) == 0:
 			self.select_actions(state)
 
 		action = self.actions.pop(0)
-		# print('\t James:', state, action)
 		return action
 
 
@@ -76,7 +72,6 @@ class HandCoded(BaseAgent):
 			else:
 				next_action = 0
 
-			# print('\t\t', x, target_sum, sm, next_action)
 			sm += next_action
 			self.actions.append(next_action)
 
