@@ -7,7 +7,7 @@ class HandCoded(BaseAgent):
 
 	 # Regarding plan duration: 0.2s is an appropriate human reaction time, which I'm also using as a the time it takes for a human to change plans, even
 	 # though that's not necessarily the same number.)
-	def __init__(self, plan_duration = 0.2):
+	def __init__(self, plan_duration = 0.2, threshold = 0.9):
 		tau = 0.02 # The OpenAI episodic cartpole-v1 has tau=0.02s between steps. Properly this should come from the environment.
 
 		self.actions_per_step = max(1, round(plan_duration / tau)) # Number of actions that should be taken before looking at state again, minimum 1.
@@ -16,6 +16,8 @@ class HandCoded(BaseAgent):
 		# The episode ends when the pole is more than 15 degrees from vertical, or the cart moves more than 2.4 units from the center.
 		self.fail_angle = 15/180*pi
 		self.fail_position = 2.4
+
+		self.threshold = threshold
 
 		return
 
@@ -89,7 +91,7 @@ class HandCoded(BaseAgent):
 		# I think it still usually fails to keep the pole up for more than 2–3s.
 
 		# Respond in proportion to how far we've tilted
-		if abs(angle) > 0.9*self.fail_angle:
+		if abs(angle) > self.threshold*self.fail_angle:
 			# Just do a maximum movement in the same direction
 			self.scaled_create_action_series(angle/abs(angle))
 		else:
