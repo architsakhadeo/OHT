@@ -64,24 +64,21 @@ def return_per_ep_all_runs(folder, run_num, scale_r=1):
     else:
         return None
 
-def num_steps_per_ep_all_runs(folder, run_num):
+def num_steps_per_ep_all_runs(folder, run_num, num_ep):
     one_setting = []
     print(folder)
-    if os.path.isfile("{}/{}runs_step_per_ep.npy".format(folder, run_num)):
-        one_setting = np.load("{}/{}runs_step_per_ep.npy".format(folder, run_num), allow_pickle=True)
+    run_count = 0
+    for run_idx in range(run_num):
+        step_name = "{}/run{}_stepPerEp.npy".format(folder, str(run_idx))
+        if os.path.isfile(step_name):
+            step_ep = np.load(step_name)[:num_ep]
+            one_setting.append(step_ep)
+            run_count += 1
+    if run_count > 0:
+        one_setting = np.array(one_setting)
+        np.save("{}/{}runs_step_per_ep".format(folder, run_count), one_setting)
     else:
-        run_count = 0
-        for run_idx in range(run_num):
-            step_name = "{}/run{}_stepPerEp.npy".format(folder, str(run_idx))
-            if os.path.isfile(step_name):
-                step_ep = np.load(step_name)
-                one_setting.append(step_ep)
-                run_count += 1
-        if run_count > 0:
-            one_setting = np.array(one_setting)
-            np.save("{}/{}runs_step_per_ep".format(folder, run_count), one_setting)
-        else:
-            print(folder, "doesn't exist")
+        print(folder, "doesn't exist")
     if len(one_setting) > 0:
         return one_setting
     else:
@@ -90,7 +87,7 @@ def num_steps_per_ep_all_runs(folder, run_num):
 # def control_exp(env_list, result_path, handcode=None):
 #     for env in env_list:
 #         control_exp_single_env(env, result_path, handcode=handcode)
-def control_exp_single_env(env_name, result_path, handcode=None):
+def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
     sweeper = Sweeper('../Parameters/{}.json'.format(env_name.lower()), "control_param")
     total_comb = sweeper.get_total_combinations()
     run_num = 30
@@ -106,7 +103,7 @@ def control_exp_single_env(env_name, result_path, handcode=None):
         config_temp = config
         config_temp.agent_params = agent_params_temp
 
-        folder, _ = saved_file_name(config_temp, 0)
+        folder, _ = saved_file_name(config_temp, 0, eval=eval)
         if env_name.lower() in ["cp"]:
             ignore_zero = False
             exp_smooth = None
@@ -118,12 +115,28 @@ def control_exp_single_env(env_name, result_path, handcode=None):
         elif env_name.lower() in ["ccp"]:
             ignore_zero = False
             exp_smooth = None
-            one_setting = accum_reward_all_runs(folder, run_num, num_steps)
-            lim_y = [-500, 0]
-            # lim_y = [0, 500]
-            lim_x = [1, 100000]
+            num_ep = 150
+            one_setting = num_steps_per_ep_all_runs(folder, run_num, num_ep)
+            lim_y = [0, 500]
+            lim_x = [1, num_ep]
             if handcode:
-                handcode_data = accum_reward_all_runs(handcode, run_num, num_steps)
+                handcode_data_temp = num_steps_per_ep_all_runs(handcode, run_num, num_ep)
+                fixed_length = num_ep
+                handcode_data = []
+                for i in handcode_data_temp:
+                    if len(i)>=fixed_length: handcode_data.append(i)
+                handcode_data = np.array(handcode_data)
+            else:
+                handcode_data = None
+        # elif env_name.lower() in ["ccp"]:
+        #     ignore_zero = False
+        #     exp_smooth = None
+        #     one_setting = accum_reward_all_runs(folder, run_num, num_steps)
+        #     lim_y = [-500, 0]
+        #     # lim_y = [0, 500]
+        #     lim_x = [1, 50000]
+        #     if handcode:
+        #         handcode_data = accum_reward_all_runs(handcode, run_num, num_steps)
         else:
             raise NotImplemented
 
@@ -143,4 +156,5 @@ def control_exp_single_env(env_name, result_path, handcode=None):
 
 if __name__ == '__main__':
     control_exp_single_env("CCP", "../data/exp_result",
-                           handcode="../data/exp_result/offline/ContinuingCartpoleEnvironment_DQN_B500_sync25_NN[128, 128]_alpha0_inputObs")
+                           handcode="../data/exp_result/offline_eval/ContinuingCartpoleEnvironment_DQN_B500_sync25_NN[128, 128]_alpha1e-05_inputObs",
+                           eval=False)

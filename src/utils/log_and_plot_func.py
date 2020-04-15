@@ -90,9 +90,9 @@ def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp
         curve = np.clip(mean, lim_y[0], lim_y[1])
         # auc = np.sum(curve - lim_y[0])
     if handcode is not None:
-        handcode = handcode.flatten()
-        x = np.linspace(1, len(handcode), len(handcode))
-        plt.plot(x, handcode, "--", label="hand_code")
+        mean, upper, lower = calculate_avg_default(handcode, exp_smooth=exp_smooth)
+        x = np.linspace(1, len(mean), len(mean))
+        plt.plot(x, mean, "--", label="hand_code")
     plt.title("best settings")
     plt.legend()
     plt.show()
