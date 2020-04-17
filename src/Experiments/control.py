@@ -114,9 +114,7 @@ class Experiment():
         for pair in self.config.env_params.__dict__:
             space = " " * (20 - len(str(pair))) + ": "
             print(str(pair), space, str(self.config.env_params.__dict__[pair]))
-        for run in range(1):
-            self.reset_exp()
-            self.single_run()
+        self.single_run()
         self.config.agent_params = self.agent.get_settings()
         self.save_log()
 
