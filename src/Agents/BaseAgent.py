@@ -10,3 +10,10 @@ class BaseAgent:
 
 	def end(self, reward):
 		raise NotImplementedError('Expected `end` to be implemented')
+
+	def save(self, filepath):
+		raise NotImplementedError('Expected `save` to be implemented')
+
+	def load(self, filepath):
+		# It's fine to not implement this, but it's used for offline learning.
+		raise NotImplementedError('Expected `load` to be implemented')
