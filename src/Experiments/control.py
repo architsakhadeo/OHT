@@ -120,7 +120,7 @@ class Experiment():
 
     def offline_learning(self):
         # agent which will be evaluated
-        eval_code = import_module("Agents.{}".format(self.config.agent))
+        eval_code = self.agent_code
         eval_name = self.config.agent
 
         path, name = self.collect_trajectory()
