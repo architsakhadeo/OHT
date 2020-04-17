@@ -275,8 +275,8 @@ if __name__ == '__main__':
     sweeper = Sweeper('../Parameters/{}.json'.format(env_name.lower()), "control_param")
     config = sweeper.parse(parsers.sweeper_idx)
 
-    oml = Experiment(config, parsers)
+    exp = Experiment(config, parsers)
     if config.learning == "online":
-        oml.online_learning()
+        exp.online_learning()
     else:
-        oml.offline_learning()
+        exp.offline_learning()
