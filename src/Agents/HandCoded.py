@@ -5,20 +5,26 @@ from math import pi
 # The hand-coded agent chooses an action for 0.2s before reassessing.
 class HandCoded(BaseAgent):
 
-	def __init__(self):
-		tau = 0.02 # The OpenAI episodic cartpole-v1 has tau=0.02s between steps. Properly this should come from the environment.
+	"""
+	Inputs: [x, y]
+		plan_duration: Number of actions that should be taken before looking at state again, minimum 1.
+			2 gives optimal behavior, insensitive to 'threshold'.
+			0.2s is an appropriate human reaction time, which could also be used as a the time it takes for a human to
+			change plans, even though that's not necessarily the same number.)
+			This would correspond to a plan duration of reaction_time/tau = 0.2/0.02 = 10.
+		threshold: A parameter between 0 and 1 to control behavior.
+		tau: The OpenAI episodic cartpole-v1 has tau=0.02s between steps.
+		fail_degrees: The angle at which the environment terminates the episode.
+		fail_position: The position at which the environment terminates the episode, whether it's positive or negative.
+	Return: None
+	"""
+	def __init__(self, plan_duration = 2, threshold = 0.9, tau = 0.02, fail_degrees = 15, fail_position = 2.4):
+		self.actions_per_step = plan_duration
+		self.fail_angle = fail_degrees/180*pi
+		self.fail_position = fail_position
+		self.threshold = threshold
 
-		 # 0.2s is an appropriate human reaction time, which I'm also using as a the time it takes for a human to change plans, even
-		 # though that's not necessarily the same number.)
-		plan_duration = 0.2
-
-		self.actions_per_step = max(1, round(plan_duration / tau)) # Number of actions that should be taken before looking at state again, minimum 1.
 		self.actions = []
-
-		# The episode ends when the pole is more than 15 degrees from vertical, or the cart moves more than 2.4 units from the center.
-		self.fail_angle = 15/180*pi
-		self.fail_position = 2.4
-
 		return
 
 	def set_param(self, param):
@@ -52,14 +58,10 @@ class HandCoded(BaseAgent):
 		# Tile into large tiles. Based on current tile, choose a pre-set action or action series and follow it for a while.
 		# Then see which tile I'm in and make a new choice.
 
-
-		# TODO every run will be the same if we don't have some source of randomness. Maybe add ±0.1 to the target level.
-
 		if len(self.actions) == 0:
 			self.select_actions(state)
 
 		action = self.actions.pop(0)
-		# print('\t James:', state, action)
 		return action
 
 
@@ -78,7 +80,6 @@ class HandCoded(BaseAgent):
 			else:
 				next_action = 0
 
-			# print('\t\t', x, target_sum, sm, next_action)
 			sm += next_action
 			self.actions.append(next_action)
 
@@ -96,7 +97,7 @@ class HandCoded(BaseAgent):
 		# I think it still usually fails to keep the pole up for more than 2–3s.
 
 		# Respond in proportion to how far we've tilted
-		if abs(angle) > 0.9*self.fail_angle:
+		if abs(angle) > self.threshold*self.fail_angle:
 			# Just do a maximum movement in the same direction
 			self.scaled_create_action_series(angle/abs(angle))
 		else:
