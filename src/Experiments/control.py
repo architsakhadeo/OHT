@@ -271,8 +271,8 @@ if __name__ == '__main__':
     # parse argument
     ci = CollectInput()
     parsers = ci.control_experiment_input()
-    env_name = parsers.domain.lower()
-    sweeper = Sweeper('../Parameters/{}.json'.format(env_name.lower()), "control_param")
+    json_name = parsers.domain.lower()
+    sweeper = Sweeper('../Parameters/{}.json'.format(json_name.lower()), "control_param")
     config = sweeper.parse(parsers.sweeper_idx)
 
     exp = Experiment(config, parsers)
