@@ -48,13 +48,14 @@ class Experiment():
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        # define env
+        # Load an environment based on the config, and pass relevant portion of config to it.
         self.domain = parsers.domain.lower()
         env_code = import_module("Environments.{}".format(config.environment))
         self.env_name = config.environment
         self.env = env_code.init_env()
         self.env.set_param(config.env_params)
 
+        # Pass environment info to the agent.
         num_action = self.env.num_action()
         self.dim_state = self.env.state_dim()
         state_normalize = self.env.state_range()
@@ -63,7 +64,7 @@ class Experiment():
         setattr(config.agent_params, "state_normalize", state_normalize)
         self.config = config
 
-        # define agent
+        # Load an agent based on the config, and pass relevant portion of config to it.
         self.agent_code = import_module("Agents.{}".format(config.agent))
         self.agent = self.agent_code.init_agent()
         self.agent.set_param(config.agent_params)
@@ -77,12 +78,16 @@ class Experiment():
             self.max_step_ep = self.config.exp_params.max_step_ep
         else:
             self.max_step_ep = np.inf
+
+        # These 3 logs are used for debugging or to create logs for offline training.
         self.step_log = []
         self.reward_log = np.zeros(self.num_steps)
         self.trajectory_log = np.zeros((self.num_steps, self.dim_state*2+3))
+
+        # Set various other parameters. Most are for the log.
         self.num_episode = self.config.exp_params.num_episodes
         self.control_ep = False if self.config.exp_params.num_episodes == 0 else self.config.exp_params.num_episodes
-        self.learning = False
+        self.learning = False # Mainly used in domains with a sparse reward with 1000s of steps before the first reward
         self.count_ep = 0
         self.count_total_step = 0
         self.count_learning_step = 0
@@ -91,6 +96,9 @@ class Experiment():
         self.log_interval = 200
         self.old_time = time.time()
 
+    # Save one or more log files.
+    # For online learning, likely just save the step and reward.
+    # For offline learning, it's important to also save the trajectory.
     def save_log(self, save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=False):
         path, name = saved_file_name(self.config, self.run_idx, eval=eval)
         if not os.path.exists(path):
@@ -111,15 +119,18 @@ class Experiment():
         return path, name
 
     def online_learning(self):
+        # Print parameter settings before doing anything
         for pair in self.config.env_params.__dict__:
             space = " " * (20 - len(str(pair))) + ": "
             print(str(pair), space, str(self.config.env_params.__dict__[pair]))
+
         self.single_run()
-        self.config.agent_params = self.agent.get_settings()
+
+        self.config.agent_params = self.agent.get_settings() # In case some settings were calculated or changed, read them because they might be saved in a log.
         self.save_log()
 
     def offline_learning(self):
-        # agent which will be evaluated
+        # Save name of agent because collect_trajectory will change it
         eval_code = self.agent_code
         eval_name = self.config.agent
 
@@ -174,7 +185,7 @@ class Experiment():
         return path, name
 
     def evaluation(self, path, name, eval_code, eval_name, eval_step):
-        # Evaluate agent with learned policy
+        # Evaluate agent with learned policy. Weights are frozen (by setting alpha to zero). Epsilon is zero. (Note epsilon is non-zero in the online setting.)
         self.agent_code = eval_code
         self.config.agent = eval_name
         self.config.exp_params.num_steps = eval_step # Evaluate for 500 steps
@@ -207,7 +218,7 @@ class Experiment():
                 self.count_ep += 1
                 condition = self.count_total_step
 
-
+    # Run a single episode and log lots of things.
     def single_ep(self):
         end_of_ep = False
         self.prev_state = self.env.start()
@@ -268,10 +279,14 @@ class Experiment():
 
 if __name__ == '__main__':
 
-    # parse argument
+    # parse arguments
     ci = CollectInput()
     parsers = ci.control_experiment_input()
     json_name = parsers.domain.lower()
+
+    # Load the config. Then, based on the sweeper_idx, choose one of the sweeper parameters
+    # and use that to override any of the default parameters (or set the value if there
+    # wasnt' a default).
     sweeper = Sweeper('../Parameters/{}.json'.format(json_name.lower()), "control_param")
     config = sweeper.parse(parsers.sweeper_idx)
 
