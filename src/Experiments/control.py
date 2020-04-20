@@ -17,7 +17,7 @@ def saved_file_name(config, run_idx, eval=False):
     agent_params = config.agent_params
     input_ = agent_params.rep_type
     input_ = input_[0].upper() + input_[1:]
-    if agent_params.rep_type in ["TC", "sepTC"]:
+    if agent_params.rep_type in ["TC", "sepTC", "sep_pair_TC"]:
         input_ += "{}x{}".format(agent_params.num_tilings, agent_params.num_tiles)
     if config.agent == "DQN":
         other_info = "_B{}_sync{}_NN{}".format(agent_params.len_buffer,
