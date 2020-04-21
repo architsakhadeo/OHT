@@ -143,6 +143,7 @@ class Experiment():
     def learn_policy(self, path, name, eval_code, eval_name):
         # Load saved trajectory
         simulated_env = np.load(path+name+"_trajectory.npy")
+
         st = simulated_env[:, :self.dim_state]
         at = simulated_env[:, self.dim_state]
         stp = simulated_env[:, self.dim_state + 1: self.dim_state * 2 + 1]
@@ -160,9 +161,9 @@ class Experiment():
             end = False
             self.agent.offline_start(st[t], t)
             while not end and t < len(simulated_env)-1:
-                self.agent.offline_step(reward[t], st[t+1], gamma[t], t+1)
                 if gamma[t] == 0:
                     end = True
+                self.agent.offline_step(reward[t], st[t+1], end, t+1)
                 t += 1
                 if t % 5000 == 0:
                     path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
