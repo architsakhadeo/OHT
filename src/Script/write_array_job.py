@@ -8,6 +8,11 @@ from utils.collect_parser import CollectInput
 
 save_in_folder = "tasks_{}.sh"
 
+# Writes multiple files (shell scripts, named `tasks_0.sh`) with one or more calls
+# to `python control.py` to run a lot of jobs.
+# Use this to execute control.py many times to have many runs while sweeping across
+# many parameters. Create a number of files matching the number of threads you want
+# to use.
 def control_job(domains, prev_file=1000, line_per_file=1):
 
     num_run = 30

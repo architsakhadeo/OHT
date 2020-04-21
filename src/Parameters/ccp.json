@@ -1,10 +1,12 @@
 {
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
-        "agent": "DQN",
+        "agent": "ExpectedSarsaTileCodingContinuing",
         "learning": "online",
         "learn_from": "HandCoded",
         "env_params": {
+            "delays": [0,0,0,0],
+            "percent_noise": [0.0, 0.0, 0.0, 0.0]
         },
         "agent_params": {
             "offline_data": null,
@@ -18,13 +20,13 @@
             ],
 
             "tc_mem_size": 64,
-            "num_tilings": 8,
+            "num_tilings": 32,
             "num_tiles": 4,
 
             "alpha": 0.001,
             "gamma": 0.99,
-            "lmbda": 0.0,
-            "epsilon": 0.05,
+            "lmbda": 0.8,
+            "epsilon": 0.0001,
             "decreasing_epsilon": "step",
             "num_planning": 1,
             "len_buffer": 1000,
@@ -43,7 +45,7 @@
 
     "control_param": {
         "agent_params": {
-            "rep_type": ["obs"],
+            "rep_type": ["sep_pair_TC"],
             "dqn_sync": [25],
             "len_buffer": [500],
             "alpha": [0.001, 0.0003, 0.0001, 3e-05, 1e-05]

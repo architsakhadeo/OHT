@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{blindtext, graphicx}
+\usepackage{amssymb}
+
+\algnewcommand{\LeftComment}[1]{\Statex \State \(\triangleright\) #1}
+\algnewcommand{\EmptyLine}[1]{\Statex #1}
+
+\begin{document}
+\begin{algorithm}
+\caption{Expected SARSA($\lambda$) Agent}\label{expectedsarsa}
+
+$\alpha$: the stepsize \\
+$\lambda$: the eligibility trace decay rate \\
+$x_{t}$: the observation vector at time $t$ \\
+$R_t$: the reward at time $t$ \\
+$A_t$: the action taken at time $t$ \\
+$S_t$: the state at time $t$ is obtained by tile coding the elements in $x_t$ individually and in pairs \\
+$\hat{q}(S_t, A_t, \textbf{w}_t)$: the action value estimate for $S_t$ and $A_t$, parameterized by $\textbf{w}_t$\\
+$\textbf{w}_t$: the parameters of the linear function mapping $S_t$ and $A_t$ to $\hat{q}(S_t, A_t, \textbf{w}_t)$. $\textbf{w}_t \in \mathbb{R}^d$ \\
+$\textbf{z}_t$: the eligibility trace vector. $\textbf{z}_t \in \mathbb{R}^d$ \\
+$\pi_t$: $\epsilon$-greedy policy at time $t$, $A_t$ = 
+                        $\begin{cases} 
+                            \arg\!\max_{a} \hat{q}(S_t, a, \textbf{w}_t) & \text{with probability 1-$\epsilon$} \\
+                            \text{random action} & \text{with probability $\epsilon$}
+                        \end{cases}$
+
+\begin{algorithmic}[1]
+
+\State Obtain observations $x_t$
+\State Construct state $S_t$
+\State $\textbf{w}_t = \textbf{R}$
+\State $\textbf{z}_t = \textbf{0}$  
+\State Choose action $A_t \sim \pi_t$ 
+
+\While {true}
+    \State Obtain $<x_t, A_t, x_{t+1}, R_{t+1}, \gamma>$
+    \State Construct states $S_t$ and $S_{t+1}$
+    \State $\delta_t = R_{t+1} + \gamma \displaystyle\sum_{a} \pi(a|S_{t+1}) \hat{q}(S_{t+1}, a, \textbf{w}_t)  - \hat{q}(S_t, A_t, \textbf{w}_t)$
+    \State $\textbf{w}_{t+1} = \textbf{w}_{t} + \alpha \delta_t \textbf{z}_t$ 
+    \State $\textbf{z}_{t+1} = \gamma \lambda \textbf{z}_t + \nabla \hat{q}(S_t, A_t, \textbf{w}_t)$ 
+    \State $\textbf{z}$ uses replacing traces so all element values are capped at 1
+    \State $x_t \xleftarrow{} x_{t+1}$
+    \State $S_t \xleftarrow{} S_{t+1}$ 
+    \State Choose action $A_{t+1} \sim \pi_{t+1}$
+    \State $A_t \xleftarrow{} A_{t+1}$
+    \State $t \xleftarrow{} t+1$
+    
+ 
+\EndWhile
+
+
+% \State \textbf{end}
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\end{document}
