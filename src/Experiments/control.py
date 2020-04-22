@@ -15,6 +15,9 @@ def saved_file_name(config, run_idx, eval=False):
     learning = config.learning
     if learning == "offline" and eval:
         learning += "_eval"
+        training_steps = "_training{}".format(config.exp_params.num_steps)
+    else:
+        training_steps = ""
     agent_params = config.agent_params
     env_params = config.env_params
     input_ = agent_params.rep_type
@@ -26,6 +29,8 @@ def saved_file_name(config, run_idx, eval=False):
                                              agent_params.dqn_sync,
                                              str(agent_params.nonLinearQ_node),
                                              )
+        if agent_params.dqn_sync == 1:
+            other_info += "_plan{}".format(agent_params.num_planning)
     else:
         other_info = ""
     if env_params.drift_prob > 0:
@@ -41,7 +46,8 @@ def saved_file_name(config, run_idx, eval=False):
         config.agent,
         other_info,
         agent_params.alpha,
-        input_
+        input_,
+        training_steps
     )
     file_path += "/"
     file_name = "run" + str(run_idx)
@@ -141,7 +147,6 @@ class Experiment():
 
     def offline_learning(self):
         # Save name of agent because collect_trajectory will change it
-        # eval_code = import_module("Agents.{}".format(self.config.agent))
         eval_code = self.agent_code
         eval_name = self.config.agent
 

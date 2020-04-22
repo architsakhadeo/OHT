@@ -114,7 +114,7 @@ def plot_control_exp_curve_single_key(canvas, all_data, labels, range_x, range_y
     print("All auc =", auc)
     best_i = np.argmax(auc) if best == "largeAUC" else np.argmin(auc)
     mean, upper, lower = calculate_avg_default(all_data[best_i], exp_smooth=exp_smooth)
-    print("Best setting =", np.max(auc), labels[best_i])
+    print("Best setting =", auc[best_i], labels[best_i])
     return mean, upper, lower, labels[best_i]
 
 def calculate_avg_ignoring_zero(data, exp_smooth=None):
