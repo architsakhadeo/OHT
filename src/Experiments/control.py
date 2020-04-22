@@ -71,7 +71,7 @@ class Experiment():
         state_normalize = self.env.state_range()
         setattr(config.agent_params, "num_action", num_action)
         setattr(config.agent_params, "dim_state", self.dim_state)
-        setattr(config.agent_params, "state_normalize", state_normalize)
+        setattr(config.agent_params, "state_normalize", np.array(state_normalize))
         self.config = config
 
         # Load an agent based on the config, and pass relevant portion of config to it.
@@ -141,6 +141,7 @@ class Experiment():
 
     def offline_learning(self):
         # Save name of agent because collect_trajectory will change it
+        # eval_code = import_module("Agents.{}".format(self.config.agent))
         eval_code = self.agent_code
         eval_name = self.config.agent
 
@@ -161,7 +162,10 @@ class Experiment():
 
     def learn_policy(self, path, name, eval_code, eval_name):
         # Load saved trajectory
-        simulated_env = np.load(path+name+"_trajectory.npy")
+        simulated_env_1 = np.load(path+name+"_trajectory.npy")
+        simulated_env = np.copy(simulated_env_1)
+        for _ in range(1, self.config.agent_params.offline_repeat):
+            simulated_env = np.concatenate((simulated_env, simulated_env_1), axis=0)
 
         st = simulated_env[:, :self.dim_state]
         at = simulated_env[:, self.dim_state]

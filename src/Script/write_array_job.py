@@ -15,7 +15,7 @@ save_in_folder = "tasks_{}.sh"
 # to use.
 def control_job(domains, prev_file=1000, line_per_file=1):
 
-    num_run = 30
+    num_run = 10
     # count_start = count
     count = 0
     file = open(save_in_folder.format(int(prev_file)), 'w')

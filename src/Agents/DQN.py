@@ -133,6 +133,9 @@ class DQN(BaseAgent):
         elif self.param.rep_type == "obs":
             self.dim_state = self.dim_observation
             self._state_representation = self._obs_normalization
+        else:
+            print(self.param.rep_type)
+            raise NotImplementedError
 
         node = [self.dim_state] + param.nonLinearQ_node + [self.num_action]
         self.nlq_learn = NonLinearVF(node).to(device)
