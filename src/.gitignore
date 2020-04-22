@@ -21,3 +21,6 @@ Script/run.sh
 
 # ignore exp_result
 data/exp_result
+
+# ignore config
+Parameters/*
