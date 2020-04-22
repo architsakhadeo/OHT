@@ -73,7 +73,7 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		self.delta = 0
 		self.state_0 = []
 		self.state_1 = []
-		self.action_0 = 0
+		self.action = 0
 		self.action_1 = 0
 		self.obs_0 = []
 		self.obs_1 = []
@@ -85,8 +85,8 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		#self.z = np.zeros(2*self.ihtsize*4) #Tiling dimensions separately
 		self.z = np.zeros(2*(self.ihtsize_ind*4 + self.ihtsize_pair*6)) #Tiling dimensions separately and in pairs
 		self.state_0 = self.tilecoding(self.obs_0)
-		self.action_0, a0, eps_a0, a1, eps_a1 = self.policy_expected_sarsa(self.state_0)
-		return self.action_0
+		self.action, a0, eps_a0, a1, eps_a1 = self.policy_expected_sarsa(self.state_0)
+		return self.action
 
 		
 	def step(self, reward, observation, complete=False):
@@ -106,7 +106,7 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		self.state_1 = self.tilecoding(self.obs_1)
 		self.delta = reward
 		
-		for i in self.F(self.state_0, self.action_0):
+		for i in self.F(self.state_0, self.action):
 			self.delta = self.delta - self.w[i]
 			self.z[i] = 1 #replacing
 			#self.z[i] += 1 #accumulating
@@ -166,8 +166,8 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		self.z = self.gamma * self.lmbda * self.z
 		#self.obs_0 = self.obs_1
 		self.state_0 = self.state_1
-		self.action_0 = self.action_1
-		return self.action_0, {}
+		self.action = self.action_1
+		return self.action, {}
 			
 	
 	
@@ -253,6 +253,12 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		if action == 1:
 			features = np.concatenate((np.zeros(len(state)),state))
 		return [i for i in range(len(features)) if features[i] == 1]
+	
+	def save(self, path):
+		np.save(path+'.npy',self.w)
+	
+	def load(self, path):
+		self.w = np.load(path + '.npy')
 
 
 def init_agent():
