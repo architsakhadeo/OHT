@@ -26,11 +26,11 @@ func NewEnvironment() rlglue.Environment {
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Environment) Initialize(config rlglue.Config, logger rlglue.Logger) {
+func (env *Environment) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
 	env.logger = logger
 
 	var seed int64
-	if sd, ok := config["seed"]; !ok {
+	if sd, ok := attr["seed"]; !ok {
 		// Config doesn't have a seed
 		seed = 0
 	} else if seed, ok = sd.(int64); !ok {
@@ -40,6 +40,8 @@ func (env *Environment) Initialize(config rlglue.Config, logger rlglue.Logger) {
 	}
 	rand.Seed(seed)
 	env.state = rand.Intn(NumberOfActions) - ActionMax
+
+	return nil
 }
 
 // Start returns an initial observation.
@@ -62,11 +64,12 @@ func (env *Environment) Step(act rlglue.Action) (float64, rlglue.State) {
 }
 
 // GetAttributes returns attributes for this environment.
-func (env *Environment) GetAttributes() rlglue.EnvironmentAttributes {
-	return rlglue.EnvironmentAttributes{
-		NumberOfActions:  NumberOfActions,
-		DimensionOfState: 1,
-		StateRange:       []rlglue.State{[]float64{float64(StateMax) * 2}},
+func (env *Environment) GetAttributes() rlglue.Attributes {
+	return rlglue.Attributes{
+		// TODO should be saved as attributes from a known struct
+		// NumberOfActions:  NumberOfActions,
+		// DimensionOfState: 1,
+		// StateRange:       []rlglue.State{[]float64{float64(StateMax) * 2}},
 	}
 }
 

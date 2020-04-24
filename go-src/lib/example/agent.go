@@ -18,12 +18,12 @@ func NewAgent() rlglue.Agent {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Agent) Initialize(config rlglue.Config, attr rlglue.EnvironmentAttributes, logger rlglue.Logger) {
+func (agent *Agent) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
 	agent.logger = logger
 	agent.attr = attr
 
 	var seed int64
-	if sd, ok := config["seed"]; !ok {
+	if sd, ok := attr["seed"]; !ok {
 		// Config doesn't have a seed
 		seed = 0
 	} else if seed, ok = sd.(int64); !ok {
@@ -32,7 +32,9 @@ func (agent *Agent) Initialize(config rlglue.Config, attr rlglue.EnvironmentAttr
 		seed = 0
 	}
 	rand.Seed(seed)
-	agent.lastAction = rand.Intn(attr.NumberOfActions)
+	// agent.lastAction = rand.Intn(attr.NumberOfActions) // Should be loaded from the config. Error if not defined.
+
+	return nil
 }
 
 // Start provides an initial observation to the agent and returns the agent's action.

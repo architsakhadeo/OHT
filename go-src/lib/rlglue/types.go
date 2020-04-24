@@ -13,9 +13,11 @@ type Logger interface {
 	Message(string)
 }
 
-type Config map[string]interface{}
+type Attributes map[string]interface{} // TODO this should probably be raw JSON which loads into structs
 
-type LoadSaver interface{
+// LoadSaver can be implemented by an Agent or Environment to save itself. If it's implemented, the
+// Experiment will call these APIs when the config requests them.
+type LoadSaver interface {
 	// Save stores anything needed to save the struct (including relevant Config passed via Initialize)
 	// into the provided Writer
 	Save(io.Writer)
@@ -25,7 +27,9 @@ type LoadSaver interface{
 	Load(io.Reader, Logger)
 }
 
-type FileLoadSaver interface{
+// FileLoadSaver can be implemented by an Agent or Environment to save itself. If it's implemented, the
+// Experiment will call these APIs when the config requests them.
+type FileLoadSaver interface {
 	// Save stores anything needed to save the struct (including relevant Config passed via Initialize)
 	// at the provided filepath.
 	Save(string)
