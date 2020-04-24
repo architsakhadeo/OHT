@@ -24,7 +24,7 @@
             "num_tiles": 4,
 
             "alpha": 0.001,
-            "gamma": 0.99,
+            "gamma": 0.95,
             "lmbda": 0.8,
             "epsilon": 0.0001,
             "decreasing_epsilon": "step",
