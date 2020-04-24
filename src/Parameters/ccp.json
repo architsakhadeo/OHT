@@ -1,7 +1,7 @@
 {
     "default_param": {
         "environment": "ContinuingCartpoleEnvironment",
-        "agent": "ExpectedSarsaTileCodingContinuing",
+        "agent": "ExpectedSarsaLambda",
         "learning": "online",
         "learn_from": "HandCoded",
         "env_params": {
