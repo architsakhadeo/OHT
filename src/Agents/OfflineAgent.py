@@ -15,7 +15,7 @@ def offline_agent(parent, param):
             return self.action
 
         def offline_step(self, reward, state, end_of_ep, t):
-            self.step(reward, state, end_of_ep=end_of_ep)
+            self.step(reward, state, end_of_ep)
             self.action = self.offline_data[t]
             return self.action
     return OfflineAgent()
