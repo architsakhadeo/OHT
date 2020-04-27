@@ -42,11 +42,7 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug lo
 
 	// Ensure errors are also logged
 	var err error
-	defer func() {
-		if err != nil {
-			debug.Message("err", err.Error())
-		}
-	}()
+	defer debug.Error(&err)
 
 	// Parse settings
 	err = json.Unmarshal(expAttr, &ci.settings)
