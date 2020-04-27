@@ -1,15 +1,23 @@
 {
+    "agent": "example-agent",
+    "environment": "example-environment",
     "agent": {
-        "name": "example-agent",
+        "lambda": 0.5,
+        "sweep": {
+            "alpha": [0.2, 0.5, 0.99],
+            "epsilon": [0.1],
+            "tilings": [
+                [1, 4, 5],
+                [3, 7, 9],
+                [1, 4]
+            ]
+        },
         "seed": 25
     },
     "environment": {
-        "name": "example-environment",
         "seed": 41
     },
     "experiment": {
-        "steps": 12,
-        "agent": "example-agent",
-        "environment": "example-environment"
+        "steps": 12
     }
 }
