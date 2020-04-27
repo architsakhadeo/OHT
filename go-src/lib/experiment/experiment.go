@@ -114,19 +114,19 @@ func (exp *Experiment) runEpisodic() {
 func (exp *Experiment) runSingleEpisode() {
 	episodeEnded := false
 	prevState := exp.environment.Start()
-	prevAction := exp.agent.Start(prevState)
+	action := exp.agent.Start(prevState)
 
 	numStepsThisEpisode := 0
 	for !episodeEnded && (exp.MaxSteps == nil || exp.numStepsTaken < *exp.MaxSteps) {
 		var reward float64
 		var newState rlglue.State
-		newState, reward, episodeEnded = exp.environment.Step(prevAction)
+		newState, reward, episodeEnded = exp.environment.Step(action)
 
 		if episodeEnded {
 			exp.agent.End(newState, reward)
 			// TODO this is continuous, so episodes shouldn't end. This is an error? But for cartpole, we're still using episodes sort of.
 		} else {
-			exp.agent.Step(newState, reward)
+			action = exp.agent.Step(newState, reward)
 		}
 
 		exp.logger.LogStep(prevState, newState, reward) // TODO add gamma at end
