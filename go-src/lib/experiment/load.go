@@ -9,7 +9,8 @@ import (
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
-func Execute(data []byte) error {
+// Execute executes the experiment described by the provided JSON.
+func Execute(data json.RawMessage) error {
 	var conf Config
 	err := json.Unmarshal(data, &conf)
 	if err != nil {
@@ -28,7 +29,25 @@ func Execute(data []byte) error {
 		FileSuffix:              "",                       // TODO after figuring out runs
 	})
 
-	expr, err := New(conf.Experiment, conf.Agent, conf.Environment, debugLogger, dataLogger)
+	// Parse settings
+	var set settings
+	err = json.Unmarshal(conf.Experiment, &set)
+	if err != nil {
+		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
+		return err
+	}
+
+	environment, err := InitializeEnvironment(conf.EnvironmentName, conf.Environment, debugLogger)
+	if err != nil {
+		return err
+	}
+
+	agent, err := InitializeAgent(conf.AgentName, conf.Agent, environment, debugLogger)
+	if err != nil {
+		return err
+	}
+
+	expr, err := New(agent, environment, set, debugLogger, dataLogger)
 	if err != nil {
 		return err
 	}

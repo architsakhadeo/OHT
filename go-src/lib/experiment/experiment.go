@@ -1,7 +1,6 @@
 package experiment
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
@@ -9,10 +8,8 @@ import (
 )
 
 type settings struct {
-	MaxEpisodes *int   `json:"episodes"`
-	MaxSteps    *int   `json:"steps"`
-	Agent       string `json:"agent"`
-	Environment string `json:"environment"`
+	MaxEpisodes *int `json:"episodes"`
+	MaxSteps    *int `json:"steps"`
 }
 
 // Experiment runs an experiment.
@@ -32,23 +29,19 @@ type Experiment struct {
 	numEpisodesDone int
 }
 
-func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug logger.Debug, log logger.Data) (*Experiment, error) {
+func New(agent rlglue.Agent, environment rlglue.Environment, set settings, debug logger.Debug, log logger.Data) (*Experiment, error) {
 	ci := &Experiment{
 		Debug:         debug,
 		Data:          log,
 		debugInterval: debug.Interval(),
+		agent:         agent,
+		environment:   environment,
+		settings:      set,
 	}
 
 	// Ensure errors are also logged
 	var err error
 	defer debug.Error(&err)
-
-	// Parse settings
-	err = json.Unmarshal(expAttr, &ci.settings)
-	if err != nil {
-		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
-		return nil, err
-	}
 
 	// Check for bad settings
 	if ci.settings.MaxEpisodes == nil && ci.settings.MaxSteps == nil {
@@ -59,17 +52,6 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug lo
 	if err != nil {
 		return nil, err
 	}
-
-	ci.environment, err = InitializeEnvironment(ci.settings.Environment, envAttr, debug)
-	if err != nil {
-		return nil, err
-	}
-
-	ci.agent, err = InitializeAgent(ci.settings.Agent, agentAttr, ci.environment, debug)
-	if err != nil {
-		return nil, err
-	}
-
 	return ci, nil
 }
 
