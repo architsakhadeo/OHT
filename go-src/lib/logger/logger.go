@@ -75,7 +75,7 @@ func (lg *Logger) LogStepHeader(...string) {
 // LogStep adds information from a step to the step log. It must contain previous state, current state,
 // and reward. It can optionally add other float64 values to be logged. (If so, LogStepHeader must be
 // called to provide headers and so the logger knows how many to expect.)
-func (lg *Logger) LogStep(prevState, currState rlglue.State, reward float64, others ...float64) {
+func (lg *Logger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, others ...float64) {
 	log.Println("Logger: some step data was saved")
 	lg.reward[lg.thisStep] = reward
 	// self.reward_log[numStepsTotal] = reward

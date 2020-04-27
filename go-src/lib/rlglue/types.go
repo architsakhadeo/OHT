@@ -32,7 +32,7 @@ type Logger interface {
 	// LogStep adds information from a step to the step log. It must contain previous state, current state,
 	// and reward. It can optionally add other float64 values to be logged. (If so, LogStepHeader must be
 	// called to provide headers and so the logger knows how many to expect.)
-	LogStep(State, State, float64, ...float64)
+	LogStep(State, State, Action, float64, ...float64)
 
 	// Interval gives the desired number of steps to take between logging messages.
 	// This number is constant, so it should be cached for efficiency.
