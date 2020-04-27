@@ -50,5 +50,8 @@ func main() {
 	})
 
 	expr, err := experiment.New(conf.Experiment, conf.Agent, conf.Environment, debugLogger, dataLogger)
+	if err != nil {
+		panic("Could not create the experiment: " + err.Error())
+	}
 	expr.Run()
 }
