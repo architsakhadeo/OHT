@@ -34,6 +34,12 @@ type Experiment struct {
 }
 
 func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug logger.Debug, log logger.Data) (*Experiment, error) {
+	ci := &Experiment{
+		Debug:         debug,
+		Data:          log,
+		debugInterval: debug.Interval(),
+	}
+
 	// Ensure errors are also logged
 	var err error
 	defer func() {
@@ -42,32 +48,25 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug lo
 		}
 	}()
 
-	var set settings
-	err = json.Unmarshal(expAttr, &set)
+	// Parse settings
+	err = json.Unmarshal(expAttr, &ci.settings)
 	if err != nil {
 		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
 		return nil, err
 	}
 
 	// Check for bad settings
-	if set.MaxEpisodes == nil && set.MaxSteps == nil {
+	if ci.settings.MaxEpisodes == nil && ci.settings.MaxSteps == nil {
 		err = errors.New("Experiment settings requres either 'episodes' or 'steps'")
-	} else if set.MaxEpisodes != nil && set.MaxSteps != nil {
+	} else if ci.settings.MaxEpisodes != nil && ci.settings.MaxSteps != nil {
 		err = errors.New("Experiment settings requres either 'episodes' or 'steps', but not both")
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	ci := &Experiment{
-		settings:      set,
-		Debug:         debug,
-		Data:          log,
-		debugInterval: debug.Interval(),
-	}
-
 	// Set up environment
-	ci.environment, err = registry.CreateEnvironment(set.Environment, debug)
+	ci.environment, err = registry.CreateEnvironment(ci.settings.Environment, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +76,7 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug lo
 	}
 
 	// Set up agent
-	ci.agent, err = registry.CreateAgent(set.Agent, debug)
+	ci.agent, err = registry.CreateAgent(ci.settings.Agent, debug)
 	if err != nil {
 		return nil, err
 	}
