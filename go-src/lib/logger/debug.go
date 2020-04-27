@@ -41,6 +41,13 @@ func (lg *debugLogger) MessageDelta(args ...interface{}) {
 	lg.Message(args)
 }
 
+// Error logs an error if not nil.
+func (lg *debugLogger) Error(err *error) {
+	if *err != nil {
+		lg.Message("err", (*err).Error())
+	}
+}
+
 // Interval gives the desired number of steps to take between logging messages.
 // This number is constant, so it should be cached for efficiency.
 func (lg *debugLogger) Interval() int {
