@@ -41,11 +41,11 @@ func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *Agent) Start(state rlglue.State) rlglue.Action {
-	return agent.Step(0, state)
+	return agent.Step(state, 0)
 }
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
-func (agent *Agent) Step(reward float64, state rlglue.State) rlglue.Action {
+func (agent *Agent) Step(state rlglue.State, reward float64) rlglue.Action {
 	agent.lastAction++
 	if agent.lastAction > agent.numberOfActions {
 		agent.lastAction = 0
@@ -54,4 +54,4 @@ func (agent *Agent) Step(reward float64, state rlglue.State) rlglue.Action {
 }
 
 // End informs the agent that a terminal state has been reached, providing the final reward.
-func (agent *Agent) End(reward float64, state rlglue.State) {}
+func (agent *Agent) End(state rlglue.State, reward float64) {}

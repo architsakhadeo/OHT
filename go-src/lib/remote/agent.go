@@ -24,11 +24,11 @@ func (agent *Agent) Start(state rlglue.State) rlglue.Action {
 }
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
-func (agent *Agent) Step(reward float64, state rlglue.State) rlglue.Action {
+func (agent *Agent) Step(state rlglue.State, reward float64) rlglue.Action {
 	panic("agent.Step not implemented")
 }
 
 // End informs the agent that a terminal state has been reached, providing the final reward.
-func (agent *Agent) End(reward float64, state rlglue.State) {
+func (agent *Agent) End(state rlglue.State, reward float64) {
 	panic("agent.End not implemented")
 }

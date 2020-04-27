@@ -9,8 +9,8 @@ type Agent interface {
 	Start(state State) Action
 
 	// Step provides a new observation and a reward to the agent and returns the agent's next action.
-	Step(reward float64, state State) Action
+	Step(state State, reward float64) Action
 
 	// End informs the agent that a terminal state has been reached, providing the final reward.
-	End(reward float64, state rlglue.State)
+	End(state rlglue.State, reward float64)
 }
