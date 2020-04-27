@@ -23,7 +23,7 @@ func (env *Environment) Start() rlglue.State {
 }
 
 // Step takes an action and provides the resulting reward and new observation.
-func (env *Environment) Step(action rlglue.Action) (float64, rlglue.State) {
+func (env *Environment) Step(action rlglue.Action) (float64, rlglue.State, bool) {
 	panic("environment.Step not implemented")
 }
 
