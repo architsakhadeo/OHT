@@ -22,6 +22,10 @@ type Environment struct {
 	state  int
 }
 
+func init() {
+	rlglue.RegisterEnvironment("example-environment", NewEnvironment)
+}
+
 func NewEnvironment() (rlglue.Environment, error) {
 	return &Environment{}, nil
 }

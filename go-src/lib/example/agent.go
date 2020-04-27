@@ -14,6 +14,10 @@ type Agent struct {
 	numberOfActions int
 }
 
+func init() {
+	rlglue.RegisterAgent("example-agent", NewAgent)
+}
+
 func NewAgent() (rlglue.Agent, error) {
 	return &Agent{}, nil
 }
