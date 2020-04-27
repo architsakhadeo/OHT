@@ -47,12 +47,3 @@ func (lg *debugLogger) Error(err *error) {
 		lg.Message("err", (*err).Error())
 	}
 }
-
-// Interval gives the desired number of steps to take between logging messages.
-// This number is constant, so it should be cached for efficiency.
-func (lg *debugLogger) Interval() int {
-	if lg.DebugConfig.Interval <= 0 {
-		return longInterval
-	}
-	return lg.DebugConfig.Interval
-}

@@ -19,7 +19,6 @@ func Execute(data json.RawMessage) error {
 
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
-		Interval:         2,
 	})
 	dataLogger := logger.NewData(debugLogger, logger.DataConfig{
 		ShouldLogTraces:         false,
@@ -30,7 +29,11 @@ func Execute(data json.RawMessage) error {
 	})
 
 	// Parse settings
-	var set settings
+	set := settings{
+		MaxEpisodes:   0,
+		MaxSteps:      0,
+		DebugInterval: 1,
+	}
 	err = json.Unmarshal(conf.Experiment, &set)
 	if err != nil {
 		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
@@ -54,6 +57,12 @@ func Execute(data json.RawMessage) error {
 
 	expr.Run()
 	return nil
+}
+
+type settings struct {
+	MaxEpisodes   int `json:"episodes"`
+	MaxSteps      int `json:"steps"`
+	DebugInterval int `json:"debug-interval"`
 }
 
 type Config struct {

@@ -18,6 +18,7 @@
 		"seed": 41
 	},
 	"experiment-settings": {
-		"steps": 12
+		"steps": 12,
+		"debug-interval": 2
 	}
 }
