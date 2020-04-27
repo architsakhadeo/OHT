@@ -12,5 +12,5 @@ type Agent interface {
 	Step(state State, reward float64) Action
 
 	// End informs the agent that a terminal state has been reached, providing the final reward.
-	End(state rlglue.State, reward float64)
+	End(state State, reward float64)
 }
