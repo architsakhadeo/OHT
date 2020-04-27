@@ -40,6 +40,9 @@ type Logger interface {
 	// Interval gives the desired number of steps to take between logging messages.
 	// This number is constant, so it should be cached for efficiency.
 	Interval() int
+
+	// Save persists the logged information to disk.
+	Save()
 }
 
 type Attributes json.RawMessage
