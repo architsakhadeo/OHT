@@ -29,6 +29,6 @@ func (agent *Agent) Step(reward float64, state rlglue.State) rlglue.Action {
 }
 
 // End informs the agent that a terminal state has been reached, providing the final reward.
-func (agent *Agent) End(reward float64) {
+func (agent *Agent) End(reward float64, state rlglue.State) {
 	panic("agent.End not implemented")
 }
