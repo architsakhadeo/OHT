@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
-	"github.com/stellentus/cartpoles/go-src/lib/registry"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
@@ -61,22 +60,12 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug lo
 		return nil, err
 	}
 
-	// Set up environment
-	ci.environment, err = registry.CreateEnvironment(ci.settings.Environment, debug)
-	if err != nil {
-		return nil, err
-	}
-	err = ci.environment.Initialize(envAttr)
+	ci.environment, err = InitializeEnvironment(ci.settings.Environment, envAttr, debug)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set up agent
-	ci.agent, err = registry.CreateAgent(ci.settings.Agent, debug)
-	if err != nil {
-		return nil, err
-	}
-	err = ci.agent.Initialize(agentAttr, ci.environment.GetAttributes())
+	ci.agent, err = InitializeAgent(ci.settings.Agent, agentAttr, ci.environment, debug)
 	if err != nil {
 		return nil, err
 	}
