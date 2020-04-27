@@ -44,6 +44,10 @@ type Logger interface {
 
 type Attributes json.RawMessage
 
+func (attr *Attributes) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, (*json.RawMessage)(attr))
+}
+
 // LoadSaver can be implemented by an Agent or Environment to save itself. If it's implemented, the
 // Experiment will call these APIs when the config requests them.
 type LoadSaver interface {
