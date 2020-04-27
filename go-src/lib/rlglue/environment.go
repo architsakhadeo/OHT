@@ -38,4 +38,4 @@ func CreateEnvironment(name string) (Environment, error) {
 	return creator()
 }
 
-var environmentList map[string]NewEnvironmentCreator
+var environmentList = map[string]NewEnvironmentCreator{}

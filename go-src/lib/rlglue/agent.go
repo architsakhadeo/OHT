@@ -39,4 +39,4 @@ func CreateAgent(name string) (Agent, error) {
 	return creator()
 }
 
-var agentList map[string]NewAgentCreator
+var agentList = map[string]NewAgentCreator{}
