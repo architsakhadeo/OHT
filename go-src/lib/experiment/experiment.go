@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/stellentus/cartpoles/go-src/lib/logger"
+	"github.com/stellentus/cartpoles/go-src/lib/registry"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
@@ -22,20 +24,21 @@ type settings struct {
 // The JSON must also specify 'agent' and 'environment'.
 type Experiment struct {
 	settings
-	agent           rlglue.Agent
-	environment     rlglue.Environment
-	logger          rlglue.Logger
-	loggerInterval  int
+	agent       rlglue.Agent
+	environment rlglue.Environment
+	logger.Debug
+	logger.Data
+	debugInterval   int
 	numStepsTaken   int
 	numEpisodesDone int
 }
 
-func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, logger rlglue.Logger) (*Experiment, error) {
+func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug logger.Debug, log logger.Data) (*Experiment, error) {
 	// Ensure errors are also logged
 	var err error
 	defer func() {
 		if err != nil {
-			logger.Message(err.Error())
+			debug.Message("err", err.Error())
 		}
 	}()
 
@@ -57,27 +60,28 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, logger r
 	}
 
 	ci := &Experiment{
-		settings:       set,
-		logger:         logger,
-		loggerInterval: logger.Interval(),
+		settings:      set,
+		Debug:         debug,
+		Data:          log,
+		debugInterval: debug.Interval(),
 	}
 
 	// Set up environment
-	ci.environment, err = rlglue.CreateEnvironment(set.Environment)
+	ci.environment, err = registry.CreateEnvironment(set.Environment, debug)
 	if err != nil {
 		return nil, err
 	}
-	err = ci.environment.Initialize(envAttr, logger)
+	err = ci.environment.Initialize(envAttr)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set up agent
-	ci.agent, err = rlglue.CreateAgent(set.Agent)
+	ci.agent, err = registry.CreateAgent(set.Agent, debug)
 	if err != nil {
 		return nil, err
 	}
-	err = ci.agent.Initialize(agentAttr, ci.environment.GetAttributes(), logger)
+	err = ci.agent.Initialize(agentAttr, ci.environment.GetAttributes())
 	if err != nil {
 		return nil, err
 	}
@@ -94,18 +98,18 @@ func (exp *Experiment) Run() {
 
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
 
-	exp.logger.Save()
+	exp.SaveLog()
 }
 
 func (exp *Experiment) runContinuous() {
-	exp.logger.Message("Starting continuous experiment")
+	exp.Message("msg", "Starting continuous experiment")
 	for exp.numStepsTaken < *exp.MaxSteps {
 		exp.runSingleEpisode()
 	}
 }
 
 func (exp *Experiment) runEpisodic() {
-	exp.logger.Message("Starting episodic experiment")
+	exp.Message("msg", "Starting episodic experiment")
 	for exp.numEpisodesDone < *exp.MaxEpisodes {
 		exp.runSingleEpisode()
 	}
@@ -122,7 +126,7 @@ func (exp *Experiment) runSingleEpisode() {
 		var newState rlglue.State
 		newState, reward, episodeEnded = exp.environment.Step(action)
 
-		exp.logger.LogStep(prevState, newState, action, reward) // TODO add gamma at end
+		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
 
 		if episodeEnded {
 			exp.agent.End(newState, reward)
@@ -136,14 +140,15 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
 
-		if exp.numStepsTaken%exp.loggerInterval == 0 {
-			exp.logger.MessageDelta("total steps", exp.numStepsTaken)
+		if exp.numStepsTaken%exp.debugInterval == 0 {
+			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 	}
 
-	exp.logger.LogEpisodeLength(numStepsThisEpisode)
+	exp.LogEpisodeLength(numStepsThisEpisode)
 	if episodeEnded {
-		exp.logger.MessageRewardSince(exp.numStepsTaken-numStepsThisEpisode, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+		reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
+		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	}
 
 	exp.numEpisodesDone += 1

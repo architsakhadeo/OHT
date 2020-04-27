@@ -1,19 +1,20 @@
 package remote
 
 import (
+	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
 type Environment struct {
-	logger rlglue.Logger
+	logger logger.Debug
 }
 
-func NewEnvironment() rlglue.Environment {
-	return &Environment{}
+func NewEnvironment(logger logger.Debug) rlglue.Environment {
+	return &Environment{logger: logger}
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Environment) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
+func (env *Environment) Initialize(attr rlglue.Attributes) error {
 	panic("environment.Initialize not implemented")
 }
 

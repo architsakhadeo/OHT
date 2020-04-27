@@ -4,43 +4,43 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/stellentus/cartpoles/go-src/lib/logger"
+	"github.com/stellentus/cartpoles/go-src/lib/registry"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
 // Agent just iterates through all actions, starting from a random one.
 type Agent struct {
-	logger          rlglue.Logger
+	logger.Debug
 	lastAction      int
 	NumberOfActions int `json:"numberOfActions"`
 }
 
 func init() {
-	rlglue.RegisterAgent("example-agent", NewAgent)
+	registry.AddAgent("example-agent", NewAgent)
 }
 
-func NewAgent() (rlglue.Agent, error) {
-	return &Agent{}, nil
+func NewAgent(logger logger.Debug) (rlglue.Agent, error) {
+	return &Agent{Debug: logger}, nil
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue.Logger) error {
-	agent.logger = logger
-
+func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes) error {
 	var ss struct{ Seed int64 }
 	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
-		logger.Message("example.Agent seed wasn't available: " + err.Error())
+		agent.Message("warning", "example.Agent seed wasn't available: "+err.Error())
 		ss.Seed = 0
 	}
 	rand.Seed(ss.Seed)
 
 	err = json.Unmarshal(envAttr, &agent)
 	if err != nil {
-		logger.Message("example.Agent number of Actions wasn't available: " + err.Error())
+		agent.Message("err", "example.Agent number of Actions wasn't available: "+err.Error())
 	}
 	agent.lastAction = rand.Intn(agent.NumberOfActions)
 
-	logger.Message("Example Agent Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
+	agent.Message("msg", "Example Agent Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
 
 	return nil
 }

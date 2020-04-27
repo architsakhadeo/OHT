@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/stellentus/cartpoles/go-src/lib/logger"
+	"github.com/stellentus/cartpoles/go-src/lib/registry"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
@@ -18,33 +20,31 @@ const (
 // Reward is equal to the new state.
 // When |state| is >= StateMax, it's reset to 0.
 type Environment struct {
-	logger rlglue.Logger
-	state  int
+	logger.Debug
+	state int
 }
 
 func init() {
-	rlglue.RegisterEnvironment("example-environment", NewEnvironment)
+	registry.AddEnvironment("example-environment", NewEnvironment)
 }
 
-func NewEnvironment() (rlglue.Environment, error) {
-	return &Environment{}, nil
+func NewEnvironment(logger logger.Debug) (rlglue.Environment, error) {
+	return &Environment{Debug: logger}, nil
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Environment) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
-	env.logger = logger
-
+func (env *Environment) Initialize(attr rlglue.Attributes) error {
 	var ss struct{ Seed int64 }
 	err := json.Unmarshal(attr, &ss)
 	if err != nil {
-		logger.Message("example.Agent seed wasn't available")
+		env.Message("warning", "example.Agent seed wasn't available")
 		ss.Seed = 0
 	}
 	rand.Seed(ss.Seed)
 
 	env.state = rand.Intn(NumberOfActions) - ActionMax
 
-	logger.Message("Example Environment Initialize", "seed", ss.Seed)
+	env.Message("msg", "Example Environment Initialize", "seed", ss.Seed)
 
 	return nil
 }

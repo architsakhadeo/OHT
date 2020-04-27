@@ -1,19 +1,20 @@
 package remote
 
 import (
+	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
 type Agent struct {
-	logger rlglue.Logger
+	logger logger.Debug
 }
 
-func NewAgent() rlglue.Agent {
+func NewAgent(logger logger.Debug) rlglue.Agent {
 	return &Agent{}
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue.Logger) error {
+func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes) error {
 	agent.logger = logger
 	panic("agent.Initialize not implemented")
 }

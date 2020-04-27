@@ -36,7 +36,18 @@ func main() {
 		panic("The config file at path '" + *configPath + "' is not valid JSON: " + err.Error())
 	}
 
-	logger := logger.New()
-	expr, err := experiment.New(conf.Experiment, conf.Agent, conf.Environment, logger)
+	debugLogger := logger.NewDebug(logger.DebugConfig{
+		ShouldPrintDebug: true,
+		Interval:         2,
+	})
+	dataLogger := logger.NewData(debugLogger, logger.DataConfig{
+		ShouldLogTraces:         false,
+		ShouldLogEpisodeLengths: true,
+		NumberOfSteps:           1000,                     // TODO how to load this?
+		BasePath:                "/save/here/from/config", // TODO
+		FileSuffix:              "",                       // TODO after figuring out runs
+	})
+
+	expr, err := experiment.New(conf.Experiment, conf.Agent, conf.Environment, debugLogger, dataLogger)
 	expr.Run()
 }
