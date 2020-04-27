@@ -7,8 +7,8 @@ type Environment interface {
 	// Start returns an initial observation.
 	Start() State
 
-	// Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
-	Step(Action) (float64, State, bool)
+	// Step takes an action and provides the new observation, the resulting reward, and whether the state is terminal.
+	Step(Action) (State, float64, bool)
 
 	// GetAttributes returns attributes for this environment.
 	GetAttributes() Attributes

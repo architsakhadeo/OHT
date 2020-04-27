@@ -50,17 +50,17 @@ func (env *Environment) Start() rlglue.State {
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Environment) Step(act rlglue.Action) (float64, rlglue.State, bool) {
+func (env *Environment) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	action := int(act)
 	if action < -ActionMax || action > ActionMax {
-		return 0, rlglue.State{}, true //, error.New("example.Environment action must be between -10 and 10")
+		return rlglue.State{}, 0, true //, error.New("example.Environment action must be between -10 and 10")
 	}
 	env.state += action - 10
 	if env.state >= StateMax || env.state <= -StateMax {
 		env.state = 0
 	}
 
-	return float64(env.state), env.stateSlice(), false
+	return env.stateSlice(), float64(env.state), false
 }
 
 // GetAttributes returns attributes for this environment.
