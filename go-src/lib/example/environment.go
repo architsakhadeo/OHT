@@ -34,17 +34,17 @@ func NewEnvironment() (rlglue.Environment, error) {
 func (env *Environment) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
 	env.logger = logger
 
-	var seed int64
-	err := json.Unmarshal(attr, &seed)
+	var ss struct{ Seed int64 }
+	err := json.Unmarshal(attr, &ss)
 	if err != nil {
 		logger.Message("example.Agent seed wasn't available")
-		seed = 0
+		ss.Seed = 0
 	}
-	rand.Seed(seed)
+	rand.Seed(ss.Seed)
 
 	env.state = rand.Intn(NumberOfActions) - ActionMax
 
-	logger.Message("Example Environment Initialize", "seed", seed)
+	logger.Message("Example Environment Initialize", "seed", ss.Seed)
 
 	return nil
 }
@@ -71,12 +71,11 @@ func (env *Environment) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 
 // GetAttributes returns attributes for this environment.
 func (env *Environment) GetAttributes() rlglue.Attributes {
-	return rlglue.Attributes{
-		// TODO should be saved as attributes from a known struct
-		// NumberOfActions:  NumberOfActions,
-		// DimensionOfState: 1,
-		// StateRange:       []rlglue.State{[]float64{float64(StateMax) * 2}},
-	}
+	return rlglue.Attributes(`{"numberOfActions":4}`)
+	// TODO should be saved as attributes from a known struct
+	// NumberOfActions:  NumberOfActions,
+	// DimensionOfState: 1,
+	// StateRange:       []rlglue.State{[]float64{float64(StateMax) * 2}},
 }
 
 func (env *Environment) stateSlice() rlglue.State {

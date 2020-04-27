@@ -11,7 +11,7 @@ import (
 type Agent struct {
 	logger          rlglue.Logger
 	lastAction      int
-	numberOfActions int
+	NumberOfActions int `json:"numberOfActions"`
 }
 
 func init() {
@@ -26,21 +26,21 @@ func NewAgent() (rlglue.Agent, error) {
 func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue.Logger) error {
 	agent.logger = logger
 
-	var seed int64
-	err := json.Unmarshal(expAttr, &seed)
+	var ss struct{ Seed int64 }
+	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
-		logger.Message("example.Agent seed wasn't available")
-		seed = 0
+		logger.Message("example.Agent seed wasn't available: " + err.Error())
+		ss.Seed = 0
 	}
-	rand.Seed(seed)
+	rand.Seed(ss.Seed)
 
-	err = json.Unmarshal(expAttr, &agent.numberOfActions)
+	err = json.Unmarshal(envAttr, &agent)
 	if err != nil {
-		logger.Message("example.Agent number of Actions wasn't available")
+		logger.Message("example.Agent number of Actions wasn't available: " + err.Error())
 	}
-	agent.lastAction = rand.Intn(agent.numberOfActions)
+	agent.lastAction = rand.Intn(agent.NumberOfActions)
 
-	logger.Message("Example Agent Initialize", "seed", seed, "numberOfActions", agent.numberOfActions)
+	logger.Message("Example Agent Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
 
 	return nil
 }
@@ -53,7 +53,7 @@ func (agent *Agent) Start(state rlglue.State) rlglue.Action {
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Agent) Step(state rlglue.State, reward float64) rlglue.Action {
 	agent.lastAction++
-	if agent.lastAction > agent.numberOfActions {
+	if agent.lastAction > agent.NumberOfActions {
 		agent.lastAction = 0
 	}
 	return rlglue.Action(agent.lastAction)
