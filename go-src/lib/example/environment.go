@@ -22,8 +22,8 @@ type Environment struct {
 	state  int
 }
 
-func NewEnvironment() rlglue.Environment {
-	return &Environment{}
+func NewEnvironment() (rlglue.Environment, error) {
+	return &Environment{}, nil
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.

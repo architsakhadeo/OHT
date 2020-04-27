@@ -14,8 +14,8 @@ type Agent struct {
 	numberOfActions int
 }
 
-func NewAgent() rlglue.Agent {
-	return &Agent{}
+func NewAgent() (rlglue.Agent, error) {
+	return &Agent{}, nil
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
