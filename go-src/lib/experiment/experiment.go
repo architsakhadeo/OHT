@@ -30,7 +30,7 @@ type Experiment struct {
 	numEpisodesDone int
 }
 
-func New(attr json.RawMessage, logger rlglue.Logger) (*Experiment, error) {
+func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, logger rlglue.Logger) (*Experiment, error) {
 	// Ensure errors are also logged
 	var err error
 	defer func() {
@@ -40,7 +40,7 @@ func New(attr json.RawMessage, logger rlglue.Logger) (*Experiment, error) {
 	}()
 
 	var set settings
-	err = json.Unmarshal(attr, &set)
+	err = json.Unmarshal(expAttr, &set)
 	if err != nil {
 		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
 		return nil, err
@@ -62,11 +62,22 @@ func New(attr json.RawMessage, logger rlglue.Logger) (*Experiment, error) {
 		loggerInterval: logger.Interval(),
 	}
 
+	// Set up environment
+	ci.environment, err = rlglue.CreateEnvironment(set.Environment)
+	if err != nil {
+		return nil, err
+	}
+	err = ci.environment.Initialize(envAttr, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set up agent
 	ci.agent, err = rlglue.CreateAgent(set.Agent)
 	if err != nil {
 		return nil, err
 	}
-	ci.environment, err = rlglue.CreateEnvironment(set.Environment)
+	err = ci.agent.Initialize(agentAttr, ci.environment.GetAttributes(), logger)
 	if err != nil {
 		return nil, err
 	}
