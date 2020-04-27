@@ -44,6 +44,8 @@ func (env *Environment) Initialize(attr rlglue.Attributes, logger rlglue.Logger)
 
 	env.state = rand.Intn(NumberOfActions) - ActionMax
 
+	logger.Message("Example Environment Initialize", "seed", seed)
+
 	return nil
 }
 

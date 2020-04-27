@@ -40,6 +40,8 @@ func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue
 	}
 	agent.lastAction = rand.Intn(agent.numberOfActions)
 
+	logger.Message("Example Agent Initialize", "seed", seed, "numberOfActions", agent.numberOfActions)
+
 	return nil
 }
 
