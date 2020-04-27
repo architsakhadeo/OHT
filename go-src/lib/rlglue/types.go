@@ -1,6 +1,9 @@
 package rlglue
 
-import "io"
+import (
+	"encoding/json"
+	"io"
+)
 
 // Action is a single integer representing the action taken by the agent.
 type Action int
@@ -13,7 +16,7 @@ type Logger interface {
 	Message(string)
 }
 
-type Attributes map[string]interface{} // TODO this should probably be raw JSON which loads into structs
+type Attributes json.RawMessage
 
 // LoadSaver can be implemented by an Agent or Environment to save itself. If it's implemented, the
 // Experiment will call these APIs when the config requests them.

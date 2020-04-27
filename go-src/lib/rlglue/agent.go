@@ -2,7 +2,8 @@ package rlglue
 
 type Agent interface {
 	// Initialize configures the agent with the provided parameters and resets any internal state.
-	Initialize(Attributes, Logger) error
+	// The first attributes are experimental attributes; the second are environmental.
+	Initialize(Attributes, Attributes, Logger) error
 
 	// Start provides an initial observation to the agent and returns the agent's action.
 	Start(state State) Action

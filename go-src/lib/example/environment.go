@@ -1,6 +1,7 @@
 package example
 
 import (
+	"encoding/json"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
@@ -30,15 +31,13 @@ func (env *Environment) Initialize(attr rlglue.Attributes, logger rlglue.Logger)
 	env.logger = logger
 
 	var seed int64
-	if sd, ok := attr["seed"]; !ok {
-		// Config doesn't have a seed
-		seed = 0
-	} else if seed, ok = sd.(int64); !ok {
-		// Config seed is wrong type
-		logger.Message("example.Environment seed was of wrong type")
+	err := json.Unmarshal(attr, &seed)
+	if err != nil {
+		logger.Message("example.Agent seed wasn't available")
 		seed = 0
 	}
 	rand.Seed(seed)
+
 	env.state = rand.Intn(NumberOfActions) - ActionMax
 
 	return nil

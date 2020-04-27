@@ -13,7 +13,7 @@ func NewAgent() rlglue.Agent {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Agent) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
+func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue.Logger) error {
 	agent.logger = logger
 	panic("agent.Initialize not implemented")
 }

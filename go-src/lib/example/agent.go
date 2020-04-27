@@ -1,6 +1,7 @@
 package example
 
 import (
+	"encoding/json"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
@@ -8,9 +9,9 @@ import (
 
 // Agent just iterates through all actions, starting from a random one.
 type Agent struct {
-	logger     rlglue.Logger
-	lastAction int
-	attr       rlglue.EnvironmentAttributes
+	logger          rlglue.Logger
+	lastAction      int
+	numberOfActions int
 }
 
 func NewAgent() rlglue.Agent {
@@ -18,21 +19,22 @@ func NewAgent() rlglue.Agent {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Agent) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
+func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes, logger rlglue.Logger) error {
 	agent.logger = logger
-	agent.attr = attr
 
 	var seed int64
-	if sd, ok := attr["seed"]; !ok {
-		// Config doesn't have a seed
-		seed = 0
-	} else if seed, ok = sd.(int64); !ok {
-		// Config seed is wrong type
-		logger.Message("example.Agent seed was of wrong type")
+	err := json.Unmarshal(expAttr, &seed)
+	if err != nil {
+		logger.Message("example.Agent seed wasn't available")
 		seed = 0
 	}
 	rand.Seed(seed)
-	// agent.lastAction = rand.Intn(attr.NumberOfActions) // Should be loaded from the config. Error if not defined.
+
+	err = json.Unmarshal(expAttr, &agent.numberOfActions)
+	if err != nil {
+		logger.Message("example.Agent number of Actions wasn't available")
+	}
+	agent.lastAction = rand.Intn(agent.numberOfActions)
 
 	return nil
 }
@@ -45,7 +47,7 @@ func (agent *Agent) Start(state rlglue.State) rlglue.Action {
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Agent) Step(reward float64, state rlglue.State) rlglue.Action {
 	agent.lastAction++
-	if agent.lastAction > agent.attr.NumberOfActions {
+	if agent.lastAction > agent.numberOfActions {
 		agent.lastAction = 0
 	}
 	return rlglue.Action(agent.lastAction)
