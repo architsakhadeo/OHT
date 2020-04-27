@@ -6,7 +6,6 @@ import (
 )
 
 type Agent struct {
-	logger logger.Debug
 }
 
 func NewAgent(logger logger.Debug) rlglue.Agent {
@@ -15,7 +14,6 @@ func NewAgent(logger logger.Debug) rlglue.Agent {
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
 func (agent *Agent) Initialize(expAttr, envAttr rlglue.Attributes) error {
-	agent.logger = logger
 	panic("agent.Initialize not implemented")
 }
 

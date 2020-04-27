@@ -1,34 +1,35 @@
 package remote
 
 import (
-	"github.com/stellentus/cartpoles/go-src/lib/logger"
+	"context"
+
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
-type Environment struct {
-	logger logger.Debug
+type environmentServer struct {
+	env rlglue.Environment
 }
 
-func NewEnvironment(logger logger.Debug) rlglue.Environment {
-	return &Environment{logger: logger}
+func NewEnvironmentServer(env rlglue.Environment) EnvironmentServer {
+	return environmentServer{env}
 }
 
-// Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Environment) Initialize(attr rlglue.Attributes) error {
-	panic("environment.Initialize not implemented")
+func (srv environmentServer) Initialize(ctx context.Context, in *Attributes) (*Empty, error) {
+	err := srv.env.Initialize(rlglue.Attributes(in.Attributes))
+	return &Empty{}, err
 }
 
-// Start returns an initial observation.
-func (env *Environment) Start() rlglue.State {
-	panic("environment.Start not implemented")
+func (srv environmentServer) Start(ctx context.Context, in *Empty) (*State, error) {
+	state := srv.env.Start()
+	return &State{Values: []float64(state)}, nil
 }
 
-// Step takes an action and provides the resulting reward and new observation.
-func (env *Environment) Step(action rlglue.Action) (rlglue.State, float64, bool) {
-	panic("environment.Step not implemented")
+func (srv environmentServer) Step(ctx context.Context, in *Action) (*StepResult, error) {
+	state, reward, terminal := srv.env.Step(rlglue.Action(in.GetAction()))
+	return &StepResult{State: &State{Values: []float64(state)}, Reward: reward, Terminal: terminal}, nil
 }
 
-// GetAttributes returns attributes for this environment.
-func (env *Environment) GetAttributes() rlglue.Attributes {
-	panic("environment.GetAttributes not implemented")
+func (srv environmentServer) GetAttributes(ctx context.Context, in *Empty) (*Attributes, error) {
+	attr := srv.env.GetAttributes()
+	return &Attributes{Attributes: string(attr)}, nil
 }
