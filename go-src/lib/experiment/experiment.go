@@ -81,7 +81,7 @@ func New(expAttr json.RawMessage, agentAttr, envAttr rlglue.Attributes, debug lo
 		return nil, err
 	}
 
-	return ci, errors.New("Not implemented")
+	return ci, nil
 }
 
 func (exp *Experiment) Run() {
