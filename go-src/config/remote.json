@@ -1,6 +1,6 @@
 {
     "agent": {
-        "name": "example-agent",
+        "name": "grpc-agent",
         "seed": 25
     },
     "environment": {
@@ -9,7 +9,7 @@
     },
     "experiment": {
         "steps": 12,
-        "agent": "example-agent",
+        "agent": "grpc-agent",
         "environment": "grpc-environment"
     }
 }
