@@ -8,6 +8,20 @@ import (
 	"google.golang.org/grpc"
 )
 
+func init() {
+	err := rlglue.RegisterEnvironment("grpc-environment", func() (rlglue.Environment, error) {
+		conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+		if err != nil {
+			return nil, err
+		}
+
+		return NewEnvironment(conn), nil
+	})
+	if err != nil {
+		panic("failed to initialize grpc-environment: " + err.Error())
+	}
+}
+
 type environmentServer struct {
 	env rlglue.Environment
 }

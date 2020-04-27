@@ -8,6 +8,7 @@ import (
 	_ "github.com/stellentus/cartpoles/go-src/lib/example"
 	"github.com/stellentus/cartpoles/go-src/lib/experiment"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
+	_ "github.com/stellentus/cartpoles/go-src/lib/remote"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
