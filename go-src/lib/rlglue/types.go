@@ -12,9 +12,6 @@ type Action int
 type State []float64
 
 // Logger can be used to log messages.
-// TODO Presumably the Logger prefixes a timestamp.
-// TODO Logger could also eventually include debug levels
-// TODO Enable setting debug only for agent, environment, or experiment.
 type Logger interface {
 	// Message logs a message followed by pairs of string-value to be stored in a structured log.
 	Message(string, ...interface{})
