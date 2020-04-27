@@ -1,5 +1,138 @@
 package experiment
 
-// Experiment runs an experiment. The experiment itself is actually just a config file.
-// Offline is managed by passing an extra value at the end of the State slice. Possibly add an API to Environment to say when it's in offline mode, but this seems specific to its implementation.
-// Online off-policy can be handled by an OffPolicyEnvironment, which has instances of (behavior) Agent and Environment. It first passes state/reward to BehaviorAgent, which returns an Action. That action is appended to the State and passed out. The (target) Agent receives the state/reward and returns an Action (which had better be identical to the behavior agent). The Environment checks that the actions were the same, and throws an error if it wasn't (since that's a coding bug). Or the Environment ignores the Action if we want to allow that weird behavior.
+import (
+	"encoding/json"
+	"errors"
+
+	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
+)
+
+type settings struct {
+	MaxEpisodes *int   `json:"episodes"`
+	MaxSteps    *int   `json:"steps"`
+	Agent       string `json:"agent"`
+	Environment string `json:"environment"`
+}
+
+// Experiment runs an experiment.
+// The experiment itself is actually just a config file which is passed in to New as json.RawMessage.
+// If the JSON contains 'episodes', then the experiment runs for that many episodes. If it contains
+// 'steps', it instead runs for that many steps, cutting off mid-episode if necessary.
+// It currently only works in an episodic paradigm.
+// The JSON must also specify 'agent' and 'environment'.
+type Experiment struct {
+	settings
+	agent           rlglue.Agent
+	environment     rlglue.Environment
+	logger          rlglue.Logger
+	loggerInterval  int
+	numStepsTaken   int
+	numEpisodesDone int
+}
+
+func New(attr json.RawMessage, logger rlglue.Logger) (*Experiment, error) {
+	// Ensure errors are also logged
+	var err error
+	defer func() {
+		if err != nil {
+			logger.Message(err.Error())
+		}
+	}()
+
+	var set settings
+	err = json.Unmarshal(attr, &set)
+	if err != nil {
+		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
+		return nil, err
+	}
+
+	// Check for bad settings
+	if set.MaxEpisodes == nil && set.MaxSteps == nil {
+		err = errors.New("Experiment settings requres either 'episodes' or 'steps'")
+	} else if set.MaxEpisodes != nil && set.MaxSteps != nil {
+		err = errors.New("Experiment settings requres either 'episodes' or 'steps', but not both")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	ci := &Experiment{
+		settings:       set,
+		logger:         logger,
+		loggerInterval: logger.Interval(),
+	}
+
+	ci.agent, err = rlglue.CreateAgent(set.Agent)
+	if err != nil {
+		return nil, err
+	}
+	ci.environment, err = rlglue.CreateEnvironment(set.Environment)
+	if err != nil {
+		return nil, err
+	}
+
+	return ci, errors.New("Not implemented")
+}
+
+func (exp *Experiment) Run() {
+	if exp.MaxSteps != nil {
+		exp.runContinuous()
+	} else {
+		exp.runEpisodic()
+	}
+
+	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
+
+	exp.logger.Save()
+}
+
+func (exp *Experiment) runContinuous() {
+	exp.logger.Message("Starting continuous experiment")
+	for exp.numStepsTaken < *exp.MaxSteps {
+		exp.runSingleEpisode()
+	}
+}
+
+func (exp *Experiment) runEpisodic() {
+	exp.logger.Message("Starting episodic experiment")
+	for exp.numEpisodesDone < *exp.MaxEpisodes {
+		exp.runSingleEpisode()
+	}
+}
+
+func (exp *Experiment) runSingleEpisode() {
+	episodeEnded := false
+	prevState := exp.environment.Start()
+	prevAction := exp.agent.Start(prevState)
+
+	numStepsThisEpisode := 0
+	for !episodeEnded && (exp.MaxSteps == nil || exp.numStepsTaken < *exp.MaxSteps) {
+		var reward float64
+		var newState rlglue.State
+		newState, reward, episodeEnded = exp.environment.Step(prevAction)
+
+		if episodeEnded {
+			exp.agent.End(newState, reward)
+			// TODO this is continuous, so episodes shouldn't end. This is an error? But for cartpole, we're still using episodes sort of.
+		} else {
+			exp.agent.Step(newState, reward)
+		}
+
+		exp.logger.LogStep(prevState, newState, reward) // TODO add gamma at end
+		prevState = newState
+
+		exp.numStepsTaken += 1
+		numStepsThisEpisode += 1
+
+		if exp.numStepsTaken%exp.loggerInterval == 0 {
+			exp.logger.MessageDelta("total steps", exp.numStepsTaken)
+		}
+	}
+
+	exp.logger.LogEpisodeLength(numStepsThisEpisode)
+	if episodeEnded {
+		exp.logger.MessageRewardSince(exp.numStepsTaken-numStepsThisEpisode, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	}
+
+	exp.numEpisodesDone += 1
+}
