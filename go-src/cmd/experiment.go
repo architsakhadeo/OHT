@@ -13,7 +13,7 @@ import (
 
 // Flags
 var (
-	configPath = flag.String("config", "", "config file for the experiment")
+	configPath = flag.String("config", "config/example.json", "config file for the experiment")
 )
 
 type Config struct {
