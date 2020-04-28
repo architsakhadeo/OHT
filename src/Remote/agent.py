@@ -1,6 +1,7 @@
 from concurrent import futures
 
 import grpc
+import json
 
 import Remote.remote_pb2 as remote_pb2
 import Remote.remote_pb2_grpc as remote_pb2_grpc
@@ -10,7 +11,7 @@ class RemoteAgent(remote_pb2_grpc.EnvironmentServicer):
 		self.agent = agent
 
 	def Initialize(self, attr, context):
-		self.agent.set_param(attr.experiment)
+		self.agent.set_param(json.loads(attr.experiment.attributes))
 		return remote_pb2.Empty()
 
 	def Start(self, state, context):
