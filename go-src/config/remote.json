@@ -5,10 +5,14 @@
         "seed": 25
     },
     "environment-settings": {
-	"NumberOfStates": 4,
+        "NumberOfStates": 4,
         "seed": 41
     },
     "experiment-settings": {
-        "steps": 12
+        "steps": 12,
+        "data-path": "data/remote",
+        "should-log-traces": true,
+        "should-log-episode-lengths": true,
+        "debug-interval": 1
     }
 }
