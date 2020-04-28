@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	err := agent.Add("grpc-agent", func(debug logger.Debug) (rlglue.Agent, error) {
+	err := agent.Add("grpc", func(debug logger.Debug) (rlglue.Agent, error) {
 		conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
 		if err != nil {
 			debug.Message("err", err)

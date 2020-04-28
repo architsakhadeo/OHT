@@ -1,6 +1,6 @@
 {
-	"agent-name": "example-agent",
-	"environment-name": "example-environment",
+	"agent-name": "example",
+	"environment-name": "example",
 	"agent-settings": {
 		"lambda": 0.5,
 		"sweep": {

@@ -24,7 +24,7 @@ type Example struct {
 }
 
 func init() {
-	Add("example-environment", NewExample)
+	Add("example", NewExample)
 }
 
 func NewExample(logger logger.Debug) (rlglue.Environment, error) {

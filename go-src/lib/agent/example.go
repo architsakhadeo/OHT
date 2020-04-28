@@ -16,7 +16,7 @@ type Example struct {
 }
 
 func init() {
-	Add("example-agent", NewExample)
+	Add("example", NewExample)
 }
 
 func NewExample(logger logger.Debug) (rlglue.Agent, error) {
