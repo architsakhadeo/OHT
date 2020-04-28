@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/stellentus/cartpoles/go-src/lib/agent"
+	"github.com/stellentus/cartpoles/go-src/lib/environment"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
-	"github.com/stellentus/cartpoles/go-src/lib/registry"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
@@ -84,7 +85,7 @@ func InitializeEnvironment(name string, attr rlglue.Attributes, debug logger.Deb
 	var err error
 	defer debug.Error(&err)
 
-	environment, err := registry.CreateEnvironment(name, debug)
+	environment, err := environment.Create(name, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +97,7 @@ func InitializeAgent(name string, attr rlglue.Attributes, env rlglue.Environment
 	var err error
 	defer debug.Error(&err)
 
-	agent, err := registry.CreateAgent(name, debug)
+	agent, err := agent.Create(name, debug)
 	if err != nil {
 		return nil, err
 	}

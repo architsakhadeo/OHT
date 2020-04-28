@@ -3,15 +3,15 @@ package remote
 import (
 	"context"
 
+	"github.com/stellentus/cartpoles/go-src/lib/agent"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
-	"github.com/stellentus/cartpoles/go-src/lib/registry"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 
 	"google.golang.org/grpc"
 )
 
 func init() {
-	err := registry.AddAgent("grpc-agent", func(debug logger.Debug) (rlglue.Agent, error) {
+	err := agent.Add("grpc-agent", func(debug logger.Debug) (rlglue.Agent, error) {
 		conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
 		if err != nil {
 			debug.Message("err", err)

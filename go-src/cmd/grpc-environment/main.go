@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/stellentus/cartpoles/go-src/lib/example"
+	"github.com/stellentus/cartpoles/go-src/lib/environment"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/remote"
 
@@ -18,7 +18,7 @@ func main() {
 	}
 
 	debugLogger := logger.NewDebug(logger.DebugConfig{ShouldPrintDebug: true})
-	env, err := example.NewEnvironment(debugLogger)
+	env, err := environment.NewExample(debugLogger)
 	if err != nil {
 		log.Fatalf("failed to init environment: %v", err)
 	}

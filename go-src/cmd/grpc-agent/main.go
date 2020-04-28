@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/stellentus/cartpoles/go-src/lib/example"
+	"github.com/stellentus/cartpoles/go-src/lib/agent"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/remote"
 
@@ -18,7 +18,7 @@ func main() {
 	}
 
 	debugLogger := logger.NewDebug(logger.DebugConfig{ShouldPrintDebug: true})
-	agent, err := example.NewAgent(debugLogger)
+	agent, err := agent.NewExample(debugLogger)
 	if err != nil {
 		log.Fatalf("failed to init agent: %v", err)
 	}

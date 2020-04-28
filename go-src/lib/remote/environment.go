@@ -3,15 +3,18 @@ package remote
 import (
 	"context"
 
+	"github.com/stellentus/cartpoles/go-src/lib/environment"
+	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 
 	"google.golang.org/grpc"
 )
 
 func init() {
-	err := rlglue.RegisterEnvironment("grpc-environment", func() (rlglue.Environment, error) {
+	err := environment.Add("grpc-environment", func(debug logger.Debug) (rlglue.Environment, error) {
 		conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
 		if err != nil {
+			debug.Message("err", err)
 			return nil, err
 		}
 
@@ -58,7 +61,7 @@ func NewEnvironment(cc *grpc.ClientConn) rlglue.Environment {
 	return &environmentWrapper{NewEnvironmentClient(cc)}
 }
 
-func (env environmentWrapper) Initialize(attr rlglue.Attributes, logger rlglue.Logger) error {
+func (env environmentWrapper) Initialize(attr rlglue.Attributes) error {
 	ctx := context.Background()
 	_, err := env.client.Initialize(ctx, &Attributes{Attributes: string(attr)})
 	return err
