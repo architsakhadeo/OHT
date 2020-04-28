@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/stellentus/cartpoles/go-src/lib/experiment"
+	_ "github.com/stellentus/cartpoles/go-src/lib/remote"
 )
 
 // Flags
