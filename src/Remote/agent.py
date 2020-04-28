@@ -22,7 +22,7 @@ class RemoteAgent(remote_pb2_grpc.EnvironmentServicer):
 			self.agent.end(result.reward)
 			return remote_pb2.Empty()
 
-		(action, unused) = self.agent.step(result.reward, state.values)
+		(action, unused) = self.agent.step(result.reward, result.state.values)
 		return remote_pb2.Action(action = action)
 
 
