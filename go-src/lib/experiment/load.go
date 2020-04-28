@@ -12,34 +12,28 @@ import (
 
 // Execute executes the experiment described by the provided JSON.
 func Execute(data json.RawMessage) error {
-	var conf Config
+	conf := Config{
+		Experiment: Settings{
+			MaxEpisodes:             0,
+			MaxSteps:                0,
+			DebugInterval:           1,
+			DataPath:                "",
+			ShouldLogTraces:         false,
+			ShouldLogEpisodeLengths: false,
+		},
+	}
 	err := json.Unmarshal(data, &conf)
 	if err != nil {
 		return errors.New("The config file is not valid JSON: " + err.Error())
-	}
-
-	// Parse settings
-	set := settings{
-		MaxEpisodes:             0,
-		MaxSteps:                0,
-		DebugInterval:           1,
-		DataPath:                "",
-		ShouldLogTraces:         false,
-		ShouldLogEpisodeLengths: false,
-	}
-	err = json.Unmarshal(conf.Experiment, &set)
-	if err != nil {
-		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
-		return err
 	}
 
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
 	dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
-		ShouldLogTraces:         set.ShouldLogTraces,
-		ShouldLogEpisodeLengths: set.ShouldLogEpisodeLengths,
-		BasePath:                set.DataPath,
+		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
+		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
+		BasePath:                conf.Experiment.DataPath,
 		FileSuffix:              "", // TODO after figuring out runs
 	})
 	if err != nil {
@@ -56,7 +50,7 @@ func Execute(data json.RawMessage) error {
 		return err
 	}
 
-	expr, err := New(agent, environment, set, debugLogger, dataLogger)
+	expr, err := New(agent, environment, conf.Experiment, debugLogger, dataLogger)
 	if err != nil {
 		return err
 	}
@@ -64,7 +58,7 @@ func Execute(data json.RawMessage) error {
 	return expr.Run()
 }
 
-type settings struct {
+type Settings struct {
 	MaxEpisodes             int    `json:"episodes"`
 	MaxSteps                int    `json:"steps"`
 	DebugInterval           int    `json:"debug-interval"`
@@ -78,7 +72,7 @@ type Config struct {
 	AgentName       string            `json:"agent-name"`
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
-	Experiment      json.RawMessage   `json:"experiment-settings"`
+	Experiment      Settings          `json:"experiment-settings"`
 }
 
 func InitializeEnvironment(name string, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {

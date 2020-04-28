@@ -14,7 +14,7 @@ import (
 // It currently only works in an episodic paradigm.
 // The JSON must also specify 'agent' and 'environment'.
 type Experiment struct {
-	settings
+	Settings
 	agent       rlglue.Agent
 	environment rlglue.Environment
 	logger.Debug
@@ -23,13 +23,13 @@ type Experiment struct {
 	numEpisodesDone int
 }
 
-func New(agent rlglue.Agent, environment rlglue.Environment, set settings, debug logger.Debug, log logger.Data) (*Experiment, error) {
+func New(agent rlglue.Agent, environment rlglue.Environment, set Settings, debug logger.Debug, log logger.Data) (*Experiment, error) {
 	ci := &Experiment{
 		Debug:       debug,
 		Data:        log,
 		agent:       agent,
 		environment: environment,
-		settings:    set,
+		Settings:    set,
 	}
 
 	// Ensure errors are also logged
@@ -37,9 +37,9 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set settings, debug
 	defer debug.Error(&err)
 
 	// Check for bad settings
-	if ci.settings.MaxEpisodes == 0 && ci.settings.MaxSteps == 0 {
+	if ci.Settings.MaxEpisodes == 0 && ci.Settings.MaxSteps == 0 {
 		err = errors.New("Experiment settings requres either 'episodes' or 'steps'")
-	} else if ci.settings.MaxEpisodes != 0 && ci.settings.MaxSteps != 0 {
+	} else if ci.Settings.MaxEpisodes != 0 && ci.Settings.MaxSteps != 0 {
 		err = errors.New("Experiment settings requres either 'episodes' or 'steps', but not both")
 	}
 	if err != nil {
