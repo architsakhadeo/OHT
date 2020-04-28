@@ -20,13 +20,16 @@ func Execute(data json.RawMessage) error {
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
-	dataLogger := logger.NewData(debugLogger, logger.DataConfig{
+	dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
 		ShouldLogTraces:         false,
 		ShouldLogEpisodeLengths: true,
-		NumberOfSteps:           1000,                     // TODO how to load this?
-		BasePath:                "/save/here/from/config", // TODO
-		FileSuffix:              "",                       // TODO after figuring out runs
+		NumberOfSteps:           1000, // TODO how to load this?
+		BasePath:                "",   // TODO
+		FileSuffix:              "",   // TODO after figuring out runs
 	})
+	if err != nil {
+		return errors.New("Could not create data logger: " + err.Error())
+	}
 
 	// Parse settings
 	set := settings{

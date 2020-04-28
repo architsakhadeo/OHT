@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"os"
+
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
@@ -43,7 +45,7 @@ type dataLogger struct {
 	thisStep int
 }
 
-func NewData(debug Debug, config DataConfig) Data {
+func NewData(debug Debug, config DataConfig) (Data, error) {
 	lg := &dataLogger{
 		Debug:      debug,
 		DataConfig: config,
@@ -58,8 +60,11 @@ func NewData(debug Debug, config DataConfig) Data {
 		// Waste some RAM: allocate enough for episodes of length 1
 		lg.episodeLengths = make([]int, 0, config.NumberOfSteps)
 	}
-	// TODO ensure we have write permissions to BasePath.
-	return lg
+	var err error
+	if lg.BasePath != "" {
+		err = os.MkdirAll(lg.BasePath, os.ModePerm) // Ensure the directory exists (TODO ensure it's writable)
+	}
+	return lg, err
 }
 
 func (lg *dataLogger) RewardSince(step int) float64 {
