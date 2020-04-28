@@ -310,6 +310,16 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 		if err := scanner.Err(); err != nil {
 			return err
 		}
+
+		numSteps := len(lg.rewards)
+		if numSteps != len(lg.prevState) || numSteps != len(lg.currState) || numSteps != len(lg.actions) {
+			return fmt.Errorf("Data file CSV unequal columns: %d %d %d %d", len(lg.currState), len(lg.prevState), len(lg.actions), numSteps)
+		}
+		for i := range lg.headers {
+			if len(lg.others[i]) != numSteps {
+				return fmt.Errorf("Data file CSV extra column %d has %d rows instead of %d", i, len(lg.others[i]), numSteps)
+			}
+		}
 	}
 
 	return nil
