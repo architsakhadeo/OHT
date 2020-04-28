@@ -16,7 +16,10 @@ type Replay struct {
 	logger.ReplayData
 
 	upcomingReward float64
+
 	LogActionDiff  bool
+	previousAction rlglue.Action
+	upcomingState  rlglue.State
 }
 
 func init() {
@@ -52,30 +55,33 @@ func (env *Replay) Initialize(attr rlglue.Attributes) error {
 
 // Start returns an initial observation.
 func (env *Replay) Start() rlglue.State {
-	st, _, _, endOfEpisode := env.getStep()
-	if endOfEpisode {
-		env.Message("warning", "offline agent start was also end of episode")
-	}
+	st, _, _ := env.getStep()
 	return st
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
 func (env *Replay) Step(act rlglue.Action) (rlglue.State, float64, bool) {
-	st, rew, expectedAction, endOfEp := env.getStep()
-	if env.LogActionDiff && expectedAction != act {
-		env.Message("warning", "offline agent got mismatched actions", "expected action", expectedAction, "received action", act)
+	if env.LogActionDiff && act != env.previousAction {
+		env.Message("warning", "offline agent got mismatched actions", "expected action", env.previousAction, "received action", act)
 	}
-	return st, rew, endOfEp
+	st, rew, stateMismatch := env.getStep()
+	if stateMismatch {
+		env.Message("msg", "Abrupt state transition, likely due to end of episode")
+	}
+	return st, rew, false
 }
 
-func (env *Replay) getStep() (rlglue.State, float64, rlglue.Action, bool) {
+func (env *Replay) getStep() (rlglue.State, float64, bool) {
 	thisReward := env.upcomingReward
-	upcomingState, currentState, expectedAction, upcomingReward := env.ReplayData.NextStep()
-	endOfEpisode := !upcomingState.IsEqual(env.ReplayData.PeekNextCurrentState())
-	env.upcomingReward = upcomingReward
-
-	return stateWithAction(currentState, expectedAction), thisReward, expectedAction, endOfEpisode
+	upcomingState, currentState, expectedAction, upcomingReward, ok := env.ReplayData.NextStep()
+	stateMismatch := !env.upcomingState.IsEqual(currentState)
+	if ok {
+		env.upcomingReward = upcomingReward
+		env.previousAction = expectedAction
+		env.upcomingState = upcomingState
+	} // else end of file was reached, and only 'currentState was valid'
+	return stateWithAction(currentState, expectedAction), thisReward, stateMismatch
 }
 
 // GetAttributes returns attributes for this environment.

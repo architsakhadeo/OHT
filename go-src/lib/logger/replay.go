@@ -31,23 +31,21 @@ func (rd ReplayData) Start() rlglue.State {
 	return rd.prevState[0]
 }
 
-func (rd *ReplayData) NextStep() (rlglue.State, rlglue.State, rlglue.Action, float64) {
+// The final argument is false if the end of the file was reached
+func (rd *ReplayData) NextStep() (rlglue.State, rlglue.State, rlglue.Action, float64, bool) {
 	if rd.nextStep >= len(rd.rewards) {
-		rd.Message("err", fmt.Sprintf("Attempted to replay step beyond maximum of %d", len(rd.rewards)))
-		rd.Reset() // This could result in an infinite loop if no data was loaded.
+		if rd.nextStep == len(rd.rewards) {
+			rd.nextStep++
+			return nil, rd.currState[len(rd.rewards)-1], 0, 0, false // At least the previous state can be provided
+		} else {
+			rd.Message("err", fmt.Sprintf("Attempted to replay step beyond maximum of %d", len(rd.rewards)))
+			rd.Reset() // This could result in an infinite loop if no data was loaded.
+		}
 	}
 
 	a, b, c, d := rd.currState[rd.nextStep], rd.prevState[rd.nextStep], rd.actions[rd.nextStep], rd.rewards[rd.nextStep]
 	rd.nextStep++
-	return a, b, c, d
-}
-
-func (rd ReplayData) PeekNextCurrentState() rlglue.State {
-	if rd.nextStep >= len(rd.rewards) {
-		rd.Message("err", fmt.Sprintf("Attempted to peek at step beyond maximum of %d", len(rd.rewards)))
-		return nil
-	}
-	return rd.currState[rd.nextStep]
+	return a, b, c, d, true
 }
 
 func (rd *ReplayData) Reset() {
