@@ -6,6 +6,8 @@ import (
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
+// ReplayData is used to replay Data.
+// TODO consider whether Data stores and replays episodes correctly, since terminal states are visited.
 type ReplayData struct {
 	dataLogger
 	numSteps int
@@ -38,6 +40,14 @@ func (rd ReplayData) NextStep() (rlglue.State, rlglue.State, rlglue.Action, floa
 	a, b, c, d := rd.currState[rd.nextStep], rd.prevState[rd.nextStep], rd.actions[rd.nextStep], rd.rewards[rd.nextStep]
 	rd.nextStep++
 	return a, b, c, d
+}
+
+func (rd ReplayData) PeekNextCurrentState() rlglue.State {
+	if rd.nextStep >= len(rd.rewards) {
+		rd.Message("err", fmt.Sprintf("Attempted to peek at step beyond maximum of %d", len(rd.rewards)))
+		return nil
+	}
+	return rd.currState[rd.nextStep]
 }
 
 func (rd *ReplayData) Reset() {
