@@ -12,17 +12,23 @@ import (
 
 func init() {
 	err := agent.Add("grpc", func(debug logger.Debug) (rlglue.Agent, error) {
-		conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
+		conn, err := dialGrpc(debug, ":8081")
 		if err != nil {
-			debug.Message("err", err)
 			return nil, err
 		}
-
 		return NewAgent(conn), nil
 	})
 	if err != nil {
 		panic("failed to initialize grpc-agent: " + err.Error())
 	}
+}
+
+func dialGrpc(debug logger.Debug, port string) (*grpc.ClientConn, error) {
+	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	if err != nil {
+		debug.Message("err", err)
+	}
+	return conn, err
 }
 
 type agentServer struct {

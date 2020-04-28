@@ -12,12 +12,10 @@ import (
 
 func init() {
 	err := environment.Add("grpc", func(debug logger.Debug) (rlglue.Environment, error) {
-		conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+		conn, err := dialGrpc(debug, ":8080")
 		if err != nil {
-			debug.Message("err", err)
 			return nil, err
 		}
-
 		return NewEnvironment(conn), nil
 	})
 	if err != nil {
