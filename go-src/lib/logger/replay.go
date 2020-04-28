@@ -22,7 +22,14 @@ func NewReplayData(pth, suffix string, debug Debug) (ReplayData, error) {
 	return rd, err
 }
 
-func (rd ReplayData) ReplayNextStep() (rlglue.State, rlglue.State, rlglue.Action, float64) {
+func (rd ReplayData) Start() rlglue.State {
+	if rd.nextStep != 0 {
+		rd.Message("err", fmt.Sprintf("Attempted to replay start while at step %d", rd.nextStep))
+	}
+	return rd.prevState[0]
+}
+
+func (rd ReplayData) NextStep() (rlglue.State, rlglue.State, rlglue.Action, float64) {
 	if rd.nextStep >= len(rd.rewards) {
 		rd.Message("err", fmt.Sprintf("Attempted to replay step beyond maximum of %d", len(rd.rewards)))
 		rd.Reset() // This could result in an infinite loop if no data was loaded.
