@@ -38,8 +38,6 @@ type dataLogger struct {
 	others    [][]float64
 
 	headers []string
-
-	thisStep int
 }
 
 func NewData(debug Debug, config DataConfig) (Data, error) {
@@ -65,7 +63,8 @@ func NewData(debug Debug, config DataConfig) (Data, error) {
 
 func (lg *dataLogger) RewardSince(step int) float64 {
 	var sum float64
-	for i := step; i < lg.thisStep; i++ {
+	end := len(lg.rewards)
+	for i := step; i < end; i++ {
 		sum += lg.rewards[i]
 	}
 	return sum
@@ -82,7 +81,7 @@ func (lg *dataLogger) LogEpisodeLength(steps int) {
 // LogStepHeader lists the headers used in the optional variadic arguments to LogStep.
 func (lg *dataLogger) LogStepHeader(headers ...string) {
 	if lg.headers != nil {
-		lg.Message("err", "Attempt to add headers after steps have been recorded", "steps", lg.thisStep, "headers", headers)
+		lg.Message("err", "Attempt to add headers after steps have been recorded", "steps", len(lg.rewards), "headers", headers)
 		return
 	}
 	for _, hdr := range headers {
@@ -102,8 +101,6 @@ func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.A
 		lg.currState = append(lg.currState, currState)
 		lg.actions = append(lg.actions, action)
 	}
-
-	lg.thisStep++
 }
 
 // LogStepMulti is like LogStep, but it can optionally add other float64 values to be logged. (If so,
