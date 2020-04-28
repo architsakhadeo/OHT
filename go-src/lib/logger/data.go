@@ -164,7 +164,7 @@ func (lg *dataLogger) SaveLog() error {
 
 		// Write header row
 		str := "new state,previous state,action,reward"
-		if lg.headers != nil {
+		if len(lg.headers) > 0 {
 			for _, hdr := range lg.headers {
 				str += "," + hdr
 			}
@@ -178,7 +178,7 @@ func (lg *dataLogger) SaveLog() error {
 		// Write remaining rows
 		for i := range lg.currState {
 			str := fmt.Sprintf("%v,%v,%d,%f", lg.currState[i], lg.prevState[i], lg.actions[i], lg.rewards[i])
-			if lg.headers != nil {
+			if len(lg.headers) > 0 {
 				for _, val := range lg.others[i] {
 					str += fmt.Sprintf(",%f", val)
 				}
