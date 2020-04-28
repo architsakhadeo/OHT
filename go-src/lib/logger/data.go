@@ -1,9 +1,13 @@
 package logger
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
@@ -193,4 +197,154 @@ func (lg *dataLogger) SaveLog() error {
 	}
 
 	return nil
+}
+
+func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisodes, loadTraces bool) error {
+	lg.DataConfig = DataConfig{
+		ShouldLogTraces:         loadTraces,
+		ShouldLogEpisodeLengths: loadEpisodes,
+		BasePath:                pth,
+		FileSuffix:              suffix,
+	}
+	lg.episodeLengths = []int{}
+	lg.prevState = []rlglue.State{}
+	lg.currState = []rlglue.State{}
+	lg.actions = []rlglue.Action{}
+	lg.rewards = []float64{}
+	lg.others = [][]float64{}
+
+	if loadRewards && !loadTraces { // If traces exists, don't bother with rewards
+		file, err := os.Open(path.Join(lg.BasePath, "rewards.csv", lg.FileSuffix))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		if !scanner.Scan() {
+			return errors.New("Reward file was empth at '" + lg.BasePath + "'")
+		} // else assume header is correct
+
+		for scanner.Scan() {
+			var val float64
+			_, err = fmt.Sscanf(scanner.Text(), "%f", &val)
+			if err != nil {
+				return err
+			}
+			lg.rewards = append(lg.rewards, val)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+	}
+
+	if loadEpisodes {
+		file, err := os.Open(path.Join(lg.BasePath, "episodes.csv", lg.FileSuffix))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		if !scanner.Scan() {
+			return errors.New("Reward file was empth at '" + lg.BasePath + "'")
+		} // else assume header is correct
+
+		for scanner.Scan() {
+			var val int
+			_, err = fmt.Sscanf(scanner.Text(), "%d", &val)
+			if err != nil {
+				return err
+			}
+			lg.episodeLengths = append(lg.episodeLengths, val)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+	}
+
+	if loadTraces {
+		file, err := os.Open(path.Join(lg.BasePath, "traces.csv", lg.FileSuffix))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		if !scanner.Scan() {
+			return errors.New("Reward file was empth at '" + lg.BasePath + "'")
+		}
+		headers := strings.Split(scanner.Text(), ",")
+		if len(headers) > 4 {
+			lg.headers = []string{}
+			for i := 4; i < len(headers); i++ {
+				lg.headers = append(lg.headers, headers[i])
+			}
+		}
+
+		for scanner.Scan() {
+			values := strings.Split(scanner.Text(), ",")
+			if val, err := parseState(values[0]); err != nil {
+				return err
+			} else {
+				lg.currState = append(lg.currState, val)
+			}
+			if val, err := parseState(values[1]); err != nil {
+				return err
+			} else {
+				lg.prevState = append(lg.prevState, val)
+			}
+			lg.actions = append(lg.actions, parseActionDefaultZero(values[2]))
+			lg.rewards = append(lg.rewards, parseFloatDefaultZero(values[3]))
+			if len(values) > 4 {
+				others := []float64{}
+				for i := 4; i < len(values); i++ {
+					others = append(others, parseFloatDefaultZero(values[i]))
+				}
+				lg.others = append(lg.others, others)
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func parseState(str string) (rlglue.State, error) {
+	str = strings.TrimSpace(str)
+	if str[0] != '[' && str[len(str)-1] != ']' {
+		return nil, errors.New("Could not parse state '" + str + "'")
+	}
+	state := rlglue.State{}
+	values := strings.Split(str[1:len(str)-1], ",")
+	for _, strVal := range values {
+		if val, err := strconv.ParseFloat(strVal, 64); err != nil {
+			fmt.Println("values", values)
+			return nil, errors.New("Could not parse state value '" + strVal + "' from '" + str + "': " + err.Error())
+		} else {
+			state = append(state, val)
+		}
+	}
+	return state, nil
+}
+
+func parseActionDefaultZero(str string) rlglue.Action {
+	if val, err := strconv.Atoi(str); err != nil {
+		return 0
+	} else {
+		return rlglue.Action(val)
+	}
+}
+
+func parseFloatDefaultZero(str string) float64 {
+	if val, err := strconv.ParseFloat(str, 64); err != nil {
+		return 0
+	} else {
+		return val
+	}
 }
