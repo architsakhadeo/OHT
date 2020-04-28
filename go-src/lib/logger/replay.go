@@ -31,7 +31,7 @@ func (rd ReplayData) Start() rlglue.State {
 	return rd.prevState[0]
 }
 
-func (rd ReplayData) NextStep() (rlglue.State, rlglue.State, rlglue.Action, float64) {
+func (rd *ReplayData) NextStep() (rlglue.State, rlglue.State, rlglue.Action, float64) {
 	if rd.nextStep >= len(rd.rewards) {
 		rd.Message("err", fmt.Sprintf("Attempted to replay step beyond maximum of %d", len(rd.rewards)))
 		rd.Reset() // This could result in an infinite loop if no data was loaded.
