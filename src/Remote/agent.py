@@ -6,7 +6,7 @@ import json
 import Remote.remote_pb2 as remote_pb2
 import Remote.remote_pb2_grpc as remote_pb2_grpc
 
-class RemoteAgent(remote_pb2_grpc.EnvironmentServicer):
+class RemoteAgent(remote_pb2_grpc.AgentServicer):
 	def __init__(self, agent):
 		self.agent = agent
 
