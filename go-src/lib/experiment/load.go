@@ -17,6 +17,18 @@ func Execute(data json.RawMessage) error {
 		return errors.New("The config file is not valid JSON: " + err.Error())
 	}
 
+	// Parse settings
+	set := settings{
+		MaxEpisodes:   0,
+		MaxSteps:      0,
+		DebugInterval: 1,
+	}
+	err = json.Unmarshal(conf.Experiment, &set)
+	if err != nil {
+		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
+		return err
+	}
+
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
@@ -29,18 +41,6 @@ func Execute(data json.RawMessage) error {
 	})
 	if err != nil {
 		return errors.New("Could not create data logger: " + err.Error())
-	}
-
-	// Parse settings
-	set := settings{
-		MaxEpisodes:   0,
-		MaxSteps:      0,
-		DebugInterval: 1,
-	}
-	err = json.Unmarshal(conf.Experiment, &set)
-	if err != nil {
-		err = errors.New("Experiment settings couldn't be parsed: " + err.Error())
-		return err
 	}
 
 	environment, err := InitializeEnvironment(conf.EnvironmentName, conf.Environment, debugLogger)
