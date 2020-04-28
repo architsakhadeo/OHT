@@ -3,6 +3,8 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
@@ -43,4 +45,78 @@ func Parse(data json.RawMessage) (Config, error) {
 	}
 
 	return conf, nil
+}
+
+type Sweeper struct {
+	allAttributes []AttributeMap
+}
+
+type AttributeMap map[string]*json.RawMessage
+
+func (am AttributeMap) String() string {
+	strs := []string{}
+	for key, val := range am {
+		strs = append(strs, fmt.Sprintf("%s:%v", key, string(*val)))
+	}
+	return "AM<" + strings.Join(strs, ", ") + ">"
+}
+func (am AttributeMap) Copy() AttributeMap {
+	am2 := AttributeMap{}
+	for key, val := range am {
+		am2[key] = val
+	}
+	return am2
+}
+
+// SingleSweep returns Agent Attributes for the requested sweep index.
+func (conf Config) Sweeper() (Sweeper, error) {
+	sweeper := Sweeper{allAttributes: []AttributeMap{}}
+
+	agentAttrs := AttributeMap{}
+	err := json.Unmarshal(conf.Agent, &agentAttrs)
+	if err != nil {
+		return sweeper, errors.New("The agent attributes is not valid JSON: " + err.Error())
+	}
+
+	sweepAttrs, ok := agentAttrs["sweep"]
+	if !ok {
+		return sweeper, nil
+	}
+	delete(agentAttrs, "sweep") // Agent shouldn't receive the sweep info
+
+	// Parse out the sweep arrays into key:array, where the array is still raw JSON.
+	sweepRawJon := map[string]json.RawMessage{}
+	err = json.Unmarshal(*sweepAttrs, &sweepRawJon)
+	if err != nil {
+		return sweeper, errors.New("The agent attributes is not valid JSON: " + err.Error())
+	}
+
+	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
+	sweeper.allAttributes = []AttributeMap{agentAttrs}
+	for key, val := range sweepRawJon {
+		arrayVals := []json.RawMessage{}
+		err = json.Unmarshal(val, &arrayVals)
+		if err != nil {
+			return sweeper, errors.New("The agent attributes is not valid JSON: " + err.Error())
+		}
+		if len(arrayVals) == 0 {
+			break // This array is empty, so nothing to do here
+		}
+
+		newAMSlice := []AttributeMap{}
+		for _, am := range sweeper.allAttributes {
+			for i, av := range arrayVals {
+				newAM := am
+				if i != 0 {
+					// For the first new value, we can use the previous one instead of copying. All others must copy.
+					newAM = am.Copy()
+				}
+				newAM[key] = &av
+				newAMSlice = append(newAMSlice, newAM)
+			}
+		}
+		sweeper.allAttributes = newAMSlice
+	}
+
+	return sweeper, nil
 }
