@@ -15,6 +15,7 @@ type Config struct {
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
 	Experiment      `json:"experiment-settings"`
+	sweeper
 }
 
 type Experiment struct {
@@ -44,12 +45,10 @@ func Parse(data json.RawMessage) (Config, error) {
 		return conf, errors.New("The config file is not valid JSON: " + err.Error())
 	}
 
-	swp, err := conf.Sweeper()
+	err = conf.LoadSweeper()
 	if err != nil {
 		return conf, errors.New("The sweeper could not be loaded: " + err.Error())
 	}
-	fmt.Println("SWEepEr:", swp.allAttributes)
-	fmt.Println("Number:", len(swp.allAttributes))
 
 	return conf, nil
 }
@@ -75,19 +74,18 @@ func (am AttributeMap) Copy() AttributeMap {
 	return am2
 }
 
-// SingleSweep returns Agent Attributes for the requested sweep index.
-func (conf Config) Sweeper() (sweeper, error) {
-	swp := sweeper{allAttributes: []AttributeMap{}}
+func (conf *Config) LoadSweeper() error {
+	conf.sweeper.allAttributes = []AttributeMap{}
 
 	agentAttrs := AttributeMap{}
 	err := json.Unmarshal(conf.Agent, &agentAttrs)
 	if err != nil {
-		return swp, errors.New("The agent attributes is not valid JSON: " + err.Error())
+		return errors.New("The agent attributes is not valid JSON: " + err.Error())
 	}
 
 	sweepAttrs, ok := agentAttrs["sweep"]
 	if !ok {
-		return swp, nil
+		return nil
 	}
 	delete(agentAttrs, "sweep") // Agent shouldn't receive the sweep info
 
@@ -95,23 +93,23 @@ func (conf Config) Sweeper() (sweeper, error) {
 	sweepRawJon := map[string]json.RawMessage{}
 	err = json.Unmarshal(*sweepAttrs, &sweepRawJon)
 	if err != nil {
-		return swp, errors.New("The agent attributes is not valid JSON: " + err.Error())
+		return errors.New("The agent attributes is not valid JSON: " + err.Error())
 	}
 
 	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
-	swp.allAttributes = []AttributeMap{agentAttrs}
+	conf.sweeper.allAttributes = []AttributeMap{agentAttrs}
 	for key, val := range sweepRawJon {
 		arrayVals := []json.RawMessage{}
 		err = json.Unmarshal(val, &arrayVals)
 		if err != nil {
-			return swp, errors.New("The agent attributes is not valid JSON: " + err.Error())
+			return errors.New("The agent attributes is not valid JSON: " + err.Error())
 		}
 		if len(arrayVals) == 0 {
 			break // This array is empty, so nothing to do here
 		}
 
 		newAMSlice := []AttributeMap{}
-		for _, am := range swp.allAttributes {
+		for _, am := range conf.sweeper.allAttributes {
 			for i, av := range arrayVals {
 				newAM := am
 				if i != 0 {
@@ -122,8 +120,8 @@ func (conf Config) Sweeper() (sweeper, error) {
 				newAMSlice = append(newAMSlice, newAM)
 			}
 		}
-		swp.allAttributes = newAMSlice
+		conf.sweeper.allAttributes = newAMSlice
 	}
 
-	return swp, nil
+	return nil
 }
