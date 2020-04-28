@@ -17,6 +17,7 @@
 		"seed": 25
 	},
 	"environment-settings": {
+		"NumberOfStates": 4,
 		"seed": 41
 	},
 	"experiment-settings": {

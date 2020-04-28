@@ -20,7 +20,8 @@ const (
 // When |state| is >= ExampleStateMax, it's reset to 0.
 type Example struct {
 	logger.Debug
-	state int
+	NumberOfStates int
+	state          int
 }
 
 func init() {
@@ -33,13 +34,21 @@ func NewExample(logger logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Example) Initialize(attr rlglue.Attributes) error {
-	var ss struct{ Seed int64 }
+	var ss struct {
+		Seed           int64
+		NumberOfStates int
+	}
 	err := json.Unmarshal(attr, &ss)
 	if err != nil {
 		env.Message("warning", "environment.Example seed wasn't available")
 		ss.Seed = 0
 	}
 	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+
+	env.NumberOfStates = ss.NumberOfStates
+	if env.NumberOfStates < 1 {
+		env.NumberOfStates = 1
+	}
 
 	env.state = rng.Intn(ExampleNumberOfActions) - ExampleActionMax
 
@@ -78,5 +87,9 @@ func (env *Example) GetAttributes() rlglue.Attributes {
 }
 
 func (env *Example) stateSlice() rlglue.State {
-	return rlglue.State([]float64{float64(env.state)})
+	st := rlglue.State{}
+	for i := 0; i < env.NumberOfStates; i++ {
+		st = append(st, float64(env.state))
+	}
+	return st
 }
