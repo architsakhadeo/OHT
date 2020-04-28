@@ -1,6 +1,6 @@
 {
 	"agent-name": "example",
-	"environment-name": "example",
+	"environment-name": "replay",
 	"agent-settings": {
 		"lambda": 0.5,
 		"sweep": {
@@ -15,11 +15,12 @@
 		"seed": 25
 	},
 	"environment-settings": {
-		"seed": 41
+		"path": "data/example",
+		"log-action-diff": true
 	},
 	"experiment-settings": {
 		"steps": 12,
-		"data-path": "data/example",
+		"data-path": "data/replay",
 		"should-log-traces": true,
 		"should-log-episode-lengths": true,
 		"debug-interval": 2
