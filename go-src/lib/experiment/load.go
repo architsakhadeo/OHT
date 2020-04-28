@@ -36,7 +36,6 @@ func Execute(data json.RawMessage) error {
 	dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
 		ShouldLogTraces:         false,
 		ShouldLogEpisodeLengths: true,
-		NumberOfSteps:           1000, // TODO how to load this?
 		BasePath:                set.DataPath,
 		FileSuffix:              "", // TODO after figuring out runs
 	})

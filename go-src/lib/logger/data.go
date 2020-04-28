@@ -16,11 +16,6 @@ type DataConfig struct {
 	// ShouldLogEpisodeLengths determines whether episode lengths saved.
 	ShouldLogEpisodeLengths bool
 
-	// NumberOfSteps is the number of steps to log. Note if the number of steps is greater than
-	// this number, the additional data will still be logged, but memory allocations may occur.
-	// This is purely to provide a hint for memory allocation.
-	NumberOfSteps int
-
 	// BasePath is the path at which files are saved. A filename will be automatically set (rewards, traces, and episodes).
 	// If not set, no file is saved.
 	BasePath string
@@ -51,16 +46,15 @@ func NewData(debug Debug, config DataConfig) (Data, error) {
 	lg := &dataLogger{
 		Debug:      debug,
 		DataConfig: config,
-		rewards:    make([]float64, config.NumberOfSteps),
+		rewards:    []float64{},
 	}
 	if lg.ShouldLogTraces {
-		lg.prevState = make([]rlglue.State, config.NumberOfSteps)
-		lg.currState = make([]rlglue.State, config.NumberOfSteps)
-		lg.actions = make([]rlglue.Action, config.NumberOfSteps)
+		lg.prevState = []rlglue.State{}
+		lg.currState = []rlglue.State{}
+		lg.actions = []rlglue.Action{}
 	}
 	if lg.ShouldLogEpisodeLengths {
-		// Waste some RAM: allocate enough for episodes of length 1
-		lg.episodeLengths = make([]int, 0, config.NumberOfSteps)
+		lg.episodeLengths = []int{}
 	}
 	var err error
 	if lg.BasePath != "" {
@@ -93,7 +87,7 @@ func (lg *dataLogger) LogStepHeader(headers ...string) {
 	}
 	for _, hdr := range headers {
 		lg.headers = append(lg.headers, hdr)
-		lg.others = append(lg.others, make([]float64, 0, lg.NumberOfSteps))
+		lg.others = append(lg.others, []float64{})
 	}
 }
 
@@ -101,12 +95,12 @@ func (lg *dataLogger) LogStepHeader(headers ...string) {
 // and reward. It can optionally add other float64 values to be logged. (If so, LogStepHeader must be
 // called to provide headers and so the logger knows how many to expect.)
 func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) {
-	lg.rewards[lg.thisStep] = reward
+	lg.rewards = append(lg.rewards, reward)
 
 	if lg.ShouldLogTraces {
-		lg.prevState[lg.thisStep] = prevState
-		lg.currState[lg.thisStep] = currState
-		lg.actions[lg.thisStep] = action
+		lg.prevState = append(lg.prevState, prevState)
+		lg.currState = append(lg.currState, currState)
+		lg.actions = append(lg.actions, action)
 	}
 
 	lg.thisStep++
@@ -117,7 +111,7 @@ func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.A
 func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlglue.Action, reward float64, others ...float64) {
 	if lg.ShouldLogTraces {
 		for i, other := range others {
-			lg.others[i][lg.thisStep] = other
+			lg.others[i] = append(lg.others[i], other)
 		}
 	}
 	lg.LogStep(prevState, currState, action, reward)
