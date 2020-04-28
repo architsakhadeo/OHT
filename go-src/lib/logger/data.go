@@ -1,7 +1,9 @@
 package logger
 
 import (
+	"fmt"
 	"os"
+	"path"
 
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
@@ -19,7 +21,7 @@ type DataConfig struct {
 	// This is purely to provide a hint for memory allocation.
 	NumberOfSteps int
 
-	// BasePath is the path at which files are saved. A suffix will automatically be added (reward, trace, and episodes).
+	// BasePath is the path at which files are saved. A filename will be automatically set (rewards, traces, and episodes).
 	// If not set, no file is saved.
 	BasePath string
 
@@ -127,9 +129,50 @@ func (lg *dataLogger) SaveLog() error {
 		return nil
 	}
 
-	// TODO save files:
-	//	- rewards to BasePath + "-rewards" + FileSuffix
-	//	- episodeLengths to BasePath + "-episodes" + FileSuffix
-	//	- everythingGivenToLogStepMulti to BasePath + "-trace" + FileSuffix
-	lg.Message("err", "logger can't yet save logs")
+	file, err := os.Create(path.Join(lg.BasePath, "rewards.csv", lg.FileSuffix))
+	if err != nil {
+		return err
+	}
+	for _, rew := range lg.rewards {
+		_, err = file.WriteString(fmt.Sprintf("%f\n", rew))
+		if err != nil {
+			return err
+		}
+	}
+
+	if lg.ShouldLogEpisodeLengths {
+		file, err := os.Create(path.Join(lg.BasePath, "episodes.csv", lg.FileSuffix))
+		if err != nil {
+			return err
+		}
+		for _, ep := range lg.episodeLengths {
+			_, err = file.WriteString(fmt.Sprintf("%d\n", ep))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if lg.ShouldLogTraces {
+		file, err := os.Create(path.Join(lg.BasePath, "traces.csv", lg.FileSuffix))
+		if err != nil {
+			return err
+		}
+		for i := range lg.currState {
+			str := fmt.Sprintf("%v,%v,%d,%f", lg.currState[i], lg.prevState[i], lg.actions[i], lg.rewards[i])
+			if lg.headers != nil {
+				for _, val := range lg.others[i] {
+					str += fmt.Sprintf(",%f", val)
+				}
+			}
+			str += "\n"
+
+			_, err = file.WriteString(str)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
