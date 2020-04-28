@@ -12,16 +12,8 @@ import (
 
 // Execute executes the experiment described by the provided JSON.
 func Execute(data json.RawMessage) error {
-	conf := Config{
-		Experiment: Settings{
-			MaxEpisodes:             0,
-			MaxSteps:                0,
-			DebugInterval:           1,
-			DataPath:                "",
-			ShouldLogTraces:         false,
-			ShouldLogEpisodeLengths: false,
-		},
-	}
+	conf := Config{}
+	conf.Experiment.SetToDefault()
 	err := json.Unmarshal(data, &conf)
 	if err != nil {
 		return errors.New("The config file is not valid JSON: " + err.Error())
@@ -56,6 +48,15 @@ func Execute(data json.RawMessage) error {
 	}
 
 	return expr.Run()
+}
+
+func (set *Settings) SetToDefault() {
+	set.MaxEpisodes = 0
+	set.MaxSteps = 0
+	set.DebugInterval = 1
+	set.DataPath = ""
+	set.ShouldLogTraces = false
+	set.ShouldLogEpisodeLengths = false
 }
 
 type Settings struct {
