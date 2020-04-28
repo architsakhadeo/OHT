@@ -1,24 +1,17 @@
 package experiment
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/stellentus/cartpoles/go-src/lib/agent"
+	"github.com/stellentus/cartpoles/go-src/lib/config"
 	"github.com/stellentus/cartpoles/go-src/lib/environment"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
 // Execute executes the experiment described by the provided JSON.
-func Execute(data json.RawMessage) error {
-	conf := Config{}
-	conf.Experiment.SetToDefault()
-	err := json.Unmarshal(data, &conf)
-	if err != nil {
-		return errors.New("The config file is not valid JSON: " + err.Error())
-	}
-
+func Execute(conf config.Config) error {
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
@@ -48,32 +41,6 @@ func Execute(data json.RawMessage) error {
 	}
 
 	return expr.Run()
-}
-
-func (set *Settings) SetToDefault() {
-	set.MaxEpisodes = 0
-	set.MaxSteps = 0
-	set.DebugInterval = 1
-	set.DataPath = ""
-	set.ShouldLogTraces = false
-	set.ShouldLogEpisodeLengths = false
-}
-
-type Settings struct {
-	MaxEpisodes             int    `json:"episodes"`
-	MaxSteps                int    `json:"steps"`
-	DebugInterval           int    `json:"debug-interval"`
-	DataPath                string `json:"data-path"`
-	ShouldLogTraces         bool   `json:"should-log-traces"`
-	ShouldLogEpisodeLengths bool   `json:"should-log-episode-lengths"`
-}
-
-type Config struct {
-	EnvironmentName string            `json:"environment-name"`
-	AgentName       string            `json:"agent-name"`
-	Environment     rlglue.Attributes `json:"environment-settings"`
-	Agent           rlglue.Attributes `json:"agent-settings"`
-	Experiment      Settings          `json:"experiment-settings"`
 }
 
 func InitializeEnvironment(name string, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {

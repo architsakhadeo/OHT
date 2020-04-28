@@ -3,6 +3,7 @@ package experiment
 import (
 	"errors"
 
+	"github.com/stellentus/cartpoles/go-src/lib/config"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
@@ -14,7 +15,7 @@ import (
 // It currently only works in an episodic paradigm.
 // The JSON must also specify 'agent' and 'environment'.
 type Experiment struct {
-	Settings
+	Settings    config.Experiment
 	agent       rlglue.Agent
 	environment rlglue.Environment
 	logger.Debug
@@ -23,7 +24,7 @@ type Experiment struct {
 	numEpisodesDone int
 }
 
-func New(agent rlglue.Agent, environment rlglue.Environment, set Settings, debug logger.Debug, log logger.Data) (*Experiment, error) {
+func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experiment, debug logger.Debug, log logger.Data) (*Experiment, error) {
 	ci := &Experiment{
 		Debug:       debug,
 		Data:        log,
