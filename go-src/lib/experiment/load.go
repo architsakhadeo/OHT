@@ -22,6 +22,7 @@ func Execute(data json.RawMessage) error {
 		MaxEpisodes:   0,
 		MaxSteps:      0,
 		DebugInterval: 1,
+		DataPath:      "",
 	}
 	err = json.Unmarshal(conf.Experiment, &set)
 	if err != nil {
@@ -36,8 +37,8 @@ func Execute(data json.RawMessage) error {
 		ShouldLogTraces:         false,
 		ShouldLogEpisodeLengths: true,
 		NumberOfSteps:           1000, // TODO how to load this?
-		BasePath:                "",   // TODO
-		FileSuffix:              "",   // TODO after figuring out runs
+		BasePath:                set.DataPath,
+		FileSuffix:              "", // TODO after figuring out runs
 	})
 	if err != nil {
 		return errors.New("Could not create data logger: " + err.Error())
@@ -63,9 +64,10 @@ func Execute(data json.RawMessage) error {
 }
 
 type settings struct {
-	MaxEpisodes   int `json:"episodes"`
-	MaxSteps      int `json:"steps"`
-	DebugInterval int `json:"debug-interval"`
+	MaxEpisodes   int    `json:"episodes"`
+	MaxSteps      int    `json:"steps"`
+	DebugInterval int    `json:"debug-interval"`
+	DataPath      string `json:"data-path"`
 }
 
 type Config struct {

@@ -19,6 +19,7 @@
 	},
 	"experiment-settings": {
 		"steps": 12,
+		"data-path": "data/",
 		"debug-interval": 2
 	}
 }
