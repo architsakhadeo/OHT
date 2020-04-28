@@ -1,2 +1,2 @@
 protoc -I . remote.proto --go_out=plugins=grpc:.
-protoc -I . remote.proto --python_out=.
+python3 -m grpc_tools.protoc -I . remote.proto --python_out=. --grpc_python_out=.
