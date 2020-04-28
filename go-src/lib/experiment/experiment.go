@@ -48,7 +48,7 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set settings, debug
 	return ci, nil
 }
 
-func (exp *Experiment) Run() {
+func (exp *Experiment) Run() error {
 	if exp.MaxSteps != 0 {
 		exp.runContinuous()
 	} else {
@@ -57,7 +57,7 @@ func (exp *Experiment) Run() {
 
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
 
-	exp.SaveLog()
+	return exp.SaveLog()
 }
 
 func (exp *Experiment) runContinuous() {

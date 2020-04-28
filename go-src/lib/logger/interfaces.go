@@ -23,7 +23,7 @@ type Data interface {
 	RewardSince(int) float64
 
 	// SaveLog persists the logged information to disk.
-	SaveLog()
+	SaveLog() error
 }
 
 // Debug can be used to log debug.

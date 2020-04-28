@@ -122,10 +122,11 @@ func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 }
 
 // Save persists the logged information to disk.
-func (lg *dataLogger) SaveLog() {
+func (lg *dataLogger) SaveLog() error {
 	if lg.BasePath == "" {
-		return
+		return nil
 	}
+
 	// TODO save files:
 	//	- rewards to BasePath + "-rewards" + FileSuffix
 	//	- episodeLengths to BasePath + "-episodes" + FileSuffix

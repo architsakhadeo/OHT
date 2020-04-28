@@ -59,8 +59,7 @@ func Execute(data json.RawMessage) error {
 		return err
 	}
 
-	expr.Run()
-	return nil
+	return expr.Run()
 }
 
 type settings struct {
