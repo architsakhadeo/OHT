@@ -124,6 +124,12 @@ func (lg *dataLogger) SaveLog() error {
 	if err != nil {
 		return err
 	}
+	// Write header row
+	_, err = file.WriteString("rewards\n")
+	if err != nil {
+		return err
+	}
+	// Write remaining rows
 	for _, rew := range lg.rewards {
 		_, err = file.WriteString(fmt.Sprintf("%f\n", rew))
 		if err != nil {
@@ -136,6 +142,12 @@ func (lg *dataLogger) SaveLog() error {
 		if err != nil {
 			return err
 		}
+		// Write header row
+		_, err = file.WriteString("episode lengths\n")
+		if err != nil {
+			return err
+		}
+		// Write remaining rows
 		for _, ep := range lg.episodeLengths {
 			_, err = file.WriteString(fmt.Sprintf("%d\n", ep))
 			if err != nil {
@@ -149,6 +161,21 @@ func (lg *dataLogger) SaveLog() error {
 		if err != nil {
 			return err
 		}
+
+		// Write header row
+		str := "new state,previous state,action,reward"
+		if lg.headers != nil {
+			for _, hdr := range lg.headers {
+				str += "," + hdr
+			}
+		}
+		str += "\n"
+		_, err = file.WriteString(str)
+		if err != nil {
+			return err
+		}
+
+		// Write remaining rows
 		for i := range lg.currState {
 			str := fmt.Sprintf("%v,%v,%d,%f", lg.currState[i], lg.prevState[i], lg.actions[i], lg.rewards[i])
 			if lg.headers != nil {
