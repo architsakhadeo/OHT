@@ -88,8 +88,10 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
 
 		if episodeEnded {
+			if exp.MaxSteps != 0 {
+				exp.Message("warning", "An episode ended in a continuing setting. This doesn't make sense.")
+			}
 			exp.agent.End(newState, reward)
-			// TODO this is continuous, so episodes shouldn't end. This is an error? But for cartpole, we're still using episodes sort of.
 		} else {
 			action = exp.agent.Step(newState, reward)
 		}
