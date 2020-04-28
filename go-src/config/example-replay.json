@@ -1,4 +1,5 @@
 {
+	"comment": "This config file shows how to run offline training by replaying a saved trace. Before running this, run 'example.json' to save a trace.",
 	"agent-name": "example",
 	"environment-name": "replay",
 	"agent-settings": {

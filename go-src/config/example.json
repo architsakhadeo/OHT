@@ -1,4 +1,5 @@
 {
+	"comment": "This config file shows the basic structure. The 'agent-name' and 'environment-name' strings provide the agent and environment to load. The 'agent-settings' and 'environment-settings' objects are passed to the agent and environment, respectively. The 'experiment-settings' configure the experiment itself. Anything inside of 'sweep' must be an array. The program will calculate how many combinations of parameters are described by the sweep, and run the experiment once for each combination. The selected value is placed directly into 'agent-settings' and the entire 'sweep' object is not visible to the agent.",
 	"agent-name": "example",
 	"environment-name": "example",
 	"agent-settings": {
