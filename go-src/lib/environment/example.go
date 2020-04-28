@@ -70,7 +70,7 @@ func (env *Example) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 
 // GetAttributes returns attributes for this environment.
 func (env *Example) GetAttributes() rlglue.Attributes {
-	return rlglue.Attributes(`{"numberOfActions":4}`)
+	return rlglue.Attributes(`{"numberOfActions":4}`) // TODO this is actually ExampleNumberOfActions, not 4
 	// TODO should be saved as attributes from a known struct
 	// ExampleNumberOfActions:  ExampleNumberOfActions,
 	// DimensionOfState: 1,
