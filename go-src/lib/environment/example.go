@@ -39,9 +39,9 @@ func (env *Example) Initialize(attr rlglue.Attributes) error {
 		env.Message("warning", "environment.Example seed wasn't available")
 		ss.Seed = 0
 	}
-	rand.Seed(ss.Seed)
+	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
 
-	env.state = rand.Intn(ExampleNumberOfActions) - ExampleActionMax
+	env.state = rng.Intn(ExampleNumberOfActions) - ExampleActionMax
 
 	env.Message("msg", "environment.Example Initialize", "seed", ss.Seed)
 

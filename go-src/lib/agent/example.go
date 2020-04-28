@@ -31,13 +31,14 @@ func (agent *Example) Initialize(expAttr, envAttr rlglue.Attributes) error {
 		agent.Message("warning", "agent.Example seed wasn't available: "+err.Error())
 		ss.Seed = 0
 	}
-	rand.Seed(ss.Seed)
 
 	err = json.Unmarshal(envAttr, &agent)
 	if err != nil {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
 	}
-	agent.lastAction = rand.Intn(agent.NumberOfActions)
+
+	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+	agent.lastAction = rng.Intn(agent.NumberOfActions)
 
 	agent.Message("msg", "agent.Example Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
 
