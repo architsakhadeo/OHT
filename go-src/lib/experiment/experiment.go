@@ -49,7 +49,7 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set Settings, debug
 }
 
 func (exp *Experiment) Run() error {
-	if exp.MaxSteps != 0 {
+	if exp.Settings.MaxSteps != 0 {
 		exp.runContinuous()
 	} else {
 		exp.runEpisodic()
@@ -62,14 +62,14 @@ func (exp *Experiment) Run() error {
 
 func (exp *Experiment) runContinuous() {
 	exp.Message("msg", "Starting continuous experiment")
-	for exp.numStepsTaken < exp.MaxSteps {
+	for exp.numStepsTaken < exp.Settings.MaxSteps {
 		exp.runSingleEpisode()
 	}
 }
 
 func (exp *Experiment) runEpisodic() {
 	exp.Message("msg", "Starting episodic experiment")
-	for exp.numEpisodesDone < exp.MaxEpisodes {
+	for exp.numEpisodesDone < exp.Settings.MaxEpisodes {
 		exp.runSingleEpisode()
 	}
 }
@@ -80,7 +80,7 @@ func (exp *Experiment) runSingleEpisode() {
 	action := exp.agent.Start(prevState)
 
 	numStepsThisEpisode := 0
-	for !episodeEnded && (exp.MaxSteps == 0 || exp.numStepsTaken < exp.MaxSteps) {
+	for !episodeEnded && (exp.Settings.MaxSteps == 0 || exp.numStepsTaken < exp.Settings.MaxSteps) {
 		var reward float64
 		var newState rlglue.State
 		newState, reward, episodeEnded = exp.environment.Step(action)
@@ -88,7 +88,7 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
 
 		if episodeEnded {
-			if exp.MaxSteps != 0 {
+			if exp.Settings.MaxSteps != 0 {
 				exp.Message("warning", "An episode ended in a continuing setting. This doesn't make sense.")
 			}
 			exp.agent.End(newState, reward)
@@ -101,7 +101,7 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
 
-		if exp.numStepsTaken%exp.DebugInterval == 0 {
+		if exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 	}
