@@ -53,6 +53,14 @@ func Parse(data json.RawMessage) (Config, error) {
 	return conf, nil
 }
 
+func (conf Config) SweptAgentAttributes(idx int) (rlglue.Attributes, error) {
+	if idx >= len(conf.sweeper.allAttributes) {
+		return nil, fmt.Errorf("Cannot run sweep %d (max idx %d)", idx, len(conf.sweeper.allAttributes)-1)
+	}
+	attrs := conf.sweeper.allAttributes[idx]
+	return json.Marshal(attrs)
+}
+
 type sweeper struct {
 	allAttributes []AttributeMap
 }
