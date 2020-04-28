@@ -13,6 +13,7 @@
 				[1, 4]
 			]
 		},
+		"enable-debug": true,
 		"seed": 25
 	},
 	"environment-settings": {
@@ -23,6 +24,6 @@
 		"data-path": "data/example",
 		"should-log-traces": true,
 		"should-log-episode-lengths": true,
-		"debug-interval": 2
+		"debug-interval": 1
 	}
 }
