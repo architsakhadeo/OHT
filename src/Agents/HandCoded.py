@@ -13,7 +13,7 @@ class HandCoded(BaseAgent):
 			change plans, even though that's not necessarily the same number.)
 			This would correspond to a plan duration of reaction_time/tau = 0.2/0.02 = 10.
 		threshold: A parameter between 0 and 1 to control behavior.
-		tau: The OpenAI episodic cartpole-v1 has tau=0.02s between steps.
+		tau: The OpenAI episodic cartpole-v1 has tau=0.02s between steps (no longer used here).
 		fail_degrees: The angle at which the environment terminates the episode.
 		fail_position: The position at which the environment terminates the episode, whether it's positive or negative.
 	Return: None
@@ -28,7 +28,23 @@ class HandCoded(BaseAgent):
 		self.actions = []
 		return
 
+
 	def set_param(self, param):
+		if not hasattr('plan_duration', 'param'):
+			param.actions_per_step = 2
+		if not hasattr('threshold', 'param'):
+			param.threshold = 0.9
+		if not hasattr('fail_degrees', 'param'):
+			param.fail_degrees = 15
+		if not hasattr('fail_position', 'param'):
+			param.fail_position = 2.4
+
+		self.actions_per_step = param.plan_duration
+		self.fail_angle = self.fail_degrees/180*pi
+		self.fail_position = param.fail_position
+		self.threshold = param.threshold
+
+		self.actions = []
 		return
 
 	"""
