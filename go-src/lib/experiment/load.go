@@ -19,10 +19,12 @@ func Execute(data json.RawMessage) error {
 
 	// Parse settings
 	set := settings{
-		MaxEpisodes:   0,
-		MaxSteps:      0,
-		DebugInterval: 1,
-		DataPath:      "",
+		MaxEpisodes:             0,
+		MaxSteps:                0,
+		DebugInterval:           1,
+		DataPath:                "",
+		ShouldLogTraces:         false,
+		ShouldLogEpisodeLengths: false,
 	}
 	err = json.Unmarshal(conf.Experiment, &set)
 	if err != nil {
@@ -34,8 +36,8 @@ func Execute(data json.RawMessage) error {
 		ShouldPrintDebug: true,
 	})
 	dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
-		ShouldLogTraces:         false,
-		ShouldLogEpisodeLengths: true,
+		ShouldLogTraces:         set.ShouldLogTraces,
+		ShouldLogEpisodeLengths: set.ShouldLogEpisodeLengths,
 		BasePath:                set.DataPath,
 		FileSuffix:              "", // TODO after figuring out runs
 	})
@@ -62,10 +64,12 @@ func Execute(data json.RawMessage) error {
 }
 
 type settings struct {
-	MaxEpisodes   int    `json:"episodes"`
-	MaxSteps      int    `json:"steps"`
-	DebugInterval int    `json:"debug-interval"`
-	DataPath      string `json:"data-path"`
+	MaxEpisodes             int    `json:"episodes"`
+	MaxSteps                int    `json:"steps"`
+	DebugInterval           int    `json:"debug-interval"`
+	DataPath                string `json:"data-path"`
+	ShouldLogTraces         bool   `json:"should-log-traces"`
+	ShouldLogEpisodeLengths bool   `json:"should-log-episode-lengths"`
 }
 
 type Config struct {

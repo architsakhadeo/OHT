@@ -20,6 +20,8 @@
 	"experiment-settings": {
 		"steps": 12,
 		"data-path": "data/",
+		"should-log-traces": true,
+		"should-log-episode-lengths": true,
 		"debug-interval": 2
 	}
 }
