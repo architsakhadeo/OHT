@@ -3,7 +3,9 @@ import numpy as np
 from importlib import import_module
 import torch
 import time
-import math
+import pickle as pkl
+from sklearn.neighbors import BallTree
+
 from utils.collect_config import ParameterConfig, Sweeper
 from utils.collect_parser import CollectInput
 from utils.log_and_plot_func import write_param_log
@@ -25,12 +27,15 @@ def saved_file_name(config, run_idx, eval=False):
     if agent_params.rep_type in ["TC", "sepTC", "sep_pair_TC"]:
         input_ += "{}x{}".format(agent_params.num_tilings, agent_params.num_tiles)
     if config.agent == "DQN":
-        other_info = "_B{}_sync{}_NN{}".format(agent_params.len_buffer,
+        other_info = "_B{}_sync{}_NN{}_batch{}".format(agent_params.len_buffer,
                                              agent_params.dqn_sync,
                                              str(agent_params.nonLinearQ_node),
+                                             agent_params.dqn_minibatch
                                              )
         if agent_params.dqn_sync == 1:
             other_info += "_plan{}".format(agent_params.num_planning)
+    elif config.agent == "ExpectedSarsaTileCodingContinuing":
+        other_info = "_lmbda{}_epsilon{}".format(agent_params.lmbda, agent_params.epsilon)
     else:
         other_info = ""
     if env_params.drift_prob > 0:
@@ -146,15 +151,18 @@ class Experiment():
         self.save_log()
 
     def offline_learning(self):
+        t0 = time.time()
         # Save name of agent because collect_trajectory will change it
         eval_code = self.agent_code
         eval_name = self.config.agent
 
         path, name = self.collect_trajectory()
         q_path, q_name = self.learn_policy(path, name, eval_code, eval_name)
-        self.evaluation(q_path, q_name, eval_code, eval_name, 100000)
+        # self.online_evaluation(q_path, q_name, eval_code, eval_name, 10000)
+        self.offline_evaluation(q_path, q_name, eval_code, eval_name, 10000)
+        print("Total running time:", time.time() - t0)
 
-    def collect_trajectory(self):
+    def collect_trajectory(self, save=True):
         # Collect trajectories with some policy
         self.config.agent = self.config.learn_from
         agent_code = import_module("Agents.{}".format(self.config.learn_from))
@@ -162,8 +170,76 @@ class Experiment():
 
         self.reset_exp()
         self.single_run()
-        path, name = self.save_log(save_step=False, save_reward=False, save_traj=True, save_Q=False)
-        return path, name
+        if save:
+            path, name = self.save_log(save_step=False, save_reward=False, save_traj=True, save_Q=False)
+            return path, name
+
+    def offline_env_training(self, file_path=None):
+        if file_path is None:
+            np.random.seed(2048) # independent random seed for environment model training data
+            policy_steps = self.config.exp_params.num_steps
+            policy_agent = self.config.agent
+            self.config.exp_params.num_steps = 1000000 # model training data size
+            self.collect_trajectory(save=False)
+            self.config.exp_params.num_steps = policy_steps # number of steps in config
+            self.config.agent = policy_agent
+            run_seed = config.exp_params.random_seed * self.run_idx # random seed in config
+            np.random.seed(run_seed)
+
+            offline_env = []
+            offline_data = []
+            self.trajectory_log[:, -1] = self.trajectory_log[:, -1] == 0
+            for a in range(self.config.agent_params.num_action):
+                idx = np.where(self.trajectory_log[:, self.dim_state] == a)[0]
+                key = self.trajectory_log[idx][:, :self.dim_state]
+                offline_data.append(np.copy(self.trajectory_log[idx]))
+                offline_env.append(BallTree(key, leaf_size=40))
+            offline_env_model = {
+                "offline_data": offline_data,
+                "offline_env": offline_env
+            }
+            path = "../data/offline_env/"
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            with open(path+"offline_env_model.pkl", "wb") as f:
+                pkl.dump(offline_env_model, f)
+        else:
+            with open(file_path, "rb") as f:
+                offline_env_model = pkl.load(f)
+        setattr(self.config, "offline_env_model", offline_env_model)
+
+        # # test
+        # terminal = np.where(self.trajectory_log[:, -1] == 1)[0]
+        # for a in range(self.config.agent_params.num_action):
+        #     _, idx = offline_env[a].query([self.trajectory_log[terminal[0], :self.dim_state]], k=1)
+        #     print(offline_data[a][idx[0][0]])
+        #     print(offline_data[a][idx[0][0]][4*2+2])
+        # exit()
+
+    def offline_env_test(self):
+        env_backup = self.env
+        env_code = import_module("Environments.OfflineEnvironment")
+        env = env_code.init_env()
+        env.set_param(self.config.offline_env_model)
+
+        agent_code = import_module("Agents.{}".format(self.config.learn_from))
+        agent = agent_code.init_agent()
+        terminal = True
+        count = 0
+        total = 0
+        while True:
+            if terminal:
+                print("Step", count)
+                state = env.start()
+                count = 0
+                action = agent.start(state)
+            state, reward, terminal, _ = env.step(action)
+            action, _ = agent.step(reward, state)
+            count += 1
+            total += 1
+            if total > 100000:
+                break
+
 
     def learn_policy(self, path, name, eval_code, eval_name):
         # Load saved trajectory
@@ -197,14 +273,40 @@ class Experiment():
                     path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
                     print("\nEvaluating agent at step", t)
                     learning_agent = self.agent
-                    self.evaluation(path, name, eval_code, eval_name, 200)
+                    # self.online_evaluation(path, name, eval_code, eval_name, 200)
+                    self.offline_evaluation(path, name, eval_code, eval_name, 200)
                     self.agent = learning_agent
                     print("\nEvaluation ends, keep learning...")
 
         path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
         return path, name
 
-    def evaluation(self, path, name, eval_code, eval_name, eval_step):
+    def offline_evaluation(self, path, name, eval_code, eval_name, eval_step):
+        env_backup = self.env
+        env_code = import_module("Environments.OfflineEnvironment")
+        self.env = env_code.init_env()
+        self.env.set_param(self.config.offline_env_model)
+
+        self.agent_code = eval_code
+        self.config.agent = eval_name
+        self.config.exp_params.num_steps = eval_step # Evaluate for 500 steps
+        learning_weight = self.config.agent_params.alpha
+        learning_epsilon = self.config.agent_params.epsilon
+        self.config.agent_params.alpha = 0 # Fixed weight
+        self.config.agent_params.epsilon = 0
+        self.config.agent_params.decreasing_epsilon = False # Does not use epsilon greedy in evaluation
+        self.agent = eval_code.init_agent()
+        self.agent.set_param(self.config.agent_params)
+        self.agent.load(path+name+"_Q")
+
+        self.reset_exp()
+        self.single_run()
+        self.config.agent_params.alpha = learning_weight
+        self.config.agent_params.epsilon = learning_epsilon
+        self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=True)
+        self.env = env_backup
+
+    def online_evaluation(self, path, name, eval_code, eval_name, eval_step):
         # Evaluate agent with learned policy. Weights are frozen (by setting alpha to zero). Epsilon is zero. (Note epsilon is non-zero in the online setting.)
         self.agent_code = eval_code
         self.config.agent = eval_name
@@ -298,7 +400,7 @@ class Experiment():
 
 
 if __name__ == '__main__':
-
+    t0 = time.time()
     # parse arguments
     ci = CollectInput()
     parsers = ci.control_experiment_input()
@@ -314,4 +416,9 @@ if __name__ == '__main__':
     if config.learning == "online":
         exp.online_learning()
     else:
+        exp.offline_env_training(file_path="../data/offline_env/offline_env_model.pkl")
+        # exp.offline_env_training(file_path=None)
+        # exp.offline_env_test()
         exp.offline_learning()
+
+    print("Running time", time.time() - t0)

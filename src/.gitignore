@@ -21,6 +21,7 @@ Script/run.sh
 
 # ignore exp_result
 data/exp_result
+data/offline_env
 
 # ignore config
 Parameters/*
