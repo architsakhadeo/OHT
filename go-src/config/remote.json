@@ -1,7 +1,12 @@
 {
-    "agent-name": "grpc",
+    "agent-name": "grpc-launcher",
     "environment-name": "grpc",
     "agent-settings": {
+        "commands": [
+            ["sleep", "626"],
+            ["echo", "'Hello'"],
+            ["pwd"]
+        ],
         "seed": 25
     },
     "environment-settings": {

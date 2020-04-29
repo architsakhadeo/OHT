@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"os/signal"
+	"sync"
 
 	"github.com/stellentus/cartpoles/go-src/lib/config"
 	"github.com/stellentus/cartpoles/go-src/lib/experiment"
-	_ "github.com/stellentus/cartpoles/go-src/lib/remote"
+	"github.com/stellentus/cartpoles/go-src/lib/remote"
 )
 
 // Flags
@@ -16,6 +21,29 @@ var (
 
 func main() {
 	flag.Parse()
+
+	wg := &sync.WaitGroup{}
+	ctx := context.Background()
+
+	// trap Ctrl+C and call cancel on the context
+	ctx, cancel := context.WithCancel(ctx)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	defer func() {
+		signal.Stop(c)
+		cancel()
+		fmt.Println("Waiting")
+		wg.Wait()
+	}()
+	go func() {
+		select {
+		case <-c:
+			cancel()
+			wg.Wait()
+		case <-ctx.Done():
+		}
+	}()
+	remote.RegisterLaunchers(ctx, wg)
 
 	data, err := ioutil.ReadFile(*configPath)
 	if err != nil {
