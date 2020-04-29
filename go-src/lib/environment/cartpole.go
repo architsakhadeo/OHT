@@ -31,6 +31,7 @@ type Cartpole struct {
 	Seed              int64     `json:"seed"`
 	Delays            []int     `json:"delays"`
 	PercentNoise      []float64 `json:"percent_noise"`
+	Continuing        bool      `json:"continuing"`
 	state             rlglue.State
 	rng               *rand.Rand
 	buffer            [][]float64
@@ -47,6 +48,8 @@ func NewCartpole(logger logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
+	env.Continuing = true // Set default
+
 	err := json.Unmarshal(attr, &env)
 	if err != nil {
 		err = errors.New("environment.Cartpole settings error: " + err.Error())
@@ -172,6 +175,9 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	if done {
 		reward = -1.0
 		env.randomizeState()
+		if env.Continuing {
+			done = false // In a continuing environment, we're never done
+		}
 	}
 
 	// Add noise to state to get observations
