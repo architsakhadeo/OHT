@@ -170,13 +170,12 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	done := (x < -xThreshold) || (x > xThreshold) || (theta < -thetaRhresholdRadians) || (theta > thetaRhresholdRadians)
 
 	var reward float64
-	if !done {
-	} else if env.stepsBeyondDone == -1 {
-		env.stepsBeyondDone = 0
-		reward = -1.0
-		env.randomizeState()
-	} else {
-		env.stepsBeyondDone += 1
+	if done {
+		if env.stepsBeyondDone == -1 {
+			env.stepsBeyondDone = 0
+		} else {
+			env.stepsBeyondDone += 1
+		}
 		reward = -1.0
 		env.randomizeState()
 	}
