@@ -1,15 +1,16 @@
 {
     "agent-name": "grpc-launcher",
-    "environment-name": "grpc",
+    "environment-name": "grpc-launcher",
     "agent-settings": {
         "commands": [
-            ["sleep", "626"],
-            ["echo", "'Hello'"],
-            ["pwd"]
+            ["../env/bin/python", "../src/launch_agent.py"]
         ],
         "seed": 25
     },
     "environment-settings": {
+        "commands": [
+            ["../env/bin/python", "../src/launch_environment.py"]
+        ],
         "NumberOfStates": 4,
         "seed": 41
     },
