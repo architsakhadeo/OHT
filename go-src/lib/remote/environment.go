@@ -61,7 +61,10 @@ func NewEnvironment(cc *grpc.ClientConn) rlglue.Environment {
 
 func (env environmentWrapper) Initialize(attr rlglue.Attributes) error {
 	ctx := context.Background()
-	_, err := env.client.Initialize(ctx, &Attributes{Attributes: string(attr)})
+	err := reattempt(func() error {
+		_, err := env.client.Initialize(ctx, &Attributes{Attributes: string(attr)})
+		return err
+	})
 	return err
 }
 

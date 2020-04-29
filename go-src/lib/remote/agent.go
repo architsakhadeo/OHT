@@ -89,9 +89,12 @@ func NewAgent(cc *grpc.ClientConn) rlglue.Agent {
 
 func (agent agentWrapper) Initialize(experiment, environment rlglue.Attributes) error {
 	ctx := context.Background()
-	_, err := agent.client.Initialize(ctx, &AgentAttributes{
-		Experiment:  &Attributes{Attributes: string(experiment)},
-		Environment: &Attributes{Attributes: string(environment)},
+	err := reattempt(func() error {
+		_, err := agent.client.Initialize(ctx, &AgentAttributes{
+			Experiment:  &Attributes{Attributes: string(experiment)},
+			Environment: &Attributes{Attributes: string(environment)},
+		})
+		return err
 	})
 	return err
 }
