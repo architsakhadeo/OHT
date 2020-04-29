@@ -60,13 +60,13 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 	return nil
 }
 
-func (env *Cartpole) randNoise() rlglue.State {
+func (env *Cartpole) noisyState() rlglue.State {
 	stateLowerBound := []float64{-2.4, -4.0, -(12 * 2 * math.Pi / 360), -3.5}
 	stateUpperBound := []float64{2.4, 4.0, (12 * 2 * math.Pi / 360), 3.5}
 
 	state := make(rlglue.State, 4)
 	for i := range state {
-		state[i] = env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
+		state[i] = env.state[i] + env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
 	}
 	return state
 }
@@ -129,12 +129,7 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	}
 
 	// Add noise to state to get observations
-	observations := env.state
-
-	noise := env.randNoise()
-	for i := range observations {
-		observations[i] += noise[i]
-	}
+	observations := env.noisyState()
 
 	return observations, reward, done
 }
