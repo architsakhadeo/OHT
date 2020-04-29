@@ -44,13 +44,27 @@ func NewCartpole(logger logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
-	env.PercentNoise = make([]float64, 4)
 	err := json.Unmarshal(attr, &env)
 	if err != nil {
 		env.Message("warning", "environment.Cartpole seed wasn't available")
 		env.Seed = 0
 	}
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+
+	if len(env.PercentNoise) != 4 && len(env.PercentNoise) != 0 {
+		err := fmt.Errorf("environment.Cartpole requires percent_noise to be length 4 or length 0, not length %d", len(env.PercentNoise))
+		env.Message("err", err)
+		return err
+	}
+
+	// If noise is off, set array to nil
+	totalNoise := 0.0
+	for _, noise := range env.PercentNoise {
+		totalNoise += noise
+	}
+	if totalNoise == 0.0 {
+		env.PercentNoise = nil
+	}
 
 	env.state = make(rlglue.State, 4)
 	env.stepsBeyondDone = -1
@@ -65,8 +79,13 @@ func (env *Cartpole) noisyState() rlglue.State {
 	stateUpperBound := []float64{2.4, 4.0, (12 * 2 * math.Pi / 360), 3.5}
 
 	state := make(rlglue.State, 4)
-	for i := range state {
-		state[i] = env.state[i] + env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
+	copy(state, env.state)
+
+	if len(env.PercentNoise) != 0 {
+		// Only add noise if it's configured
+		for i := range state {
+			state[i] += env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
+		}
 	}
 	return state
 }
