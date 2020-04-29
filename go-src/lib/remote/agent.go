@@ -2,6 +2,7 @@ package remote
 
 import (
 	"context"
+	"time"
 
 	"github.com/stellentus/cartpoles/go-src/lib/agent"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
@@ -23,12 +24,31 @@ func init() {
 	}
 }
 
+const maxDialAttempts = 20
+
 func dialGrpc(debug logger.Debug, port string) (*grpc.ClientConn, error) {
-	conn, err := grpc.Dial("localhost"+port, grpc.WithInsecure())
+	var conn *grpc.ClientConn
+	err := reattempt(func() error {
+		var err error
+		conn, err = grpc.Dial("localhost"+port, grpc.WithInsecure())
+		return err
+	})
 	if err != nil {
 		debug.Message("err", err)
 	}
 	return conn, err
+}
+
+func reattempt(action func() error) error {
+	var err error
+	for i := 0; i < maxDialAttempts; i++ {
+		err = action()
+		if err == nil {
+			return nil // It worked!
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return err
 }
 
 type agentServer struct {
