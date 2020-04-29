@@ -24,7 +24,7 @@ func init() {
 	}
 }
 
-const maxDialAttempts = 20
+const maxDialAttempts = 200
 
 func dialGrpc(debug logger.Debug, port string) (*grpc.ClientConn, error) {
 	var conn *grpc.ClientConn
