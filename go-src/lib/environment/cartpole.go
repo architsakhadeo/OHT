@@ -51,8 +51,12 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 	}
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
-	if len(env.PercentNoise) != 4 && len(env.PercentNoise) != 0 {
-		err := fmt.Errorf("environment.Cartpole requires percent_noise to be length 4 or length 0, not length %d", len(env.PercentNoise))
+	if len(env.PercentNoise) == 1 {
+		// Copy it for all dimensions
+		noise := env.PercentNoise[0]
+		env.PercentNoise = []float64{noise, noise, noise, noise}
+	} else if len(env.PercentNoise) != 4 && len(env.PercentNoise) != 0 {
+		err := fmt.Errorf("environment.Cartpole requires percent_noise to be length 4, 1, or 0, not length %d", len(env.PercentNoise))
 		env.Message("err", err)
 		return err
 	}
