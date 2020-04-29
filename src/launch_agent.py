@@ -1,7 +1,7 @@
 import logging
 
 from Remote.agent import serve
-from Agents.HandCoded import HandCoded
+from Agents.ExpectedSarsaLambda import ExpectedSarsaTileCodingContinuing
 
 logging.basicConfig()
-serve(HandCoded())
+serve(ExpectedSarsaTileCodingContinuing())
