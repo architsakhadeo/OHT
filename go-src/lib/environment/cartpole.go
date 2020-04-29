@@ -31,7 +31,6 @@ type Cartpole struct {
 	Delays            []int     `json:"delays"`
 	PercentNoise      []float64 `json:"percent_noise"`
 	state             rlglue.State
-	stepsBeyondDone   int
 	rng               *rand.Rand
 	buffer            [][]float64
 	bufferInsertIndex []int
@@ -93,7 +92,6 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 	}
 
 	env.state = make(rlglue.State, 4)
-	env.stepsBeyondDone = -1
 
 	if len(env.Delays) != 0 {
 		env.buffer = make([][]float64, 4)
@@ -137,7 +135,6 @@ func (env *Cartpole) randFloat(min, max float64) float64 {
 // Start returns an initial observation.
 func (env *Cartpole) Start() rlglue.State {
 	env.randomizeState()
-	env.stepsBeyondDone = -1
 	return env.state
 }
 
@@ -171,11 +168,6 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 
 	var reward float64
 	if done {
-		if env.stepsBeyondDone == -1 {
-			env.stepsBeyondDone = 0
-		} else {
-			env.stepsBeyondDone += 1
-		}
 		reward = -1.0
 		env.randomizeState()
 	}
