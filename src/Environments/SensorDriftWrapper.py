@@ -13,6 +13,7 @@ class SensorDriftWrapper(BaseEnvironment):
         self.noise_std = self.state_max / 100
         self.noise_max = self.state_max
         self.drift_prob = 0
+        self.noise_fn = None
 
     def __getattr__(self, name):
         return getattr(self.env, name)
@@ -22,7 +23,11 @@ class SensorDriftWrapper(BaseEnvironment):
         self.sensor_steps = 0
         self.sensor_life = np.array(param.sensor_life)
         self.noise_std = self.state_max / param.drift_scale
-        self.drift_prob = param.drift_prob
+        if param.drift_prob < 0:
+            self.noise_fn = self.gauss_noise
+        else:
+            self.noise_fn = self.prob_gauss_noise
+            self.drift_prob = param.drift_prob
         return self.env.set_param(param)
 
     def reset(self):
@@ -36,7 +41,11 @@ class SensorDriftWrapper(BaseEnvironment):
         state, reward, done = self.env.step(action)
         return self.state_process(state), reward, done
     
-    def state_process(self, state):
+    def gauss_noise(self):
+        # Zero-mean gaussian noise applied at every time-step.
+        return np.random.normal(loc=np.zeros(shape=self.state_dim()), scale=self.noise_std)
+
+    def prob_gauss_noise(self):
         self.sensor_steps += 1
 
         # The probability of drift at each timestep follows a scaled logistic function.
@@ -49,6 +58,10 @@ class SensorDriftWrapper(BaseEnvironment):
         noise_new = np.multiply(
             np.random.normal(loc=np.zeros(shape=self.state_dim()), scale=self.noise_std),
             is_drift)
+        return noise_new
+
+    def state_process(self, state):
+        noise_new = self.noise_fn()
         self.noise = np.clip(self.noise+noise_new, -self.noise_max, self.noise_max)
         state = np.clip(state+self.noise, -self.state_max, self.state_max)
         return state
