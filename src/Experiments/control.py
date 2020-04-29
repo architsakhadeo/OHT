@@ -8,6 +8,7 @@ from utils.collect_config import ParameterConfig, Sweeper
 from utils.collect_parser import CollectInput
 from utils.log_and_plot_func import write_param_log
 import os
+from Environments.SensorDriftWrapper import SensorDriftWrapper
 
 
 def saved_file_name(config, run_idx, eval=False):
@@ -15,6 +16,7 @@ def saved_file_name(config, run_idx, eval=False):
     if learning == "offline" and eval:
         learning += "_eval"
     agent_params = config.agent_params
+    env_params = config.env_params
     input_ = agent_params.rep_type
     input_ = input_[0].upper() + input_[1:]
     if agent_params.rep_type in ["TC", "sepTC"]:
@@ -26,6 +28,8 @@ def saved_file_name(config, run_idx, eval=False):
                                              )
     else:
         other_info = ""
+    other_info += (f'_drift_scale{env_params.drift_scale}' +
+        f'_life{env_params.sensor_life}_prob{env_params.drift_prob}')
     file_path = "{}/{}/{}_{}{}_alpha{}_input{}".format(
         agent_params.exp_result_path,
         learning,
@@ -53,6 +57,8 @@ class Experiment():
         env_code = import_module("Environments.{}".format(config.environment))
         self.env_name = config.environment
         self.env = env_code.init_env()
+        if config.env_params.drift_prob != 0:
+            self.env = SensorDriftWrapper(self.env)
         self.env.set_param(config.env_params)
 
         # Pass environment info to the agent.
