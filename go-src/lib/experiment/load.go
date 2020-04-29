@@ -27,7 +27,7 @@ func Execute(conf config.Config) error {
 
 	environment, err := InitializeEnvironment(conf.EnvironmentName, conf.Environment, debugLogger)
 	if err != nil {
-		return err
+		return errors.New("Could not initialize environment: " + err.Error())
 	}
 
 	agent, err := InitializeAgent(conf.AgentName, conf.Agent, environment, debugLogger)
@@ -49,9 +49,12 @@ func InitializeEnvironment(name string, attr rlglue.Attributes, debug logger.Deb
 
 	environment, err := environment.Create(name, debug)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Could not create experiment: " + err.Error())
 	}
 	err = environment.Initialize(attr)
+	if err != nil {
+		err = errors.New("Could not initialize experiment: " + err.Error())
+	}
 	return environment, err
 }
 
@@ -61,8 +64,11 @@ func InitializeAgent(name string, attr rlglue.Attributes, env rlglue.Environment
 
 	agent, err := agent.Create(name, debug)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Could not create agent: " + err.Error())
 	}
 	err = agent.Initialize(attr, env.GetAttributes())
+	if err != nil {
+		err = errors.New("Could not initialize agent: " + err.Error())
+	}
 	return agent, err
 }
