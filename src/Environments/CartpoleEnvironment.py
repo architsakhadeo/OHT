@@ -79,9 +79,9 @@ class CartpoleEnvironment(BaseEnvironment):
 		else:
 			self.steps_beyond_done += 1
 			reward = 0.0
-		
-		
-		return self.state, reward, done, {}
+
+
+		return self.state, reward, done
 
 	def num_action(self):
 		return 2
