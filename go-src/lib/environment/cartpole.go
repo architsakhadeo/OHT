@@ -2,6 +2,7 @@ package environment
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -48,8 +49,9 @@ func NewCartpole(logger logger.Debug) (rlglue.Environment, error) {
 func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 	err := json.Unmarshal(attr, &env)
 	if err != nil {
-		env.Message("warning", "environment.Cartpole seed wasn't available")
-		env.Seed = 0
+		err = errors.New("environment.Cartpole settings error: " + err.Error())
+		env.Message("err", err)
+		return err
 	}
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
