@@ -11,7 +11,7 @@ class RemoteEnvironment(remote_pb2_grpc.EnvironmentServicer):
 		self.environment = environment
 
 	def Initialize(self, attr, context):
-		self.environment.set_param(attr.attributes)
+		self.environment.set_param(json.loads(attr.attributes))
 		self.attributes = attr.attributes
 		return remote_pb2.Empty()
 
@@ -20,7 +20,7 @@ class RemoteEnvironment(remote_pb2_grpc.EnvironmentServicer):
 		return remote_pb2.State(values = state)
 
 	def Step(self, action, context):
-		(state, reward, done, unused) = self.environment.step(action.action)
+		(state, reward, done) = self.environment.step(action.action)
 		return remote_pb2.StepResult(
 			state = remote_pb2.State(values = state),
 			reward = reward,
@@ -28,7 +28,7 @@ class RemoteEnvironment(remote_pb2_grpc.EnvironmentServicer):
 			)
 
 	def GetAttributes(self, empty, context):
-		return remote_pb2.Attributes(attributes = self.attributes)
+		return remote_pb2.Attributes(attributes = self.attributes) # TODO this is something different, provided by the enviornment
 
 
 
