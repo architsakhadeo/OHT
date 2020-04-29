@@ -64,10 +64,7 @@ func (agent *Example) Start(state rlglue.State) rlglue.Action {
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Example) Step(state rlglue.State, reward float64) rlglue.Action {
-	agent.lastAction++
-	if agent.lastAction > agent.NumberOfActions {
-		agent.lastAction = 0
-	}
+	agent.lastAction = (agent.lastAction + 1) % agent.NumberOfActions
 	act := rlglue.Action(agent.lastAction)
 	if agent.EnableDebug {
 		if agent.StateContainsReplay {
