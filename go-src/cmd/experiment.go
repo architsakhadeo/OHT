@@ -38,7 +38,7 @@ func main() {
 		case <-c:
 			cancel()
 			wg.Wait()
-			os.Exit(130) // ctrl-C is 130 but this still just returns 1
+			os.Exit(1)
 		case <-ctx.Done():
 		}
 	}()
