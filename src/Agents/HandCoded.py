@@ -30,19 +30,22 @@ class HandCoded(BaseAgent):
 
 
 	def set_param(self, param):
-		if not hasattr('plan_duration', 'param'):
-			param.actions_per_step = 2
-		if not hasattr('threshold', 'param'):
-			param.threshold = 0.9
-		if not hasattr('fail_degrees', 'param'):
-			param.fail_degrees = 15
-		if not hasattr('fail_position', 'param'):
-			param.fail_position = 2.4
+		if 'plan_duration' not in param:
+			param['plan_duration'] = 2
 
-		self.actions_per_step = param.plan_duration
-		self.fail_angle = self.fail_degrees/180*pi
-		self.fail_position = param.fail_position
-		self.threshold = param.threshold
+		if 'threshold' not in param:
+			param['threshold'] = 0.9
+
+		if 'fail_degrees' not in param:
+			param['fail_degrees'] = 15
+
+		if 'fail_position' not in param:
+			param['fail_position'] = 2.4
+
+		self.actions_per_step = param['plan_duration']
+		self.fail_angle = param['fail_degrees']/180*pi
+		self.fail_position = param['fail_position']
+		self.threshold = param['threshold']
 
 		self.actions = []
 		return
