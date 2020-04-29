@@ -2,6 +2,7 @@ package environment
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -26,12 +27,14 @@ const (
 
 type Cartpole struct {
 	logger.Debug
-	Seed            int64     `json:"seed"`
-	Delays          int       `json:"delays"`
-	PercentNoise    []float64 `json:"percent_noise"`
-	state           rlglue.State
-	stepsBeyondDone int
-	rng             *rand.Rand
+	Seed              int64     `json:"seed"`
+	Delays            []int     `json:"delays"`
+	PercentNoise      []float64 `json:"percent_noise"`
+	state             rlglue.State
+	stepsBeyondDone   int
+	rng               *rand.Rand
+	buffer            [][]float64
+	bufferInsertIndex []int
 }
 
 func init() {
@@ -61,6 +64,16 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 		return err
 	}
 
+	if len(env.Delays) == 1 {
+		// Copy it for all dimensions
+		delay := env.Delays[0]
+		env.Delays = []int{delay, delay, delay, delay}
+	} else if len(env.Delays) != 4 && len(env.Delays) != 0 {
+		err := fmt.Errorf("environment.Cartpole requires delays to be length 4, 1, or 0, not length %d", len(env.Delays))
+		env.Message("err", err)
+		return err
+	}
+
 	// If noise is off, set array to nil
 	totalNoise := 0.0
 	for _, noise := range env.PercentNoise {
@@ -70,8 +83,25 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 		env.PercentNoise = nil
 	}
 
+	// If delays are off, set array to nil
+	totalDelay := 0
+	for _, noise := range env.Delays {
+		totalDelay += noise
+	}
+	if totalDelay == 0 {
+		env.Delays = nil
+	}
+
 	env.state = make(rlglue.State, 4)
 	env.stepsBeyondDone = -1
+
+	if len(env.Delays) != 0 {
+		env.buffer = make([][]float64, 4)
+		for i := range env.buffer {
+			env.buffer[i] = make([]float64, env.Delays[i])
+		}
+		env.bufferInsertIndex = make([]int, 4)
+	}
 
 	env.Message("msg", "environment.Cartpole Initialize", "seed", env.Seed, "delays", env.Delays, "percent noise", env.PercentNoise)
 
@@ -153,6 +183,15 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 
 	// Add noise to state to get observations
 	observations := env.noisyState()
+
+	// Add delays
+	if len(env.Delays) != 0 {
+		for i, obs := range observations {
+			observations[i] = env.buffer[i][env.bufferInsertIndex[i]]                 // Load the delayed observation
+			env.buffer[i][env.bufferInsertIndex[i]] = obs                             // Store the current state
+			env.bufferInsertIndex[i] = (env.bufferInsertIndex[i] + 1) % env.Delays[i] // Update the insertion point
+		}
+	}
 
 	return observations, reward, done
 }
