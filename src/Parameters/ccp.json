@@ -6,7 +6,7 @@
         "learn_from": "HandCoded",
         "env_params": {
             "drift_scale": 100,
-            "sensor_life": 1,
+            "sensor_life": [1,1,1,1],
             "drift_prob": 0
         },
         "agent_params": {
@@ -47,7 +47,7 @@
     "control_param": {
         "env_params": {
             "drift_scale": [100],
-            "sensor_life": [1],
+            "sensor_life": [[1,1,1,1]],
             "drift_prob": [0, 0.05, 0.1]
         },
         "agent_params": {

@@ -20,7 +20,7 @@ class SensorDriftWrapper(BaseEnvironment):
     def set_param(self, param):
         self.noise = np.zeros(shape=self.state_dim())
         self.sensor_steps = 0
-        self.sensor_life = param.sensor_life
+        self.sensor_life = np.array(param.sensor_life)
         self.noise_std = self.state_max / param.drift_scale
         self.drift_prob = param.drift_prob
         return self.env.set_param(param)
@@ -35,19 +35,20 @@ class SensorDriftWrapper(BaseEnvironment):
     def step(self, action):
         state, reward, done = self.env.step(action)
         return self.state_process(state), reward, done
-
+    
     def state_process(self, state):
         self.sensor_steps += 1
 
         # The probability of drift at each timestep follows a scaled logistic function.
+        # Each element corresponds to the sensor of a component of the state.
         prob_drift = logistic.cdf(self.sensor_steps, loc=self.sensor_life/2,
                                   scale=self.sensor_life/10)*self.drift_prob
         is_drift = bernoulli.rvs(p=prob_drift)
         
         # TODO Enable increasing mean and/or variance.
-        noise_new = (np.random.normal(loc=np.zeros(shape=self.state_dim()),
-                        scale=self.noise_std) if is_drift
-                        else np.zeros(shape=self.state_dim()))
+        noise_new = np.multiply(
+            np.random.normal(loc=np.zeros(shape=self.state_dim()), scale=self.noise_std),
+            is_drift)
         self.noise = np.clip(self.noise+noise_new, -self.noise_max, self.noise_max)
         state = np.clip(state+self.noise, -self.state_max, self.state_max)
         return state
