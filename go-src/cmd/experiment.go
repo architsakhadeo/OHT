@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -32,7 +31,6 @@ func main() {
 	defer func() {
 		signal.Stop(c)
 		cancel()
-		fmt.Println("Waiting")
 		wg.Wait()
 	}()
 	go func() {
@@ -40,6 +38,7 @@ func main() {
 		case <-c:
 			cancel()
 			wg.Wait()
+			os.Exit(130) // ctrl-C is 130 but this still just returns 1
 		case <-ctx.Done():
 		}
 	}()
