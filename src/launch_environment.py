@@ -1,7 +1,7 @@
 import logging
 
 from Remote.environment import serve
-from Environments.CartpoleEnvironment import CartpoleEnvironment
+from Environments.ContinuingCartpoleEnvironment import CartpoleEnvironmentContinuing
 
 logging.basicConfig()
-serve(CartpoleEnvironment())
+serve(CartpoleEnvironmentContinuing())
