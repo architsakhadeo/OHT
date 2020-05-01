@@ -54,7 +54,7 @@ def write_param_log(agent_params, env_params, env, file_path, exp_params=None, s
 
     print("log saved in", file_path)
 
-def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp_smooth=None, save_path=None, num_color=None, handcode=None):
+def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp_smooth=None, save_path=None, handcode=None, best="largeAUC"):
     best_lrs = {}
     for k in all_data.keys():
 
@@ -62,7 +62,7 @@ def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp
         plt.xlim(lim_x[0], lim_x[1])
         plt.ylim(lim_y[0], lim_y[1])
         print("\ntitle", k)
-        mean, upper, lower, lr = plot_control_exp_curve_single_key(plt, all_data[k], label[k], lim_x, lim_y, ignore_zero=ignore_zero, exp_smooth=exp_smooth, total_number=num_color)
+        mean, upper, lower, lr = plot_control_exp_curve_single_key(plt, all_data[k], label[k], lim_x, lim_y, ignore_zero=ignore_zero, exp_smooth=exp_smooth, best=best)
         best_lrs[k] = [mean, upper, lower, lr]
 
         plt.title(k)
@@ -96,7 +96,7 @@ def plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=False, exp
     plt.legend()
     plt.show()
 
-def plot_control_exp_curve_single_key(canvas, all_data, labels, range_x, range_y, ignore_zero=False, exp_smooth=None, total_number=None):
+def plot_control_exp_curve_single_key(canvas, all_data, labels, range_x, range_y, ignore_zero=False, exp_smooth=None, best="largeAUC"):
     auc = np.zeros(len(all_data))
     for i in range(len(all_data)):
         c = get_color_by_lable(labels[i], i)
@@ -112,7 +112,7 @@ def plot_control_exp_curve_single_key(canvas, all_data, labels, range_x, range_y
         auc[i] = np.sum(curve[len(curve)//2:] - range_y[0])
 
     print("All auc =", auc)
-    best_i = np.argmax(auc)
+    best_i = np.argmax(auc) if best == "largeAUC" else np.argmin(auc)
     mean, upper, lower = calculate_avg_default(all_data[best_i], exp_smooth=exp_smooth)
     print("Best setting =", np.max(auc), labels[best_i])
     return mean, upper, lower, labels[best_i]

@@ -109,6 +109,7 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
         if env_name.lower() in ["cp"]:
             ignore_zero = False
             exp_smooth = None
+            best = "largeAUC"
             one_setting = return_per_ep_all_runs(folder, run_num, num_steps)
             lim_y = [0, 200]
             lim_x = [1, 10000]
@@ -119,6 +120,7 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
         #     ignore_zero = False
         #     exp_smooth = None
         #     num_ep = 150
+        #     best = "largeAUC"
         #     one_setting = num_steps_per_ep_all_runs(folder, run_num, num_ep)
         #     lim_y = [0, 500]
         #     lim_x = [1, num_ep]
@@ -136,6 +138,7 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
         elif env_name.lower() in ["ccp"]:
             ignore_zero = False
             exp_smooth = None
+            best = "smallAUC"
             one_setting = accum_reward_all_runs(folder, run_num, num_steps)
             if one_setting is None:
                 continue
@@ -175,9 +178,9 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
                 all_data[key] = [one_setting]
                 label[key] = [agent_params.alpha]
     save_path = "../data/plots/{}".format(env_name)
-    pf.plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=ignore_zero, exp_smooth=exp_smooth, save_path=None, handcode=handcode_data)
+    pf.plot_control_exp_curve(all_data, label, lim_x, lim_y, ignore_zero=ignore_zero, exp_smooth=exp_smooth, save_path=None, handcode=handcode_data, best=best)
 
 if __name__ == '__main__':
     control_exp_single_env("CCP", "../data/exp_result",
-                           handcode="../data/exp_result/offline_eval/ContinuingCartpoleEnvironment_DQN_B500_sync25_NN[128, 128]_alpha1e-05_inputObs",
-                           eval=False)
+                           handcode="../data/exp_result/offline_eval/ContinuingCartpoleEnvironment_DQN_B500_sync10_NN[128, 128]_alpha1e-05_inputObs",
+                           eval=True)

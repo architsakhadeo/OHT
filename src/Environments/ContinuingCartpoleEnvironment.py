@@ -24,10 +24,17 @@ import math
 
 
 # state space = array([cart position, cart velocity, pole angle, pole velocity at tip])
-# action space = array([-1, +1])
+# action space = array([0, 1])
 
 class CartpoleEnvironmentContinuing(BaseEnvironment):
 	def __init__(self):
+		super().__init__()
+		return		
+	
+	def set_param(self, param):
+		self.delays = param.delays
+		self.percent_noise = param.percent_noise
+
 		self.gravity = 9.8
 		self.masscart = 1.0
 		self.masspole = 0.1
@@ -36,26 +43,25 @@ class CartpoleEnvironmentContinuing(BaseEnvironment):
 		self.polemass_length = (self.masspole * self.length)
 		self.force_mag = 10.0
 		self.tau = 0.02
-		self.theta_threshold_radians = 12 * 2 * math.pi / 360
+		self.theta_threshold_radians = (12 * 2 * math.pi / 360)
 		self.x_threshold = 2.4
-		#self.x_dot_threshold = 4
-		#self.theta_dot_threshold_radians = 3.5
-		self.state = None
-		#self.total_steps = 0
-		self.steps_beyond_done = None
-		#self.max_episode_length = 200
-		# self.seed = seed
-		# np.random.seed(self.seed)
 
-	def set_param(self, param):
-		"""
-		No parameter comes from json file yet
-		"""
+		self.state = None
+		self.observations = None
+		self.delay_observations = None
+		self.steps_beyond_done = None
+
+		self.buffer = [[] for i in range(self.state_dim())]
+		self.actual_index = [0 for i in range(self.state_dim())]
+		self.delay_index = [0 for i in range(self.state_dim())]
+		
+		self.state_lowerbound = [-2.4, -4.0, -(12 * 2 * math.pi / 360), -3.5]
+		self.state_upperbound = [2.4, 4.0, (12 * 2 * math.pi / 360), 3.5]
+
 		return
 		
 	def start(self):
-		#self.total_steps = 0
-		self.state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
+		self.state = np.random.uniform(low=-0.05, high=0.05, size=(self.state_dim(),))
 		self.steps_beyond_done = None
 		return self.state
 	
@@ -85,10 +91,7 @@ class CartpoleEnvironmentContinuing(BaseEnvironment):
 		
 		self.state = np.array([x, x_dot, theta, theta_dot])
 		
-		#self.total_steps += 1
-		
-		done = (x < -self.x_threshold) or (x > self.x_threshold) or (theta < -self.theta_threshold_radians) or (theta > self.theta_threshold_radians) #or (self.total_steps >= self.max_episode_length)
-		#done = (x < -self.x_threshold) or (x > self.x_threshold) or (theta < -self.theta_threshold_radians) or (theta > self.theta_threshold_radians) or (x_dot < -self.x_dot_threshold) or (x_dot > self.x_dot_threshold) or (theta_dot < -self.theta_dot_threshold_radians) or (theta_dot > self.theta_dot_threshold_radians)
+		done = (x < -self.x_threshold) or (x > self.x_threshold) or (theta < -self.theta_threshold_radians) or (theta > self.theta_threshold_radians)
 		done = bool(done)
 		
 		if not done:
@@ -96,14 +99,33 @@ class CartpoleEnvironmentContinuing(BaseEnvironment):
 		elif self.steps_beyond_done is None:
 			self.steps_beyond_done = 0
 			reward = -1.0
-			self.state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
+			self.state = np.random.uniform(low=-0.05, high=0.05, size=(self.state_dim(),))
 		else:
 			self.steps_beyond_done += 1
 			reward = -1.0
-			self.state = np.random.uniform(low=-0.05, high=0.05, size=(4,))
+			self.state = np.random.uniform(low=-0.05, high=0.05, size=(self.state_dim(),))
 		
+		# Add noise to state to get observations
+		self.observations = [self.state[i] for i in range(len(self.state))]
+
 		
-		return self.state, reward, done
+		noise = [np.random.uniform(low=self.percent_noise[i]*self.state_lowerbound[i], high=self.percent_noise[i]*self.state_upperbound[i]) for i in range(self.state_dim())]
+
+		for i in range(len(self.observations)):
+			self.observations[i] += noise[i]
+		for i in range(len(state)):
+			self.buffer[i].append(self.observations[i])
+			if len(self.buffer[i]) > max(self.delays) + 1:
+				self.buffer[i] = self.buffer[i][- max(self.delays) - 1:]
+			self.actual_index[i] = len(self.buffer[i]) - 1
+			self.delay_index[i] = len(self.buffer[i]) - 1 - self.delays[i]
+			if self.delay_index[i] < 0:
+				self.delay_index[i] = 0
+
+		self.delay_observations = [self.buffer[i][self.delay_index[i]] for i in range(len(self.observations))]
+	
+		return self.delay_observations, reward, done
+
 
 	def num_action(self):
 		return 2
