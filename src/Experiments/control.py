@@ -28,8 +28,12 @@ def saved_file_name(config, run_idx, eval=False):
                                              )
     else:
         other_info = ""
-    other_info += (f'_drift_scale{env_params.drift_scale}' +
-        f'_life{env_params.sensor_life}_prob{env_params.drift_prob}')
+    if env_params.drift_prob > 0:
+        other_info += (f'_drift_scale{env_params.drift_scale}' +
+            f'_life{str(env_params.sensor_life)}_prob{env_params.drift_prob}')
+    elif env_params.drift_prob < 0:
+        other_info += f'_drift_scale{env_params.drift_scale}'
+
     file_path = "{}/{}/{}_{}{}_alpha{}_input{}".format(
         agent_params.exp_result_path,
         learning,

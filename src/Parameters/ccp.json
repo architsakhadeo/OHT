@@ -7,7 +7,7 @@
         "env_params": {
             "drift_scale": 100,
             "sensor_life": [1,1,1,1],
-            "drift_prob": -1
+            "drift_prob": 0
         },
         "agent_params": {
             "offline_data": null,
@@ -48,7 +48,7 @@
         "env_params": {
             "drift_scale": [100],
             "sensor_life": [[1,1,1,1]],
-            "drift_prob": [-1, 0, 0.05, 0.1]
+            "drift_prob": [-1, 0, 0.05]
         },
         "agent_params": {
             "rep_type": ["obs"],
