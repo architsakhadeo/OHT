@@ -19,6 +19,7 @@ class HandCoded(BaseAgent):
 	Return: None
 	"""
 	def __init__(self, plan_duration = 2, threshold = 0.9, tau = 0.02, fail_degrees = 15, fail_position = 2.4):
+		super().__init__()
 		self.actions_per_step = plan_duration
 		self.fail_angle = fail_degrees/180*pi
 		self.fail_position = fail_position

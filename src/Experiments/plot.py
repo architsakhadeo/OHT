@@ -93,10 +93,12 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
     run_num = 30
     all_data = {}
     label = {}
+    handcode_data = None
     for idx in range(total_comb):
         sweeper = Sweeper('../Parameters/{}.json'.format(env_name.lower()), "control_param")
         config = sweeper.parse(idx)
         agent_params = config.agent_params
+        env_params = config.env_params
         num_steps = config.exp_params.num_steps
         agent_params_temp = config.agent_params
         setattr(agent_params_temp, "exp_result_path", result_path)
@@ -138,6 +140,8 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
             exp_smooth = None
             best = "smallAUC"
             one_setting = accum_reward_all_runs(folder, run_num, num_steps)
+            if one_setting is None:
+                continue
             one_setting *= -1 # number of failures = -1 * accumulate reward
             lim_y = [0, 500]
             lim_x = [1, 50000]
@@ -148,10 +152,22 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
             raise NotImplemented
 
         if one_setting is not None:
-            key = "B{}_sync{}".format(
-                folder.split("_B")[1].split("_")[0],
-                folder.split("_sync")[1].split("_")[0]
-            )
+            key = ''
+            if config.agent == 'DQN':
+                key = "B{}_sync{}".format(
+                    folder.split("_B")[1].split("_")[0],
+                    folder.split("_sync")[1].split("_")[0]
+                )
+            if env_params.drift_prob > 0:
+                key += "drift_scale{}_life{}_prob{}".format(
+                    folder.split("_scale")[1].split("_")[0],
+                    folder.split("_life")[1].split("_")[0],
+                    folder.split("_prob")[1].split("_")[0])
+            elif env_params.drift_prob < 0:
+                key += "drift_scale{}".format(
+                    folder.split("_scale")[1].split("_")[0])
+            else:
+                key += "drift_none"
             if key in all_data.keys():
                 all_data[key].append(one_setting)
                 label[key].append(agent_params.alpha)

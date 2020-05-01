@@ -520,9 +520,6 @@ class DQN(BaseAgent):
             tde = seq[:, self.dim_state * 2 + 3]
         return last_state, last_action, state, reward, gamma, tde
 
-    def get_settings(self):
-        return self.param
-
 
 def init_agent():
     agent = DQN()

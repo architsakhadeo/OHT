@@ -3,6 +3,9 @@
         "environment": "CartpoleEnvironment",
         "agent": "SarsaTileCodingContinuing",
         "env_params": {
+            "drift_scale": 100,
+            "sensor_life": [1,1,1,1],
+            "drift_prob": 0
         },
         "agent_params": {
             "offline_data": null,
@@ -41,6 +44,11 @@
     },
 
     "control_param": {
+        "env_params": {
+            "drift_scale": [100],
+            "sensor_life": [[1,1,1,1]],
+            "drift_prob": [0]
+        },
         "agent_params": {
             "alpha": [0.001, 0.0003, 0.0001, 3e-05]
         }

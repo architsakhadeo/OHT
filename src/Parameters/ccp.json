@@ -6,7 +6,10 @@
         "learn_from": "HandCoded",
         "env_params": {
             "delays": [0,0,0,0],
-            "percent_noise": [0.0, 0.0, 0.0, 0.0]
+            "percent_noise": [0.0, 0.0, 0.0, 0.0],
+            "drift_scale": 100,
+            "sensor_life": [1,1,1,1],
+            "drift_prob": 0
         },
         "agent_params": {
             "offline_data": null,
@@ -44,6 +47,11 @@
     },
 
     "control_param": {
+        "env_params": {
+            "drift_scale": [100],
+            "sensor_life": [[1,1,1,1]],
+            "drift_prob": [-1, 0, 0.05]
+        },
         "agent_params": {
             "rep_type": ["sep_pair_TC"],
             "dqn_sync": [25],
