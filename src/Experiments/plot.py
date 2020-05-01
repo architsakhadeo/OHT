@@ -152,25 +152,22 @@ def control_exp_single_env(env_name, result_path, handcode=None, eval=False):
             raise NotImplemented
 
         if one_setting is not None:
-            if env_params.drift_prob > 0:
-                key = "B{}_sync{}_drift_scale{}_life{}_prob{}".format(
-                    folder.split("_B")[1].split("_")[0],
-                    folder.split("_sync")[1].split("_")[0],
-                    folder.split("_scale")[1].split("_")[0],
-                    folder.split("_life")[1].split("_")[0],
-                    folder.split("_prob")[1].split("_")[0]
-                )
-            elif env_params.drift_prob < 0:
-                key = "B{}_sync{}_drift_scale{}".format(
-                    folder.split("_B")[1].split("_")[0],
-                    folder.split("_sync")[1].split("_")[0],
-                    folder.split("_scale")[1].split("_")[0]
-                )
-            else:
+            key = ''
+            if config.agent == 'DQN':
                 key = "B{}_sync{}".format(
                     folder.split("_B")[1].split("_")[0],
                     folder.split("_sync")[1].split("_")[0]
                 )
+            if env_params.drift_prob > 0:
+                key += "drift_scale{}_life{}_prob{}".format(
+                    folder.split("_scale")[1].split("_")[0],
+                    folder.split("_life")[1].split("_")[0],
+                    folder.split("_prob")[1].split("_")[0])
+            elif env_params.drift_prob < 0:
+                key += "drift_scale{}".format(
+                    folder.split("_scale")[1].split("_")[0])
+            else:
+                key += "drift_none"
             if key in all_data.keys():
                 all_data[key].append(one_setting)
                 label[key].append(agent_params.alpha)

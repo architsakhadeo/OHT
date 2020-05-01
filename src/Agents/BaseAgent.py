@@ -1,4 +1,7 @@
 class BaseAgent:
+	def __init__(self, **kwargs):
+		self.param = None
+
 	def set_param(self, param):
 		raise NotImplementedError('Expected `set_param` to be implemented')
 
@@ -17,3 +20,6 @@ class BaseAgent:
 	def load(self, filepath):
 		# It's fine to not implement this, but it's used for offline learning.
 		raise NotImplementedError('Expected `load` to be implemented')
+
+	def get_settings(self):
+		return self.param

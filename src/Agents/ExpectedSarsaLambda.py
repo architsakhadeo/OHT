@@ -21,6 +21,7 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		return
 
 	def set_param(self, param):
+		self.param = param
 		self.number_tilings = param.num_tilings
 		self.dim = param.num_tiles
 		self.gamma = param.gamma
