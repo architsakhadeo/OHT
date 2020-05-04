@@ -1,8 +1,6 @@
 package logger
 
-import (
-	"log"
-)
+import "fmt"
 
 const longInterval = 1000000000 // A really large number, which should make the client log rarely
 
@@ -32,13 +30,13 @@ func (lg *debugLogger) Message(args ...interface{}) {
 	if !lg.ShouldPrintDebug {
 		return
 	}
-	log.Println(args)
+	fmt.Println(args...)
 }
 
 // MessageDelta calls Message and appends the time since the last Message or MessageDelta.
 func (lg *debugLogger) MessageDelta(args ...interface{}) {
 	// TODO append delta-time
-	lg.Message(args)
+	lg.Message(args...)
 }
 
 // Error logs an error if not nil.
