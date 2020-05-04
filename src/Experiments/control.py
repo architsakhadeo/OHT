@@ -61,7 +61,8 @@ def saved_file_name(config, run_idx, eval=False):
 class Experiment():
     def __init__(self, config, parsers):
         self.run_idx = parsers.run_idx
-        run_seed = config.exp_params.random_seed * self.run_idx
+        self.config = config
+        run_seed = self.config.exp_params.random_seed * self.run_idx
         np.random.seed(run_seed)
         torch.manual_seed(run_seed)
         torch.backends.cudnn.deterministic = True
@@ -69,8 +70,11 @@ class Experiment():
 
         # Load an environment based on the config, and pass relevant portion of config to it.
         self.domain = parsers.domain.lower()
-        env_code = import_module("Environments.{}".format(config.environment))
-        self.env_name = config.environment
+        env_code = import_module("Environments.{}".format(self.config.environment))
+        self.env_name = self.config.environment
+        if self.env_name == "OfflineEnvironment":
+            self.env_simulator_training(file_path=self.config.simulator_path)
+
         self.env = env_code.init_env()
         if config.env_params.drift_prob != 0:
             self.env = SensorDriftWrapper(self.env)
@@ -80,16 +84,15 @@ class Experiment():
         num_action = self.env.num_action()
         self.dim_state = self.env.state_dim()
         state_normalize = self.env.state_range()
-        setattr(config.agent_params, "num_action", num_action)
-        setattr(config.agent_params, "dim_state", self.dim_state)
-        setattr(config.agent_params, "state_normalize", np.array(state_normalize))
-        self.config = config
+        setattr(self.config.agent_params, "num_action", num_action)
+        setattr(self.config.agent_params, "dim_state", self.dim_state)
+        setattr(self.config.agent_params, "state_normalize", np.array(state_normalize))
 
         # Load an agent based on the config, and pass relevant portion of config to it.
-        self.agent_code = import_module("Agents.{}".format(config.agent))
+        self.agent_code = import_module("Agents.{}".format(self.config.agent))
         self.agent = self.agent_code.init_agent()
-        self.agent.set_param(config.agent_params)
-        self.gamma = config.agent_params.gamma
+        self.agent.set_param(self.config.agent_params)
+        self.gamma = self.config.agent_params.gamma
 
         self.reset_exp()
 
@@ -147,8 +150,8 @@ class Experiment():
 
         self.single_run()
 
-        self.config.agent_params = self.agent.get_settings() # In case some settings were calculated or changed, read them because they might be saved in a log.
-        self.save_log()
+        # self.config.agent_params = self.agent.get_settings() # In case some settings were calculated or changed, read them because they might be saved in a log.
+        self.save_log(save_Q=True)
 
     def offline_learning(self):
         t0 = time.time()
@@ -174,18 +177,10 @@ class Experiment():
             path, name = self.save_log(save_step=False, save_reward=False, save_traj=True, save_Q=False)
             return path, name
 
-    def offline_env_training(self, file_path=None):
+    def env_simulator_training(self, file_path=None):
         if file_path is None:
             np.random.seed(2048) # independent random seed for environment model training data
-            policy_steps = self.config.exp_params.num_steps
-            policy_agent = self.config.agent
-            self.config.exp_params.num_steps = 1000000 # model training data size
             self.collect_trajectory(save=False)
-            self.config.exp_params.num_steps = policy_steps # number of steps in config
-            self.config.agent = policy_agent
-            run_seed = config.exp_params.random_seed * self.run_idx # random seed in config
-            np.random.seed(run_seed)
-
             offline_env = []
             offline_data = []
             self.trajectory_log[:, -1] = self.trajectory_log[:, -1] == 0
@@ -198,15 +193,16 @@ class Experiment():
                 "offline_data": offline_data,
                 "offline_env": offline_env
             }
-            path = "../data/offline_env/"
-            if not os.path.isdir(path):
-                os.makedirs(path)
-            with open(path+"offline_env_model.pkl", "wb") as f:
+            path = self.config.simulator_path
+            if not os.path.isdir("".join(path.split("/")[:-1])):
+                os.makedirs("".join(path.split("/")[:-1]))
+            with open(path, "wb") as f:
                 pkl.dump(offline_env_model, f)
+            print("Model saved in", path)
         else:
             with open(file_path, "rb") as f:
                 offline_env_model = pkl.load(f)
-        setattr(self.config, "offline_env_model", offline_env_model)
+        setattr(self.config.env_params, "offline_env_model", offline_env_model)
 
         # # test
         # terminal = np.where(self.trajectory_log[:, -1] == 1)[0]
@@ -216,11 +212,15 @@ class Experiment():
         #     print(offline_data[a][idx[0][0]][4*2+2])
         # exit()
 
-    def offline_env_test(self):
+    def offline_env_test(self, run_idx):
+        np.random.seed(config.exp_params.random_seed * run_idx)
         env_backup = self.env
         env_code = import_module("Environments.OfflineEnvironment")
         env = env_code.init_env()
         env.set_param(self.config.offline_env_model)
+
+        max_step = 100000
+        trajectory = np.zeros((max_step, self.dim_state*2+3))
 
         agent_code = import_module("Agents.{}".format(self.config.learn_from))
         agent = agent_code.init_agent()
@@ -229,17 +229,28 @@ class Experiment():
         total = 0
         while True:
             if terminal:
-                print("Step", count)
+                print("Step", total)
                 state = env.start()
                 count = 0
                 action = agent.start(state)
-            state, reward, terminal, _ = env.step(action)
-            action, _ = agent.step(reward, state)
+            next_state, reward, terminal, _ = env.step(action)
+            seq = np.concatenate((state, np.array([action]), next_state, np.array([reward]), np.array([terminal==0])))
+            trajectory[total] = seq
+            action, _ = agent.step(reward, next_state)
+            state = next_state
             count += 1
             total += 1
-            if total > 100000:
+            if total >= max_step:
                 break
 
+        path = "../data/offline_env/test/"+self.config.learn_from
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        np.save("{}/run{}_rewardPerStep".format(path, run_idx), trajectory[:, self.dim_state*2+1])
+
+        self.env = env_backup
+        run_seed = config.exp_params.random_seed * self.run_idx
+        np.random.seed(run_seed)
 
     def learn_policy(self, path, name, eval_code, eval_name):
         # Load saved trajectory
@@ -261,6 +272,7 @@ class Experiment():
         self.agent = agent_code.offline_agent(eval_name, self.config.agent_params)
         self.agent.set_param(self.config.agent_params)
         t = 0
+        self.config.exp_params.num_steps = len(simulated_env)
         while t < len(simulated_env)-1:
             end = False
             self.agent.offline_start(st[t], t)
@@ -274,14 +286,14 @@ class Experiment():
                     print("\nEvaluating agent at step", t)
                     learning_agent = self.agent
                     # self.online_evaluation(path, name, eval_code, eval_name, 200)
-                    self.offline_evaluation(path, name, eval_code, eval_name, 200)
+                    self.offline_evaluation(path, name, eval_code, eval_name, 200, save=False)
                     self.agent = learning_agent
                     print("\nEvaluation ends, keep learning...")
 
         path, name = self.save_log(save_step=False, save_reward=False, save_traj=False, save_Q=True)
         return path, name
 
-    def offline_evaluation(self, path, name, eval_code, eval_name, eval_step):
+    def offline_evaluation(self, path, name, eval_code, eval_name, eval_step, save=True):
         env_backup = self.env
         env_code = import_module("Environments.OfflineEnvironment")
         self.env = env_code.init_env()
@@ -289,6 +301,7 @@ class Experiment():
 
         self.agent_code = eval_code
         self.config.agent = eval_name
+        training_step = self.config.exp_params.num_steps
         self.config.exp_params.num_steps = eval_step # Evaluate for 500 steps
         learning_weight = self.config.agent_params.alpha
         learning_epsilon = self.config.agent_params.epsilon
@@ -303,7 +316,9 @@ class Experiment():
         self.single_run()
         self.config.agent_params.alpha = learning_weight
         self.config.agent_params.epsilon = learning_epsilon
-        self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=True)
+        self.config.exp_params.num_steps = training_step
+        if save:
+            self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=True)
         self.env = env_backup
 
     def online_evaluation(self, path, name, eval_code, eval_name, eval_step):
@@ -327,8 +342,6 @@ class Experiment():
         self.save_log(save_step=True, save_reward=True, save_traj=False, save_Q=False, eval=True)
 
     def single_run(self):
-        print("Episode {} starts, total step {}, learning step {}/{}".format(self.count_ep, self.count_total_step,
-                                                                          self.count_learning_step, self.num_steps))
         if self.control_ep:
             for _ in range(self.num_episode):
                 self.single_ep()
@@ -336,6 +349,10 @@ class Experiment():
         else:
             condition = self.count_total_step
             while condition < self.num_steps:
+                print(
+                    "Episode {} starts, total step {}, learning step {}/{}".format(self.count_ep, self.count_total_step,
+                                                                                   self.count_learning_step,
+                                                                                   self.num_steps))
                 self.single_ep()
                 self.count_ep += 1
                 condition = self.count_total_step
@@ -416,9 +433,7 @@ if __name__ == '__main__':
     if config.learning == "online":
         exp.online_learning()
     else:
-        exp.offline_env_training(file_path="../data/offline_env/offline_env_model.pkl")
-        # exp.offline_env_training(file_path=None)
-        # exp.offline_env_test()
+        # exp.offline_env_test(exp.run_idx)
         exp.offline_learning()
 
     print("Running time", time.time() - t0)

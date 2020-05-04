@@ -9,8 +9,8 @@ class OfflineEnv(BaseEnvironment):
         return
 
     def set_param(self, param):
-        self.offline_env = param["offline_env"] # a list of trees
-        self.offline_data = param["offline_data"] # a list of data
+        self.offline_env = param.offline_env_model["offline_env"] # a list of trees
+        self.offline_data = param.offline_env_model["offline_data"] # a list of data
         return
 
     def start(self):
