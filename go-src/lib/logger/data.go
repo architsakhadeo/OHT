@@ -124,7 +124,7 @@ func (lg *dataLogger) SaveLog() error {
 		return nil
 	}
 
-	file, err := os.Create(path.Join(lg.BasePath, "rewards.csv", lg.FileSuffix))
+	file, err := os.Create(path.Join(lg.BasePath, "rewards-"+lg.FileSuffix+".csv"))
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (lg *dataLogger) SaveLog() error {
 	}
 
 	if lg.ShouldLogEpisodeLengths {
-		file, err := os.Create(path.Join(lg.BasePath, "episodes.csv", lg.FileSuffix))
+		file, err := os.Create(path.Join(lg.BasePath, "episodes-"+lg.FileSuffix+".csv"))
 		if err != nil {
 			return err
 		}
@@ -161,7 +161,7 @@ func (lg *dataLogger) SaveLog() error {
 	}
 
 	if lg.ShouldLogTraces {
-		file, err := os.Create(path.Join(lg.BasePath, "traces.csv", lg.FileSuffix))
+		file, err := os.Create(path.Join(lg.BasePath, "traces-"+lg.FileSuffix+".csv"))
 		if err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 	lg.others = [][]float64{}
 
 	if loadRewards && !loadTraces { // If traces exists, don't bother with rewards
-		file, err := os.Open(path.Join(lg.BasePath, "rewards.csv", lg.FileSuffix))
+		file, err := os.Open(path.Join(lg.BasePath, "rewards-"+lg.FileSuffix+".csv"))
 		if err != nil {
 			return err
 		}
@@ -240,7 +240,7 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 	}
 
 	if loadEpisodes {
-		file, err := os.Open(path.Join(lg.BasePath, "episodes.csv", lg.FileSuffix))
+		file, err := os.Open(path.Join(lg.BasePath, "episodes-"+lg.FileSuffix+".csv"))
 		if err != nil {
 			return err
 		}
@@ -266,7 +266,7 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 	}
 
 	if loadTraces {
-		file, err := os.Open(path.Join(lg.BasePath, "traces.csv", lg.FileSuffix))
+		file, err := os.Open(path.Join(lg.BasePath, "traces.csv-"+lg.FileSuffix+".csv"))
 		if err != nil {
 			return err
 		}
