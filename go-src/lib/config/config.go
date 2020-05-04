@@ -9,12 +9,15 @@ import (
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
 
+var Run = 0
+
 type Config struct {
 	EnvironmentName string            `json:"environment-name"`
 	AgentName       string            `json:"agent-name"`
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
 	Experiment      `json:"experiment-settings"`
+	Run             int `json:"run"`
 	sweeper
 }
 
@@ -36,7 +39,8 @@ func (set *Experiment) SetToDefault() {
 	set.ShouldLogEpisodeLengths = false
 }
 
-func Parse(data json.RawMessage) (Config, error) {
+// If run>=0, it's used to override the value in the config. If it's also not set in the config, it's 0.
+func Parse(data json.RawMessage, run int) (Config, error) {
 	var conf Config
 	conf.Experiment.SetToDefault()
 
@@ -44,6 +48,11 @@ func Parse(data json.RawMessage) (Config, error) {
 	if err != nil {
 		return conf, errors.New("The config file is not valid JSON: " + err.Error())
 	}
+
+	if run >= 0 {
+		conf.Run = run
+	}
+	Run = conf.Run
 
 	err = conf.LoadSweeper()
 	if err != nil {

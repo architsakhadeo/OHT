@@ -2,6 +2,7 @@ package experiment
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/stellentus/cartpoles/go-src/lib/agent"
 	"github.com/stellentus/cartpoles/go-src/lib/config"
@@ -19,7 +20,7 @@ func Execute(conf config.Config) error {
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
 		BasePath:                conf.Experiment.DataPath,
-		FileSuffix:              "", // TODO after figuring out runs
+		FileSuffix:              strconv.Itoa(config.Run),
 	})
 	if err != nil {
 		return errors.New("Could not create data logger: " + err.Error())

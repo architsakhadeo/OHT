@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/stellentus/cartpoles/go-src/lib/config"
 	"github.com/stellentus/cartpoles/go-src/lib/logger"
 	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
 )
@@ -56,7 +57,7 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+	env.rng = rand.New(rand.NewSource(env.Seed + int64(config.Run))) // Create a new rand source for reproducibility
 
 	if len(env.PercentNoise) == 1 {
 		// Copy it for all dimensions

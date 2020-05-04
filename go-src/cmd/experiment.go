@@ -16,6 +16,7 @@ import (
 // Flags
 var (
 	configPath = flag.String("config", "config/example.json", "config file for the experiment")
+	run        = flag.Int("run", 0, "Run number")
 )
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 		panic("The config file at path '" + *configPath + "' could not be read: " + err.Error())
 	}
 
-	conf, err := config.Parse(data)
+	conf, err := config.Parse(data, *run)
 	if err != nil {
 		panic("Could not parse the config: " + err.Error())
 	}
