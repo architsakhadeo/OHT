@@ -1,0 +1,33 @@
+{
+    "default_param": {
+        "environment": "ContinuingCartpoleEnvironment",
+        "simulator_path": "../data/offline_env/offline_env_model.pkl",
+        "agent": "HandCoded",
+        "learn_from": "HandCoded",
+        "env_params": {
+            "delays": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "percent_noise": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        "agent_params": {
+            "gamma": 0.95
+        },
+        "exp_params": {
+            "num_episodes": 0,
+            "num_steps": 30000,
+            "num_runs": 1,
+            "random_seed": 15
+        }
+    },
+    "control_param": {
+    }
+}

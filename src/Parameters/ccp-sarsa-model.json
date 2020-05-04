@@ -1,0 +1,55 @@
+{
+    "default_param": {
+        "environment": "OfflineEnvironment",
+        "simulator_path": "../data/offline_env/offline_env_model.pkl",
+        "agent": "ExpectedSarsaTileCodingContinuing",
+        "learning": "online",
+        "learn_from": "HandCoded",
+        "env_params": {
+            "delays": [0,0,0,0],
+            "percent_noise": [0.0, 0.0, 0.0, 0.0]
+        },
+        "agent_params": {
+            "offline_data": null,
+            "offline_repeat": 1,
+
+            "tc_mem_size": 64,
+            "num_tilings": 32,
+            "num_tiles": 4,
+
+            "alpha": 0.001,
+            "gamma": 0.95,
+            "lmbda": 0.8,
+            "epsilon": 0.0001,
+            "decreasing_epsilon": null,
+            "num_planning": 1,
+            "len_buffer": 1000,
+            "pri_thrshd": 0,
+
+            "exp_result_path": "../data/exp_result/"
+        },
+
+        "exp_params": {
+            "num_episodes": 0,
+            "num_steps": 10000,
+            "num_runs": 1,
+            "random_seed": 15
+        }
+    },
+
+    "control_param": {
+        "agent_params": {
+            "rep_type": ["sep_pair_TC"],
+            "num_tilings": [32],
+            "num_tiles": [2],
+            "lmbda": [0.6],
+            "epsilon": [0.2],
+            "alpha": [0.1]
+        }
+    },
+            "num_tilings": [16, 32, 64],
+            "num_tiles": [2, 4, 8],
+            "lmbda": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+            "epsilon": [0, 0.1, 0.2],
+            "alpha": [0.001, 0.01, 0.1, 1.0, 2.0, 4.0, 8.0]
+}

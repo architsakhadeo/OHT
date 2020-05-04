@@ -1,0 +1,56 @@
+{
+    "default_param": {
+        "environment": "OfflineEnvironment",
+        "simulator_path": "../data/offline_env/offline_env_model.pkl",
+        "agent": "DQN",
+        "learning": "online",
+        "learn_from": "HandCoded",
+        "env_params": {
+            "delays": [0,0,0,0],
+            "percent_noise": [0.0, 0.0, 0.0, 0.0]
+        },
+        "agent_params": {
+            "offline_data": null,
+            "offline_repeat": 1,
+
+            "dqn_sync": 10,
+            "dqn_minibatch": 32,
+            "dqn_beta": [0.9, 0.999],
+
+            "nonLinearQ_node": [
+                    128, 128
+            ],
+
+            "alpha": 0.001,
+            "gamma": 0.95,
+            "epsilon": 0.2,
+            "decreasing_epsilon": null,
+            "num_planning": 1,
+            "len_buffer": 1000,
+            "pri_thrshd": 0,
+
+            "exp_result_path": "../data/exp_result/"
+        },
+
+        "exp_params": {
+            "num_episodes": 0,
+            "num_steps": 30000,
+            "num_runs": 1,
+            "random_seed": 15
+        }
+    },
+
+    "control_param": {
+        "agent_params": {
+            "rep_type": ["obs"],
+            "dqn_sync": [25],
+            "len_buffer": [500],
+            "dqn_minibatch": [16],
+            "alpha": [1e-04]
+        }
+    },
+            "dqn_sync": [1, 10, 25, 100],
+            "len_buffer": [250, 500, 1000],
+            "dqn_minibatch": [8, 16, 32, 64],
+            "alpha": [1e-02, 1e-03, 1e-04, 1e-05, 1e-06]
+}
