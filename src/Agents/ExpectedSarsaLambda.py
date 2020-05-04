@@ -37,7 +37,7 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 			param['epsilon'] = 0.0001
 
 		if 'alpha' not in param:
-			param['alpha'] = 0.001
+			param['alpha'] = 0.1
 
 		return param
 
