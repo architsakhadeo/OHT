@@ -7,9 +7,9 @@ from Experiments.control import Experiment
 t0 = time.time()
 ci = CollectInput()
 parsers = ci.control_experiment_input()
-json_name = parsers.domain.lower()
+json_name = parsers.json.lower()
 
-sweeper = Sweeper('../Parameters/{}.json'.format(json_name.lower()), "control_param")
+sweeper = Sweeper('../Parameters/{}.json'.format(json_name.lower()), "env_model_param")
 config = sweeper.parse(parsers.sweeper_idx)
 
 exp = Experiment(config, parsers)

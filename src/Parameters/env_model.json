@@ -28,6 +28,9 @@
             "random_seed": 15
         }
     },
-    "control_param": {
+    "env_model_param": {
+        "exp_params": {
+            "num_steps": [30000]
+        }
     }
 }

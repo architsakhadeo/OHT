@@ -26,7 +26,7 @@ def control_job(domains, prev_file=1000, line_per_file=1):
         for i in range(total_comb):
             for idx in range(num_run):
                 file.write("python control.py" +
-                           " --domain " + str(env_name) +
+                           " --json " + str(env_name) +
                            " --sweeper_idx " + str(i) +
                            " --run_idx " + str(idx) +
                            "\n"
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     parsers = ci.write_jobs()
 
     # check if arguments are valid
-    domain_list = parsers.domain.split(',')
+    domain_list = parsers.json.split(',')
     line_per_file = int(parsers.lines)
 
     # write jobs

@@ -69,7 +69,7 @@ class Experiment():
         torch.backends.cudnn.benchmark = False
 
         # Load an environment based on the config, and pass relevant portion of config to it.
-        self.domain = parsers.domain.lower()
+        # self.domain = parsers.json.lower()
         env_code = import_module("Environments.{}".format(self.config.environment))
         self.env_name = self.config.environment
         if self.env_name == "OfflineEnvironment":
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     # parse arguments
     ci = CollectInput()
     parsers = ci.control_experiment_input()
-    json_name = parsers.domain.lower()
+    json_name = parsers.json.lower()
 
     # Load the config. Then, based on the sweeper_idx, choose one of the sweeper parameters
     # and use that to override any of the default parameters (or set the value if there

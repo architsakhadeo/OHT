@@ -2,7 +2,7 @@ Usage:
 Run the following command in Experiment folder:
 
 run control experiment:
-    python control.py --domain CCP --sweeper_idx 0 --run_idx 0
+    python control.py --json CCP --sweeper_idx 0 --run_idx 0
 
 plotting code (You may need to modify plotting code or write new functions):
     python plot.py 
