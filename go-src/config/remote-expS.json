@@ -1,8 +1,10 @@
 {
-    "agent-name": "grpc",
+    "agent-name": "grpc-launcher",
     "environment-name": "cartpole",
     "agent-settings": {
-        "commands": []
+        "commands": [
+            ["../env/bin/python", "../src/launch_agent.py"]
+        ]
     },
     "environment-settings": {
         "seed": 15
@@ -12,6 +14,6 @@
         "data-path": "data/expS",
         "should-log-traces": true,
         "should-log-episode-lengths": true,
-        "debug-interval": 1
+        "debug-interval": 100
     }
 }
