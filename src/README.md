@@ -1,6 +1,9 @@
 Usage: 
 Run the following command in Experiment folder:
 
+construct crappy model:
+    python env_model_learning --json env_model 
+
 run control experiment:
     python control.py --json CCP --sweeper_idx 0 --run_idx 0
 
