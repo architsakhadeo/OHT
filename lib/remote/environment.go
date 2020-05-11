@@ -24,7 +24,7 @@ func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.Wa
 }
 
 func (env *launcherEnvironment) Initialize(run uint, attr rlglue.Attributes) error {
-	port, err := getPort(8080, attr)
+	port, err := getPort(2200+int(run), attr)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (env *launcherEnvironment) Initialize(run uint, attr rlglue.Attributes) err
 	}
 	env.client = NewEnvironmentClient(cc)
 
-	err = launchCommands(attr, env.ctx, env.wg)
+	err = launchCommands(run, attr, env.ctx, env.wg)
 	if err != nil {
 		return err
 	}

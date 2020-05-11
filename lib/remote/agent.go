@@ -24,7 +24,7 @@ func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGrou
 }
 
 func (agent *launcherAgent) Initialize(run uint, experiment, environment rlglue.Attributes) error {
-	port, err := getPort(8081, experiment)
+	port, err := getPort(2500+int(run), experiment)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (agent *launcherAgent) Initialize(run uint, experiment, environment rlglue.
 	}
 	agent.client = NewAgentClient(cc)
 
-	err = launchCommands(experiment, agent.ctx, agent.wg)
+	err = launchCommands(run, experiment, agent.ctx, agent.wg)
 	if err != nil {
 		return err
 	}

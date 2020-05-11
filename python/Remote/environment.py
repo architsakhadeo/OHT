@@ -2,6 +2,7 @@ from concurrent import futures
 
 import grpc
 import json
+import os
 
 import Remote.remote_pb2 as remote_pb2
 import Remote.remote_pb2_grpc as remote_pb2_grpc
@@ -34,9 +35,14 @@ class RemoteEnvironment(remote_pb2_grpc.EnvironmentServicer):
 
 
 def serve(environment):
+    port = 2200
+
+    if 'RUN' in os.environ:
+        port = port+int(os.environ['RUN'])
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     remote_pb2_grpc.add_EnvironmentServicer_to_server(
         RemoteEnvironment(environment), server)
-    server.add_insecure_port('[::]:8080')
+    server.add_insecure_port('[::]:'+str(port))
     server.start()
     server.wait_for_termination()
