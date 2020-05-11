@@ -15,13 +15,13 @@ type launcherAgent struct {
 	debug  logger.Debug
 }
 
-func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (launcherAgent, error) {
+func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (*launcherAgent, error) {
 	cc, err := dialGrpc(debug, ":8081")
 	if err != nil {
-		return launcherAgent{}, err
+		return nil, err
 	}
 
-	return launcherAgent{
+	return &launcherAgent{
 		client: NewAgentClient(cc),
 		ctx:    ctx,
 		wg:     wg,
@@ -29,7 +29,7 @@ func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGrou
 	}, nil
 }
 
-func (agent launcherAgent) Initialize(experiment, environment rlglue.Attributes) error {
+func (agent *launcherAgent) Initialize(experiment, environment rlglue.Attributes) error {
 	err := launchCommands(experiment, agent.ctx, agent.wg)
 	if err != nil {
 		return err
@@ -46,13 +46,13 @@ func (agent launcherAgent) Initialize(experiment, environment rlglue.Attributes)
 	return err
 }
 
-func (agent launcherAgent) Start(state rlglue.State) rlglue.Action {
+func (agent *launcherAgent) Start(state rlglue.State) rlglue.Action {
 	ctx := context.Background()
 	action, _ := agent.client.Start(ctx, &State{Values: []float64(state)})
 	return rlglue.Action(action.Action)
 }
 
-func (agent launcherAgent) Step(state rlglue.State, reward float64) rlglue.Action {
+func (agent *launcherAgent) Step(state rlglue.State, reward float64) rlglue.Action {
 	ctx := context.Background()
 	action, _ := agent.client.Step(ctx, &StepResult{
 		State:    &State{Values: []float64(state)},
@@ -62,7 +62,7 @@ func (agent launcherAgent) Step(state rlglue.State, reward float64) rlglue.Actio
 	return rlglue.Action(action.Action)
 }
 
-func (agent launcherAgent) End(state rlglue.State, reward float64) {
+func (agent *launcherAgent) End(state rlglue.State, reward float64) {
 	ctx := context.Background()
 	agent.client.Step(ctx, &StepResult{
 		State:    &State{Values: []float64(state)},

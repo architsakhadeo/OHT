@@ -15,13 +15,13 @@ type launcherEnvironment struct {
 	debug  logger.Debug
 }
 
-func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (launcherEnvironment, error) {
+func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (*launcherEnvironment, error) {
 	cc, err := dialGrpc(debug, ":8080")
 	if err != nil {
-		return launcherEnvironment{}, err
+		return nil, err
 	}
 
-	return launcherEnvironment{
+	return &launcherEnvironment{
 		client: NewEnvironmentClient(cc),
 		ctx:    ctx,
 		wg:     wg,
@@ -29,7 +29,7 @@ func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.Wa
 	}, nil
 }
 
-func (env launcherEnvironment) Initialize(attr rlglue.Attributes) error {
+func (env *launcherEnvironment) Initialize(attr rlglue.Attributes) error {
 	err := launchCommands(attr, env.ctx, env.wg)
 	if err != nil {
 		return err
@@ -45,21 +45,21 @@ func (env launcherEnvironment) Initialize(attr rlglue.Attributes) error {
 }
 
 // Start returns an initial observation.
-func (env launcherEnvironment) Start() rlglue.State {
+func (env *launcherEnvironment) Start() rlglue.State {
 	ctx := context.Background()
 	state, _ := env.client.Start(ctx, &Empty{})
 	return rlglue.State(state.Values)
 }
 
 // Step takes an action and provides the new observation, the resulting reward, and whether the state is terminal.
-func (env launcherEnvironment) Step(action rlglue.Action) (rlglue.State, float64, bool) {
+func (env *launcherEnvironment) Step(action rlglue.Action) (rlglue.State, float64, bool) {
 	ctx := context.Background()
 	result, _ := env.client.Step(ctx, &Action{Action: uint64(action)})
 	return rlglue.State(result.State.Values), result.Reward, result.Terminal
 }
 
 // GetAttributes returns attributes for this environment.
-func (env launcherEnvironment) GetAttributes() rlglue.Attributes {
+func (env *launcherEnvironment) GetAttributes() rlglue.Attributes {
 	ctx := context.Background()
 	attr, _ := env.client.GetAttributes(ctx, &Empty{})
 	return rlglue.Attributes(attr.Attributes)
