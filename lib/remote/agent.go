@@ -16,21 +16,21 @@ type launcherAgent struct {
 }
 
 func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (*launcherAgent, error) {
-	cc, err := dialGrpc(debug, ":8081")
-	if err != nil {
-		return nil, err
-	}
-
 	return &launcherAgent{
-		client: NewAgentClient(cc),
-		ctx:    ctx,
-		wg:     wg,
-		debug:  debug,
+		ctx:   ctx,
+		wg:    wg,
+		debug: debug,
 	}, nil
 }
 
 func (agent *launcherAgent) Initialize(experiment, environment rlglue.Attributes) error {
-	err := launchCommands(experiment, agent.ctx, agent.wg)
+	cc, err := dialGrpc(agent.debug, ":8081")
+	if err != nil {
+		return err
+	}
+	agent.client = NewAgentClient(cc)
+
+	err = launchCommands(experiment, agent.ctx, agent.wg)
 	if err != nil {
 		return err
 	}

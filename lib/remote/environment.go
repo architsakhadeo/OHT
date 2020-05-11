@@ -16,21 +16,21 @@ type launcherEnvironment struct {
 }
 
 func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (*launcherEnvironment, error) {
-	cc, err := dialGrpc(debug, ":8080")
-	if err != nil {
-		return nil, err
-	}
-
 	return &launcherEnvironment{
-		client: NewEnvironmentClient(cc),
-		ctx:    ctx,
-		wg:     wg,
-		debug:  debug,
+		ctx:   ctx,
+		wg:    wg,
+		debug: debug,
 	}, nil
 }
 
 func (env *launcherEnvironment) Initialize(attr rlglue.Attributes) error {
-	err := launchCommands(attr, env.ctx, env.wg)
+	cc, err := dialGrpc(env.debug, ":8080")
+	if err != nil {
+		return err
+	}
+	env.client = NewEnvironmentClient(cc)
+
+	err = launchCommands(attr, env.ctx, env.wg)
 	if err != nil {
 		return err
 	}
