@@ -35,7 +35,7 @@ func (env *launcherEnvironment) Initialize(run uint, attr rlglue.Attributes) err
 	}
 	env.client = NewEnvironmentClient(cc)
 
-	err = launchCommands(attr, env.ctx, env.wg)
+	err = launchCommands(run, attr, env.ctx, env.wg)
 	if err != nil {
 		return err
 	}

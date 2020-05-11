@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	fmt "fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -69,7 +70,7 @@ func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 }
 
 // TODO add environment variables by adding a "env" attribute and using `cmd.Env = append(os.Environ(), "PORT=8080", "FOO=actual_value")`
-func launchCommands(attr rlglue.Attributes, ctx context.Context, wg *sync.WaitGroup) error {
+func launchCommands(run uint, attr rlglue.Attributes, ctx context.Context, wg *sync.WaitGroup) error {
 	extractedAttrs := map[string]json.RawMessage{}
 	err := json.Unmarshal(attr, &extractedAttrs)
 	if err != nil {
@@ -89,6 +90,7 @@ func launchCommands(attr rlglue.Attributes, ctx context.Context, wg *sync.WaitGr
 	for _, command := range commands {
 		cmd := exec.CommandContext(ctx, command[0], command[1:]...) // Kills the command based on ctx cancelin
 		wg.Add(1)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("RUN=%d", run))
 		err := cmd.Start() // Runs the command in the background
 		if err != nil {
 			wg.Done()

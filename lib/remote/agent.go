@@ -35,7 +35,7 @@ func (agent *launcherAgent) Initialize(run uint, experiment, environment rlglue.
 	}
 	agent.client = NewAgentClient(cc)
 
-	err = launchCommands(experiment, agent.ctx, agent.wg)
+	err = launchCommands(run, experiment, agent.ctx, agent.wg)
 	if err != nil {
 		return err
 	}
