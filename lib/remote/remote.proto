@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option go_package = ".;remote";
+
 service Environment {
   rpc Initialize(Attributes) returns (Empty) {}
   rpc Start(Empty) returns (State) {}
