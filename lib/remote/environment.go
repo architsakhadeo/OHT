@@ -4,9 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
-
-	"google.golang.org/grpc"
 )
 
 type launcherEnvironment struct {
@@ -15,7 +14,12 @@ type launcherEnvironment struct {
 	wg     *sync.WaitGroup
 }
 
-func newLauncherEnvironment(cc *grpc.ClientConn, ctx context.Context, wg *sync.WaitGroup) (launcherEnvironment, error) {
+func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (launcherEnvironment, error) {
+	cc, err := dialGrpc(debug, ":8080")
+	if err != nil {
+		return launcherEnvironment{}, err
+	}
+
 	return launcherEnvironment{
 		client: NewEnvironmentClient(cc),
 		ctx:    ctx,

@@ -45,22 +45,14 @@ func reattempt(action func() error) error {
 func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 	// TODO Update this function type to also send rlglue.Attribute for the agent
 	err := agent.Add("grpc", func(debug logger.Debug) (rlglue.Agent, error) {
-		conn, err := dialGrpc(debug, ":8081")
-		if err != nil {
-			return nil, err
-		}
-		return newLauncherAgent(conn, ctx, wg)
+		return newLauncherAgent(debug, ctx, wg)
 	})
 	if err != nil {
 		return errors.New("failed to initialize grpc agent: " + err.Error())
 	}
 
 	err = environment.Add("grpc", func(debug logger.Debug) (rlglue.Environment, error) {
-		conn, err := dialGrpc(debug, ":8080")
-		if err != nil {
-			return nil, err
-		}
-		return newLauncherEnvironment(conn, ctx, wg)
+		return newLauncherEnvironment(debug, ctx, wg)
 	})
 	if err != nil {
 		return errors.New("failed to initialize grpc environment: " + err.Error())

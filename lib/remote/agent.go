@@ -4,9 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
-
-	"google.golang.org/grpc"
 )
 
 type launcherAgent struct {
@@ -15,7 +14,12 @@ type launcherAgent struct {
 	wg     *sync.WaitGroup
 }
 
-func newLauncherAgent(cc *grpc.ClientConn, ctx context.Context, wg *sync.WaitGroup) (launcherAgent, error) {
+func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (launcherAgent, error) {
+	cc, err := dialGrpc(debug, ":8081")
+	if err != nil {
+		return launcherAgent{}, err
+	}
+
 	return launcherAgent{
 		client: NewAgentClient(cc),
 		ctx:    ctx,
