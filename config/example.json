@@ -20,10 +20,10 @@
 		"seed": 15
 	},
 	"experiment-settings": {
-		"steps": 50000,
+		"steps": 50,
 		"data-path": "data/example",
 		"should-log-traces": true,
 		"should-log-episode-lengths": true,
-		"debug-interval": 100
+		"debug-interval": 5
 	}
 }
