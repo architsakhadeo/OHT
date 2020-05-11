@@ -1,6 +1,6 @@
 {
-    "agent-name": "grpc-launcher",
-    "environment-name": "grpc-launcher",
+    "agent-name": "grpc",
+    "environment-name": "grpc",
     "agent-settings": {
         "commands": [
             ["./env/bin/python", "./python/launch_agent.py"]

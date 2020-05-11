@@ -12,6 +12,7 @@ class RemoteAgent(remote_pb2_grpc.AgentServicer):
 
 	def Initialize(self, attr, context):
 		self.agent.set_param(json.loads(attr.experiment.attributes))
+		# TODO: use attr.run.run to load the random seed or whatever
 		return remote_pb2.Empty()
 
 	def Start(self, state, context):

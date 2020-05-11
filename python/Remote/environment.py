@@ -11,8 +11,9 @@ class RemoteEnvironment(remote_pb2_grpc.EnvironmentServicer):
 		self.environment = environment
 
 	def Initialize(self, attr, context):
-		self.environment.set_param(json.loads(attr.attributes))
-		self.attributes = attr.attributes
+		self.environment.set_param(json.loads(attr.attributes.attributes))
+		self.attributes = attr.attributes.attributes
+		# TODO: use attr.run.run to load the random seed or whatever
 		return remote_pb2.Empty()
 
 	def Start(self, empty, context):

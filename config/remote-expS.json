@@ -1,5 +1,5 @@
 {
-    "agent-name": "grpc-launcher",
+    "agent-name": "grpc",
     "environment-name": "cartpole",
     "agent-settings": {
         "commands": [

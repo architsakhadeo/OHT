@@ -1,7 +1,9 @@
 syntax = "proto3";
 
+option go_package = ".;remote";
+
 service Environment {
-  rpc Initialize(Attributes) returns (Empty) {}
+  rpc Initialize(EnvironmentAttributes) returns (Empty) {}
   rpc Start(Empty) returns (State) {}
   rpc Step(Action) returns (StepResult) {}
   rpc GetAttributes(Empty) returns (Attributes) {}
@@ -14,13 +16,23 @@ service Agent {
 }
 
 
+message Run {
+	fixed64 run = 1;
+}
+
 message Attributes {
 	string attributes = 1;
 }
 
 message AgentAttributes {
-	Attributes experiment = 1;
-	Attributes environment = 2;
+	Run run = 1;
+	Attributes experiment = 2;
+	Attributes environment = 3;
+}
+
+message EnvironmentAttributes {
+	Run run = 1;
+	Attributes attributes = 2;
 }
 
 message State {
