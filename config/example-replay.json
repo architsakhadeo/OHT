@@ -1,0 +1,30 @@
+{
+	"comment": "This config file shows how to run offline training by replaying a saved trace. Before running this, run 'example.json' to save a trace.",
+	"agent-name": "example",
+	"environment-name": "replay",
+	"agent-settings": {
+		"lambda": 0.5,
+		"sweep": {
+			"alpha": [0.2, 0.5, 0.99],
+			"epsilon": [0.1],
+			"tilings": [
+				[1, 4, 5],
+				[3, 7, 9],
+				[1, 4]
+			]
+		},
+		"enable-debug": true,
+		"seed": 25
+	},
+	"environment-settings": {
+		"path": "data/example",
+		"log-action-diff": true
+	},
+	"experiment-settings": {
+		"steps": 12,
+		"data-path": "data/replay",
+		"should-log-traces": true,
+		"should-log-episode-lengths": true,
+		"debug-interval": 1
+	}
+}

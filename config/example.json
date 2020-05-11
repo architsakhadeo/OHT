@@ -1,0 +1,29 @@
+{
+	"comment": "This config file shows the basic structure. The 'agent-name' and 'environment-name' strings provide the agent and environment to load. The 'agent-settings' and 'environment-settings' objects are passed to the agent and environment, respectively. The 'experiment-settings' configure the experiment itself. Anything inside of 'sweep' must be an array. The program will calculate how many combinations of parameters are described by the sweep, and run the experiment once for each combination. The selected value is placed directly into 'agent-settings' and the entire 'sweep' object is not visible to the agent.",
+	"agent-name": "example",
+	"environment-name": "cartpole",
+	"agent-settings": {
+		"lambda": 0.5,
+		"sweep": {
+			"alpha": [0.2, 0.5, 0.99],
+			"epsilon": [0.1],
+			"tilings": [
+				[1, 4, 5],
+				[3, 7, 9],
+				[1, 4]
+			]
+		},
+		"enable-debug": true,
+		"seed": 25
+	},
+	"environment-settings": {
+		"seed": 15
+	},
+	"experiment-settings": {
+		"steps": 50000,
+		"data-path": "data/example",
+		"should-log-traces": true,
+		"should-log-episode-lengths": true,
+		"debug-interval": 100
+	}
+}

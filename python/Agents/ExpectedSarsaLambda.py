@@ -20,15 +20,38 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		super().__init__()
 		return
 
+	def setDefaults(self, param):
+		if 'num_tilings' not in param:
+			param['num_tilings'] = 32
+
+		if 'num_tiles' not in param:
+			param['num_tiles'] = 4
+
+		if 'gamma' not in param:
+			param['gamma'] = 0.95
+
+		if 'lmbda' not in param:
+			param['lmbda'] = 0.8
+
+		if 'epsilon' not in param:
+			param['epsilon'] = 0.0001
+
+		if 'alpha' not in param:
+			param['alpha'] = 0.1
+
+		return param
+
 	def set_param(self, param):
-		self.param = param
-		self.number_tilings = param.num_tilings
-		self.dim = param.num_tiles
-		self.gamma = param.gamma
-		self.lmbda = param.lmbda
-		self.epsilon_init = param.epsilon
-		
-		self.stepsize = param.alpha / self.number_tilings
+		param = self.setDefaults(param)
+
+		self.number_tilings = param['num_tilings']
+		self.dim = param['num_tiles']
+		self.gamma = param['gamma']
+		self.lmbda = param['lmbda']
+		self.epsilon_init = param['epsilon']
+
+		self.stepsize = param['alpha'] / self.number_tilings
+
 		self.lows = [-2.4, -4.0, -(12 * 2 * math.pi / 360), -3.5]
 		self.highs = [2.4, 4.0, (12 * 2 * math.pi / 360), 3.5]
 		self.range = [2.0* 2.4, 2.0* 4.0, 2.0* 12 * 2 * math.pi / 360, 2.0* 3.5]		
@@ -173,9 +196,11 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 		self.action = self.action_1
 		return self.action, {}
 
-			
-	
-	
+
+	def end(self, reward):
+		return
+
+
 	def tilecoding(self, observation):
 		#Tiling all dimensions separately and in pairs
 		

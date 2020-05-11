@@ -32,8 +32,15 @@ class CartpoleEnvironmentContinuing(BaseEnvironment):
 		return		
 	
 	def set_param(self, param):
-		self.delays = param.delays
-		self.percent_noise = param.percent_noise
+		# Initialize defaults for parameters
+		if 'delays' not in param:
+			param['delays'] = [0,0,0,0]
+
+		if 'percent_noise' not in param:
+			param['percent_noise'] = [0.0, 0.0, 0.0, 0.0]
+
+		self.delays = param['delays']
+		self.percent_noise = param['percent_noise']
 
 		self.gravity = 9.8
 		self.masscart = 1.0

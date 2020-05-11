@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+service Environment {
+  rpc Initialize(Attributes) returns (Empty) {}
+  rpc Start(Empty) returns (State) {}
+  rpc Step(Action) returns (StepResult) {}
+  rpc GetAttributes(Empty) returns (Attributes) {}
+}
+
+service Agent {
+	rpc Initialize(AgentAttributes) returns (Empty) {}
+	rpc Start(State) returns (Action) {}
+	rpc Step(StepResult) returns (Action) {}
+}
+
+
+message Attributes {
+	string attributes = 1;
+}
+
+message AgentAttributes {
+	Attributes experiment = 1;
+	Attributes environment = 2;
+}
+
+message State {
+	repeated double values = 1;
+}
+
+message Action {
+	fixed64 action = 1;
+}
+
+message StepResult {
+	State state = 1;
+	double reward = 2;
+	bool terminal = 3;
+}
+
+message Empty {
+}
