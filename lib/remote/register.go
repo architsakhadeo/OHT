@@ -6,6 +6,7 @@ import (
 	"errors"
 	fmt "fmt"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,6 +38,8 @@ func reattempt(action func() error) error {
 		err = action()
 		if err == nil {
 			return nil // It worked!
+		} else if !strings.Contains(err.Error(), "connection refused") {
+			return errors.New("Failed to connect to gRPC: " + err.Error())
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
