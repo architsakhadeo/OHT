@@ -19,3 +19,12 @@ Unless otherwise noted, these commands are executed in the `cartpoles` directory
 2. Change into the Experiments directory: `cd python/Experiments/`. The control script currently only works from that directory. Then run the code with `python control.py`. Parameters can be changed by providing a different parameters JSON file.
 3. If you need a new package, install it in the virtual environment with `python -m pip install PACKAGE_NAME`.
 4. When you're done working on the project, `deactivate` exits the virtual environment.
+
+### Protocol Buffers
+
+*This is only necessary if you need to modify the protocol buffer definitions (which is unlikely).*
+
+* Install protocol buffers. I downloaded the C++ code and compiled from source. These instructions might work for you: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
+* Install the go plugin: `go get -u github.com/golang/protobuf/protoc-gen-go`
+* From within an active `virtualenv` session, install the python plugin: `python -m pip install grpcio`
+* Now you can execute `lib/remote/generate.sh`
