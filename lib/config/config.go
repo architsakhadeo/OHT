@@ -17,7 +17,6 @@ type Config struct {
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
 	Experiment      `json:"experiment-settings"`
-	Run             int `json:"run"`
 	sweeper
 }
 
@@ -41,13 +40,12 @@ func (set *Experiment) SetToDefault() {
 
 // Parse parses a json.RawMessage. If the input is a JSON array, then that array as parsed as an array of config objects.
 // Otherwise, it's parsed as a single config object.
-// If run>=0, it's used to override the value in the config. If it's also not set in the config, it's 0.
-func Parse(data json.RawMessage, run int) ([]Config, error) {
+func Parse(data json.RawMessage) ([]Config, error) {
 	confJson := []json.RawMessage{}
 	err := json.Unmarshal(data, &confJson)
 	if err != nil {
 		// Maybe it's a single conf, not an array
-		conf, err := parseOne(data, run)
+		conf, err := parseOne(data)
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +54,7 @@ func Parse(data json.RawMessage, run int) ([]Config, error) {
 
 	confs := make([]Config, len(confJson))
 	for i, cData := range confJson {
-		confs[i], err = parseOne(cData, run)
+		confs[i], err = parseOne(cData)
 		if err != nil {
 			return nil, fmt.Errorf("Error parsing array element %d: %s", i, err.Error())
 		}
@@ -65,7 +63,7 @@ func Parse(data json.RawMessage, run int) ([]Config, error) {
 	return confs, nil
 }
 
-func parseOne(data json.RawMessage, run int) (Config, error) {
+func parseOne(data json.RawMessage) (Config, error) {
 	var conf Config
 	conf.Experiment.SetToDefault()
 
@@ -73,11 +71,6 @@ func parseOne(data json.RawMessage, run int) (Config, error) {
 	if err != nil {
 		return conf, errors.New("The config file is not valid JSON: " + err.Error())
 	}
-
-	if run >= 0 {
-		conf.Run = run
-	}
-	Run = conf.Run
 
 	err = conf.LoadSweeper()
 	if err != nil {

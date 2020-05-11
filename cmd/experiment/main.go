@@ -51,7 +51,7 @@ func main() {
 		panic("The config file at path '" + *configPath + "' could not be read: " + err.Error())
 	}
 
-	confs, err := config.Parse(data, int(*run))
+	confs, err := config.Parse(data)
 	if err != nil {
 		panic("Could not parse the config: " + err.Error())
 	}
