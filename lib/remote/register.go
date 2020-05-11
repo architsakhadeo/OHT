@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/stellentus/cartpoles/lib/agent"
 	"github.com/stellentus/cartpoles/lib/environment"
@@ -13,6 +14,33 @@ import (
 	"github.com/stellentus/cartpoles/lib/rlglue"
 	"google.golang.org/grpc"
 )
+
+const maxDialAttempts = 200
+
+func dialGrpc(debug logger.Debug, port string) (*grpc.ClientConn, error) {
+	var conn *grpc.ClientConn
+	err := reattempt(func() error {
+		var err error
+		conn, err = grpc.Dial("localhost"+port, grpc.WithInsecure())
+		return err
+	})
+	if err != nil {
+		debug.Message("err", err)
+	}
+	return conn, err
+}
+
+func reattempt(action func() error) error {
+	var err error
+	for i := 0; i < maxDialAttempts; i++ {
+		err = action()
+		if err == nil {
+			return nil // It worked!
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return err
+}
 
 func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 	// TODO Update this function type to also send rlglue.Attribute for the agent
@@ -38,50 +66,6 @@ func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 		return errors.New("failed to initialize grpc environment: " + err.Error())
 	}
 	return nil
-}
-
-type launcherAgent struct {
-	rlglue.Agent
-	ctx context.Context
-	wg  *sync.WaitGroup
-}
-
-func newLauncherAgent(cc *grpc.ClientConn, ctx context.Context, wg *sync.WaitGroup) (launcherAgent, error) {
-	return launcherAgent{
-		Agent: NewAgent(cc),
-		ctx:   ctx,
-		wg:    wg,
-	}, nil
-}
-
-func (agent launcherAgent) Initialize(experiment, environment rlglue.Attributes) error {
-	err := launchCommands(experiment, agent.ctx, agent.wg)
-	if err != nil {
-		return err
-	}
-	return agent.Agent.Initialize(experiment, environment)
-}
-
-type launcherEnvironment struct {
-	rlglue.Environment
-	ctx context.Context
-	wg  *sync.WaitGroup
-}
-
-func newLauncherEnvironment(cc *grpc.ClientConn, ctx context.Context, wg *sync.WaitGroup) (launcherEnvironment, error) {
-	return launcherEnvironment{
-		Environment: NewEnvironment(cc),
-		ctx:         ctx,
-		wg:          wg,
-	}, nil
-}
-
-func (environment launcherEnvironment) Initialize(attr rlglue.Attributes) error {
-	err := launchCommands(attr, environment.ctx, environment.wg)
-	if err != nil {
-		return err
-	}
-	return environment.Environment.Initialize(attr)
 }
 
 // TODO add environment variables by adding a "env" attribute and using `cmd.Env = append(os.Environ(), "PORT=8080", "FOO=actual_value")`

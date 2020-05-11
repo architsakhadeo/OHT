@@ -2,52 +2,35 @@ package remote
 
 import (
 	"context"
-	"time"
+	"sync"
 
-	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 
 	"google.golang.org/grpc"
 )
 
-const maxDialAttempts = 200
-
-func dialGrpc(debug logger.Debug, port string) (*grpc.ClientConn, error) {
-	var conn *grpc.ClientConn
-	err := reattempt(func() error {
-		var err error
-		conn, err = grpc.Dial("localhost"+port, grpc.WithInsecure())
-		return err
-	})
-	if err != nil {
-		debug.Message("err", err)
-	}
-	return conn, err
-}
-
-func reattempt(action func() error) error {
-	var err error
-	for i := 0; i < maxDialAttempts; i++ {
-		err = action()
-		if err == nil {
-			return nil // It worked!
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	return err
-}
-
-type agentWrapper struct {
+type launcherAgent struct {
 	client AgentClient
+	ctx    context.Context
+	wg     *sync.WaitGroup
 }
 
-func NewAgent(cc *grpc.ClientConn) rlglue.Agent {
-	return &agentWrapper{NewAgentClient(cc)}
+func newLauncherAgent(cc *grpc.ClientConn, ctx context.Context, wg *sync.WaitGroup) (launcherAgent, error) {
+	return launcherAgent{
+		client: NewAgentClient(cc),
+		ctx:    ctx,
+		wg:     wg,
+	}, nil
 }
 
-func (agent agentWrapper) Initialize(experiment, environment rlglue.Attributes) error {
+func (agent launcherAgent) Initialize(experiment, environment rlglue.Attributes) error {
+	err := launchCommands(experiment, agent.ctx, agent.wg)
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
-	err := reattempt(func() error {
+	err = reattempt(func() error {
 		_, err := agent.client.Initialize(ctx, &AgentAttributes{
 			Experiment:  &Attributes{Attributes: string(experiment)},
 			Environment: &Attributes{Attributes: string(environment)},
@@ -57,13 +40,13 @@ func (agent agentWrapper) Initialize(experiment, environment rlglue.Attributes) 
 	return err
 }
 
-func (agent agentWrapper) Start(state rlglue.State) rlglue.Action {
+func (agent launcherAgent) Start(state rlglue.State) rlglue.Action {
 	ctx := context.Background()
 	action, _ := agent.client.Start(ctx, &State{Values: []float64(state)})
 	return rlglue.Action(action.Action)
 }
 
-func (agent agentWrapper) Step(state rlglue.State, reward float64) rlglue.Action {
+func (agent launcherAgent) Step(state rlglue.State, reward float64) rlglue.Action {
 	ctx := context.Background()
 	action, _ := agent.client.Step(ctx, &StepResult{
 		State:    &State{Values: []float64(state)},
@@ -73,7 +56,7 @@ func (agent agentWrapper) Step(state rlglue.State, reward float64) rlglue.Action
 	return rlglue.Action(action.Action)
 }
 
-func (agent agentWrapper) End(state rlglue.State, reward float64) {
+func (agent launcherAgent) End(state rlglue.State, reward float64) {
 	ctx := context.Background()
 	agent.client.Step(ctx, &StepResult{
 		State:    &State{Values: []float64(state)},
