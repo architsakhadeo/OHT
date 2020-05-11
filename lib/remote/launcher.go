@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	fmt "fmt"
 	"os/exec"
 	"sync"
 
@@ -17,7 +16,7 @@ import (
 
 func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 	// TODO Update this function type to also send rlglue.Attribute for the agent
-	err := agent.Add("grpc-launcher", func(debug logger.Debug) (rlglue.Agent, error) {
+	err := agent.Add("grpc", func(debug logger.Debug) (rlglue.Agent, error) {
 		conn, err := dialGrpc(debug, ":8081")
 		if err != nil {
 			return nil, err
@@ -25,10 +24,10 @@ func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 		return newLauncherAgent(conn, ctx, wg)
 	})
 	if err != nil {
-		return errors.New("failed to initialize grpc-launcher agent: " + err.Error())
+		return errors.New("failed to initialize grpc agent: " + err.Error())
 	}
 
-	err = environment.Add("grpc-launcher", func(debug logger.Debug) (rlglue.Environment, error) {
+	err = environment.Add("grpc", func(debug logger.Debug) (rlglue.Environment, error) {
 		conn, err := dialGrpc(debug, ":8080")
 		if err != nil {
 			return nil, err
@@ -36,7 +35,7 @@ func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {
 		return newLauncherEnvironment(conn, ctx, wg)
 	})
 	if err != nil {
-		return errors.New("failed to initialize grpc-launcher environment: " + err.Error())
+		return errors.New("failed to initialize grpc environment: " + err.Error())
 	}
 	return nil
 }
@@ -90,18 +89,17 @@ func launchCommands(attr rlglue.Attributes, ctx context.Context, wg *sync.WaitGr
 	extractedAttrs := map[string]json.RawMessage{}
 	err := json.Unmarshal(attr, &extractedAttrs)
 	if err != nil {
-		return errors.New("The launcher attributes is not valid JSON: " + err.Error())
+		return errors.New("The gRPC attributes are not valid JSON: " + err.Error())
 	}
 
 	commandJson, ok := extractedAttrs["commands"]
 	if !ok {
-		fmt.Println("WARNING: Launcher did not have any commands to run. This is not necessarily a bug, but if it was intentional you should use the regular 'grpc' instead. The purpose of 'grpc-launcher' is to also run code from another binary/language, in which case your JSON should contain a 'commands' array of shell commands to execute.")
 		return nil
 	}
 	commands := [][]string{}
 	err = json.Unmarshal(commandJson, &commands)
 	if err != nil {
-		return errors.New("The launcher commands are not valid JSON: " + err.Error())
+		return errors.New("The gRPC commands are not valid JSON: " + err.Error())
 	}
 
 	for _, command := range commands {

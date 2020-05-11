@@ -3,25 +3,10 @@ package remote
 import (
 	"context"
 
-	"github.com/stellentus/cartpoles/lib/environment"
-	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 
 	"google.golang.org/grpc"
 )
-
-func init() {
-	err := environment.Add("grpc", func(debug logger.Debug) (rlglue.Environment, error) {
-		conn, err := dialGrpc(debug, ":8080")
-		if err != nil {
-			return nil, err
-		}
-		return NewEnvironment(conn), nil
-	})
-	if err != nil {
-		panic("failed to initialize grpc-environment: " + err.Error())
-	}
-}
 
 type environmentServer struct {
 	env rlglue.Environment

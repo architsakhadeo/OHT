@@ -4,25 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/stellentus/cartpoles/lib/agent"
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 
 	"google.golang.org/grpc"
 )
-
-func init() {
-	err := agent.Add("grpc", func(debug logger.Debug) (rlglue.Agent, error) {
-		conn, err := dialGrpc(debug, ":8081")
-		if err != nil {
-			return nil, err
-		}
-		return NewAgent(conn), nil
-	})
-	if err != nil {
-		panic("failed to initialize grpc-agent: " + err.Error())
-	}
-}
 
 const maxDialAttempts = 200
 
