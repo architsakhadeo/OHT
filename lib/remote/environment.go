@@ -12,6 +12,7 @@ type launcherEnvironment struct {
 	client EnvironmentClient
 	ctx    context.Context
 	wg     *sync.WaitGroup
+	debug  logger.Debug
 }
 
 func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (launcherEnvironment, error) {
@@ -24,6 +25,7 @@ func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.Wa
 		client: NewEnvironmentClient(cc),
 		ctx:    ctx,
 		wg:     wg,
+		debug:  debug,
 	}, nil
 }
 

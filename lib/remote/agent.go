@@ -12,6 +12,7 @@ type launcherAgent struct {
 	client AgentClient
 	ctx    context.Context
 	wg     *sync.WaitGroup
+	debug  logger.Debug
 }
 
 func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (launcherAgent, error) {
@@ -24,6 +25,7 @@ func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGrou
 		client: NewAgentClient(cc),
 		ctx:    ctx,
 		wg:     wg,
+		debug:  debug,
 	}, nil
 }
 
