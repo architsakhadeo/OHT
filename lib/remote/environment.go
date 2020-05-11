@@ -35,9 +35,8 @@ func (env *launcherEnvironment) Initialize(attr rlglue.Attributes) error {
 		return err
 	}
 
-	ctx := context.Background()
 	err = reattempt(func() error {
-		_, err := env.client.Initialize(ctx, &Attributes{Attributes: string(attr)})
+		_, err := env.client.Initialize(env.ctx, &Attributes{Attributes: string(attr)})
 		return err
 	})
 

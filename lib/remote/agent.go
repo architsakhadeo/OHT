@@ -35,9 +35,8 @@ func (agent *launcherAgent) Initialize(experiment, environment rlglue.Attributes
 		return err
 	}
 
-	ctx := context.Background()
 	err = reattempt(func() error {
-		_, err := agent.client.Initialize(ctx, &AgentAttributes{
+		_, err := agent.client.Initialize(agent.ctx, &AgentAttributes{
 			Experiment:  &Attributes{Attributes: string(experiment)},
 			Environment: &Attributes{Attributes: string(environment)},
 		})
