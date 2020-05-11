@@ -29,6 +29,53 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
+type Run struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Run uint64 `protobuf:"fixed64,1,opt,name=run,proto3" json:"run,omitempty"`
+}
+
+func (x *Run) Reset() {
+	*x = Run{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_remote_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Run) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Run) ProtoMessage() {}
+
+func (x *Run) ProtoReflect() protoreflect.Message {
+	mi := &file_remote_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Run.ProtoReflect.Descriptor instead.
+func (*Run) Descriptor() ([]byte, []int) {
+	return file_remote_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Run) GetRun() uint64 {
+	if x != nil {
+		return x.Run
+	}
+	return 0
+}
+
 type Attributes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -40,7 +87,7 @@ type Attributes struct {
 func (x *Attributes) Reset() {
 	*x = Attributes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_remote_proto_msgTypes[0]
+		mi := &file_remote_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -53,7 +100,7 @@ func (x *Attributes) String() string {
 func (*Attributes) ProtoMessage() {}
 
 func (x *Attributes) ProtoReflect() protoreflect.Message {
-	mi := &file_remote_proto_msgTypes[0]
+	mi := &file_remote_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -66,7 +113,7 @@ func (x *Attributes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Attributes.ProtoReflect.Descriptor instead.
 func (*Attributes) Descriptor() ([]byte, []int) {
-	return file_remote_proto_rawDescGZIP(), []int{0}
+	return file_remote_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Attributes) GetAttributes() string {
@@ -81,14 +128,15 @@ type AgentAttributes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Experiment  *Attributes `protobuf:"bytes,1,opt,name=experiment,proto3" json:"experiment,omitempty"`
-	Environment *Attributes `protobuf:"bytes,2,opt,name=environment,proto3" json:"environment,omitempty"`
+	Run         *Run        `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
+	Experiment  *Attributes `protobuf:"bytes,2,opt,name=experiment,proto3" json:"experiment,omitempty"`
+	Environment *Attributes `protobuf:"bytes,3,opt,name=environment,proto3" json:"environment,omitempty"`
 }
 
 func (x *AgentAttributes) Reset() {
 	*x = AgentAttributes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_remote_proto_msgTypes[1]
+		mi := &file_remote_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -101,7 +149,7 @@ func (x *AgentAttributes) String() string {
 func (*AgentAttributes) ProtoMessage() {}
 
 func (x *AgentAttributes) ProtoReflect() protoreflect.Message {
-	mi := &file_remote_proto_msgTypes[1]
+	mi := &file_remote_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -114,7 +162,14 @@ func (x *AgentAttributes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentAttributes.ProtoReflect.Descriptor instead.
 func (*AgentAttributes) Descriptor() ([]byte, []int) {
-	return file_remote_proto_rawDescGZIP(), []int{1}
+	return file_remote_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *AgentAttributes) GetRun() *Run {
+	if x != nil {
+		return x.Run
+	}
+	return nil
 }
 
 func (x *AgentAttributes) GetExperiment() *Attributes {
@@ -131,6 +186,61 @@ func (x *AgentAttributes) GetEnvironment() *Attributes {
 	return nil
 }
 
+type EnvironmentAttributes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Run        *Run        `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
+	Attributes *Attributes `protobuf:"bytes,2,opt,name=attributes,proto3" json:"attributes,omitempty"`
+}
+
+func (x *EnvironmentAttributes) Reset() {
+	*x = EnvironmentAttributes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_remote_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnvironmentAttributes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnvironmentAttributes) ProtoMessage() {}
+
+func (x *EnvironmentAttributes) ProtoReflect() protoreflect.Message {
+	mi := &file_remote_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnvironmentAttributes.ProtoReflect.Descriptor instead.
+func (*EnvironmentAttributes) Descriptor() ([]byte, []int) {
+	return file_remote_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *EnvironmentAttributes) GetRun() *Run {
+	if x != nil {
+		return x.Run
+	}
+	return nil
+}
+
+func (x *EnvironmentAttributes) GetAttributes() *Attributes {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
 type State struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -142,7 +252,7 @@ type State struct {
 func (x *State) Reset() {
 	*x = State{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_remote_proto_msgTypes[2]
+		mi := &file_remote_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -155,7 +265,7 @@ func (x *State) String() string {
 func (*State) ProtoMessage() {}
 
 func (x *State) ProtoReflect() protoreflect.Message {
-	mi := &file_remote_proto_msgTypes[2]
+	mi := &file_remote_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -168,7 +278,7 @@ func (x *State) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use State.ProtoReflect.Descriptor instead.
 func (*State) Descriptor() ([]byte, []int) {
-	return file_remote_proto_rawDescGZIP(), []int{2}
+	return file_remote_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *State) GetValues() []float64 {
@@ -189,7 +299,7 @@ type Action struct {
 func (x *Action) Reset() {
 	*x = Action{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_remote_proto_msgTypes[3]
+		mi := &file_remote_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -202,7 +312,7 @@ func (x *Action) String() string {
 func (*Action) ProtoMessage() {}
 
 func (x *Action) ProtoReflect() protoreflect.Message {
-	mi := &file_remote_proto_msgTypes[3]
+	mi := &file_remote_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -215,7 +325,7 @@ func (x *Action) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Action.ProtoReflect.Descriptor instead.
 func (*Action) Descriptor() ([]byte, []int) {
-	return file_remote_proto_rawDescGZIP(), []int{3}
+	return file_remote_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Action) GetAction() uint64 {
@@ -238,7 +348,7 @@ type StepResult struct {
 func (x *StepResult) Reset() {
 	*x = StepResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_remote_proto_msgTypes[4]
+		mi := &file_remote_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -251,7 +361,7 @@ func (x *StepResult) String() string {
 func (*StepResult) ProtoMessage() {}
 
 func (x *StepResult) ProtoReflect() protoreflect.Message {
-	mi := &file_remote_proto_msgTypes[4]
+	mi := &file_remote_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -264,7 +374,7 @@ func (x *StepResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepResult.ProtoReflect.Descriptor instead.
 func (*StepResult) Descriptor() ([]byte, []int) {
-	return file_remote_proto_rawDescGZIP(), []int{4}
+	return file_remote_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *StepResult) GetState() *State {
@@ -297,7 +407,7 @@ type Empty struct {
 func (x *Empty) Reset() {
 	*x = Empty{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_remote_proto_msgTypes[5]
+		mi := &file_remote_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -310,7 +420,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_remote_proto_msgTypes[5]
+	mi := &file_remote_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,23 +433,32 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_remote_proto_rawDescGZIP(), []int{5}
+	return file_remote_proto_rawDescGZIP(), []int{7}
 }
 
 var File_remote_proto protoreflect.FileDescriptor
 
 var file_remote_proto_rawDesc = []byte{
-	0x0a, 0x0c, 0x72, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x2c,
-	0x0a, 0x0a, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x12, 0x1e, 0x0a, 0x0a,
-	0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x6d, 0x0a, 0x0f,
-	0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x12,
-	0x2b, 0x0a, 0x0a, 0x65, 0x78, 0x70, 0x65, 0x72, 0x69, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20,
+	0x0a, 0x0c, 0x72, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x17,
+	0x0a, 0x03, 0x52, 0x75, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x72, 0x75, 0x6e, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x06, 0x52, 0x03, 0x72, 0x75, 0x6e, 0x22, 0x2c, 0x0a, 0x0a, 0x41, 0x74, 0x74, 0x72, 0x69,
+	0x62, 0x75, 0x74, 0x65, 0x73, 0x12, 0x1e, 0x0a, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75,
+	0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69,
+	0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x85, 0x01, 0x0a, 0x0f, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41,
+	0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x12, 0x16, 0x0a, 0x03, 0x72, 0x75, 0x6e,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x52, 0x75, 0x6e, 0x52, 0x03, 0x72, 0x75,
+	0x6e, 0x12, 0x2b, 0x0a, 0x0a, 0x65, 0x78, 0x70, 0x65, 0x72, 0x69, 0x6d, 0x65, 0x6e, 0x74, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
+	0x65, 0x73, 0x52, 0x0a, 0x65, 0x78, 0x70, 0x65, 0x72, 0x69, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x2d,
+	0x0a, 0x0b, 0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73,
-	0x52, 0x0a, 0x65, 0x78, 0x70, 0x65, 0x72, 0x69, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x0a, 0x0b,
-	0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x0b, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x52, 0x0b,
-	0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x22, 0x1f, 0x0a, 0x05, 0x53,
+	0x52, 0x0b, 0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x22, 0x5c, 0x0a,
+	0x15, 0x45, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x41, 0x74, 0x74, 0x72,
+	0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x12, 0x16, 0x0a, 0x03, 0x72, 0x75, 0x6e, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x52, 0x75, 0x6e, 0x52, 0x03, 0x72, 0x75, 0x6e, 0x12, 0x2b,
+	0x0a, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x52,
+	0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x1f, 0x0a, 0x05, 0x53,
 	0x74, 0x61, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01,
 	0x20, 0x03, 0x28, 0x01, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x22, 0x20, 0x0a, 0x06,
 	0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e,
@@ -350,25 +469,25 @@ var file_remote_proto_rawDesc = []byte{
 	0x77, 0x61, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x06, 0x72, 0x65, 0x77, 0x61,
 	0x72, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x61, 0x6c, 0x18, 0x03,
 	0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x74, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x61, 0x6c, 0x22, 0x07,
-	0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0x95, 0x01, 0x0a, 0x0b, 0x45, 0x6e, 0x76, 0x69,
-	0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x23, 0x0a, 0x0a, 0x49, 0x6e, 0x69, 0x74, 0x69,
-	0x61, 0x6c, 0x69, 0x7a, 0x65, 0x12, 0x0b, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
-	0x65, 0x73, 0x1a, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x19, 0x0a, 0x05,
-	0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x06, 0x2e,
-	0x53, 0x74, 0x61, 0x74, 0x65, 0x22, 0x00, 0x12, 0x1e, 0x0a, 0x04, 0x53, 0x74, 0x65, 0x70, 0x12,
-	0x07, 0x2e, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x0b, 0x2e, 0x53, 0x74, 0x65, 0x70, 0x52,
-	0x65, 0x73, 0x75, 0x6c, 0x74, 0x22, 0x00, 0x12, 0x26, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x41, 0x74,
-	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x12, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x1a, 0x0b, 0x2e, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x00, 0x32,
-	0x6d, 0x0a, 0x05, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x12, 0x28, 0x0a, 0x0a, 0x49, 0x6e, 0x69, 0x74,
-	0x69, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x12, 0x10, 0x2e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x74,
-	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x1a, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x22, 0x00, 0x12, 0x1a, 0x0a, 0x05, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x06, 0x2e, 0x53, 0x74,
-	0x61, 0x74, 0x65, 0x1a, 0x07, 0x2e, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x00, 0x12, 0x1e,
-	0x0a, 0x04, 0x53, 0x74, 0x65, 0x70, 0x12, 0x0b, 0x2e, 0x53, 0x74, 0x65, 0x70, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x1a, 0x07, 0x2e, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x00, 0x42, 0x0a,
-	0x5a, 0x08, 0x2e, 0x3b, 0x72, 0x65, 0x6d, 0x6f, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x32, 0xa0, 0x01, 0x0a, 0x0b, 0x45, 0x6e, 0x76, 0x69,
+	0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x2e, 0x0a, 0x0a, 0x49, 0x6e, 0x69, 0x74, 0x69,
+	0x61, 0x6c, 0x69, 0x7a, 0x65, 0x12, 0x16, 0x2e, 0x45, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d,
+	0x65, 0x6e, 0x74, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x1a, 0x06, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x19, 0x0a, 0x05, 0x53, 0x74, 0x61, 0x72, 0x74,
+	0x12, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x06, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x65,
+	0x22, 0x00, 0x12, 0x1e, 0x0a, 0x04, 0x53, 0x74, 0x65, 0x70, 0x12, 0x07, 0x2e, 0x41, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x1a, 0x0b, 0x2e, 0x53, 0x74, 0x65, 0x70, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x22, 0x00, 0x12, 0x26, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75,
+	0x74, 0x65, 0x73, 0x12, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x0b, 0x2e, 0x41, 0x74,
+	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x00, 0x32, 0x6d, 0x0a, 0x05, 0x41, 0x67,
+	0x65, 0x6e, 0x74, 0x12, 0x28, 0x0a, 0x0a, 0x49, 0x6e, 0x69, 0x74, 0x69, 0x61, 0x6c, 0x69, 0x7a,
+	0x65, 0x12, 0x10, 0x2e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75,
+	0x74, 0x65, 0x73, 0x1a, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x1a, 0x0a,
+	0x05, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x06, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x1a, 0x07,
+	0x2e, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x00, 0x12, 0x1e, 0x0a, 0x04, 0x53, 0x74, 0x65,
+	0x70, 0x12, 0x0b, 0x2e, 0x53, 0x74, 0x65, 0x70, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x1a, 0x07,
+	0x2e, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x00, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x3b, 0x72,
+	0x65, 0x6d, 0x6f, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -383,38 +502,43 @@ func file_remote_proto_rawDescGZIP() []byte {
 	return file_remote_proto_rawDescData
 }
 
-var file_remote_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_remote_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_remote_proto_goTypes = []interface{}{
-	(*Attributes)(nil),      // 0: Attributes
-	(*AgentAttributes)(nil), // 1: AgentAttributes
-	(*State)(nil),           // 2: State
-	(*Action)(nil),          // 3: Action
-	(*StepResult)(nil),      // 4: StepResult
-	(*Empty)(nil),           // 5: Empty
+	(*Run)(nil),                   // 0: Run
+	(*Attributes)(nil),            // 1: Attributes
+	(*AgentAttributes)(nil),       // 2: AgentAttributes
+	(*EnvironmentAttributes)(nil), // 3: EnvironmentAttributes
+	(*State)(nil),                 // 4: State
+	(*Action)(nil),                // 5: Action
+	(*StepResult)(nil),            // 6: StepResult
+	(*Empty)(nil),                 // 7: Empty
 }
 var file_remote_proto_depIdxs = []int32{
-	0,  // 0: AgentAttributes.experiment:type_name -> Attributes
-	0,  // 1: AgentAttributes.environment:type_name -> Attributes
-	2,  // 2: StepResult.state:type_name -> State
-	0,  // 3: Environment.Initialize:input_type -> Attributes
-	5,  // 4: Environment.Start:input_type -> Empty
-	3,  // 5: Environment.Step:input_type -> Action
-	5,  // 6: Environment.GetAttributes:input_type -> Empty
-	1,  // 7: Agent.Initialize:input_type -> AgentAttributes
-	2,  // 8: Agent.Start:input_type -> State
-	4,  // 9: Agent.Step:input_type -> StepResult
-	5,  // 10: Environment.Initialize:output_type -> Empty
-	2,  // 11: Environment.Start:output_type -> State
-	4,  // 12: Environment.Step:output_type -> StepResult
-	0,  // 13: Environment.GetAttributes:output_type -> Attributes
-	5,  // 14: Agent.Initialize:output_type -> Empty
-	3,  // 15: Agent.Start:output_type -> Action
-	3,  // 16: Agent.Step:output_type -> Action
-	10, // [10:17] is the sub-list for method output_type
-	3,  // [3:10] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	0,  // 0: AgentAttributes.run:type_name -> Run
+	1,  // 1: AgentAttributes.experiment:type_name -> Attributes
+	1,  // 2: AgentAttributes.environment:type_name -> Attributes
+	0,  // 3: EnvironmentAttributes.run:type_name -> Run
+	1,  // 4: EnvironmentAttributes.attributes:type_name -> Attributes
+	4,  // 5: StepResult.state:type_name -> State
+	3,  // 6: Environment.Initialize:input_type -> EnvironmentAttributes
+	7,  // 7: Environment.Start:input_type -> Empty
+	5,  // 8: Environment.Step:input_type -> Action
+	7,  // 9: Environment.GetAttributes:input_type -> Empty
+	2,  // 10: Agent.Initialize:input_type -> AgentAttributes
+	4,  // 11: Agent.Start:input_type -> State
+	6,  // 12: Agent.Step:input_type -> StepResult
+	7,  // 13: Environment.Initialize:output_type -> Empty
+	4,  // 14: Environment.Start:output_type -> State
+	6,  // 15: Environment.Step:output_type -> StepResult
+	1,  // 16: Environment.GetAttributes:output_type -> Attributes
+	7,  // 17: Agent.Initialize:output_type -> Empty
+	5,  // 18: Agent.Start:output_type -> Action
+	5,  // 19: Agent.Step:output_type -> Action
+	13, // [13:20] is the sub-list for method output_type
+	6,  // [6:13] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_remote_proto_init() }
@@ -424,7 +548,7 @@ func file_remote_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_remote_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Attributes); i {
+			switch v := v.(*Run); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -436,7 +560,7 @@ func file_remote_proto_init() {
 			}
 		}
 		file_remote_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AgentAttributes); i {
+			switch v := v.(*Attributes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -448,7 +572,7 @@ func file_remote_proto_init() {
 			}
 		}
 		file_remote_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*State); i {
+			switch v := v.(*AgentAttributes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -460,7 +584,7 @@ func file_remote_proto_init() {
 			}
 		}
 		file_remote_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Action); i {
+			switch v := v.(*EnvironmentAttributes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -472,7 +596,7 @@ func file_remote_proto_init() {
 			}
 		}
 		file_remote_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StepResult); i {
+			switch v := v.(*State); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -484,6 +608,30 @@ func file_remote_proto_init() {
 			}
 		}
 		file_remote_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Action); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_remote_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StepResult); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_remote_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Empty); i {
 			case 0:
 				return &v.state
@@ -502,7 +650,7 @@ func file_remote_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_remote_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
@@ -528,7 +676,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EnvironmentClient interface {
-	Initialize(ctx context.Context, in *Attributes, opts ...grpc.CallOption) (*Empty, error)
+	Initialize(ctx context.Context, in *EnvironmentAttributes, opts ...grpc.CallOption) (*Empty, error)
 	Start(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*State, error)
 	Step(ctx context.Context, in *Action, opts ...grpc.CallOption) (*StepResult, error)
 	GetAttributes(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Attributes, error)
@@ -542,7 +690,7 @@ func NewEnvironmentClient(cc grpc.ClientConnInterface) EnvironmentClient {
 	return &environmentClient{cc}
 }
 
-func (c *environmentClient) Initialize(ctx context.Context, in *Attributes, opts ...grpc.CallOption) (*Empty, error) {
+func (c *environmentClient) Initialize(ctx context.Context, in *EnvironmentAttributes, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/Environment/Initialize", in, out, opts...)
 	if err != nil {
@@ -580,7 +728,7 @@ func (c *environmentClient) GetAttributes(ctx context.Context, in *Empty, opts .
 
 // EnvironmentServer is the server API for Environment service.
 type EnvironmentServer interface {
-	Initialize(context.Context, *Attributes) (*Empty, error)
+	Initialize(context.Context, *EnvironmentAttributes) (*Empty, error)
 	Start(context.Context, *Empty) (*State, error)
 	Step(context.Context, *Action) (*StepResult, error)
 	GetAttributes(context.Context, *Empty) (*Attributes, error)
@@ -590,7 +738,7 @@ type EnvironmentServer interface {
 type UnimplementedEnvironmentServer struct {
 }
 
-func (*UnimplementedEnvironmentServer) Initialize(context.Context, *Attributes) (*Empty, error) {
+func (*UnimplementedEnvironmentServer) Initialize(context.Context, *EnvironmentAttributes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Initialize not implemented")
 }
 func (*UnimplementedEnvironmentServer) Start(context.Context, *Empty) (*State, error) {
@@ -608,7 +756,7 @@ func RegisterEnvironmentServer(s *grpc.Server, srv EnvironmentServer) {
 }
 
 func _Environment_Initialize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Attributes)
+	in := new(EnvironmentAttributes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -620,7 +768,7 @@ func _Environment_Initialize_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/Environment/Initialize",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EnvironmentServer).Initialize(ctx, req.(*Attributes))
+		return srv.(EnvironmentServer).Initialize(ctx, req.(*EnvironmentAttributes))
 	}
 	return interceptor(ctx, in, info, handler)
 }

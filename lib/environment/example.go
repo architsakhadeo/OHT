@@ -33,7 +33,7 @@ func NewExample(logger logger.Debug) (rlglue.Environment, error) {
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Example) Initialize(attr rlglue.Attributes) error {
+func (env *Example) Initialize(run uint, attr rlglue.Attributes) error {
 	var ss struct {
 		Seed           int64
 		NumberOfStates int
@@ -43,7 +43,7 @@ func (env *Example) Initialize(attr rlglue.Attributes) error {
 		env.Message("warning", "environment.Example seed wasn't available")
 		ss.Seed = 0
 	}
-	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+	rng := rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	env.NumberOfStates = ss.NumberOfStates
 	if env.NumberOfStates < 1 {

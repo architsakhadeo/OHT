@@ -23,7 +23,7 @@ func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.Wa
 	}, nil
 }
 
-func (env *launcherEnvironment) Initialize(attr rlglue.Attributes) error {
+func (env *launcherEnvironment) Initialize(run uint, attr rlglue.Attributes) error {
 	port, err := getPort(8080, attr)
 	if err != nil {
 		return err
@@ -41,7 +41,10 @@ func (env *launcherEnvironment) Initialize(attr rlglue.Attributes) error {
 	}
 
 	err = reattempt(func() error {
-		_, err := env.client.Initialize(env.ctx, &Attributes{Attributes: string(attr)})
+		_, err := env.client.Initialize(env.ctx, &EnvironmentAttributes{
+			Run:        &Run{Run: uint64(run)},
+			Attributes: &Attributes{Attributes: string(attr)},
+		})
 		return err
 	})
 

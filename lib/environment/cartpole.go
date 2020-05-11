@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/stellentus/cartpoles/lib/config"
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
@@ -48,7 +47,7 @@ func NewCartpole(logger logger.Debug) (rlglue.Environment, error) {
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
+func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
 	env.Continuing = true // Set default
 
 	err := json.Unmarshal(attr, &env)
@@ -57,7 +56,7 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	env.rng = rand.New(rand.NewSource(env.Seed + int64(config.Run))) // Create a new rand source for reproducibility
+	env.rng = rand.New(rand.NewSource(env.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	if len(env.PercentNoise) == 1 {
 		// Copy it for all dimensions

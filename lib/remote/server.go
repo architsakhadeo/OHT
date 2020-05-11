@@ -17,7 +17,7 @@ func NewAgentServer(agent rlglue.Agent) agentServer {
 }
 
 func (srv agentServer) Initialize(ctx context.Context, attr *AgentAttributes) (*Empty, error) {
-	err := srv.agent.Initialize(rlglue.Attributes(attr.Experiment.Attributes), rlglue.Attributes(attr.Environment.Attributes))
+	err := srv.agent.Initialize(uint(attr.Run.Run), rlglue.Attributes(attr.Experiment.Attributes), rlglue.Attributes(attr.Environment.Attributes))
 	return &Empty{}, err
 }
 
@@ -44,8 +44,8 @@ func NewEnvironmentServer(env rlglue.Environment) EnvironmentServer {
 	return environmentServer{env}
 }
 
-func (srv environmentServer) Initialize(ctx context.Context, in *Attributes) (*Empty, error) {
-	err := srv.env.Initialize(rlglue.Attributes(in.Attributes))
+func (srv environmentServer) Initialize(ctx context.Context, in *EnvironmentAttributes) (*Empty, error) {
+	err := srv.env.Initialize(uint(in.Run.Run), rlglue.Attributes(in.Attributes.Attributes))
 	return &Empty{}, err
 }
 

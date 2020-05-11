@@ -26,7 +26,7 @@ func NewExample(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Example) Initialize(expAttr, envAttr rlglue.Attributes) error {
+func (agent *Example) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	var ss struct {
 		Seed        int64
 		EnableDebug bool `json:"enable-debug"`
@@ -43,7 +43,7 @@ func (agent *Example) Initialize(expAttr, envAttr rlglue.Attributes) error {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
 	}
 
-	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+	rng := rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
 	agent.lastAction = rng.Intn(agent.NumberOfActions)
 
 	if agent.EnableDebug {

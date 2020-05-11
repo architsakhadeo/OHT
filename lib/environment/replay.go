@@ -31,7 +31,7 @@ func NewReplay(debug logger.Debug) (rlglue.Environment, error) {
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Replay) Initialize(attr rlglue.Attributes) error {
+func (env *Replay) Initialize(run uint, attr rlglue.Attributes) error {
 	var ss struct {
 		Path          string
 		Suffix        string

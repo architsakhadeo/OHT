@@ -12,7 +12,7 @@ import (
 )
 
 // Execute executes the experiment described by the provided JSON.
-func Execute(conf config.Config) error {
+func Execute(run uint, conf config.Config) error {
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
@@ -26,12 +26,12 @@ func Execute(conf config.Config) error {
 		return errors.New("Could not create data logger: " + err.Error())
 	}
 
-	environment, err := InitializeEnvironment(conf.EnvironmentName, conf.Environment, debugLogger)
+	environment, err := InitializeEnvironment(conf.EnvironmentName, run, conf.Environment, debugLogger)
 	if err != nil {
 		return errors.New("Could not initialize environment: " + err.Error())
 	}
 
-	agent, err := InitializeAgent(conf.AgentName, conf.Agent, environment, debugLogger)
+	agent, err := InitializeAgent(conf.AgentName, run, conf.Agent, environment, debugLogger)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func Execute(conf config.Config) error {
 	return expr.Run()
 }
 
-func InitializeEnvironment(name string, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {
+func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {
 	var err error
 	defer debug.Error(&err)
 
@@ -52,14 +52,14 @@ func InitializeEnvironment(name string, attr rlglue.Attributes, debug logger.Deb
 	if err != nil {
 		return nil, errors.New("Could not create experiment: " + err.Error())
 	}
-	err = environment.Initialize(attr)
+	err = environment.Initialize(run, attr)
 	if err != nil {
 		err = errors.New("Could not initialize experiment: " + err.Error())
 	}
 	return environment, err
 }
 
-func InitializeAgent(name string, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Agent, error) {
+func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Agent, error) {
 	var err error
 	defer debug.Error(&err)
 
@@ -67,7 +67,7 @@ func InitializeAgent(name string, attr rlglue.Attributes, env rlglue.Environment
 	if err != nil {
 		return nil, errors.New("Could not create agent: " + err.Error())
 	}
-	err = agent.Initialize(attr, env.GetAttributes())
+	err = agent.Initialize(run, attr, env.GetAttributes())
 	if err != nil {
 		err = errors.New("Could not initialize agent: " + err.Error())
 	}
