@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	fmt "fmt"
 	"os/exec"
 	"sync"
 	"time"
@@ -40,6 +41,10 @@ func reattempt(action func() error) error {
 		time.Sleep(100 * time.Millisecond)
 	}
 	return err
+}
+
+func getPort(defaultPort int, attr rlglue.Attributes) (string, error) {
+	return fmt.Sprintf(":%d", defaultPort), nil
 }
 
 func RegisterLaunchers(ctx context.Context, wg *sync.WaitGroup) error {

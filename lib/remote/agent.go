@@ -24,7 +24,12 @@ func newLauncherAgent(debug logger.Debug, ctx context.Context, wg *sync.WaitGrou
 }
 
 func (agent *launcherAgent) Initialize(experiment, environment rlglue.Attributes) error {
-	cc, err := dialGrpc(agent.debug, ":8081")
+	port, err := getPort(8081, experiment)
+	if err != nil {
+		return err
+	}
+
+	cc, err := dialGrpc(agent.debug, port)
 	if err != nil {
 		return err
 	}

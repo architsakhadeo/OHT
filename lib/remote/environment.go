@@ -24,7 +24,12 @@ func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.Wa
 }
 
 func (env *launcherEnvironment) Initialize(attr rlglue.Attributes) error {
-	cc, err := dialGrpc(env.debug, ":8080")
+	port, err := getPort(8080, attr)
+	if err != nil {
+		return err
+	}
+
+	cc, err := dialGrpc(env.debug, port)
 	if err != nil {
 		return err
 	}
