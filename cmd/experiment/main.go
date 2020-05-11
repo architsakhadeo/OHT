@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -50,13 +51,18 @@ func main() {
 		panic("The config file at path '" + *configPath + "' could not be read: " + err.Error())
 	}
 
-	conf, err := config.Parse(data, *run)
+	confs, err := config.Parse(data, *run)
 	if err != nil {
 		panic("Could not parse the config: " + err.Error())
 	}
 
-	err = experiment.Execute(conf)
-	if err != nil {
-		panic("Could not create the experiment: " + err.Error())
+	for i, conf := range confs {
+		if len(confs) > 1 {
+			fmt.Printf("Running experiment %d of %d\n", i+1, len(confs))
+		}
+		err = experiment.Execute(conf)
+		if err != nil {
+			panic("Could not create experiment: " + err.Error())
+		}
 	}
 }

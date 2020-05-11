@@ -39,8 +39,33 @@ func (set *Experiment) SetToDefault() {
 	set.ShouldLogEpisodeLengths = false
 }
 
+// Parse parses a json.RawMessage. If the input is a JSON array, then that array as parsed as an array of config objects.
+// Otherwise, it's parsed as a single config object.
 // If run>=0, it's used to override the value in the config. If it's also not set in the config, it's 0.
-func Parse(data json.RawMessage, run int) (Config, error) {
+func Parse(data json.RawMessage, run int) ([]Config, error) {
+	confJson := []json.RawMessage{}
+	err := json.Unmarshal(data, &confJson)
+	if err != nil {
+		// Maybe it's a single conf, not an array
+		conf, err := parseOne(data, run)
+		if err != nil {
+			return nil, err
+		}
+		return []Config{conf}, nil
+	}
+
+	confs := make([]Config, len(confJson))
+	for i, cData := range confJson {
+		confs[i], err = parseOne(cData, run)
+		if err != nil {
+			return nil, fmt.Errorf("Error parsing array element %d: %s", i, err.Error())
+		}
+	}
+
+	return confs, nil
+}
+
+func parseOne(data json.RawMessage, run int) (Config, error) {
 	var conf Config
 	conf.Experiment.SetToDefault()
 
