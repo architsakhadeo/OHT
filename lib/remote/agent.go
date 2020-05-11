@@ -37,34 +37,6 @@ func reattempt(action func() error) error {
 	return err
 }
 
-type agentServer struct {
-	agent rlglue.Agent
-}
-
-func NewAgentServer(agent rlglue.Agent) agentServer {
-	return agentServer{agent}
-}
-
-func (srv agentServer) Initialize(ctx context.Context, attr *AgentAttributes) (*Empty, error) {
-	err := srv.agent.Initialize(rlglue.Attributes(attr.Experiment.Attributes), rlglue.Attributes(attr.Environment.Attributes))
-	return &Empty{}, err
-}
-
-func (srv agentServer) Start(ctx context.Context, state *State) (*Action, error) {
-	action := srv.agent.Start(rlglue.State(state.Values))
-	return &Action{Action: uint64(action)}, nil
-}
-
-func (srv agentServer) Step(ctx context.Context, result *StepResult) (*Action, error) {
-	if result.Terminal {
-		srv.agent.End(rlglue.State(result.State.Values), result.Reward)
-		return nil, nil
-	}
-
-	action := srv.agent.Step(rlglue.State(result.State.Values), result.Reward)
-	return &Action{Action: uint64(action)}, nil
-}
-
 type agentWrapper struct {
 	client AgentClient
 }
