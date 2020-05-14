@@ -141,7 +141,3 @@ func (wrapper *SensorDriftWrapper) logisticProb() []float64 {
 func (wrapper *SensorDriftWrapper) clamp(x, min, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
-
-// func (wrapper *SensorDriftWrapper) StateRange() []float64 {
-// 	return wrapper.Env.StateRange()
-// }
