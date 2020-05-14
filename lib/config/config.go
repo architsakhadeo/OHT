@@ -86,7 +86,11 @@ func parseOne(data json.RawMessage) (Config, error) {
 	return conf, nil
 }
 
-func (conf Config) SweptAgentAttributes(idx int) (rlglue.Attributes, error) {
+func (conf Config) SweptAttrLen() int {
+	return len(conf.sweeper.allAttributes)
+}
+
+func (conf Config) SweptAttributes(idx int) (rlglue.Attributes, error) {
 	if idx >= len(conf.sweeper.allAttributes) {
 		return nil, fmt.Errorf("Cannot run sweep %d (max idx %d)", idx, len(conf.sweeper.allAttributes)-1)
 	}
@@ -137,6 +141,22 @@ func (conf *Config) LoadSweeper() error {
 		return errors.New("The agent attributes is not valid JSON: " + err.Error())
 	}
 
+	envAttrs := AttributeMap{}
+	err = json.Unmarshal(conf.Environment, &envAttrs)
+	if err != nil {
+		return errors.New("The environment attributes is not valid JSON: " + err.Error())
+	}
+	envSweepAttrs, envOk := envAttrs["sweep"]
+	if !envOk {
+		return nil
+	}
+	delete(envAttrs, "sweep") // Environment shouldn't receive the sweep info
+	// Parse out the sweep arrays into key:array, where the array is still raw JSON.
+	err = json.Unmarshal(*envSweepAttrs, &sweepRawJon)
+	if err != nil {
+		return errors.New("The environment attributes is not valid JSON: " + err.Error())
+	}
+
 	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
 	conf.sweeper.allAttributes = []AttributeMap{agentAttrs}
 	for key, val := range sweepRawJon {
@@ -157,7 +177,9 @@ func (conf *Config) LoadSweeper() error {
 					// For the first new value, we can use the previous one instead of copying. All others must copy.
 					newAM = am.Copy()
 				}
-				newAM[key] = &av
+				newAV := make(json.RawMessage, len(av))
+				copy(newAV, av)
+				newAM[key] = &newAV
 				newAMSlice = append(newAMSlice, newAM)
 			}
 		}

@@ -32,7 +32,11 @@ func main() {
 		if len(confs) > 1 {
 			fmt.Printf("Running experiment %d of %d\n", i+1, len(confs))
 		}
-		err = experiment.Execute(*run, conf)
+		sweepLen := conf.SweptAttrLen()
+		for j := 0; j < sweepLen; j++ {
+			fmt.Printf("Running sweep %d of %d\n", j+1, sweepLen)
+			err = experiment.Execute(*run, conf, j)
+		}
 		if err != nil {
 			panic("Could not create experiment: " + err.Error())
 		}

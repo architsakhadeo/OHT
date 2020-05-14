@@ -199,5 +199,27 @@ func (env *Cartpole) getObservations() rlglue.State {
 
 // GetAttributes returns attributes for this environment.
 func (env *Cartpole) GetAttributes() rlglue.Attributes {
-	return rlglue.Attributes(`{"numberOfActions":2}`)
+	attr, err := json.Marshal(&env)
+	if err != nil {
+		err = errors.New("environment.Cartpole settings error: " + err.Error())
+		env.Message("err", err)
+	}
+
+	// Add elements to attributes.
+	var attrMap map[string]interface{}
+	err = json.Unmarshal(attr, &attrMap)
+	if err != nil {
+		err = errors.New("environment.Cartpole settings error: " + err.Error())
+		env.Message("err", err)
+	}
+	attrMap["numberOfActions"] = 2
+	attrMap["stateDimension"] = 4
+	attrMap["stateRange"] = []float64{4.8, 8.0, (2 * 12 * 2 * math.Pi / 360), 7.0}
+	attr, err = json.Marshal(&attrMap)
+	if err != nil {
+		err = errors.New("environment.Cartpole settings error: " + err.Error())
+		env.Message("err", err)
+	}
+
+	return attr
 }
