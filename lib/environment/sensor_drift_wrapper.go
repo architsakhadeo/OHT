@@ -34,8 +34,8 @@ type SensorDriftWrapper struct {
 	// SensorLife is the number of time-steps after which the probability of drift will become nearly 1
 	SensorLife []float64 `json:"sensorLife"`
 	// DriftProb is the probability scale, if it's less than 0, drift occurs with prob=1, if it's between 0 and 1, the max prob is scaled by this value.
-	DriftProb float64 `json:"driftProb"`
-	noiseFn   func() []float64
+	DriftProb []float64 `json:"driftProb"`
+	noiseFns  []func(int) float64
 	rng       *rand.Rand
 }
 
@@ -69,16 +69,19 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 	for i := range wrapper.noiseMax {
 		wrapper.noiseMax[i] = wrapper.StateRange[i] / 2
 	}
-	if wrapper.DriftProb < 0 {
-		wrapper.noiseFn = wrapper.gaussNoise
-	} else {
-		wrapper.noiseFn = wrapper.probGaussNoise
+	wrapper.noiseFns = make([]func(int) float64, wrapper.StateDim)
+	for i := range wrapper.DriftProb {
+		if wrapper.DriftProb[i] < 0 {
+			wrapper.noiseFns[i] = wrapper.gaussNoise
+		} else {
+			wrapper.noiseFns[i] = wrapper.probGaussNoise
+		}
 	}
 
 	wrapper.Message("msg", "environment.SensorDriftWrapper Initialize",
 		"drift scale", wrapper.DriftScale,
 		"sensor life", wrapper.SensorLife,
-		"drift prob", wrapper.DriftProb)
+		"drift probability", wrapper.DriftProb)
 	return nil
 }
 
@@ -101,40 +104,29 @@ func (wrapper *SensorDriftWrapper) GetAttributes() rlglue.Attributes {
 }
 
 func (wrapper *SensorDriftWrapper) stateProcess(state rlglue.State) rlglue.State {
-	noiseNew := wrapper.noiseFn()
+	wrapper.sensorSteps++
 	for i := 0; i < wrapper.StateDim; i++ {
-		wrapper.noise[i] = wrapper.clamp(wrapper.noise[i]+noiseNew[i], -wrapper.noiseMax[i], wrapper.noiseMax[i])
+		wrapper.noise[i] = wrapper.clamp(wrapper.noise[i]+wrapper.noiseFns[i](i), -wrapper.noiseMax[i], wrapper.noiseMax[i])
 		state[i] = wrapper.clamp(state[i]+wrapper.noise[i], -wrapper.noiseMax[i], wrapper.noiseMax[i])
 	}
 	return state
 }
 
-func (wrapper *SensorDriftWrapper) gaussNoise() []float64 {
-	noise := make([]float64, wrapper.StateDim)
-	for i := range noise {
-		noise[i] = wrapper.rng.NormFloat64() * wrapper.noiseStd[i]
+func (wrapper *SensorDriftWrapper) gaussNoise(idx int) float64 {
+	return wrapper.rng.NormFloat64() * wrapper.noiseStd[idx]
+}
+
+func (wrapper *SensorDriftWrapper) probGaussNoise(idx int) float64 {
+	var noise float64
+	probDrift := wrapper.logisticProb(idx)
+	if sample := wrapper.rng.Float64(); sample < probDrift {
+		noise = wrapper.rng.NormFloat64() * wrapper.noiseStd[idx]
 	}
 	return noise
 }
 
-func (wrapper *SensorDriftWrapper) probGaussNoise() []float64 {
-	wrapper.sensorSteps++
-	noise := make([]float64, wrapper.StateDim)
-	probDrift := wrapper.logisticProb()
-	for i := range probDrift {
-		if sample := wrapper.rng.Float64(); sample < probDrift[i] {
-			noise[i] = wrapper.rng.NormFloat64() * wrapper.noiseStd[i]
-		}
-	}
-	return noise
-}
-
-func (wrapper *SensorDriftWrapper) logisticProb() []float64 {
-	cdf := make([]float64, wrapper.StateDim)
-	for i := range cdf {
-		cdf[i] = wrapper.DriftProb / (1 + math.Exp(-(float64(wrapper.sensorSteps)-wrapper.SensorLife[i]/2)/(wrapper.SensorLife[i]/10)))
-	}
-	return cdf
+func (wrapper *SensorDriftWrapper) logisticProb(idx int) float64 {
+	return wrapper.DriftProb[idx] / (1 + math.Exp(-(float64(wrapper.sensorSteps)-wrapper.SensorLife[idx]/2)/(wrapper.SensorLife[idx]/10)))
 }
 
 func (wrapper *SensorDriftWrapper) clamp(x, min, max float64) float64 {
