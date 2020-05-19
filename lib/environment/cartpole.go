@@ -199,26 +199,20 @@ func (env *Cartpole) getObservations() rlglue.State {
 
 // GetAttributes returns attributes for this environment.
 func (env *Cartpole) GetAttributes() rlglue.Attributes {
-	attr, err := json.Marshal(&env)
-	if err != nil {
-		err = errors.New("environment.Cartpole settings error: " + err.Error())
-		env.Message("err", err)
+	// Add elements to attributes.
+	attributes := struct {
+		NumAction  int       `json:"numberOfActions"`
+		StateDim   int       `json:"stateDimension"`
+		StateRange []float64 `json:"stateRange"`
+	}{
+		2,
+		4,
+		[]float64{4.8, 8.0, (2 * 12 * 2 * math.Pi / 360), 7.0},
 	}
 
-	// Add elements to attributes.
-	var attrMap map[string]interface{}
-	err = json.Unmarshal(attr, &attrMap)
+	attr, err := json.Marshal(&attributes)
 	if err != nil {
-		err = errors.New("environment.Cartpole settings error: " + err.Error())
-		env.Message("err", err)
-	}
-	attrMap["numberOfActions"] = 2
-	attrMap["stateDimension"] = 4
-	attrMap["stateRange"] = []float64{4.8, 8.0, (2 * 12 * 2 * math.Pi / 360), 7.0}
-	attr, err = json.Marshal(&attrMap)
-	if err != nil {
-		err = errors.New("environment.Cartpole settings error: " + err.Error())
-		env.Message("err", err)
+		env.Message("err", "environment.Cartpole could not Marshal its JSON attributes: "+err.Error())
 	}
 
 	return attr

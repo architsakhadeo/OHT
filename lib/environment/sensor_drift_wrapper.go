@@ -10,32 +10,33 @@ import (
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
-// const (
-
-// )
-
-// Example is just a dumb test environment.
-// state is adjusted by the action. Valid values are integers [0, ExampleNumberOfActions).
-// Reward is equal to the new state.
-// When |state| is >= ExampleStateMax, it's reset to 0.
+// SensorDriftWrapper is used to wrap an environment, adding sensor drift.
 type SensorDriftWrapper struct {
 	logger.Debug
-	Env         rlglue.Environment
-	Seed        int64     `json:"seed"`
-	NumAction   int64     `json:"numberOfActions"`
-	StateDim    int       `json:"stateDimension"`
-	StateRange  []float64 `json:"stateRange"`
-	Noise       []float64
-	NoiseStd    []float64
-	NoiseMax    []float64
+	Env  rlglue.Environment
+	Seed int64 `json:"seed"`
+	// NumAction is the number of actions that can be taken in the environment.
+	NumAction int64 `json:"numberOfActions"`
+	// StateDim is the dimension of the observation array.
+	StateDim int `json:"stateDimension"`
+	// StateRange is the range of observations, obtained by (max observation - min observation).
+	StateRange []float64 `json:"stateRange"`
+	// noise is the zero-mean Gaussian noise applied to the observation at each time-step.
+	noise []float64
+	// noiseStd is the standard deviation of the noise generated at each time-step.
+	noiseStd []float64
+	// noiseMax is the maximum noise value used for clamping the noise and observation.
+	noiseMax []float64
+	// sensorSteps is the number of sensor drift time-steps.
 	sensorSteps int64
-	Sweep       struct {
-		DriftScale float64   `json:"driftScale"`
-		SensorLife []float64 `json:"sensorLife"`
-		DriftProb  float64   `json:"driftProb"`
-	} `json:"sweep"`
-	NoiseFn func() []float64
-	rng     *rand.Rand
+	// DriftScale is the scale of the drift with respect to the state range.
+	DriftScale float64 `json:"driftScale"`
+	// SensorLife is the number of time-steps after which the probability of drift will become nearly 1
+	SensorLife []float64 `json:"sensorLife"`
+	// DriftProb is the probability scale, if it's less than 0, drift occurs with prob=1, if it's between 0 and 1, the max prob is scaled by this value.
+	DriftProb float64 `json:"driftProb"`
+	noiseFn   func() []float64
+	rng       *rand.Rand
 }
 
 func NewSensorDriftWrapper(logger logger.Debug, env rlglue.Environment) (rlglue.Environment, error) {
@@ -45,8 +46,6 @@ func NewSensorDriftWrapper(logger logger.Debug, env rlglue.Environment) (rlglue.
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) error {
 	wrapper.rng = rand.New(rand.NewSource(wrapper.Seed + int64(run)))
-	// wrapper.Env = env
-	// envAttr := env.GetAttributes()
 	err := json.Unmarshal(attr, &wrapper)
 	if err != nil {
 		err = errors.New("environment.SensorDriftWrapper settings error: " + err.Error())
@@ -61,25 +60,25 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 		return err
 	}
 
-	wrapper.Noise = make([]float64, wrapper.StateDim)
-	wrapper.NoiseStd = make([]float64, wrapper.StateDim)
-	for i := range wrapper.NoiseStd {
-		wrapper.NoiseStd[i] = wrapper.StateRange[i] / wrapper.Sweep.DriftScale
+	wrapper.noise = make([]float64, wrapper.StateDim)
+	wrapper.noiseStd = make([]float64, wrapper.StateDim)
+	for i := range wrapper.noiseStd {
+		wrapper.noiseStd[i] = wrapper.StateRange[i] / wrapper.DriftScale
 	}
-	wrapper.NoiseMax = make([]float64, wrapper.StateDim)
-	for i := range wrapper.NoiseMax {
-		wrapper.NoiseMax[i] = wrapper.StateRange[i] / 2
+	wrapper.noiseMax = make([]float64, wrapper.StateDim)
+	for i := range wrapper.noiseMax {
+		wrapper.noiseMax[i] = wrapper.StateRange[i] / 2
 	}
-	if wrapper.Sweep.DriftProb < 0 {
-		wrapper.NoiseFn = wrapper.gaussNoise
+	if wrapper.DriftProb < 0 {
+		wrapper.noiseFn = wrapper.gaussNoise
 	} else {
-		wrapper.NoiseFn = wrapper.probGaussNoise
+		wrapper.noiseFn = wrapper.probGaussNoise
 	}
 
 	wrapper.Message("msg", "environment.SensorDriftWrapper Initialize",
-		"drift scale", wrapper.Sweep.DriftScale,
-		"sensor life", wrapper.Sweep.SensorLife,
-		"drift prob", wrapper.Sweep.DriftProb)
+		"drift scale", wrapper.DriftScale,
+		"sensor life", wrapper.SensorLife,
+		"drift prob", wrapper.DriftProb)
 	return nil
 }
 
@@ -102,10 +101,10 @@ func (wrapper *SensorDriftWrapper) GetAttributes() rlglue.Attributes {
 }
 
 func (wrapper *SensorDriftWrapper) stateProcess(state rlglue.State) rlglue.State {
-	noiseNew := wrapper.NoiseFn()
+	noiseNew := wrapper.noiseFn()
 	for i := 0; i < wrapper.StateDim; i++ {
-		wrapper.Noise[i] = wrapper.clamp(wrapper.Noise[i]+noiseNew[i], -wrapper.NoiseMax[i], wrapper.NoiseMax[i])
-		state[i] = wrapper.clamp(state[i]+wrapper.Noise[i], -wrapper.NoiseMax[i], wrapper.NoiseMax[i])
+		wrapper.noise[i] = wrapper.clamp(wrapper.noise[i]+noiseNew[i], -wrapper.noiseMax[i], wrapper.noiseMax[i])
+		state[i] = wrapper.clamp(state[i]+wrapper.noise[i], -wrapper.noiseMax[i], wrapper.noiseMax[i])
 	}
 	return state
 }
@@ -113,7 +112,7 @@ func (wrapper *SensorDriftWrapper) stateProcess(state rlglue.State) rlglue.State
 func (wrapper *SensorDriftWrapper) gaussNoise() []float64 {
 	noise := make([]float64, wrapper.StateDim)
 	for i := range noise {
-		noise[i] = wrapper.rng.NormFloat64() * wrapper.NoiseStd[i]
+		noise[i] = wrapper.rng.NormFloat64() * wrapper.noiseStd[i]
 	}
 	return noise
 }
@@ -124,7 +123,7 @@ func (wrapper *SensorDriftWrapper) probGaussNoise() []float64 {
 	probDrift := wrapper.logisticProb()
 	for i := range probDrift {
 		if sample := wrapper.rng.Float64(); sample < probDrift[i] {
-			noise[i] = wrapper.rng.NormFloat64() * wrapper.NoiseStd[i]
+			noise[i] = wrapper.rng.NormFloat64() * wrapper.noiseStd[i]
 		}
 	}
 	return noise
@@ -133,7 +132,7 @@ func (wrapper *SensorDriftWrapper) probGaussNoise() []float64 {
 func (wrapper *SensorDriftWrapper) logisticProb() []float64 {
 	cdf := make([]float64, wrapper.StateDim)
 	for i := range cdf {
-		cdf[i] = wrapper.Sweep.DriftProb / (1 + math.Exp(-(float64(wrapper.sensorSteps)-wrapper.Sweep.SensorLife[i]/2)/(wrapper.Sweep.SensorLife[i]/10)))
+		cdf[i] = wrapper.DriftProb / (1 + math.Exp(-(float64(wrapper.sensorSteps)-wrapper.SensorLife[i]/2)/(wrapper.SensorLife[i]/10)))
 	}
 	return cdf
 }

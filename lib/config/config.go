@@ -17,7 +17,8 @@ type Config struct {
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
 	Experiment      `json:"experiment-settings"`
-	sweeper
+	agentSweeper    Sweeper
+	envSweeper      Sweeper
 }
 
 type Experiment struct {
@@ -78,27 +79,70 @@ func parseOne(data json.RawMessage) (Config, error) {
 		return conf, errors.New("The config file is not valid JSON: " + err.Error())
 	}
 
-	err = conf.LoadSweeper()
+	err = conf.agentSweeper.Load(conf.Agent)
 	if err != nil {
-		return conf, errors.New("The sweeper could not be loaded: " + err.Error())
+		return conf, errors.New("The agent sweeper could not be loaded: " + err.Error())
+	}
+	err = conf.envSweeper.Load(conf.Environment)
+	if err != nil {
+		return conf, errors.New("The environment sweeper could not be loaded: " + err.Error())
 	}
 
 	return conf, nil
 }
 
-func (conf Config) SweptAttrLen() int {
-	return len(conf.sweeper.allAttributes)
+func (conf Config) SweptAttrCount() int {
+	// Assume we always sweep over at least one agent parameter.
+	return len(conf.agentSweeper.allAttributes) * max(1, len(conf.envSweeper.allAttributes))
 }
 
-func (conf Config) SweptAttributes(idx int) (rlglue.Attributes, error) {
-	if idx >= len(conf.sweeper.allAttributes) {
-		return nil, fmt.Errorf("Cannot run sweep %d (max idx %d)", idx, len(conf.sweeper.allAttributes)-1)
+func max(a, b int) int {
+	if a > b {
+		return a
 	}
-	attrs := conf.sweeper.allAttributes[idx]
-	return json.Marshal(attrs)
+	return b
 }
 
-type sweeper struct {
+func (conf Config) sweepIndices(idx int) (int, int, error) {
+	agentCount := len(conf.agentSweeper.allAttributes)
+	envCount := len(conf.envSweeper.allAttributes)
+	agentIdx := idx % agentCount
+	if envCount == 0 {
+		return agentIdx, -1, nil
+	}
+	envIdx := idx / agentCount
+	if envIdx >= envCount {
+		return 0, 0, fmt.Errorf("The sweep idx is invalid")
+	}
+	return agentIdx, envIdx, nil
+}
+
+func (conf Config) SweptAttributes(idx int) (rlglue.Attributes, rlglue.Attributes, error) {
+	totalCount := conf.SweptAttrCount()
+	if idx >= totalCount {
+		return nil, nil, fmt.Errorf("Cannot run sweep %d (max idx %d)", idx, totalCount-1)
+	}
+	agentIdx, envIdx, err := conf.sweepIndices(idx)
+	if err != nil {
+		return nil, nil, errors.New("Cannot run sweep: " + err.Error())
+	}
+	agentAttrs := conf.agentSweeper.allAttributes[agentIdx]
+	agentAttributes, err := json.Marshal(agentAttrs)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Cannot run agent sweep %d", agentIdx)
+	}
+	if envIdx == -1 {
+		return agentAttributes, rlglue.Attributes(`{}`), nil
+	}
+	envAttrs := conf.envSweeper.allAttributes[envIdx]
+	envAttributes, err := json.Marshal(envAttrs)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Cannot run environment sweep %d", envIdx)
+	}
+	return agentAttributes, envAttributes, nil
+}
+
+type Sweeper struct {
 	allAttributes []AttributeMap
 }
 
@@ -119,71 +163,54 @@ func (am AttributeMap) Copy() AttributeMap {
 	return am2
 }
 
-func (conf *Config) LoadSweeper() error {
-	conf.sweeper.allAttributes = []AttributeMap{}
+func (swpr *Sweeper) Load(attributes rlglue.Attributes) error {
+	swpr.allAttributes = []AttributeMap{}
 
-	agentAttrs := AttributeMap{}
-	err := json.Unmarshal(conf.Agent, &agentAttrs)
+	attrs := AttributeMap{}
+	err := json.Unmarshal(attributes, &attrs)
 	if err != nil {
-		return errors.New("The agent attributes is not valid JSON: " + err.Error())
+		return errors.New("The attributes is not valid JSON: " + err.Error())
 	}
 
-	sweepAttrs, ok := agentAttrs["sweep"]
+	sweepAttrs, ok := attrs["sweep"]
 	if !ok {
 		return nil
 	}
-	delete(agentAttrs, "sweep") // Agent shouldn't receive the sweep info
+	delete(attrs, "sweep") // Neither Agent or Environment shouldn't receive the sweep info
 
 	// Parse out the sweep arrays into key:array, where the array is still raw JSON.
 	sweepRawJon := map[string]json.RawMessage{}
 	err = json.Unmarshal(*sweepAttrs, &sweepRawJon)
 	if err != nil {
-		return errors.New("The agent attributes is not valid JSON: " + err.Error())
-	}
-
-	envAttrs := AttributeMap{}
-	err = json.Unmarshal(conf.Environment, &envAttrs)
-	if err != nil {
-		return errors.New("The environment attributes is not valid JSON: " + err.Error())
-	}
-	envSweepAttrs, envOk := envAttrs["sweep"]
-	if !envOk {
-		return nil
-	}
-	delete(envAttrs, "sweep") // Environment shouldn't receive the sweep info
-	// Parse out the sweep arrays into key:array, where the array is still raw JSON.
-	err = json.Unmarshal(*envSweepAttrs, &sweepRawJon)
-	if err != nil {
-		return errors.New("The environment attributes is not valid JSON: " + err.Error())
+		return errors.New("The swept attributes is not valid JSON: " + err.Error())
 	}
 
 	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
-	conf.sweeper.allAttributes = []AttributeMap{agentAttrs}
+	swpr.allAttributes = []AttributeMap{attrs}
 	for key, val := range sweepRawJon {
 		arrayVals := []json.RawMessage{}
 		err = json.Unmarshal(val, &arrayVals)
 		if err != nil {
-			return errors.New("The agent attributes is not valid JSON: " + err.Error())
+			return errors.New("The attributes is not valid JSON: " + err.Error())
 		}
 		if len(arrayVals) == 0 {
 			break // This array is empty, so nothing to do here
 		}
 
 		newAMSlice := []AttributeMap{}
-		for _, am := range conf.sweeper.allAttributes {
-			for i, av := range arrayVals {
+		for _, am := range swpr.allAttributes {
+			for i := range arrayVals {
 				newAM := am
 				if i != 0 {
 					// For the first new value, we can use the previous one instead of copying. All others must copy.
 					newAM = am.Copy()
 				}
-				newAV := make(json.RawMessage, len(av))
-				copy(newAV, av)
-				newAM[key] = &newAV
+				av := arrayVals[i]
+				newAM[key] = &av
 				newAMSlice = append(newAMSlice, newAM)
 			}
 		}
-		conf.sweeper.allAttributes = newAMSlice
+		swpr.allAttributes = newAMSlice
 	}
 
 	return nil

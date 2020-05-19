@@ -17,12 +17,7 @@
 		"seed": 25
 	},
 	"environment-settings": {
-		"seed": 15,
-		"sweep": {
-			"driftScale": [100],
-			"sensorLife": [[1,2,3,4]],
-			"driftProb": [1]
-		}
+		"seed": 15
 	},
 	"experiment-settings": {
 		"steps": 50,

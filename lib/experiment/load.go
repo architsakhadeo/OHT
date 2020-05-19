@@ -21,11 +21,11 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
-	sweepAttr, err := conf.SweptAttributes(sweepIdx)
+	agentAttr, envAttr, err := conf.SweptAttributes(sweepIdx)
 	if err != nil {
 		return errors.New("Cannot run sweep: " + err.Error())
 	}
-	savePath, err := hyphenatedStringify(sweepAttr)
+	savePath, err := hyphenatedStringify(agentAttr, envAttr)
 	if err != nil {
 		return errors.New("Failed to format path: " + err.Error())
 	}
@@ -42,12 +42,12 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 
 	runtime.GOMAXPROCS(conf.MaxCPUs) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
 
-	environment, err := InitializeEnvironment(conf.EnvironmentName, run, conf.Environment, debugLogger, sweepAttr)
+	environment, err := InitializeEnvironment(conf.EnvironmentName, run, conf.Environment, debugLogger, envAttr)
 	if err != nil {
 		return errors.New("Could not initialize environment: " + err.Error())
 	}
 
-	agent, err := InitializeAgent(conf.AgentName, run, conf.Agent, environment, debugLogger, sweepAttr)
+	agent, err := InitializeAgent(conf.AgentName, run, conf.Agent, environment, debugLogger, agentAttr)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	return expr.Run()
 }
 
-func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug, sweepAttr rlglue.Attributes) (rlglue.Environment, error) {
+func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug, envAttr rlglue.Attributes) (rlglue.Environment, error) {
 	var err error
 	defer debug.Error(&err)
 
@@ -68,7 +68,7 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	if err != nil {
 		return nil, errors.New("Could not create experiment: " + err.Error())
 	}
-	attr, err = AddSweepAttr(attr, sweepAttr)
+	attr, err = AddSweepAttr(attr, envAttr)
 	if err != nil {
 		return nil, errors.New("Could not add sweep attributes: " + err.Error())
 	}
@@ -83,7 +83,7 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	return environment, err
 }
 
-func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug, sweepAttr rlglue.Attributes) (rlglue.Agent, error) {
+func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug, agentAttr rlglue.Attributes) (rlglue.Agent, error) {
 	var err error
 	defer debug.Error(&err)
 
@@ -91,7 +91,7 @@ func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.E
 	if err != nil {
 		return nil, errors.New("Could not create agent: " + err.Error())
 	}
-	attr, err = AddSweepAttr(attr, sweepAttr)
+	attr, err = AddSweepAttr(attr, agentAttr)
 	if err != nil {
 		return nil, errors.New("Could not add sweep attributes: " + err.Error())
 	}
@@ -104,7 +104,18 @@ func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.E
 
 func InitializeEnvWrapper(debug logger.Debug, env rlglue.Environment,
 	run uint, attr rlglue.Attributes) (rlglue.Environment, error) {
-	env, err := environment.NewSensorDriftWrapper(debug, env)
+	// Return raw environment if there is no parameter to sweep over.
+	var attrMap map[string]interface{}
+	err := json.Unmarshal(attr, &attrMap)
+	if err != nil {
+		return nil, errors.New("Could not parse attributes: " + err.Error())
+	}
+	_, ok := attrMap["sweep"]
+	if !ok {
+		return env, nil
+	}
+	delete(attrMap, "sweep")
+	env, err = environment.NewSensorDriftWrapper(debug, env)
 	if err != nil {
 		return nil, errors.New("Could not create experiment: " + err.Error())
 	}
@@ -128,10 +139,14 @@ func AddSweepAttr(attr rlglue.Attributes, sweepAttr rlglue.Attributes) (rlglue.A
 		return nil, errors.New("Could not parse sweep attributes: " + err.Error())
 	}
 	_, ok := attrMap["sweep"]
-	if !ok {
-		return nil, errors.New("Could not find sweep attributes: " + err.Error())
+	if ok {
+		// attrMap["sweep"] = sweepAttrMap
+		for k, v := range sweepAttrMap {
+			if _, ok = attrMap[k]; !ok {
+				attrMap[k] = v
+			}
+		}
 	}
-	attrMap["sweep"] = sweepAttrMap
 	attr, err = json.Marshal(&attrMap)
 	if err != nil {
 		return nil, errors.New("Could not encode attributes: " + err.Error())
@@ -140,12 +155,16 @@ func AddSweepAttr(attr rlglue.Attributes, sweepAttr rlglue.Attributes) (rlglue.A
 	return attr, nil
 }
 
-func hyphenatedStringify(sweepAttr rlglue.Attributes) (string, error) {
+func hyphenatedStringify(agentAttr rlglue.Attributes, envAttr rlglue.Attributes) (string, error) {
 	pstrings := []string{}
 	var sweepAttrMap map[string]interface{}
-	err := json.Unmarshal(sweepAttr, &sweepAttrMap)
+	err := json.Unmarshal(agentAttr, &sweepAttrMap)
 	if err != nil {
-		return "", errors.New("Could not parse sweep attributes: " + err.Error())
+		return "", errors.New("Could not parse agent attributes: " + err.Error())
+	}
+	err = json.Unmarshal(envAttr, &sweepAttrMap)
+	if err != nil {
+		return "", errors.New("Could not parse environment attributes: " + err.Error())
 	}
 	for name, value := range sweepAttrMap {
 		switch value := value.(type) {

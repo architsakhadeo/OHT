@@ -32,7 +32,7 @@ func main() {
 		if len(confs) > 1 {
 			fmt.Printf("Running experiment %d of %d\n", i+1, len(confs))
 		}
-		sweepLen := conf.SweptAttrLen()
+		sweepLen := conf.SweptAttrCount()
 		for j := 0; j < sweepLen; j++ {
 			fmt.Printf("Running sweep %d of %d\n", j+1, sweepLen)
 			err = experiment.Execute(*run, conf, j)
