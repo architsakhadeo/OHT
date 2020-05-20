@@ -3,7 +3,7 @@ package buffer
 import (
 	"math/rand"
 
-	"github.com/stellentus/cartpoles/go-src/lib/rlglue"
+	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
 // type BufferControl interface {
