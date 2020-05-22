@@ -13,9 +13,11 @@ import (
 // Expected sarsa-lambda with tile coding
 type ESarsa struct {
 	logger.Debug
-	rng     *rand.Rand
-	tiler   util.MultiTiler
-	weights []float64
+	rng   *rand.Rand
+	tiler util.MultiTiler
+
+	// weights is a slice of weights for each action
+	weights [][]float64
 }
 
 func init() {
@@ -54,7 +56,9 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		return err
 	}
 
-	agent.weights = make([]float64, agent.tiler.NumberOfIndices())
+	agent.weights = make([][]float64, 2) // one weight slice for each action
+	agent.weights[0] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.weights[1] = make([]float64, agent.tiler.NumberOfIndices())
 
 	return nil
 }
