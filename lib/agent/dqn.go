@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
-	"strconv"
+	// "strconv"
 	
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 	// "github.com/tensorflow/tensorflow/tensorflow/go/op"
@@ -33,7 +33,9 @@ type Model struct {
 	initOp         *tf.Operation
 	trainOp        *tf.Operation
 
-	syncOp	*tf.Operation
+	syncOp1	*tf.Operation
+	syncOp2	*tf.Operation
+	syncOp3	*tf.Operation
 }
 
 type Dqn struct {
@@ -123,13 +125,16 @@ func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
 	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim)
 
 	graphDef := "data/nn/graph.pb"
-	cmd := exec.Command("python", "-c", "import utils.network.vanilla; utils.network.vanilla.graph_construction("+strconv.Itoa(agent.StateDim)+", "+strconv.Itoa(agent.NumberOfActions)+", "+strconv.Itoa(agent.Hidden)+", "+strconv.Itoa(agent.Layer)+
-	", "+strconv.Itoa(agent.Alpha)+", "+graphDef+")")
+	// cmd := exec.Command("python", "-c", "import utils.network.vanilla; utils.network.vanilla.graph_construction("+strconv.Itoa(agent.StateDim)+", "+strconv.Itoa(agent.NumberOfActions)+", "+strconv.Itoa(agent.Hidden)+", "+strconv.Itoa(agent.Layer)+
+	// ", "+strconv.Itoa(agent.Alpha)+", "+graphDef+")")
+	cmd := exec.Command("python", "-c", "import utils.network.vanilla; utils.network.vanilla.graph_construction("+graphDef+")")
 	err = cmd.Run()
 
 	log.Print("Loading graph")
 	agent.valueNet = NewModel(graphDef)
-
+	if _, err := agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.initOp}); err != nil {
+		panic(err)
+	}
 	agent.updateNum = 0
 
 	return nil
@@ -151,14 +156,16 @@ func NewModel(graphDefFilename string) *Model {
 	return &Model {
 		graph: graph,
 		sess: sess,
-		initOp: graph.Operation("init"),
+		initOp:  graph.Operation("init"),
 		trainOp: graph.Operation("beh_train"),
 		behIn: graph.Operation("beh_in").Output(0),
 		behTruth: graph.Operation("beh_truth").Output(0),
 		behOut: graph.Operation("beh_out").Output(0),
 		tarIn: graph.Operation("target_in").Output(0),
 		tarOut: graph.Operation("target_out").Output(0),
-		syncOp: graph.Operation("sync"),
+		syncOp1: graph.Operation("set1"),
+		syncOp2: graph.Operation("set2"),
+		syncOp3: graph.Operation("set3"),
 	}
 }
 
@@ -203,7 +210,9 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 func (agent *Dqn) Update() {
 	
 	if agent.updateNum % agent.Sync == 0 {
-		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp})
+		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp1})
+		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp2})
+		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp3})
 	}
 
 	samples := agent.bf.Sample(agent.BatchSize)
@@ -252,5 +261,3 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	}
 	return idx
 }
-
-

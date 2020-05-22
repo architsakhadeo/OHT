@@ -2,51 +2,54 @@ import tensorflow.compat.v1 as tf
 import os
 tf.disable_v2_behavior() 
 
-# with tf.variable_scope("behaviour"):
-# Behaviour
-b_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='beh_in')
-b_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='beh_truth')
 
-b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
-b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
-b_y_ = tf.layers.dense(b_ly2, 4, name='beh_out')
+def graph_construction(save_name):
+    # with tf.variable_scope("behaviour"):
+    # Behaviour
+    b_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='beh_in')
+    b_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='beh_truth')
 
-# Optimize loss
-b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
-b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
-b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
+    b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
+    b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
+    b_y_ = tf.layers.dense(b_ly2, 4, name='beh_out')
 
-# with tf.variable_scope("target"):
-# Target
-t_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='target_in')
-t_x_nog = tf.stop_gradient(t_x, name="target_in_no_g")
-t_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='target_truth')
+    # Optimize loss
+    b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
+    b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+    b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
 
-t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu, name='target_ly1')
-t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu, name='target_ly2')
-t_y_ = tf.layers.dense(t_ly2, 4, name='target_out')
+    # with tf.variable_scope("target"):
+    # Target
+    t_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='target_in')
+    t_x_nog = tf.stop_gradient(t_x, name="target_in_no_g")
+    t_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='target_truth')
 
-with tf.variable_scope("sync"):
+    t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu, name='target_ly1')
+    t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu, name='target_ly2')
+    t_y_ = tf.layers.dense(t_ly2, 4, name='target_out')
+
+    # with tf.variable_scope("sync"):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly1.name)[0] + '/kernel:0')
-    tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly1.name)[0] + '/kernel:0'), weights)
-
+    set1 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly1.name)[0] + '/kernel:0'), weights, name="set1")
+    
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly2.name)[0] + '/kernel:0')
-    tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly2.name)[0] + '/kernel:0'), weights)
+    set2 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly2.name)[0] + '/kernel:0'), weights, name="set2")
 
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_y_.name)[0] + '/kernel:0')
-    tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_y_.name)[0] + '/kernel:0'), weights)
-
-init = tf.global_variables_initializer()
+    set3 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_y_.name)[0] + '/kernel:0'), weights, name="set3")
 
 
-saver_def = tf.train.Saver().as_saver_def()
+    init = tf.global_variables_initializer()
 
-# print('Run this operation to initialize variables     : ', init.name)
-# print('Run this operation for a train step            : ', b_train_op.name)
+    saver_def = tf.train.Saver().as_saver_def()
 
-# Write the graph out to a file.
-with open('graph.pb', 'wb') as f:
-    f.write(tf.get_default_graph().as_graph_def().SerializeToString())
+    # print('Run this operation to initialize variables     : ', init.name)
+    # print('Run this operation for a train step            : ', b_train_op.name)
+
+    # Write the graph out to a file.
+    with open(save_name, 'wb') as f:
+        f.write(tf.get_default_graph().as_graph_def().SerializeToString())
+        print("Graph saved")
 
 
 
@@ -100,4 +103,4 @@ with open('graph.pb', 'wb') as f:
 #     print("Graph saved")
 
 
-# graph_construction(4, 8, 32, 2, 0.0001, "data/nn/graph.pb")
+graph_construction("data/nn/graph.pb")
