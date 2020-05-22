@@ -32,7 +32,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		Seed        int64
 		EnableDebug bool `json:"enable-debug"`
 		NumTiles    int  `json:"tiles"`       // This was 32 in the python code
-		TileSpread  int  `json:"tile-spread"` // This was 4+1 in the python code
+		TileSpread  int  `json:"tile-spread"` // This was 4 in the python code
 	}
 	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
