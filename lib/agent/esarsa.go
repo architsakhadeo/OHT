@@ -70,18 +70,16 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
+	return agent.Step(state, 0)
+}
+
+// Step provides a new observation and a reward to the agent and returns the agent's next action.
+func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	_, err := agent.tiler.Tile(state) // Rename the _ to whatever you want it to be. It's a slice of indices of tile activations
 	if err != nil {
 		agent.Message("err", "agent.ESarsa is acting on garbage state because it couldn't create tiles: "+err.Error())
 	}
 
-	panic("Start not implemented")
-
-	return 0
-}
-
-// Step provides a new observation and a reward to the agent and returns the agent's next action.
-func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	panic("Step not implemented")
 	return 0
 }
