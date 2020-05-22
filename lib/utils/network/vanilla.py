@@ -2,29 +2,29 @@ import tensorflow.compat.v1 as tf
 import os
 tf.disable_v2_behavior() 
 
-with tf.variable_scope("behaviour"):
-    # Behaviour
-    b_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='beh_in')
-    b_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='beh_truth')
+# with tf.variable_scope("behaviour"):
+# Behaviour
+b_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='beh_in')
+b_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='beh_truth')
 
-    b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
-    b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
-    b_y_ = tf.layers.dense(b_ly2, 4, name='beh_out')
+b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
+b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
+b_y_ = tf.layers.dense(b_ly2, 4, name='beh_out')
 
-    # Optimize loss
-    b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
-    b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
-    b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
+# Optimize loss
+b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
+b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
 
-with tf.variable_scope("target"):
-    # Target
-    t_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='target_in')
-    t_x_nog = tf.stop_gradient(t_x, name="target_in_no_g")
-    t_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='target_truth')
+# with tf.variable_scope("target"):
+# Target
+t_x = tf.placeholder(tf.float32, shape=[None, 1, 6], name='target_in')
+t_x_nog = tf.stop_gradient(t_x, name="target_in_no_g")
+t_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='target_truth')
 
-    t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu, name='target_ly1')
-    t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu, name='target_ly2')
-    t_y_ = tf.layers.dense(t_ly2, 4, name='target_out')
+t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu, name='target_ly1')
+t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu, name='target_ly2')
+t_y_ = tf.layers.dense(t_ly2, 4, name='target_out')
 
 with tf.variable_scope("sync"):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly1.name)[0] + '/kernel:0')
