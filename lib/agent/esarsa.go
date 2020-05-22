@@ -30,12 +30,17 @@ func NewESarsa(logger logger.Debug) (rlglue.Agent, error) {
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
 func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	var ss struct {
+	ss := struct {
 		Seed        int64
 		EnableDebug bool `json:"enable-debug"`
-		NumTiles    int  `json:"tiles"`       // This was 32 in the python code
-		TileSpread  int  `json:"tile-spread"` // This was 4 in the python code
+		NumTiles    int  `json:"tiles"`
+		TileSpread  int  `json:"tile-spread"`
+	}{
+		// These default settings will be used if the config doesn't set these values
+		NumTiles:   32,
+		TileSpread: 4,
 	}
+
 	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
 		agent.Message("warning", "agent.ESarsa seed wasn't available: "+err.Error())
