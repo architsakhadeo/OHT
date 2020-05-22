@@ -12,6 +12,9 @@ type MultiTiler struct {
 
 	// scalers is an array of scaling information to be applied to each input data dimension.
 	scalers []Scaler
+
+	// numOutputs is the number of tile indicies that could be produced. Valid indices range between 0 and numOutputs-1.
+	numOutputs int
 }
 
 // NewMultiTiler creates a new Indexing Tiler, which returns a slice of indexes based on the tiles' hashes.
@@ -80,4 +83,8 @@ func (st MultiTiler) Tile(data []float64) ([]int, error) {
 	indices := st.it.Tile(data)
 
 	return indices, st.it.CheckError()
+}
+
+func (st MultiTiler) NumberOfIndices() int {
+	return st.numOutputs
 }
