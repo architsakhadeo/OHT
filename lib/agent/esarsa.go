@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -75,12 +76,21 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
-	_, err := agent.tiler.Tile(state) // Rename the _ to whatever you want it to be. It's a slice of indices of tile activations
+	tiles, err := agent.tiler.Tile(state) // Rename the _ to whatever you want it to be. It's a slice of indices of tile activations
 	if err != nil {
 		agent.Message("err", "agent.ESarsa is acting on garbage state because it couldn't create tiles: "+err.Error())
 	}
 
-	panic("Step not implemented")
+	// This is some hacky debug code just to print some tilings. I'm abusing weights[0][0] to store the number of times we've
+	// visited this function. We'll visit a few times, printing the tilings, and then panic.
+	if agent.weights[0][0] > 3 {
+		panic("Step not implemented")
+	}
+	agent.weights[0][0]++
+
+	fmt.Println(state)
+	fmt.Println(tiles)
+	fmt.Println("") // separate each one with a newline
 	return 0
 }
 
