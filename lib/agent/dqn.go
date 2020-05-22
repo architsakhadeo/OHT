@@ -3,18 +3,39 @@ package agent
 import (
 	"encoding/json"
 	"math/rand"
-	"fmt"
+	"io/ioutil"
+	"log"
+	"os/exec"
+	"strconv"
 	
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"github.com/tensorflow/tensorflow/tensorflow/go/op"
+	// "github.com/tensorflow/tensorflow/tensorflow/go/op"
 
 	ao "github.com/stellentus/cartpoles/lib/utils/array-opr"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 	"github.com/stellentus/cartpoles/lib/utils/buffer"
-	nw "github.com/stellentus/cartpoles/lib/utils/network"
+	// nw "github.com/stellentus/cartpoles/lib/utils/network"
 )
+
+
+type Model struct {
+	graph *tf.Graph
+	sess  *tf.Session
+
+	behTruth tf.Output
+	behOut tf.Output
+	tarOut tf.Output
+
+	behIn  *tf.Operation
+	tarIn  *tf.Operation
+
+	initOp         *tf.Operation
+	trainOp        *tf.Operation
+
+	syncOp	*tf.Operation
+}
 
 type Dqn struct {
 	logger.Debug
@@ -23,19 +44,21 @@ type Dqn struct {
 	EnableDebug         bool
 	NumberOfActions     int `json:"numberOfActions"`
 	StateContainsReplay bool `json:"state-contains-replay"`
-	gamma				float64 `json:"alpha"`
-
-	state_dim			int `json:"state-len"`
-	batch_size			int `json:"batch-size"`
-
-	learning_net		*nw.Vanilla
-	target_net			*nw.Vanilla
-	loss				tf.Tensor
-	optimizer			tf.Tensor
+	Gamma				float64 `json:"gamma"`
+	Hidden				int `json:"dqn-hidden"`
+	Layer				int `json:"dqn-ly"`
+	Alpha				int `json:"alpha"`
+	Sync				int `json:"dqn-sync"`
+	updateNum			int
 	
 	bf					*buffer.Buffer
-	bsize				int `json:"buffer-size"`
-	btype				string `json:buffer-type`
+	Bsize				int `json:"buffer-size"`
+	Btype				string `json:"buffer-type"`
+
+	StateDim			int `json:"state-len"`
+	BatchSize			int `json:"batch-size"`
+
+	valueNet			*Model	
 }
 
 // type Loss func(tf.Tensor, tf.Tensor) float64
@@ -80,28 +103,46 @@ func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
 	}
 
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.btype, agent.bsize, agent.state_dim)
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim)
 
-	// agent.loss = op.ReduceSum(op.Square(out - target))
-	agent.optimizer = op.Train.GradientDescentOptimizer(expAttr["alpha"]).minimize(agent.loss)	
+	graphDef := "data/nn/graph.pb"
+	cmd := exec.Command("python", "-c", "import utils.network.vanilla; utils.network.vanilla.graph_construction("+strconv.Itoa(agent.StateDim)+", "+strconv.Itoa(agent.NumberOfActions)+", "+strconv.Itoa(agent.Hidden)+", "+strconv.Itoa(agent.Layer)+
+	", "+strconv.Itoa(agent.Alpha)+", "+graphDef+")")
+	err = cmd.Run()
 
-	agent.learning_net = nw.NewVanilla()
-	agent.learning_net.Initialize(agent.state_dim, agent.NumberOfActions, expAttr["dqn_hidden"], expAttr["dqn_activation"])
-	agent.target_net = nw.NewVanilla()
-	agent.target_net.Initialize(agent.state_dim, agent.NumberOfActions, expAttr["dqn_hidden"], expAttr["dqn_activation"])
+	log.Print("Loading graph")
+	agent.valueNet = NewModel(graphDef)
 
-	learning_sess := op.NewScopeWithGraph(agent.learning_net)
-	// agent.learning_sess.run(tf.initialize_all_variables())
-	agent.learning_net.run(op.Initialize)
-	target_sess := op.NewScopeWithGraph(self.target_net)
-	agent.SyncTarget()
-	
+	agent.updateNum = 0
+
 	return nil
 }
 
-func (agent *Dqn) Loss(out tf.Tensor, target tf.Tensor) tf.Tensor {
-	res := op.ReduceSum(op.Square(out - target))
-	return res
+func NewModel(graphDefFilename string) *Model {
+	graphDef, err := ioutil.ReadFile(graphDefFilename)
+	if err != nil {
+		log.Fatal("Failed to read ", graphDefFilename,": ", err)
+	}
+	graph := tf.NewGraph()
+	if err = graph.Import(graphDef, ""); err != nil {
+		log.Fatal("Invalid GraphDef?", err)
+	}
+	sess, err := tf.NewSession(graph, nil)
+	if err != nil {
+		panic(err)
+	}
+	return &Model {
+		graph: graph,
+		sess: sess,
+		initOp: graph.Operation("init"),
+		trainOp: graph.Operation("beh_train"),
+		behIn: graph.Operation("beh_in"),
+		behTruth: graph.Operation("beh_truth").Output(0),
+		behOut: graph.Operation("beh_out").Output(0),
+		tarIn: graph.Operation("target_in"),
+		tarOut: graph.Operation("target_out").Output(0),
+		syncOp: graph.Operation("sync"),
+	}
 }
 
 // Start provides an initial observation to the agent and returns the agent's action.
@@ -115,7 +156,7 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
-	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.gamma)
+	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	agent.Update()
 	// agent.lastAction = (agent.lastAction + 1) % agent.NumberOfActions
 	agent.lastAction = agent.Policy(state)
@@ -143,38 +184,49 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 }
 
 func (agent *Dqn) Update() {
-	samples := agent.bf.Sample(agent.batch_size)
-	last_states := samples[:][:agent.state_dim]
-	last_actions := samples[:][agent.state_dim]
-	states := samples[:][agent.state_dim+1: agent.state_dim*2+1]
-	rewards := samples[:][agent.state_dim*2+1]
-	gammas := samples[:][agent.state_dim*2+2]
+	samples := agent.bf.Sample(agent.BatchSize)
+	lastStates := samples[:][:agent.StateDim]
+	lastActions := samples[:][agent.StateDim]
+	states := samples[:][agent.StateDim+1: agent.StateDim*2+1]
+	rewards := samples[:][agent.StateDim*2+1]
+	gammas := samples[:][agent.StateDim*2+2]
 
-	states = tf.Tensor(states)
-	op.StopGradient(states)
-	// q_next_all := agent.target_sess.run(agent.target_net, feed_dict={in: states})
-	q_next_all, err := agent.target_sess.run(map[tf.Output]*tf.Tensor{in: states}, []tf.Output{out}, nil)
-	q_next := ao.RowIndexMax(q_next_all)
-	target := ao.ButwiseAdd(rewards, ao.BitwiseMulti(q_next, gammas))
+	statesT, _ := tf.NewTensor(states)
+	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarOut: statesT}
+	fetch := []tf.Output{agent.valueNet.tarOut}
+	qNextAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
+	qNext := ao.RowIndexMax(qNextAll[0].Value().([][]float32))
+	target := ao.BitwiseAdd(ao.A64To32(rewards), ao.BitwiseMulti(qNext, ao.A64To32(gammas)))
 
-	last_states = tf.Tensor(last_states)
-	// q_all := agent.learning_sess.run(agent.learning_net, feed_dict={x: last_states})
-	q_all, err := agent.learning_sess.run(agent.learning_net, map[tf.Output]*tf.Tensor{in: last_states, []tf.Output{out}, nil})
-	q := ao.RowIndexFloat(q_all, last_actions)
-	// agent.learning_sess.run(agent.loss, 
-	// 	feed_dict={pred: tf.convert_to_tensor(q, dtype=tf.float32), 
-	// 		target: tf.convert_to_tensor(target, dtype=tf.float32)}
-	// 	)
-	agent.learning_sess.run(agent.optimizer, agent.loss, map[tf.Output]*tf.Tensor{in: last_states, []tf.Output{out}, nil})
+	lastStatesT, _ := tf.NewTensor(lastStates)
+	feeds = map[tf.Output]*tf.Tensor{agent.valueNet.behOut: lastStatesT}
+	fetch = []tf.Output{agent.valueNet.behOut}
+	qAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
+	q := ao.RowIndexFloat(qAll[0].Value().([][]float32), ao.A64ToInt(lastActions))
 
+	predictionT, _ := tf.NewTensor(q)
+	targetT, _ := tf.NewTensor(target)
+	feeds = map[tf.Output]*tf.Tensor{
+		agent.valueNet.behOut:  predictionT,
+		agent.valueNet.behTruth: targetT,
+	}
+	agent.valueNet.sess.Run(feeds, nil, []*tf.Operation{agent.valueNet.trainOp})
+
+	agent.updateNum += 1
+	if agent.updateNum % agent.Sync == 0 {
+		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp})
+	}
 }
 
 // Choose action
 func (agent *Dqn) Policy(state rlglue.State) int {
-	return 0	
+	
+	lastStatesT, _ := tf.NewTensor(agent.lastState)
+	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.behOut: lastStatesT}
+	fetch := []tf.Output{agent.valueNet.behOut}
+	qAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
+	_, idx := ao.ArrayMax(qAll[0].Value().([]float32))
+	return idx
 }
 
-func (agent *Dqn) SyncTarget() {
-	agent.target_net.set_weights(agent.learning_net.get_weights()) 
-}
 
