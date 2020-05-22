@@ -19,7 +19,7 @@ type ESarsa struct {
 }
 
 func init() {
-	Add("example", NewESarsa)
+	Add("esarsa-lambda", NewESarsa)
 }
 
 func NewESarsa(logger logger.Debug) (rlglue.Agent, error) {
