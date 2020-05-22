@@ -75,18 +75,18 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 		agent.Message("err", "agent.ESarsa is acting on garbage state because it couldn't create tiles: "+err.Error())
 	}
 
-	panic("Not implemented")
+	panic("Start not implemented")
 
 	return 0
 }
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
-	panic("Not implemented")
+	panic("Step not implemented")
 	return 0
 }
 
 // End informs the agent that a terminal state has been reached, providing the final reward.
 func (agent *ESarsa) End(state rlglue.State, reward float64) {
-	panic("Not implemented")
+	panic("End not implemented")
 }
