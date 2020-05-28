@@ -1,0 +1,24 @@
+{
+	"agent-name": "esarsa",
+	"environment-name": "cartpole",
+	"agent-settings": {
+		"tilings": 32,
+		"tiles": 4,
+		"gamma": 0.95,
+		"lambda": 0.8,
+		"epsilon": 0.05,
+		"alpha": 0.1,
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1
+	},
+	"experiment-settings": {
+		"steps": 100000,
+		"data-path": "data/esarsa",
+		"should-log-traces": true,
+		"should-log-episode-lengths": true,
+		"debug-interval": 1000000
+	}
+}
