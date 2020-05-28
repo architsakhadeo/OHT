@@ -136,14 +136,14 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 
 	newAction, epsilons := agent.PolicyExpectedSarsaLambda(newStateActiveFeatures) // Exp-Sarsa-L policy
 
-	for j := range []int{0, 1} {
+	for j := range agent.weights {
 		for _, value := range newStateActiveFeatures {
 			agent.delta += agent.Gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
 		}
 	}
 
 	// update for both actions for weights and traces
-	for j := range []int{0, 1} {
+	for j := range agent.weights {
 		for i := range agent.weights[j] {
 			if agent.traces[j][i] != 0 { // update only where traces are non-zero
 				agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
