@@ -54,8 +54,10 @@ func NewMultiTiler(numDims, tiles int, scalers []Scaler) (MultiTiler, error) {
 	if err != nil {
 		return MultiTiler{}, fmt.Errorf("Could not create aggregate tiler: %s", err.Error())
 	}
-	for _, scaler := range scalers {
-		numIndices += maxIndices(scaler.MaxRange, 2, tiles)
+	for index1, scaler1 := range scalers {
+		for _, scaler2 := range scalers[index1+1:] {
+			numIndices += maxIndicesForRanges([]int{scaler1.MaxRange, scaler2.MaxRange}, tiles)
+		}
 	}
 
 	// Create a mega-tiler that appends pairs and singles
