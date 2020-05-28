@@ -76,27 +76,14 @@ func (exp *Experiment) runEpisodic() {
 }
 
 func (exp *Experiment) runSingleEpisode() {
-	episodeEnded := false
 	prevState := exp.environment.Start()
 	action := exp.agent.Start(prevState)
 
 	numStepsThisEpisode := 0
-	for !episodeEnded && (exp.Settings.MaxSteps == 0 || exp.numStepsTaken < exp.Settings.MaxSteps) {
-		var reward float64
-		var newState rlglue.State
-		newState, reward, episodeEnded = exp.environment.Step(action)
+	for exp.Settings.MaxSteps == 0 || exp.numStepsTaken < exp.Settings.MaxSteps {
+		newState, reward, episodeEnded := exp.environment.Step(action)
 
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
-
-		if episodeEnded {
-			if exp.Settings.MaxSteps != 0 {
-				exp.Message("warning", "An episode ended in a continuing setting. This doesn't make sense.")
-			}
-			exp.agent.End(newState, reward)
-		} else {
-			action = exp.agent.Step(newState, reward)
-		}
-
 		prevState = newState
 
 		exp.numStepsTaken += 1
@@ -105,13 +92,31 @@ func (exp *Experiment) runSingleEpisode() {
 		if exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
+
+		if !episodeEnded {
+			action = exp.agent.Step(newState, reward)
+			continue
+		}
+
+		exp.logEndOfEpisode(numStepsThisEpisode)
+		exp.numEpisodesDone += 1
+		numStepsThisEpisode = 0
+
+		if exp.Settings.MaxSteps == 0 {
+			// We're in the episodic setting, so we are done with this episode
+			exp.agent.End(newState, reward)
+			break
+		}
 	}
 
+	if numStepsThisEpisode > 0 {
+		// If there are leftover steps, we're ending after a partial episode. Still log it.
+		exp.logEndOfEpisode(numStepsThisEpisode)
+	}
+}
+
+func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	exp.LogEpisodeLength(numStepsThisEpisode)
-	if episodeEnded {
-		reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
-		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
-	}
-
-	exp.numEpisodesDone += 1
+	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
+	exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 }
