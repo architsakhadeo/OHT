@@ -63,9 +63,7 @@ func (exp *Experiment) Run() error {
 
 func (exp *Experiment) runContinuous() {
 	exp.Message("msg", "Starting continuous experiment")
-	for exp.numStepsTaken < exp.Settings.MaxSteps {
-		exp.runSingleEpisode()
-	}
+	exp.runSingleEpisode()
 }
 
 func (exp *Experiment) runEpisodic() {
