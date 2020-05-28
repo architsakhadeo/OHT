@@ -4,7 +4,6 @@ import "github.com/stellentus/cartpoles/lib/rlglue"
 
 // Data can be used to log data.
 type Data interface {
-
 	// LogEpisodeLength adds the provided episode length to the episode length log.
 	LogEpisodeLength(int)
 
