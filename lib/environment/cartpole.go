@@ -56,7 +56,8 @@ func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	env.rng = rand.New(rand.NewSource(env.Seed + int64(run))) // Create a new rand source for reproducibility
+	env.Seed += int64(run)
+	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
 	if len(env.PercentNoise) == 1 {
 		// Copy it for all dimensions

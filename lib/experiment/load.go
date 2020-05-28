@@ -20,7 +20,7 @@ func Execute(run uint, conf config.Config) error {
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
 		BasePath:                conf.Experiment.DataPath,
-		FileSuffix:              strconv.Itoa(config.Run),
+		FileSuffix:              strconv.Itoa(int(run)),
 	})
 	if err != nil {
 		return errors.New("Could not create data logger: " + err.Error())

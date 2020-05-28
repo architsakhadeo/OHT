@@ -43,7 +43,8 @@ func (env *Example) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("warning", "environment.Example seed wasn't available")
 		ss.Seed = 0
 	}
-	rng := rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
+	ss.Seed += int64(run)
+	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
 
 	env.NumberOfStates = ss.NumberOfStates
 	if env.NumberOfStates < 1 {
