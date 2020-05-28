@@ -179,8 +179,6 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 
 // PolicyExpectedSarsaLambda returns action based on tile coded state
 func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []int) (rlglue.Action, []float64) {
-	probs := make([]float64, 2) // Probabilities of taking actions 0 and 1
-
 	// Calculates action values
 	actionValue0 := agent.ActionValue(tileCodedStateActiveFeatures, 0)
 	actionValue1 := agent.ActionValue(tileCodedStateActiveFeatures, 1)
@@ -191,6 +189,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	}
 
 	// Calculates Epsilon-greedy probabilities for both actions
+	probs := make([]float64, 2) // Probabilities of taking actions 0 and 1
 	probs[(greedyAction+1)%2] = agent.Epsilon / 2
 	probs[greedyAction] = 1 - probs[(greedyAction+1)%2]
 
