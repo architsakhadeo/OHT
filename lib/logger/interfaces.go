@@ -4,16 +4,12 @@ import "github.com/stellentus/cartpoles/lib/rlglue"
 
 // Data can be used to log data.
 type Data interface {
-
 	// LogEpisodeLength adds the provided episode length to the episode length log.
 	LogEpisodeLength(int)
 
 	// LogStep adds information from a step to the step log. It must contain previous state, current state,
 	// and reward.
 	LogStep(prevState, newState rlglue.State, action rlglue.Action, reward float64)
-
-	// LogStepHeader lists the headers used in the optional variadic arguments to LogStepMulti.
-	LogStepHeader(...string)
 
 	// LogStepMulti is like LogStep, but it can optionally add other float64 values to be logged. (If so,
 	// LogStepHeader must be called to provide headers and so the logger knows how many to expect.)

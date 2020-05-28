@@ -26,7 +26,11 @@ type Experiment struct {
 	DebugInterval           int    `json:"debug-interval"`
 	DataPath                string `json:"data-path"`
 	ShouldLogTraces         bool   `json:"should-log-traces"`
+	CacheTracesInRAM        bool   `json:"cache-traces-in-ram"`
 	ShouldLogEpisodeLengths bool   `json:"should-log-episode-lengths"`
+
+	// MaxCPUs, if set, specifies the maximum number of CPUs this experiment is allowed to use
+	MaxCPUs int `json:"max-cpus"`
 }
 
 func (set *Experiment) SetToDefault() {
@@ -36,6 +40,8 @@ func (set *Experiment) SetToDefault() {
 	set.DataPath = ""
 	set.ShouldLogTraces = false
 	set.ShouldLogEpisodeLengths = false
+	set.CacheTracesInRAM = false
+	set.MaxCPUs = 0 // Does not change the default value
 }
 
 // Parse parses a json.RawMessage. If the input is a JSON array, then that array as parsed as an array of config objects.

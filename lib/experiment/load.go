@@ -2,6 +2,7 @@ package experiment
 
 import (
 	"errors"
+	"runtime"
 	"strconv"
 
 	"github.com/stellentus/cartpoles/lib/agent"
@@ -18,6 +19,7 @@ func Execute(run uint, conf config.Config) error {
 	})
 	dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
+		CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
 		BasePath:                conf.Experiment.DataPath,
 		FileSuffix:              strconv.Itoa(int(run)),
@@ -25,6 +27,8 @@ func Execute(run uint, conf config.Config) error {
 	if err != nil {
 		return errors.New("Could not create data logger: " + err.Error())
 	}
+
+	runtime.GOMAXPROCS(conf.MaxCPUs) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
 
 	environment, err := InitializeEnvironment(conf.EnvironmentName, run, conf.Environment, debugLogger)
 	if err != nil {
