@@ -47,6 +47,7 @@ type dataLogger struct {
 
 	// file is used for writing out the trace.
 	file *os.File
+	*bufio.Writer
 }
 
 // NewDataWithExtraVariables creates a new Data with extra headers. The length of headers
@@ -95,6 +96,7 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 	if err != nil {
 		return nil, err
 	}
+	lg.Writer = bufio.NewWriterSize(lg.file, 64*1024)
 
 	return lg, nil
 }
@@ -137,7 +139,7 @@ func (lg *dataLogger) LogEpisodeLength(steps int) {
 func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) {
 	str := lg.logStep(prevState, currState, action, reward)
 	if lg.ShouldLogTraces {
-		_, err := lg.file.WriteString(str)
+		_, err := lg.Writer.WriteString(str)
 		if err != nil {
 			lg.Debug.Error(&err)
 		}
@@ -160,7 +162,7 @@ func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 			str += fmt.Sprintf(",%f", val)
 		}
 		str += "\n"
-		_, err := lg.file.WriteString(str)
+		_, err := lg.Writer.WriteString(str)
 		if err != nil {
 			lg.Debug.Error(&err)
 		}
@@ -229,6 +231,7 @@ func (lg *dataLogger) SaveLog() error {
 	}
 
 	if lg.ShouldLogTraces {
+		lg.Writer.Flush()
 		lg.file.Close()
 	}
 
