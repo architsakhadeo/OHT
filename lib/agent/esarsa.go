@@ -185,15 +185,14 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	actionValue0 := agent.ActionValue(tileCodedStateActiveFeatures, 0)
 	actionValue1 := agent.ActionValue(tileCodedStateActiveFeatures, 1)
 
-	// Calculates Epsilon-greedy probabilities for both actions
+	greedyAction := 0
 	if actionValue0 < actionValue1 {
-		probs[0] = agent.Epsilon / 2
-		probs[1] = 1 - probs[0]
-
-	} else {
-		probs[0] = 1 - agent.Epsilon/2
-		probs[1] = 1 - probs[0]
+		greedyAction = 1
 	}
+
+	// Calculates Epsilon-greedy probabilities for both actions
+	probs[(greedyAction+1)%2] = agent.Epsilon / 2
+	probs[greedyAction] = 1 - probs[(greedyAction+1)%2]
 
 	// Random sampling action based on epsilon-greedy policy
 	random := agent.rng.Float64()
