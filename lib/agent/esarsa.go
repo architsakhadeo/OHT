@@ -17,13 +17,23 @@ const (
 	maxAngularVelocity = 3.5
 )
 
+type esarsaSettings struct {
+	EnableDebug         bool    `json:"enable-debug"`
+	StateContainsReplay bool    `json:"state-contains-replay"`
+	Seed                int64   `json:"seed"`
+	NumTilings          int     `json:"tilings"`
+	NumTiles            int     `json:"tiles"`
+	Gamma               float64 `json:"gamma"`
+	Lambda              float64 `json:"lambda"`
+	Epsilon             float64 `json:"epsilon"`
+	Alpha               float64 `json:"alpha"`
+}
+
 // Expected sarsa-lambda with tile coding
 type ESarsa struct {
 	logger.Debug
-	rng                 *rand.Rand
-	tiler               util.MultiTiler
-	EnableDebug         bool
-	StateContainsReplay bool
+	rng   *rand.Rand
+	tiler util.MultiTiler
 
 	// Agent accessible parameters
 	weights                [][]float64 // weights is a slice of weights for each action
@@ -31,11 +41,10 @@ type ESarsa struct {
 	delta                  float64
 	oldStateActiveFeatures []int
 	oldAction              rlglue.Action
-	gamma                  float64
-	lambda                 float64
-	epsilon                float64
 	alpha                  float64
 	stepsize               float64
+
+	esarsaSettings
 }
 
 func init() {
@@ -48,54 +57,35 @@ func NewESarsa(logger logger.Debug) (rlglue.Agent, error) {
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
 func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	ss := struct {
-		// Experiment parameters from config
-		EnableDebug         bool    `json:"enable-debug"`
-		StateContainsReplay bool    `json:"state-contains-replay"`
-		Seed                int64   `json:"seed"`
-		NumTilings          int     `json:"tilings"`
-		NumTiles            int     `json:"tiles"`
-		Gamma               float64 `json:"gamma"`
-		Lambda              float64 `json:"lambda"`
-		Epsilon             float64 `json:"epsilon"`
-		Alpha               float64 `json:"alpha"`
-	}{
+	agent.esarsaSettings = esarsaSettings{
 		// These default settings will be used if the config doesn't set these values
-		EnableDebug:         false,
-		StateContainsReplay: false,
-		Seed:                0,
-		NumTilings:          32,
-		NumTiles:            4,
-		Gamma:               0.99,
-		Lambda:              0.8,
-		Epsilon:             0.05,
-		Alpha:               0.1,
+		NumTilings: 32,
+		NumTiles:   4,
+		Gamma:      0.99,
+		Lambda:     0.8,
+		Epsilon:    0.05,
+		Alpha:      0.1,
 	}
 
-	err := json.Unmarshal(expAttr, &ss)
+	err := json.Unmarshal(expAttr, &agent.esarsaSettings)
 	if err != nil {
-		agent.Message("warning", "agent.ESarsa seed wasn't available: "+err.Error())
-		ss.Seed = 0
+		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
+		agent.esarsaSettings.Seed = 0
 	}
 
-	agent.EnableDebug = ss.EnableDebug
-	agent.StateContainsReplay = ss.StateContainsReplay
-	agent.gamma = ss.Gamma
-	agent.lambda = ss.Lambda
-	agent.epsilon = ss.Epsilon
-	agent.alpha = ss.Alpha
-	agent.stepsize = ss.Alpha / float64(ss.NumTilings)         // Setting stepsize
-	agent.rng = rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
+	agent.stepsize = agent.Alpha / float64(agent.esarsaSettings.NumTilings) // Setting stepsize
+	agent.esarsaSettings.Seed += int64(run)
+	agent.rng = rand.New(rand.NewSource(agent.esarsaSettings.Seed)) // Create a new rand source for reproducibility
 
 	// scales the input observations for tile-coding
 	scalers := []util.Scaler{
-		util.NewScaler(-maxPosition, maxPosition, ss.NumTiles),
-		util.NewScaler(-maxVelocity, maxVelocity, ss.NumTiles),
-		util.NewScaler(-maxAngle, maxAngle, ss.NumTiles),
-		util.NewScaler(-maxAngularVelocity, maxAngularVelocity, ss.NumTiles),
+		util.NewScaler(-maxPosition, maxPosition, agent.esarsaSettings.NumTiles),
+		util.NewScaler(-maxVelocity, maxVelocity, agent.esarsaSettings.NumTiles),
+		util.NewScaler(-maxAngle, maxAngle, agent.esarsaSettings.NumTiles),
+		util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.esarsaSettings.NumTiles),
 	}
 
-	agent.tiler, err = util.NewMultiTiler(4, ss.NumTilings, scalers)
+	agent.tiler, err = util.NewMultiTiler(4, agent.esarsaSettings.NumTilings, scalers)
 	if err != nil {
 		return err
 	}
@@ -149,7 +139,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 
 	for j := range []int{0, 1} {
 		for _, value := range newStateActiveFeatures {
-			agent.delta += agent.gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
+			agent.delta += agent.Gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
 		}
 	}
 
@@ -158,7 +148,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 		for i := range agent.weights[j] {
 			if agent.traces[j][i] != 0 { // update only where traces are non-zero
 				agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
-				agent.traces[j][i] = agent.gamma * agent.lambda * agent.traces[j][i]     // update traces
+				agent.traces[j][i] = agent.Gamma * agent.Lambda * agent.traces[j][i]     // update traces
 			}
 		}
 	}
@@ -197,11 +187,11 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 
 	// Calculates Epsilon-greedy probabilities for both actions
 	if actionValue0 < actionValue1 {
-		probs[0] = agent.epsilon / 2
+		probs[0] = agent.Epsilon / 2
 		probs[1] = 1 - probs[0]
 
 	} else {
-		probs[0] = 1 - agent.epsilon/2
+		probs[0] = 1 - agent.Epsilon/2
 		probs[1] = 1 - probs[0]
 	}
 
