@@ -18,15 +18,14 @@ const (
 )
 
 type esarsaSettings struct {
-	EnableDebug         bool    `json:"enable-debug"`
-	StateContainsReplay bool    `json:"state-contains-replay"`
-	Seed                int64   `json:"seed"`
-	NumTilings          int     `json:"tilings"`
-	NumTiles            int     `json:"tiles"`
-	Gamma               float64 `json:"gamma"`
-	Lambda              float64 `json:"lambda"`
-	Epsilon             float64 `json:"epsilon"`
-	Alpha               float64 `json:"alpha"`
+	EnableDebug bool    `json:"enable-debug"`
+	Seed        int64   `json:"seed"`
+	NumTilings  int     `json:"tilings"`
+	NumTiles    int     `json:"tiles"`
+	Gamma       float64 `json:"gamma"`
+	Lambda      float64 `json:"lambda"`
+	Epsilon     float64 `json:"epsilon"`
+	Alpha       float64 `json:"alpha"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -158,11 +157,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	agent.oldAction = newAction
 
 	if agent.EnableDebug {
-		if agent.StateContainsReplay {
-			agent.Message("msg", "step", "state", state[0], "reward", reward, "action", agent.oldAction, "expected action", agent.oldAction)
-		} else {
-			agent.Message("msg", "step", "state", state, "reward", reward, "action", agent.oldAction)
-		}
+		agent.Message("msg", "step", "state", state, "reward", reward, "action", agent.oldAction)
 	}
 
 	return agent.oldAction
