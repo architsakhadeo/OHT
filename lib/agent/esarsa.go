@@ -11,11 +11,6 @@ import (
 )
 
 const (
-	minPosition        = -2.4
-	minVelocity        = -4
-	minAngle           = -12 * 2 * math.Pi / 360
-	minAngularVelocity = -3.5
-
 	maxPosition        = 2.4
 	maxVelocity        = 4
 	maxAngle           = 12 * 2 * math.Pi / 360
@@ -94,10 +89,10 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	// scales the input observations for tile-coding
 	scalers := []util.Scaler{
-		util.NewScaler(minPosition, maxPosition, ss.NumTiles),
-		util.NewScaler(minVelocity, maxVelocity, ss.NumTiles),
-		util.NewScaler(minAngle, maxAngle, ss.NumTiles),
-		util.NewScaler(minAngularVelocity, maxAngularVelocity, ss.NumTiles),
+		util.NewScaler(-maxPosition, maxPosition, ss.NumTiles),
+		util.NewScaler(-maxVelocity, maxVelocity, ss.NumTiles),
+		util.NewScaler(-maxAngle, maxAngle, ss.NumTiles),
+		util.NewScaler(-maxAngularVelocity, maxAngularVelocity, ss.NumTiles),
 	}
 
 	agent.tiler, err = util.NewMultiTiler(4, ss.NumTilings, scalers)
