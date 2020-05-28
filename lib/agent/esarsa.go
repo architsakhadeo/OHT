@@ -198,9 +198,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	// Random sampling action based on epsilon-greedy policy
 	random := agent.rng.Float64()
 	var action rlglue.Action
-	if random < probs[0] {
-		action = 0
-	} else {
+	if random >= probs[0] {
 		action = 1
 	}
 
