@@ -18,6 +18,7 @@ func Execute(run uint, conf config.Config) error {
 	})
 	dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
+		CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
 		BasePath:                conf.Experiment.DataPath,
 		FileSuffix:              strconv.Itoa(int(run)),

@@ -17,6 +17,9 @@ type DataConfig struct {
 	// other provided values). Rewards are always recorded.
 	ShouldLogTraces bool
 
+	// CacheTracesInRAM determines whether traces are kept in RAM.
+	CacheTracesInRAM bool
+
 	// ShouldLogEpisodeLengths determines whether episode lengths saved.
 	ShouldLogEpisodeLengths bool
 
@@ -34,35 +37,81 @@ type dataLogger struct {
 	DataConfig
 
 	episodeLengths []int
+	rewards        []float64
 
+	// These are used if the trace is cached in RAM.
 	prevState []rlglue.State
 	currState []rlglue.State
 	actions   []rlglue.Action
-	rewards   []float64
 	others    [][]float64
 
-	headers []string
+	// file is used for writing out the trace.
+	file *os.File
 }
 
-func NewData(debug Debug, config DataConfig) (Data, error) {
+// NewDataWithExtraVariables creates a new Data with extra headers. The length of headers
+// should match the length of 'others' in every call to LogStepMulti.
+func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string) (Data, error) {
 	lg := &dataLogger{
 		Debug:      debug,
 		DataConfig: config,
 		rewards:    []float64{},
 	}
-	if lg.ShouldLogTraces {
+
+	if lg.CacheTracesInRAM {
 		lg.prevState = []rlglue.State{}
 		lg.currState = []rlglue.State{}
 		lg.actions = []rlglue.Action{}
+		for _ = range headers {
+			lg.others = append(lg.others, []float64{})
+		}
 	}
+
 	if lg.ShouldLogEpisodeLengths {
 		lg.episodeLengths = []int{}
 	}
-	var err error
-	if lg.BasePath != "" {
-		err = os.MkdirAll(lg.BasePath, os.ModePerm) // Ensure the directory exists (TODO ensure it's writable)
+
+	if lg.BasePath == "" {
+		// No files are being saved, so nothing else to do
+		return lg, nil
 	}
-	return lg, err
+
+	// Ensure the directory exists (TODO ensure it's writable)
+	err := os.MkdirAll(lg.BasePath, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	if !lg.ShouldLogTraces {
+		// The trace is not being saved, so nothing else to do
+		return lg, nil
+	}
+
+	lg.file, err = os.Create(path.Join(lg.BasePath, "traces-"+lg.FileSuffix+".csv"))
+	if err != nil {
+		return nil, err
+	}
+	err = lg.writeTraceHeader(headers...)
+	if err != nil {
+		return nil, err
+	}
+
+	return lg, nil
+}
+
+func NewData(debug Debug, config DataConfig) (Data, error) {
+	return NewDataWithExtraVariables(debug, config)
+}
+
+func (lg *dataLogger) writeTraceHeader(headers ...string) error {
+	// Write header row
+	str := "new state,previous state,action,reward"
+	for _, hdr := range headers {
+		str += "," + hdr
+	}
+	str += "\n"
+	_, err := lg.file.WriteString(str)
+	return err
 }
 
 func (lg *dataLogger) RewardSince(step int) float64 {
@@ -82,40 +131,56 @@ func (lg *dataLogger) LogEpisodeLength(steps int) {
 	lg.episodeLengths = append(lg.episodeLengths, steps)
 }
 
-// LogStepHeader lists the headers used in the optional variadic arguments to LogStep.
-func (lg *dataLogger) LogStepHeader(headers ...string) {
-	if lg.headers != nil {
-		lg.Message("err", "Attempt to add headers after steps have been recorded", "steps", len(lg.rewards), "headers", headers)
-		return
-	}
-	for _, hdr := range headers {
-		lg.headers = append(lg.headers, hdr)
-		lg.others = append(lg.others, []float64{})
-	}
-}
-
 // LogStep adds information from a step to the step log. It must contain previous state, current state,
 // and reward. It can optionally add other float64 values to be logged. (If so, LogStepHeader must be
 // called to provide headers and so the logger knows how many to expect.)
 func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) {
-	lg.rewards = append(lg.rewards, reward)
-
+	str := lg.logStep(prevState, currState, action, reward)
 	if lg.ShouldLogTraces {
-		lg.prevState = append(lg.prevState, prevState)
-		lg.currState = append(lg.currState, currState)
-		lg.actions = append(lg.actions, action)
+		_, err := lg.file.WriteString(str)
+		if err != nil {
+			lg.Debug.Error(&err)
+		}
 	}
 }
 
 // LogStepMulti is like LogStep, but it can optionally add other float64 values to be logged. (If so,
 // LogStepHeader must be called to provide headers and so the logger knows how many to expect.)
 func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlglue.Action, reward float64, others ...float64) {
-	if lg.ShouldLogTraces {
+	str := lg.logStep(prevState, currState, action, reward)
+
+	if lg.CacheTracesInRAM {
 		for i, other := range others {
 			lg.others[i] = append(lg.others[i], other)
 		}
 	}
-	lg.LogStep(prevState, currState, action, reward)
+
+	if lg.ShouldLogTraces {
+		for _, val := range others {
+			str += fmt.Sprintf(",%f", val)
+		}
+		str += "\n"
+		_, err := lg.file.WriteString(str)
+		if err != nil {
+			lg.Debug.Error(&err)
+		}
+	}
+}
+
+func (lg *dataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) string {
+	lg.rewards = append(lg.rewards, reward)
+
+	if lg.CacheTracesInRAM {
+		lg.prevState = append(lg.prevState, prevState)
+		lg.currState = append(lg.currState, currState)
+		lg.actions = append(lg.actions, action)
+	}
+
+	if !lg.ShouldLogTraces {
+		return ""
+	}
+
+	return fmt.Sprintf("%v,%v,%d,%f", currState, prevState, action, reward)
 }
 
 // Save persists the logged information to disk.
@@ -149,7 +214,6 @@ func (lg *dataLogger) SaveLog() error {
 			return err
 		}
 		defer file.Close()
-
 		// Write header row
 		_, err = file.WriteString("episode lengths\n")
 		if err != nil {
@@ -165,40 +229,7 @@ func (lg *dataLogger) SaveLog() error {
 	}
 
 	if lg.ShouldLogTraces {
-		file, err := os.Create(path.Join(lg.BasePath, "traces-"+lg.FileSuffix+".csv"))
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		// Write header row
-		str := "new state,previous state,action,reward"
-		if len(lg.headers) > 0 {
-			for _, hdr := range lg.headers {
-				str += "," + hdr
-			}
-		}
-		str += "\n"
-		_, err = file.WriteString(str)
-		if err != nil {
-			return err
-		}
-
-		// Write remaining rows
-		for i := range lg.currState {
-			str := fmt.Sprintf("%v,%v,%d,%f", lg.currState[i], lg.prevState[i], lg.actions[i], lg.rewards[i])
-			if len(lg.headers) > 0 {
-				for _, val := range lg.others[i] {
-					str += fmt.Sprintf(",%f", val)
-				}
-			}
-			str += "\n"
-
-			_, err = file.WriteString(str)
-			if err != nil {
-				return err
-			}
-		}
+		lg.file.Close()
 	}
 
 	return nil
@@ -212,11 +243,7 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 		FileSuffix:              suffix,
 	}
 	lg.episodeLengths = []int{}
-	lg.prevState = []rlglue.State{}
-	lg.currState = []rlglue.State{}
-	lg.actions = []rlglue.Action{}
 	lg.rewards = []float64{}
-	lg.others = [][]float64{}
 
 	if loadRewards && !loadTraces { // If traces exists, don't bother with rewards
 		file, err := os.Open(path.Join(lg.BasePath, "rewards-"+lg.FileSuffix+".csv"))
@@ -282,35 +309,6 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 			return errors.New("Reward file was empth at '" + lg.BasePath + "'")
 		}
 		headers := strings.Split(scanner.Text(), ",")
-		if len(headers) > 4 {
-			lg.headers = []string{}
-			for i := 4; i < len(headers); i++ {
-				lg.headers = append(lg.headers, headers[i])
-			}
-		}
-
-		for scanner.Scan() {
-			values := strings.Split(scanner.Text(), ",")
-			if val, err := parseState(values[0]); err != nil {
-				return err
-			} else {
-				lg.currState = append(lg.currState, val)
-			}
-			if val, err := parseState(values[1]); err != nil {
-				return err
-			} else {
-				lg.prevState = append(lg.prevState, val)
-			}
-			lg.actions = append(lg.actions, parseActionDefaultZero(values[2]))
-			lg.rewards = append(lg.rewards, parseFloatDefaultZero(values[3]))
-			if len(values) > 4 {
-				others := []float64{}
-				for i := 4; i < len(values); i++ {
-					others = append(others, parseFloatDefaultZero(values[i]))
-				}
-				lg.others = append(lg.others, others)
-			}
-		}
 
 		if err := scanner.Err(); err != nil {
 			return err
@@ -320,7 +318,9 @@ func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 		if numSteps != len(lg.prevState) || numSteps != len(lg.currState) || numSteps != len(lg.actions) {
 			return fmt.Errorf("Data file CSV unequal columns: %d %d %d %d", len(lg.currState), len(lg.prevState), len(lg.actions), numSteps)
 		}
-		for i := range lg.headers {
+
+		numOthers := len(headers) - 4
+		for i := 0; i < numOthers; i++ {
 			if len(lg.others[i]) != numSteps {
 				return fmt.Errorf("Data file CSV extra column %d has %d rows instead of %d", i, len(lg.others[i]), numSteps)
 			}

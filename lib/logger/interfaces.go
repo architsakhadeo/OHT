@@ -11,9 +11,6 @@ type Data interface {
 	// and reward.
 	LogStep(prevState, newState rlglue.State, action rlglue.Action, reward float64)
 
-	// LogStepHeader lists the headers used in the optional variadic arguments to LogStepMulti.
-	LogStepHeader(...string)
-
 	// LogStepMulti is like LogStep, but it can optionally add other float64 values to be logged. (If so,
 	// LogStepHeader must be called to provide headers and so the logger knows how many to expect.)
 	LogStepMulti(prevState, newState rlglue.State, action rlglue.Action, reward float64, others ...float64)

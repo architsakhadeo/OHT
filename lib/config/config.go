@@ -26,6 +26,7 @@ type Experiment struct {
 	DebugInterval           int    `json:"debug-interval"`
 	DataPath                string `json:"data-path"`
 	ShouldLogTraces         bool   `json:"should-log-traces"`
+	CacheTracesInRAM        bool   `json:"cache-traces-in-ram"`
 	ShouldLogEpisodeLengths bool   `json:"should-log-episode-lengths"`
 }
 
@@ -36,6 +37,7 @@ func (set *Experiment) SetToDefault() {
 	set.DataPath = ""
 	set.ShouldLogTraces = false
 	set.ShouldLogEpisodeLengths = false
+	set.CacheTracesInRAM = false
 }
 
 // Parse parses a json.RawMessage. If the input is a JSON array, then that array as parsed as an array of config objects.
