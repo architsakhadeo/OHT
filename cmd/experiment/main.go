@@ -16,7 +16,7 @@ import (
 
 // Flags
 var (
-	configPath = flag.String("config", "config/example.json", "config file for the experiment")
+	configPath = flag.String("config", "config/esarsa.json", "config file for the experiment")
 	run        = flag.Uint("run", 0, "Run number")
 )
 
