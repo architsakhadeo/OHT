@@ -139,7 +139,7 @@ func (lg *dataLogger) LogEpisodeLength(steps int) {
 func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) {
 	str := lg.logStep(prevState, currState, action, reward)
 	if lg.ShouldLogTraces {
-		_, err := lg.Writer.WriteString(str)
+		_, err := lg.Writer.WriteString(str + "\n")
 		if err != nil {
 			lg.Debug.Error(&err)
 		}
@@ -161,8 +161,7 @@ func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 		for _, val := range others {
 			str += fmt.Sprintf(",%f", val)
 		}
-		str += "\n"
-		_, err := lg.Writer.WriteString(str)
+		_, err := lg.Writer.WriteString(str + "\n")
 		if err != nil {
 			lg.Debug.Error(&err)
 		}
