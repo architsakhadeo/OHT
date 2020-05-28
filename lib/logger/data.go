@@ -128,6 +128,8 @@ func (lg *dataLogger) SaveLog() error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
+
 	// Write header row
 	_, err = file.WriteString("rewards\n")
 	if err != nil {
@@ -146,6 +148,8 @@ func (lg *dataLogger) SaveLog() error {
 		if err != nil {
 			return err
 		}
+		defer file.Close()
+
 		// Write header row
 		_, err = file.WriteString("episode lengths\n")
 		if err != nil {
@@ -165,6 +169,7 @@ func (lg *dataLogger) SaveLog() error {
 		if err != nil {
 			return err
 		}
+		defer file.Close()
 
 		// Write header row
 		str := "new state,previous state,action,reward"
