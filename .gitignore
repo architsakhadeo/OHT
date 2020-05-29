@@ -5,3 +5,4 @@ __pycache__/
 Data
 data
 .vscode/
+plot/.ipynb_checkpoints
