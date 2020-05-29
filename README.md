@@ -17,7 +17,7 @@ Unless otherwise noted, these commands are executed in the `cartpoles` directory
 
 1. Execute `source env/bin/activate` (or `.\env\Scripts\activate` on Windows) to enter the virtual environment.
 2. Change into the Experiments directory: `cd python/Experiments/`. The control script currently only works from that directory. Then run the code with `python control.py`. Parameters can be changed by providing a different parameters JSON file.
-3. If you need a new package, install it in the virtual environment with `python -m pip install PACKAGE_NAME`.
+3. If you need a new package, install it in the virtual environment with `python -m pip install PACKAGE_NAME` and add it to the requirements with `pip freeze > requirements.txt`.
 4. When you're done working on the project, `deactivate` exits the virtual environment.
 
 ### Protocol Buffers
