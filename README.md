@@ -10,6 +10,7 @@ Unless otherwise noted, these commands are executed in the `cartpoles` directory
 
 1. Run `python3 -m venv env` (or `py -m venv env` on Windows). This will create the virtual environment. This only needs to be done once.
 2. Execute `source env/bin/activate` (or `.\env\Scripts\activate` on Windows) to enter the virtual environment.
+3. Execute `pip install --upgrade pip` to upgrade pip.
 3. Execute `pip install -r requirements.txt` to install required packages.
 4. Execute `deactivate` to exit the virtual environment.
 
