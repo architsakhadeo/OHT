@@ -17,8 +17,8 @@ type Config struct {
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
 	Experiment      `json:"experiment-settings"`
-	agentSweeper    Sweeper
-	envSweeper      Sweeper
+	agentSweeper    sweeper
+	envSweeper      sweeper
 }
 
 type Experiment struct {
@@ -92,8 +92,8 @@ func parseOne(data json.RawMessage) (Config, error) {
 }
 
 func (conf Config) SweptAttrCount() int {
-	// Assume we always sweep over at least one agent parameter.
-	return len(conf.agentSweeper.allAttributes) * max(1, len(conf.envSweeper.allAttributes))
+	// Assume there is at least one agent parameter in the agent/environment setting.
+	return len(conf.agentSweeper.allAttributes) * len(conf.envSweeper.allAttributes)
 }
 
 func max(a, b int) int {
@@ -107,12 +107,9 @@ func (conf Config) sweepIndices(idx int) (int, int, error) {
 	agentCount := len(conf.agentSweeper.allAttributes)
 	envCount := len(conf.envSweeper.allAttributes)
 	agentIdx := idx % agentCount
-	if envCount == 0 {
-		return agentIdx, -1, nil
-	}
 	envIdx := idx / agentCount
 	if envIdx >= envCount {
-		return 0, 0, fmt.Errorf("The sweep idx is invalid")
+		return 0, 0, errors.New("The sweep idx is invalid")
 	}
 	return agentIdx, envIdx, nil
 }
@@ -131,9 +128,6 @@ func (conf Config) SweptAttributes(idx int) (rlglue.Attributes, rlglue.Attribute
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot run agent sweep %d", agentIdx)
 	}
-	if envIdx == -1 {
-		return agentAttributes, rlglue.Attributes(`{}`), nil
-	}
 	envAttrs := conf.envSweeper.allAttributes[envIdx]
 	envAttributes, err := json.Marshal(envAttrs)
 	if err != nil {
@@ -142,7 +136,7 @@ func (conf Config) SweptAttributes(idx int) (rlglue.Attributes, rlglue.Attribute
 	return agentAttributes, envAttributes, nil
 }
 
-type Sweeper struct {
+type sweeper struct {
 	allAttributes []AttributeMap
 }
 
@@ -163,7 +157,7 @@ func (am AttributeMap) Copy() AttributeMap {
 	return am2
 }
 
-func (swpr *Sweeper) Load(attributes rlglue.Attributes) error {
+func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
 	swpr.allAttributes = []AttributeMap{}
 
 	attrs := AttributeMap{}
@@ -171,7 +165,7 @@ func (swpr *Sweeper) Load(attributes rlglue.Attributes) error {
 	if err != nil {
 		return errors.New("The attributes is not valid JSON: " + err.Error())
 	}
-
+	swpr.allAttributes = []AttributeMap{attrs}
 	sweepAttrs, ok := attrs["sweep"]
 	if !ok {
 		return nil
@@ -186,7 +180,6 @@ func (swpr *Sweeper) Load(attributes rlglue.Attributes) error {
 	}
 
 	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
-	swpr.allAttributes = []AttributeMap{attrs}
 	for key, val := range sweepRawJon {
 		arrayVals := []json.RawMessage{}
 		err = json.Unmarshal(val, &arrayVals)
