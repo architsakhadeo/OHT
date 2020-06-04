@@ -73,12 +73,15 @@ func (exp *Experiment) runEpisodic() {
 	}
 }
 
+// runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
+// strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() {
 	prevState := exp.environment.Start()
 	action := exp.agent.Start(prevState)
+	isEpisodic := exp.Settings.MaxSteps == 0
 
 	numStepsThisEpisode := 0
-	for exp.Settings.MaxSteps == 0 || exp.numStepsTaken < exp.Settings.MaxSteps {
+	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 		newState, reward, episodeEnded := exp.environment.Step(action)
 
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
@@ -87,28 +90,34 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
 
-		if exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
+		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 
 		if !episodeEnded {
 			action = exp.agent.Step(newState, reward)
 			continue
+		} else if !isEpisodic {
+			// An episodic environment is being treated as continuous, so reset the environment
+			newState = exp.environment.Start()
+			episodeEnded = false
+			action = exp.agent.Step(newState, reward)
 		}
 
 		exp.logEndOfEpisode(numStepsThisEpisode)
 		exp.numEpisodesDone += 1
 		numStepsThisEpisode = 0
 
-		if exp.Settings.MaxSteps == 0 {
+		if isEpisodic {
 			// We're in the episodic setting, so we are done with this episode
 			exp.agent.End(newState, reward)
 			break
 		}
 	}
 
-	if numStepsThisEpisode > 0 {
-		// If there are leftover steps, we're ending after a partial episode. Still log it.
+	if numStepsThisEpisode > 0 || isEpisodic {
+		// If there are leftover steps, we're ending after a partial episode.
+		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
 	}
 }
@@ -116,5 +125,7 @@ func (exp *Experiment) runSingleEpisode() {
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	exp.LogEpisodeLength(numStepsThisEpisode)
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
-	exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	if exp.Settings.DebugInterval != 0 {
+		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	}
 }

@@ -139,7 +139,7 @@ func (env *Cartpole) randFloat(min, max float64) float64 {
 // Start returns an initial observation.
 func (env *Cartpole) Start() rlglue.State {
 	env.randomizeState()
-	return env.state
+	return env.getObservations()
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
@@ -176,6 +176,10 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 		env.randomizeState()
 	}
 
+	return env.getObservations(), reward, done
+}
+
+func (env *Cartpole) getObservations() rlglue.State {
 	// Add noise to state to get observations
 	observations := env.noisyState()
 
@@ -187,8 +191,7 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 			env.bufferInsertIndex[i] = (env.bufferInsertIndex[i] + 1) % env.Delays[i] // Update the insertion point
 		}
 	}
-
-	return observations, reward, done
+	return observations
 }
 
 // GetAttributes returns attributes for this environment.
