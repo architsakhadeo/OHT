@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -72,6 +73,8 @@ func (agent *HandController) Initialize(run uint, expAttr, envAttr rlglue.Attrib
 	agent.FailAngle /= 180 * math.Pi // convert degrees to radians
 
 	agent.actions = make([]int, agent.PlanDuration)
+
+	agent.Message("hand-controller settings", fmt.Sprintf("%+v", agent.handControllerSettings))
 
 	return nil
 }

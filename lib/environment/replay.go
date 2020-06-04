@@ -2,6 +2,7 @@ package environment
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
@@ -15,11 +16,18 @@ type Replay struct {
 	logger.Debug
 	logger.ReplayData
 
+	replaySettings
+
 	upcomingReward float64
 
-	LogActionDiff  bool
 	previousAction rlglue.Action
 	upcomingState  rlglue.State
+}
+
+type replaySettings struct {
+	Path          string
+	Suffix        string
+	LogActionDiff bool `json:"log-action-diff"`
 }
 
 func init() {
@@ -32,23 +40,17 @@ func NewReplay(debug logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Replay) Initialize(run uint, attr rlglue.Attributes) error {
-	var ss struct {
-		Path          string
-		Suffix        string
-		LogActionDiff bool `json:"log-action-diff"`
-	}
-	err := json.Unmarshal(attr, &ss)
-	if err != nil || ss.Path == "" {
+	err := json.Unmarshal(attr, &env.replaySettings)
+	if err != nil || env.replaySettings.Path == "" {
 		env.Message("warning", "environment.Replay path wasn't available: "+err.Error())
 	}
-	env.LogActionDiff = ss.LogActionDiff
 
-	env.ReplayData, err = logger.NewReplayData(ss.Path, ss.Suffix, env.Debug)
+	env.ReplayData, err = logger.NewReplayData(env.replaySettings.Path, env.replaySettings.Suffix, env.Debug)
 	if err != nil {
 		return err
 	}
 
-	env.Message("msg", "environment.Replay Initialize", "path", ss.Path, "suffix", ss.Suffix)
+	env.Message("replay-environment settings", fmt.Sprintf("%+v", env.replaySettings))
 
 	return nil
 }

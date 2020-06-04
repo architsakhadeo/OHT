@@ -2,6 +2,7 @@ package environment
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -14,14 +15,19 @@ const (
 	ExampleNumberOfActions = 2*ExampleActionMax + 1
 )
 
+type exampleSettings struct {
+	Seed           int64
+	NumberOfStates int `json:"number-of-states"`
+}
+
 // Example is just a dumb test environment.
 // state is adjusted by the action. Valid values are integers [0, ExampleNumberOfActions).
 // Reward is equal to the new state.
 // When |state| is >= ExampleStateMax, it's reset to 0.
 type Example struct {
 	logger.Debug
-	NumberOfStates int
-	state          int
+	exampleSettings
+	state int
 }
 
 func init() {
@@ -34,26 +40,21 @@ func NewExample(logger logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Example) Initialize(run uint, attr rlglue.Attributes) error {
-	var ss struct {
-		Seed           int64
-		NumberOfStates int
-	}
-	err := json.Unmarshal(attr, &ss)
+	err := json.Unmarshal(attr, &env.exampleSettings)
 	if err != nil {
 		env.Message("warning", "environment.Example seed wasn't available")
-		ss.Seed = 0
+		env.Seed = 0
 	}
-	ss.Seed += int64(run)
-	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+	env.Seed += int64(run)
+	rng := rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
-	env.NumberOfStates = ss.NumberOfStates
 	if env.NumberOfStates < 1 {
 		env.NumberOfStates = 1
 	}
 
 	env.state = rng.Intn(ExampleNumberOfActions) - ExampleActionMax
 
-	env.Message("msg", "environment.Example Initialize", "seed", ss.Seed)
+	env.Message("environment settings", fmt.Sprintf("%+v", env.exampleSettings))
 
 	return nil
 }

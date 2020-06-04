@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -96,6 +97,8 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 	agent.traces = make([][]float64, 2) // one trace slice for each action
 	agent.traces[0] = make([]float64, agent.tiler.NumberOfIndices())
 	agent.traces[1] = make([]float64, agent.tiler.NumberOfIndices())
+
+	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
 
 	return nil
 }
