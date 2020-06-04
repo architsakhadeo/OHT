@@ -87,7 +87,7 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
 
-		if exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
+		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 
@@ -116,5 +116,7 @@ func (exp *Experiment) runSingleEpisode() {
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	exp.LogEpisodeLength(numStepsThisEpisode)
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
-	exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	if exp.Settings.DebugInterval != 0 {
+		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	}
 }
