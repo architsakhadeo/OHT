@@ -107,8 +107,9 @@ func (exp *Experiment) runSingleEpisode() {
 		}
 	}
 
-	if numStepsThisEpisode > 0 {
-		// If there are leftover steps, we're ending after a partial episode. Still log it.
+	if numStepsThisEpisode > 0 || exp.Settings.MaxSteps == 0 {
+		// If there are leftover steps, we're ending after a partial episode.
+		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
 	}
 }
