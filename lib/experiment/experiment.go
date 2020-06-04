@@ -76,9 +76,10 @@ func (exp *Experiment) runEpisodic() {
 func (exp *Experiment) runSingleEpisode() {
 	prevState := exp.environment.Start()
 	action := exp.agent.Start(prevState)
+	isEpisodic := exp.Settings.MaxSteps == 0
 
 	numStepsThisEpisode := 0
-	for exp.Settings.MaxSteps == 0 || exp.numStepsTaken < exp.Settings.MaxSteps {
+	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 		newState, reward, episodeEnded := exp.environment.Step(action)
 
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
@@ -94,7 +95,7 @@ func (exp *Experiment) runSingleEpisode() {
 		if !episodeEnded {
 			action = exp.agent.Step(newState, reward)
 			continue
-		} else if exp.Settings.MaxSteps != 0 {
+		} else if !isEpisodic {
 			// An episodic environment is being treated as continuous, so reset the environment
 			newState = exp.environment.Start()
 			episodeEnded = false
@@ -105,14 +106,14 @@ func (exp *Experiment) runSingleEpisode() {
 		exp.numEpisodesDone += 1
 		numStepsThisEpisode = 0
 
-		if exp.Settings.MaxSteps == 0 {
+		if isEpisodic {
 			// We're in the episodic setting, so we are done with this episode
 			exp.agent.End(newState, reward)
 			break
 		}
 	}
 
-	if numStepsThisEpisode > 0 || exp.Settings.MaxSteps == 0 {
+	if numStepsThisEpisode > 0 || isEpisodic {
 		// If there are leftover steps, we're ending after a partial episode.
 		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
