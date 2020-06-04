@@ -73,6 +73,8 @@ func (exp *Experiment) runEpisodic() {
 	}
 }
 
+// runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
+// strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() {
 	prevState := exp.environment.Start()
 	action := exp.agent.Start(prevState)
