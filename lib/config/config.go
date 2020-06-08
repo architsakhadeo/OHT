@@ -92,7 +92,7 @@ func parseOne(data json.RawMessage) (Config, error) {
 }
 
 func (conf Config) SweptAttrCount() int {
-	// Assume there is at least one agent parameter in the agent/environment setting.
+	// Assume there is at least one parameter in the agent/environment setting.
 	return len(conf.agentSweeper.allAttributes) * len(conf.envSweeper.allAttributes)
 }
 

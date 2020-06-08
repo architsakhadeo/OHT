@@ -42,12 +42,12 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 
 	runtime.GOMAXPROCS(conf.MaxCPUs) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
 
-	environment, err := InitializeEnvironment(conf.EnvironmentName, run, conf.Environment, debugLogger, envAttr)
+	environment, err := InitializeEnvironment(conf.EnvironmentName, run, envAttr, debugLogger)
 	if err != nil {
 		return errors.New("Could not initialize environment: " + err.Error())
 	}
 
-	agent, err := InitializeAgent(conf.AgentName, run, conf.Agent, environment, debugLogger, agentAttr)
+	agent, err := InitializeAgent(conf.AgentName, run, agentAttr, environment, debugLogger)
 	if err != nil {
 		return err
 	}
@@ -60,17 +60,13 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	return expr.Run()
 }
 
-func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug, envAttr rlglue.Attributes) (rlglue.Environment, error) {
+func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {
 	var err error
 	defer debug.Error(&err)
 
 	environment, err := environment.Create(name, debug)
 	if err != nil {
 		return nil, errors.New("Could not create experiment: " + err.Error())
-	}
-	attr, err = AddSweepAttr(attr, envAttr)
-	if err != nil {
-		return nil, errors.New("Could not add sweep attributes: " + err.Error())
 	}
 	err = environment.Initialize(run, attr)
 	if err != nil {
@@ -83,17 +79,13 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	return environment, err
 }
 
-func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug, agentAttr rlglue.Attributes) (rlglue.Agent, error) {
+func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Agent, error) {
 	var err error
 	defer debug.Error(&err)
 
 	agent, err := agent.Create(name, debug)
 	if err != nil {
 		return nil, errors.New("Could not create agent: " + err.Error())
-	}
-	attr, err = AddSweepAttr(attr, agentAttr)
-	if err != nil {
-		return nil, errors.New("Could not add sweep attributes: " + err.Error())
 	}
 	err = agent.Initialize(run, attr, env.GetAttributes())
 	if err != nil {
@@ -110,11 +102,6 @@ func InitializeEnvWrapper(debug logger.Debug, env rlglue.Environment,
 	if err != nil {
 		return nil, errors.New("Could not parse attributes: " + err.Error())
 	}
-	_, ok := attrMap["sweep"]
-	if !ok {
-		return env, nil
-	}
-	delete(attrMap, "sweep")
 	env, err = environment.NewSensorDriftWrapper(debug, env)
 	if err != nil {
 		return nil, errors.New("Could not create experiment: " + err.Error())

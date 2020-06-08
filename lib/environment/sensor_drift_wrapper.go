@@ -25,6 +25,15 @@ type SensorDriftWrapper struct {
 		// StateRange is the range of observations, obtained by (max observation - min observation).
 		StateRange []float64 `json:"stateRange"`
 	}
+	// DriftAttrs is information loaded from the json config file.
+	DriftAttrs struct {
+		// DriftScale is the scale of the drift with respect to the state range.
+		DriftScale float64 `json:"driftScale"`
+		// SensorLife is the number of time-steps after which the probability of drift will become nearly 1
+		SensorLife []float64 `json:"sensorLife"`
+		// DriftProb is the probability scale, if it's less than 0, drift occurs with prob=1, if it's between 0 and 1, the max prob is scaled by this value.
+		DriftProb []float64 `json:"driftProb"`
+	}
 	// noise is the zero-mean Gaussian noise applied to the observation at each time-step.
 	noise []float64
 	// noiseStd is the standard deviation of the noise generated at each time-step.
@@ -33,14 +42,8 @@ type SensorDriftWrapper struct {
 	noiseMax []float64
 	// sensorSteps is the number of sensor drift time-steps.
 	sensorSteps int64
-	// DriftScale is the scale of the drift with respect to the state range.
-	DriftScale float64 `json:"driftScale"`
-	// SensorLife is the number of time-steps after which the probability of drift will become nearly 1
-	SensorLife []float64 `json:"sensorLife"`
-	// DriftProb is the probability scale, if it's less than 0, drift occurs with prob=1, if it's between 0 and 1, the max prob is scaled by this value.
-	DriftProb []float64 `json:"driftProb"`
-	noiseFns  []func(int) float64
-	rng       *rand.Rand
+	noiseFns    []func(int) float64
+	rng         *rand.Rand
 }
 
 func NewSensorDriftWrapper(logger logger.Debug, env rlglue.Environment) (rlglue.Environment, error) {
@@ -49,10 +52,21 @@ func NewSensorDriftWrapper(logger logger.Debug, env rlglue.Environment) (rlglue.
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) error {
-	wrapper.rng = rand.New(rand.NewSource(wrapper.Seed + int64(run)))
 	err := json.Unmarshal(attr, &wrapper)
 	if err != nil {
 		err = errors.New("environment.SensorDriftWrapper settings error: " + err.Error())
+		wrapper.Message("err", err)
+		return err
+	}
+	wrapper.rng = rand.New(rand.NewSource(wrapper.Seed + int64(run)))
+	err = json.Unmarshal(attr, &wrapper.DriftAttrs)
+	if err != nil {
+		err = errors.New("environment.SensorDriftWrapper settings error: " + err.Error())
+		wrapper.Message("err", err)
+		return err
+	}
+	if wrapper.DriftAttrs.DriftScale == 0 || wrapper.DriftAttrs.SensorLife == nil || wrapper.DriftAttrs.DriftProb == nil {
+		err = errors.New("environment.SensorDriftWrapper settings error: Invalid sensor drift attribute(s) in the config file")
 		wrapper.Message("err", err)
 		return err
 	}
@@ -63,19 +77,24 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 		wrapper.Message("err", err)
 		return err
 	}
+	if wrapper.WrappedEnvAttrs.NumAction == 0 || wrapper.WrappedEnvAttrs.StateDim == 0 || wrapper.WrappedEnvAttrs.StateRange == nil {
+		err = errors.New("environment.SensorDriftWrapper settings error: Invalid attribute(s) from the wrapped environment")
+		wrapper.Message("err", err)
+		return err
+	}
 
 	wrapper.noise = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
 	wrapper.noiseStd = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
 	for i := range wrapper.noiseStd {
-		wrapper.noiseStd[i] = wrapper.WrappedEnvAttrs.StateRange[i] / wrapper.DriftScale
+		wrapper.noiseStd[i] = wrapper.WrappedEnvAttrs.StateRange[i] / wrapper.DriftAttrs.DriftScale
 	}
 	wrapper.noiseMax = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
 	for i := range wrapper.noiseMax {
 		wrapper.noiseMax[i] = wrapper.WrappedEnvAttrs.StateRange[i] / 2
 	}
 	wrapper.noiseFns = make([]func(int) float64, wrapper.WrappedEnvAttrs.StateDim)
-	for i := range wrapper.DriftProb {
-		if wrapper.DriftProb[i] < 0 {
+	for i := range wrapper.DriftAttrs.DriftProb {
+		if wrapper.DriftAttrs.DriftProb[i] < 0 {
 			wrapper.noiseFns[i] = wrapper.gaussNoise
 		} else {
 			wrapper.noiseFns[i] = wrapper.probGaussNoise
@@ -83,9 +102,9 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 	}
 
 	wrapper.Message("msg", "environment.SensorDriftWrapper Initialize",
-		"drift scale", wrapper.DriftScale,
-		"sensor life", wrapper.SensorLife,
-		"drift probability", wrapper.DriftProb)
+		"drift scale", wrapper.DriftAttrs.DriftScale,
+		"sensor life", wrapper.DriftAttrs.SensorLife,
+		"drift probability", wrapper.DriftAttrs.DriftProb)
 	return nil
 }
 
@@ -110,8 +129,8 @@ func (wrapper *SensorDriftWrapper) GetAttributes() rlglue.Attributes {
 func (wrapper *SensorDriftWrapper) stateProcess(state rlglue.State) rlglue.State {
 	wrapper.sensorSteps++
 	for i := 0; i < wrapper.WrappedEnvAttrs.StateDim; i++ {
-		wrapper.noise[i] = clamp(wrapper.noise[i]+wrapper.noiseFns[i](i), -wrapper.noiseMax[i], wrapper.noiseMax[i])
-		state[i] = clamp(state[i]+wrapper.noise[i], -wrapper.noiseMax[i], wrapper.noiseMax[i])
+		wrapper.noise[i] = wrapper.clamp(wrapper.noise[i]+wrapper.noiseFns[i](i), i)
+		state[i] = wrapper.clamp(state[i]+wrapper.noise[i], i)
 	}
 	return state
 }
@@ -130,9 +149,9 @@ func (wrapper *SensorDriftWrapper) probGaussNoise(idx int) float64 {
 }
 
 func (wrapper *SensorDriftWrapper) logisticProb(idx int) float64 {
-	return wrapper.DriftProb[idx] / (1 + math.Exp(-(float64(wrapper.sensorSteps)-wrapper.SensorLife[idx]/2)/(wrapper.SensorLife[idx]/10)))
+	return wrapper.DriftAttrs.DriftProb[idx] / (1 + math.Exp(-(float64(wrapper.sensorSteps)-wrapper.DriftAttrs.SensorLife[idx]/2)/(wrapper.DriftAttrs.SensorLife[idx]/10)))
 }
 
-func clamp(x, min, max float64) float64 {
-	return math.Max(min, math.Min(x, max))
+func (wrapper *SensorDriftWrapper) clamp(x float64, idx int) float64 {
+	return math.Max(-wrapper.noiseMax[idx], math.Min(x, wrapper.noiseMax[idx]))
 }
