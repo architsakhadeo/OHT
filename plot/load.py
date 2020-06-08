@@ -14,7 +14,7 @@ def load_data(alg_path):
 		next(rewards_csv) #skips the first line
 
 		rewards_list = np.array([float(reward) for row in rewards_csv for reward in row])
-		returns_list = np.array([0 for i in range(len(rewards_list))])
+		returns_list = np.zeros(len(rewards_list))
 
 		returns_list[0] = rewards_list[0]
 
