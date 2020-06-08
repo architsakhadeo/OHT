@@ -1,6 +1,7 @@
 import csv
 import os
 import numpy as np
+import pandas as pd
 
 def load_data(alg_path):
 	dir_files = os.listdir(alg_path)
@@ -10,10 +11,9 @@ def load_data(alg_path):
 	returns_list_files = np.array([])
 
 	for file in rewards_files:
-		f = open(alg_path+'/'+file)
-		rewards_list = np.loadtxt(f, skiprows=1).T # Import CSV and skip the header line
+		rewards_list = pd.read_csv(alg_path+'/'+file)
 
-		returns_list = np.cumsum(rewards_list)
+		returns_list = np.cumsum(rewards_list.rewards)
 
 		if returns_list_files.size != 0:
 			returns_list_files = np.vstack((returns_list_files, returns_list))
