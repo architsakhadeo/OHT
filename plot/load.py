@@ -19,10 +19,7 @@ def load_data(alg_path):
 		returns_list[0] = rewards_list[0]
 
 		for i in range(1,len(rewards_list)):
-			if rewards_list[i] == 0:
-				returns_list[i] = returns_list[i-1]
-			else:
-				returns_list[i] = returns_list[i-1] + rewards_list[i]
+			returns_list[i] = returns_list[i-1] + rewards_list[i]
 
 		if returns_list_files.size != 0:
 			returns_list_files = np.vstack((returns_list_files, returns_list))
