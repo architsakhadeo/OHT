@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
+	"fmt"
 	// "strconv"
 	
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
@@ -125,13 +126,16 @@ func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
 	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim)
 
 	graphDef := "data/nn/graph.pb"
-	// cmd := exec.Command("python", "-c", "import utils.network.vanilla; utils.network.vanilla.graph_construction("+strconv.Itoa(agent.StateDim)+", "+strconv.Itoa(agent.NumberOfActions)+", "+strconv.Itoa(agent.Hidden)+", "+strconv.Itoa(agent.Layer)+
-	// ", "+strconv.Itoa(agent.Alpha)+", "+graphDef+")")
-	cmd := exec.Command("python", "-c", "import utils.network.vanilla; utils.network.vanilla.graph_construction("+graphDef+")")
-	err = cmd.Run()
-
+	cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+graphDef+"')")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + string(output))
+		return err
+	}
+	
 	log.Print("Loading graph")
 	agent.valueNet = NewModel(graphDef)
+	
 	if _, err := agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.initOp}); err != nil {
 		panic(err)
 	}
@@ -150,6 +154,7 @@ func NewModel(graphDefFilename string) *Model {
 		log.Fatal("Invalid GraphDef?", err)
 	}
 	sess, err := tf.NewSession(graph, nil)
+
 	if err != nil {
 		panic(err)
 	}
@@ -182,8 +187,7 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	agent.Update()
-	// agent.lastAction = (agent.lastAction + 1) % agent.NumberOfActions
-	agent.lastAction = agent.Policy(state)
+	// agent.lastAction = agent.Policy(state)
 	agent.lastState = state
 	act := rlglue.Action(agent.lastAction)
 	if agent.EnableDebug {
@@ -225,7 +229,12 @@ func (agent *Dqn) Update() {
 	statesT, _ := tf.NewTensor(states)
 	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT}
 	fetch := []tf.Output{agent.valueNet.tarOut}
-	qNextAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
+	
+	qNextAll, err := agent.valueNet.sess.Run(feeds, fetch, nil)
+	if err != nil {
+		panic(err)
+	}
+	log.Print(qNextAll, statesT)
 	qNext := ao.RowIndexMax(qNextAll[0].Value().([][]float32))
 	target := ao.BitwiseAdd(ao.A64To32(rewards), ao.BitwiseMulti(qNext, ao.A64To32(gammas)))
 
@@ -234,7 +243,7 @@ func (agent *Dqn) Update() {
 	fetch = []tf.Output{agent.valueNet.behOut}
 	qAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
 	q := ao.RowIndexFloat(qAll[0].Value().([][]float32), ao.A64ToInt(lastActions))
-
+	
 	predictionT, _ := tf.NewTensor(q)
 	targetT, _ := tf.NewTensor(target)
 	feeds = map[tf.Output]*tf.Tensor{
@@ -244,7 +253,6 @@ func (agent *Dqn) Update() {
 	agent.valueNet.sess.Run(feeds, nil, []*tf.Operation{agent.valueNet.trainOp})
 
 	agent.updateNum += 1
-
 }
 
 // Choose action

@@ -2,7 +2,6 @@ import tensorflow.compat.v1 as tf
 import os
 tf.disable_v2_behavior() 
 
-
 def graph_construction(save_name):
     # with tf.variable_scope("behaviour"):
     # Behaviour
@@ -11,7 +10,8 @@ def graph_construction(save_name):
 
     b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
     b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
-    b_y_ = tf.layers.dense(b_ly2, 4, name='beh_out')
+    b_ly3 = tf.layers.dense(b_ly2, 4, name='beh_ly3')
+    b_y_ = tf.identity(b_ly3, name='beh_out')
 
     # Optimize loss
     b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
@@ -24,9 +24,10 @@ def graph_construction(save_name):
     t_x_nog = tf.stop_gradient(t_x, name="target_in_no_g")
     t_y = tf.placeholder(tf.float32, shape=[None, 1, 4], name='target_truth')
 
-    t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu, name='target_ly1')
-    t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu, name='target_ly2')
-    t_y_ = tf.layers.dense(t_ly2, 4, name='target_out')
+    t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu)#, name='target_ly1')
+    t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu)#, name='target_ly2')
+    t_ly3 = tf.layers.dense(t_ly2, 4)#, name='target_ly_3')
+    t_y_ = tf.identity(t_ly3, name='target_out')
 
     # with tf.variable_scope("sync"):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly1.name)[0] + '/kernel:0')
@@ -35,8 +36,10 @@ def graph_construction(save_name):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly2.name)[0] + '/kernel:0')
     set2 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly2.name)[0] + '/kernel:0'), weights, name="set2")
 
-    weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_y_.name)[0] + '/kernel:0')
-    set3 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_y_.name)[0] + '/kernel:0'), weights, name="set3")
+    # weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_y_.name)[0] + '/kernel:0')
+    # set3 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_y_.name)[0] + '/kernel:0'), weights, name="set3")
+    weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly3.name)[0] + '/kernel:0')
+    set3 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly3.name)[0] + '/kernel:0'), weights, name="set3")
 
 
     init = tf.global_variables_initializer()
@@ -103,4 +106,4 @@ def graph_construction(save_name):
 #     print("Graph saved")
 
 
-graph_construction("data/nn/graph.pb")
+# graph_construction("data/nn/graph.pb")

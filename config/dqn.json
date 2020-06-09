@@ -22,7 +22,7 @@
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/example",
+		"data-path": "data/dqn",
 		"should-log-traces": true,
 		"should-log-episode-lengths": true,
 		"debug-interval": 100
