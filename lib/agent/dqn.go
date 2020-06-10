@@ -233,6 +233,7 @@ func (agent *Dqn) Update() {
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp1})
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp2})
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp3})
+		// fmt.Println("Sync at step", agent.updateNum)
 	}
 
 	samples64 := agent.bf.Sample(agent.BatchSize)
