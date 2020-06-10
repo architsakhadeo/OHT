@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"fmt"
 	// "strconv"
+	// "reflect"
 	
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 	// "github.com/tensorflow/tensorflow/tensorflow/go/op"
@@ -219,30 +220,39 @@ func (agent *Dqn) Update() {
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp3})
 	}
 
-	samples := agent.bf.Sample(agent.BatchSize)
-	lastStates := samples[:][:agent.StateDim]
-	lastActions := samples[:][agent.StateDim]
-	states := samples[:][agent.StateDim+1: agent.StateDim*2+1]
-	rewards := samples[:][agent.StateDim*2+1]
-	gammas := samples[:][agent.StateDim*2+2]
-
-	statesT, _ := tf.NewTensor(states)
+	samples64 := agent.bf.Sample(agent.BatchSize)
+	// lastStates := samples[:][:agent.StateDim]
+	// lastActions := samples[:][agent.StateDim]
+	// states := samples[:][agent.StateDim+1: agent.StateDim*2+1]
+	// rewards := samples[:][agent.StateDim*2+1]
+	// gammas := samples[:][agent.StateDim*2+2]
+	
+	samples := ao.A64To32_2d(samples64)
+	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
+	lastActions := ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)
+	states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
+	rewards := ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2)
+	gammas := ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3)
+	
+	statesT, err := tf.NewTensor(states)
+	if err != nil {
+		panic(err)
+	}
 	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT}
 	fetch := []tf.Output{agent.valueNet.tarOut}
-	
 	qNextAll, err := agent.valueNet.sess.Run(feeds, fetch, nil)
 	if err != nil {
 		panic(err)
 	}
-	log.Print(qNextAll, statesT)
+	fmt.Print(qNextAll, "\n")
 	qNext := ao.RowIndexMax(qNextAll[0].Value().([][]float32))
-	target := ao.BitwiseAdd(ao.A64To32(rewards), ao.BitwiseMulti(qNext, ao.A64To32(gammas)))
+	target := ao.BitwiseAdd(ao.A32Col(rewards, 0), ao.BitwiseMulti(qNext, ao.A32Col(gammas, 0)))
 
 	lastStatesT, _ := tf.NewTensor(lastStates)
 	feeds = map[tf.Output]*tf.Tensor{agent.valueNet.behIn: lastStatesT}
 	fetch = []tf.Output{agent.valueNet.behOut}
 	qAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
-	q := ao.RowIndexFloat(qAll[0].Value().([][]float32), ao.A64ToInt(lastActions))
+	q := ao.RowIndexFloat(qAll[0].Value().([][]float32), ao.A32ToInt(ao.A32Col(lastActions, 0)))
 	
 	predictionT, _ := tf.NewTensor(q)
 	targetT, _ := tf.NewTensor(target)
