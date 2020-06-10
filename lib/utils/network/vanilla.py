@@ -18,7 +18,8 @@ def graph_construction(save_name):
                           tf.reshape(tf.cast(b_action, tf.int32), [tf.shape(b_action)[0]])], 
                           axis=1)
     b_y_act = tf.gather_nd(params=b_y_, indices=a_indices, name='beh_out_act')
-
+    b_y_argmax = tf.math.argmax(b_y_, axis=1, name='beh_out_argmax')
+ 
     # with tf.variable_scope("target"):
     # Target
     t_x = tf.placeholder(tf.float32, shape=[None, 4], name='target_in')
@@ -48,8 +49,6 @@ def graph_construction(save_name):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly2.name)[0] + '/kernel:0')
     set2 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly2.name)[0] + '/kernel:0'), weights, name="set2")
 
-    # weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_y_.name)[0] + '/kernel:0')
-    # set3 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_y_.name)[0] + '/kernel:0'), weights, name="set3")
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly3.name)[0] + '/kernel:0')
     set3 = tf.assign(tf.get_default_graph().get_tensor_by_name(os.path.split(t_ly3.name)[0] + '/kernel:0'), weights, name="set3")
 
@@ -66,14 +65,13 @@ def graph_construction(save_name):
         f.write(tf.get_default_graph().as_graph_def().SerializeToString())
         print("Graph saved")
 
-    # a = np.array([[1,2,3,4], [5,5,6,7]]).astype(np.float32)
-    # b = [[0.1, 0.2], [0.3, 0.4]]
-    # at = tf.convert_to_tensor(a)
-    # bt = tf.convert_to_tensor(b)
-    # with tf.Session() as sess:
-    #     sess.run(init)
-    #     sess.run(t_y_, feed_dict={t_x: a})
-    #     print(t_y_)
+#     a = np.array([[1,2,3,4], [5,5,6,7]]).astype(np.float32)
+#     # at = tf.convert_to_tensor(a0)
+#     b = [[0.1, 0.2], [0.3, 0.4]]
+#     with tf.Session() as sess:
+#         sess.run(init)
+#         sess.run(b_y_, feed_dict={b_x: a})
+#         print(b_y_.eval())
 
 
 

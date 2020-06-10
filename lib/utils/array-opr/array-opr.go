@@ -2,6 +2,9 @@ package arrayOpr
 // import (
 // 	"fmt"
 // )
+import (
+	"github.com/stellentus/cartpoles/lib/rlglue"
+)
 
 func A32Col(array [][]float32, col int) []float32 {
 	var new []float32
@@ -65,6 +68,14 @@ func ArrayMax(array []float32) (float32, int){
 		}
 	}
 	return max, idx
+}
+
+func StateTo32(state rlglue.State) []float32 {
+	var a32 []float32
+	for i:=0; i<len(state); i++ {
+		a32 = append(a32, float32(state[i]))
+	}
+	return a32
 }
 
 func A64To32_2d(array [][]float64) [][]float32 {

@@ -26,6 +26,7 @@ type Model struct {
 	sess  *tf.Session
 
 	behTruth tf.Output
+	behArgmax tf.Output
 	behOut tf.Output
 	tarOut tf.Output
 
@@ -170,6 +171,7 @@ func NewModel(graphDefFilename string) *Model {
 		behIn: graph.Operation("beh_in").Output(0),
 		behActionIn: graph.Operation("beh_action_in").Output(0),
 		behTruth: graph.Operation("beh_truth").Output(0),
+		behArgmax: graph.Operation("beh_out_argmax").Output(0),
 		// behOut: graph.Operation("beh_out").Output(0),
 		behOut: graph.Operation("beh_out_act").Output(0),
 		tarIn: graph.Operation("target_in").Output(0),
@@ -188,16 +190,21 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 	if agent.EnableDebug {
 		agent.Message("msg", "start")
 	}
-	act := agent.Step(state, 0)
-	return act
+	// act := agent.Step(state, 0)
+	agent.lastState = state
+	act := agent.Policy(state)
+	agent.lastAction = act
+	fmt.Println("START", act, state)
+	return rlglue.Action(act)
 }
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	agent.Update()
-	// agent.lastAction = agent.Policy(state)
+	agent.lastAction = agent.Policy(state)
 	agent.lastState = state
+
 	act := rlglue.Action(agent.lastAction)
 	if agent.EnableDebug {
 		if agent.StateContainsReplay {
@@ -258,12 +265,19 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	var idx int
 	if rand.Float64() < agent.Epsilon {
 		idx = agent.rng.Intn(agent.NumberOfActions)
-	} else {
-		lastStatesT, _ := tf.NewTensor(agent.lastState)
-		feeds := map[tf.Output]*tf.Tensor{agent.valueNet.behOut: lastStatesT}
-		fetch := []tf.Output{agent.valueNet.behOut}
-		qAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
-		_, idx = ao.ArrayMax(qAll[0].Value().([]float32))	
+	} else {		
+		var reshape [1][]float32
+		state32 := ao.StateTo32(agent.lastState)
+		reshape[0] = state32
+		lastStatesT, _ := tf.NewTensor(reshape)
+		feeds := map[tf.Output]*tf.Tensor{agent.valueNet.behIn: lastStatesT}
+		fetch := []tf.Output{agent.valueNet.behArgmax}
+		action, err := agent.valueNet.sess.Run(feeds, fetch, nil)
+		if err != nil {
+			panic(err)
+		}
+		idx64 := action[0].Value().([]int64)[0]
+		idx = int(idx64)
 	}
 	return idx
 }

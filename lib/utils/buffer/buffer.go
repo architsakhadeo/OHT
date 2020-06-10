@@ -41,7 +41,6 @@ func (bf *Buffer) Initialize(stype string, size int, slen int) {
 }
 
 func (bf *Buffer) Feed(laststate rlglue.State, lastaction int, state rlglue.State, reward float64, gamma float64) {
-// func (bf *Buffer) Feed(laststate []float64, lastaction int, state []float64, reward float64, gamma float64) {
 	seq := make([]float64, bf.seq_len) 
 	copy(seq[:bf.state_len], laststate)
 	seq[bf.state_len] = float64(lastaction)
