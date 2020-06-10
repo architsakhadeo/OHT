@@ -6,17 +6,18 @@ def graph_construction(save_name):
     # with tf.variable_scope("behaviour"):
     # Behaviour
     b_x = tf.placeholder(tf.float32, shape=[None, 4], name='beh_in')
-    b_y = tf.placeholder(tf.float32, shape=[None, 2], name='beh_truth')
+    # b_y = tf.placeholder(tf.float32, shape=[None, 2], name='beh_truth')
 
     b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
     b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
     b_ly3 = tf.layers.dense(b_ly2, 2, name='beh_ly3')
     b_y_ = tf.identity(b_ly3, name='beh_out')
 
-    # Optimize loss
-    b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
-    b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
-    b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
+    b_action = tf.placeholder(tf.float32, shape=[None, 1], name='beh_action_in')
+    a_indices = tf.stack([tf.range(tf.shape(b_action)[0], dtype=tf.int32), 
+                          tf.reshape(tf.cast(b_action, tf.int32), [tf.shape(b_action)[0]])], 
+                          axis=1)
+    b_y_act = tf.gather_nd(params=b_y_, indices=a_indices, name='beh_out_act')
 
     # with tf.variable_scope("target"):
     # Target
@@ -33,6 +34,12 @@ def graph_construction(save_name):
     reward = tf.placeholder(tf.float32, shape=[None, 1], name='reward')
     gamma = tf.placeholder(tf.float32, shape=[None, 1], name='gamma')
     target = tf.math.add(reward, tf.math.multiply(gamma, t_y_max), name='target')
+
+    # Optimize loss
+    # b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
+    b_loss = tf.reduce_mean(tf.square(b_y_act - target), name='beh_loss')
+    b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+    b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
 
     # with tf.variable_scope("sync"):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly1.name)[0] + '/kernel:0')

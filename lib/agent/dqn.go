@@ -30,6 +30,7 @@ type Model struct {
 	tarOut tf.Output
 
 	behIn  tf.Output
+	behActionIn tf.Output
 	tarIn  tf.Output
 	gammaIn tf.Output
 	rewardIn tf.Output
@@ -167,8 +168,10 @@ func NewModel(graphDefFilename string) *Model {
 		initOp:  graph.Operation("init"),
 		trainOp: graph.Operation("beh_train"),
 		behIn: graph.Operation("beh_in").Output(0),
+		behActionIn: graph.Operation("beh_action_in").Output(0),
 		behTruth: graph.Operation("beh_truth").Output(0),
-		behOut: graph.Operation("beh_out").Output(0),
+		// behOut: graph.Operation("beh_out").Output(0),
+		behOut: graph.Operation("beh_out_act").Output(0),
 		tarIn: graph.Operation("target_in").Output(0),
 		gammaIn: graph.Operation("gamma").Output(0),
 		rewardIn: graph.Operation("reward").Output(0),
@@ -226,52 +229,27 @@ func (agent *Dqn) Update() {
 	}
 
 	samples64 := agent.bf.Sample(agent.BatchSize)
-	// lastStates := samples[:][:agent.StateDim]
-	// lastActions := samples[:][agent.StateDim]
-	// states := samples[:][agent.StateDim+1: agent.StateDim*2+1]
-	// rewards := samples[:][agent.StateDim*2+1]
-	// gammas := samples[:][agent.StateDim*2+2]
-	
 	samples := ao.A64To32_2d(samples64)
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
 	lastActions := ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)
 	states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
 	rewards := ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2)
 	gammas := ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3)
-	
-	statesT, err := tf.NewTensor(states)
-	if err != nil {
-		panic(err)
-	}
-	// feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT}
-	// fetch := []tf.Output{agent.valueNet.tarOut}
-	// qNext, err := agent.valueNet.sess.Run(feeds, fetch, nil)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Print(qNext, "\n")
-	// qNext := ao.RowIndexMax(qNextAll[0].Value().([][]float32))
-	// target := ao.BitwiseAdd(ao.A32Col(rewards, 0), ao.BitwiseMulti(qNext, ao.A32Col(gammas, 0)))
+		
+	statesT, _ := tf.NewTensor(states)
 	rewardT, _ := tf.NewTensor(rewards)
 	gammaT, _ := tf.NewTensor(gammas)
-	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT, agent.valueNet.gammaIn: gammaT, agent.valueNet.rewardIn: rewardT}
-	fetch := []tf.Output{agent.valueNet.tarOut}
-	target, err := agent.valueNet.sess.Run(feeds, fetch, nil)
-
 	lastStatesT, _ := tf.NewTensor(lastStates)
-	feeds = map[tf.Output]*tf.Tensor{agent.valueNet.behIn: lastStatesT}
-	fetch = []tf.Output{agent.valueNet.behOut}
-	qAll, _ := agent.valueNet.sess.Run(feeds, fetch, nil)
-	q := ao.RowIndexFloat(qAll[0].Value().([][]float32), ao.A32ToInt(ao.A32Col(lastActions, 0)))
-	
-	predictionT, _ := tf.NewTensor(q)
-	targetT, _ := tf.NewTensor(target)
-	feeds = map[tf.Output]*tf.Tensor{
-		agent.valueNet.behOut:  predictionT,
-		agent.valueNet.behTruth: targetT,
-	}
-	agent.valueNet.sess.Run(feeds, nil, []*tf.Operation{agent.valueNet.trainOp})
+	lastActionT, _ := tf.NewTensor(lastActions)
 
+	feeds := map[tf.Output]*tf.Tensor{
+		agent.valueNet.tarIn: statesT, 
+		agent.valueNet.gammaIn: gammaT, 
+		agent.valueNet.rewardIn: rewardT,
+		agent.valueNet.behIn: lastStatesT, 
+		agent.valueNet.behActionIn: lastActionT}
+
+	agent.valueNet.sess.Run(feeds, nil, []*tf.Operation{agent.valueNet.trainOp})
 	agent.updateNum += 1
 }
 
