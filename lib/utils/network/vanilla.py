@@ -28,6 +28,11 @@ def graph_construction(save_name):
     t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu)#, name='target_ly2')
     t_ly3 = tf.layers.dense(t_ly2, 2)#, name='target_ly_3')
     t_y_ = tf.identity(t_ly3, name='target_out')
+    t_y_max = tf.math.reduce_max(t_y_, axis=1, keepdims=True, name='target_out_max')
+
+    reward = tf.placeholder(tf.float32, shape=[None, 1], name='reward')
+    gamma = tf.placeholder(tf.float32, shape=[None, 1], name='gamma')
+    target = tf.math.add(reward, tf.math.multiply(gamma, t_y_max), name='target')
 
     # with tf.variable_scope("sync"):
     weights = tf.get_default_graph().get_tensor_by_name(os.path.split(b_ly1.name)[0] + '/kernel:0')

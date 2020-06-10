@@ -31,6 +31,8 @@ type Model struct {
 
 	behIn  tf.Output
 	tarIn  tf.Output
+	gammaIn tf.Output
+	rewardIn tf.Output
 
 	initOp         *tf.Operation
 	trainOp        *tf.Operation
@@ -168,7 +170,10 @@ func NewModel(graphDefFilename string) *Model {
 		behTruth: graph.Operation("beh_truth").Output(0),
 		behOut: graph.Operation("beh_out").Output(0),
 		tarIn: graph.Operation("target_in").Output(0),
-		tarOut: graph.Operation("target_out").Output(0),
+		gammaIn: graph.Operation("gamma").Output(0),
+		rewardIn: graph.Operation("reward").Output(0),
+		// tarOut: graph.Operation("target_out").Output(0),
+		tarOut: graph.Operation("target").Output(0),
 		syncOp1: graph.Operation("set1"),
 		syncOp2: graph.Operation("set2"),
 		syncOp3: graph.Operation("set3"),
@@ -238,15 +243,20 @@ func (agent *Dqn) Update() {
 	if err != nil {
 		panic(err)
 	}
-	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT}
+	// feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT}
+	// fetch := []tf.Output{agent.valueNet.tarOut}
+	// qNext, err := agent.valueNet.sess.Run(feeds, fetch, nil)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Print(qNext, "\n")
+	// qNext := ao.RowIndexMax(qNextAll[0].Value().([][]float32))
+	// target := ao.BitwiseAdd(ao.A32Col(rewards, 0), ao.BitwiseMulti(qNext, ao.A32Col(gammas, 0)))
+	rewardT, _ := tf.NewTensor(rewards)
+	gammaT, _ := tf.NewTensor(gammas)
+	feeds := map[tf.Output]*tf.Tensor{agent.valueNet.tarIn: statesT, agent.valueNet.gammaIn: gammaT, agent.valueNet.rewardIn: rewardT}
 	fetch := []tf.Output{agent.valueNet.tarOut}
-	qNextAll, err := agent.valueNet.sess.Run(feeds, fetch, nil)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Print(qNextAll, "\n")
-	qNext := ao.RowIndexMax(qNextAll[0].Value().([][]float32))
-	target := ao.BitwiseAdd(ao.A32Col(rewards, 0), ao.BitwiseMulti(qNext, ao.A32Col(gammas, 0)))
+	target, err := agent.valueNet.sess.Run(feeds, fetch, nil)
 
 	lastStatesT, _ := tf.NewTensor(lastStates)
 	feeds = map[tf.Output]*tf.Tensor{agent.valueNet.behIn: lastStatesT}
