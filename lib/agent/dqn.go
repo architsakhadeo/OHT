@@ -194,7 +194,6 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 	agent.lastState = state
 	act := agent.Policy(state)
 	agent.lastAction = act
-	fmt.Println("START", act, state)
 	return rlglue.Action(act)
 }
 
