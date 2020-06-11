@@ -117,35 +117,6 @@ func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attribu
 	return *envWrapper, nil
 }
 
-func AddSweepAttr(attr rlglue.Attributes, sweepAttr rlglue.Attributes) (rlglue.Attributes, error) {
-	// Reformat sweep attributes in environment attributes.
-	var attrMap map[string]interface{}
-	err := json.Unmarshal(attr, &attrMap)
-	if err != nil {
-		return nil, errors.New("Could not parse attributes: " + err.Error())
-	}
-	var sweepAttrMap map[string]interface{}
-	err = json.Unmarshal(sweepAttr, &sweepAttrMap)
-	if err != nil {
-		return nil, errors.New("Could not parse sweep attributes: " + err.Error())
-	}
-	_, ok := attrMap["sweep"]
-	if ok {
-		// attrMap["sweep"] = sweepAttrMap
-		for k, v := range sweepAttrMap {
-			if _, ok = attrMap[k]; !ok {
-				attrMap[k] = v
-			}
-		}
-	}
-	attr, err = json.Marshal(&attrMap)
-	if err != nil {
-		return nil, errors.New("Could not encode attributes: " + err.Error())
-	}
-
-	return attr, nil
-}
-
 func hyphenatedStringify(attrs []rlglue.Attributes) (string, error) {
 	pstrings := []string{}
 	var sweepAttrMap map[string]interface{}
