@@ -63,9 +63,7 @@ func (exp *Experiment) Run() error {
 
 func (exp *Experiment) runContinuous() {
 	exp.Message("msg", "Starting continuous experiment")
-	for exp.numStepsTaken < exp.Settings.MaxSteps {
-		exp.runSingleEpisode()
-	}
+	exp.runSingleEpisode()
 }
 
 func (exp *Experiment) runEpisodic() {
@@ -75,43 +73,59 @@ func (exp *Experiment) runEpisodic() {
 	}
 }
 
+// runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
+// strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() {
-	episodeEnded := false
 	prevState := exp.environment.Start()
 	action := exp.agent.Start(prevState)
+	isEpisodic := exp.Settings.MaxSteps == 0
 
 	numStepsThisEpisode := 0
-	for !episodeEnded && (exp.Settings.MaxSteps == 0 || exp.numStepsTaken < exp.Settings.MaxSteps) {
-		var reward float64
-		var newState rlglue.State
-		newState, reward, episodeEnded = exp.environment.Step(action)
+	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
+		newState, reward, episodeEnded := exp.environment.Step(action)
 
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
-
-		if episodeEnded {
-			if exp.Settings.MaxSteps != 0 {
-				exp.Message("warning", "An episode ended in a continuing setting. This doesn't make sense.")
-			}
-			exp.agent.End(newState, reward)
-		} else {
-			action = exp.agent.Step(newState, reward)
-		}
-
 		prevState = newState
 
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
 
-		if exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
+		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
+		}
+
+		if !episodeEnded {
+			action = exp.agent.Step(newState, reward)
+			continue
+		} else if !isEpisodic {
+			// An episodic environment is being treated as continuous, so reset the environment
+			newState = exp.environment.Start()
+			episodeEnded = false
+			action = exp.agent.Step(newState, reward)
+		}
+
+		exp.logEndOfEpisode(numStepsThisEpisode)
+		exp.numEpisodesDone += 1
+		numStepsThisEpisode = 0
+
+		if isEpisodic {
+			// We're in the episodic setting, so we are done with this episode
+			exp.agent.End(newState, reward)
+			break
 		}
 	}
 
+	if numStepsThisEpisode > 0 || isEpisodic {
+		// If there are leftover steps, we're ending after a partial episode.
+		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
+		exp.logEndOfEpisode(numStepsThisEpisode)
+	}
+}
+
+func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	exp.LogEpisodeLength(numStepsThisEpisode)
-	if episodeEnded {
-		reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
+	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
+	if exp.Settings.DebugInterval != 0 {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	}
-
-	exp.numEpisodesDone += 1
 }

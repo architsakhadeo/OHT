@@ -1,5 +1,6 @@
 from concurrent import futures
 
+import os
 import grpc
 import json
 
@@ -12,6 +13,7 @@ class RemoteAgent(remote_pb2_grpc.AgentServicer):
 
 	def Initialize(self, attr, context):
 		self.agent.set_param(json.loads(attr.experiment.attributes))
+		# TODO: use attr.run.run to load the random seed or whatever
 		return remote_pb2.Empty()
 
 	def Start(self, state, context):
@@ -29,9 +31,14 @@ class RemoteAgent(remote_pb2_grpc.AgentServicer):
 
 
 def serve(agent):
+    port = 2500
+
+    if 'RUN' in os.environ:
+        port = port+int(os.environ['RUN'])
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     remote_pb2_grpc.add_AgentServicer_to_server(
         RemoteAgent(agent), server)
-    server.add_insecure_port('[::]:8081')
+    server.add_insecure_port('[::]:'+str(port))
     server.start()
     server.wait_for_termination()

@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/stellentus/cartpoles/lib/config"
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
@@ -27,12 +26,15 @@ const (
 	stateMax              = 0.05
 )
 
+type cartpoleSettings struct {
+	Seed         int64     `json:"seed"`
+	Delays       []int     `json:"delays"`
+	PercentNoise []float64 `json:"percent_noise"`
+}
+
 type Cartpole struct {
 	logger.Debug
-	Seed              int64     `json:"seed"`
-	Delays            []int     `json:"delays"`
-	PercentNoise      []float64 `json:"percent_noise"`
-	Continuing        bool      `json:"continuing"`
+	cartpoleSettings
 	state             rlglue.State
 	rng               *rand.Rand
 	buffer            [][]float64
@@ -48,16 +50,15 @@ func NewCartpole(logger logger.Debug) (rlglue.Environment, error) {
 }
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
-func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
-	env.Continuing = true // Set default
-
-	err := json.Unmarshal(attr, &env)
+func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
+	err := json.Unmarshal(attr, &env.cartpoleSettings)
 	if err != nil {
 		err = errors.New("environment.Cartpole settings error: " + err.Error())
 		env.Message("err", err)
 		return err
 	}
-	env.rng = rand.New(rand.NewSource(env.Seed + int64(config.Run))) // Create a new rand source for reproducibility
+	env.Seed += int64(run)
+	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
 	if len(env.PercentNoise) == 1 {
 		// Copy it for all dimensions
@@ -107,7 +108,7 @@ func (env *Cartpole) Initialize(attr rlglue.Attributes) error {
 		env.bufferInsertIndex = make([]int, 4)
 	}
 
-	env.Message("msg", "environment.Cartpole Initialize", "seed", env.Seed, "delays", env.Delays, "percent noise", env.PercentNoise)
+	env.Message("cartpole settings", fmt.Sprintf("%+v", env.cartpoleSettings))
 
 	return nil
 }
@@ -141,7 +142,7 @@ func (env *Cartpole) randFloat(min, max float64) float64 {
 // Start returns an initial observation.
 func (env *Cartpole) Start() rlglue.State {
 	env.randomizeState()
-	return env.state
+	return env.getObservations()
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
@@ -176,11 +177,12 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	if done {
 		reward = -1.0
 		env.randomizeState()
-		if env.Continuing {
-			done = false // In a continuing environment, we're never done
-		}
 	}
 
+	return env.getObservations(), reward, done
+}
+
+func (env *Cartpole) getObservations() rlglue.State {
 	// Add noise to state to get observations
 	observations := env.noisyState()
 
@@ -192,8 +194,7 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 			env.bufferInsertIndex[i] = (env.bufferInsertIndex[i] + 1) % env.Delays[i] // Update the insertion point
 		}
 	}
-
-	return observations, reward, done
+	return observations
 }
 
 // GetAttributes returns attributes for this environment.

@@ -2,19 +2,29 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
+type exampleSettings struct {
+	Seed        int64
+	EnableDebug bool `json:"enable-debug"`
+}
+
+type environmentAttributes struct {
+	NumberOfActions     int  `json:"numberOfActions"`
+	StateContainsReplay bool `json:"state-contains-replay"`
+}
+
 // Example just iterates through all actions, starting from a random one.
 type Example struct {
 	logger.Debug
-	lastAction          int
-	NumberOfActions     int `json:"numberOfActions"`
-	EnableDebug         bool
-	StateContainsReplay bool `json:"state-contains-replay"`
+	exampleSettings
+	environmentAttributes
+	lastAction int
 }
 
 func init() {
@@ -26,29 +36,25 @@ func NewExample(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Example) Initialize(expAttr, envAttr rlglue.Attributes) error {
-	var ss struct {
-		Seed        int64
-		EnableDebug bool `json:"enable-debug"`
-	}
-	err := json.Unmarshal(expAttr, &ss)
+func (agent *Example) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+	err := json.Unmarshal(expAttr, &agent.exampleSettings)
 	if err != nil {
-		agent.Message("warning", "agent.Example seed wasn't available: "+err.Error())
-		ss.Seed = 0
-	}
-	agent.EnableDebug = ss.EnableDebug
-
-	err = json.Unmarshal(envAttr, &agent)
-	if err != nil {
-		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
+		agent.Message("warning", "agent.Example settings weren't available: "+err.Error())
 	}
 
-	rng := rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+	err = json.Unmarshal(envAttr, &agent.environmentAttributes)
+	if err != nil {
+		agent.Message("err", "agent.Example environment attributes weren't available: "+err.Error())
+	}
+
+	rng := rand.New(rand.NewSource(agent.Seed + int64(run))) // Create a new rand source for reproducibility
 	agent.lastAction = rng.Intn(agent.NumberOfActions)
 
 	if agent.EnableDebug {
-		agent.Message("msg", "agent.Example Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
+		agent.Message("msg", "agent.Example Initialize", "seed", agent.Seed, "numberOfActions", agent.NumberOfActions)
 	}
+
+	agent.Message("agent settings", fmt.Sprintf("%+v", agent.exampleSettings))
 
 	return nil
 }

@@ -15,7 +15,7 @@ class EnvironmentStub(object):
         """
         self.Initialize = channel.unary_unary(
                 '/Environment/Initialize',
-                request_serializer=remote__pb2.Attributes.SerializeToString,
+                request_serializer=remote__pb2.EnvironmentAttributes.SerializeToString,
                 response_deserializer=remote__pb2.Empty.FromString,
                 )
         self.Start = channel.unary_unary(
@@ -67,7 +67,7 @@ def add_EnvironmentServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Initialize': grpc.unary_unary_rpc_method_handler(
                     servicer.Initialize,
-                    request_deserializer=remote__pb2.Attributes.FromString,
+                    request_deserializer=remote__pb2.EnvironmentAttributes.FromString,
                     response_serializer=remote__pb2.Empty.SerializeToString,
             ),
             'Start': grpc.unary_unary_rpc_method_handler(
@@ -106,7 +106,7 @@ class Environment(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Environment/Initialize',
-            remote__pb2.Attributes.SerializeToString,
+            remote__pb2.EnvironmentAttributes.SerializeToString,
             remote__pb2.Empty.FromString,
             options, channel_credentials,
             call_credentials, compression, wait_for_ready, timeout, metadata)

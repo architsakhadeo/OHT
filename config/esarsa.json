@@ -1,0 +1,33 @@
+{
+	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+	"agent-name": "esarsa",
+	"environment-name": "cartpole",
+	"agent-settings": {
+		"tilings": 32,
+		"tiles": 4,
+		"gamma": 0.95,
+		"lambda": 0.8,
+		"epsilon": 0.05,
+		"alpha": 0.1,
+		"sweep": {
+			"tilings": [1, 2, 4, 8, 16, 32, 64, 128],
+			"tiles": [1, 2, 4, 8],
+			"gamma": [0.95],
+			"lambda": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+			"epsilon": [0.0, 0.1, 0.2, 0.3],
+			"alpha": [0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4]
+		},
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1
+	},
+	"experiment-settings": {
+		"steps": 10000,
+		"data-path": "data/esarsa",
+		"should-log-traces": false,
+		"should-log-episode-lengths": true,
+		"debug-interval": 0
+	}
+}

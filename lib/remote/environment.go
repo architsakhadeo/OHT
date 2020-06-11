@@ -2,88 +2,71 @@ package remote
 
 import (
 	"context"
+	"sync"
 
-	"github.com/stellentus/cartpoles/lib/environment"
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
-
-	"google.golang.org/grpc"
 )
 
-func init() {
-	err := environment.Add("grpc", func(debug logger.Debug) (rlglue.Environment, error) {
-		conn, err := dialGrpc(debug, ":8080")
-		if err != nil {
-			return nil, err
-		}
-		return NewEnvironment(conn), nil
-	})
-	if err != nil {
-		panic("failed to initialize grpc-environment: " + err.Error())
-	}
-}
-
-type environmentServer struct {
-	env rlglue.Environment
-}
-
-func NewEnvironmentServer(env rlglue.Environment) EnvironmentServer {
-	return environmentServer{env}
-}
-
-func (srv environmentServer) Initialize(ctx context.Context, in *Attributes) (*Empty, error) {
-	err := srv.env.Initialize(rlglue.Attributes(in.Attributes))
-	return &Empty{}, err
-}
-
-func (srv environmentServer) Start(ctx context.Context, in *Empty) (*State, error) {
-	state := srv.env.Start()
-	return &State{Values: []float64(state)}, nil
-}
-
-func (srv environmentServer) Step(ctx context.Context, in *Action) (*StepResult, error) {
-	state, reward, terminal := srv.env.Step(rlglue.Action(in.GetAction()))
-	return &StepResult{State: &State{Values: []float64(state)}, Reward: reward, Terminal: terminal}, nil
-}
-
-func (srv environmentServer) GetAttributes(ctx context.Context, in *Empty) (*Attributes, error) {
-	attr := srv.env.GetAttributes()
-	return &Attributes{Attributes: string(attr)}, nil
-}
-
-type environmentWrapper struct {
+type launcherEnvironment struct {
 	client EnvironmentClient
+	ctx    context.Context
+	wg     *sync.WaitGroup
+	debug  logger.Debug
 }
 
-func NewEnvironment(cc *grpc.ClientConn) rlglue.Environment {
-	return &environmentWrapper{NewEnvironmentClient(cc)}
+func newLauncherEnvironment(debug logger.Debug, ctx context.Context, wg *sync.WaitGroup) (*launcherEnvironment, error) {
+	return &launcherEnvironment{
+		ctx:   ctx,
+		wg:    wg,
+		debug: debug,
+	}, nil
 }
 
-func (env environmentWrapper) Initialize(attr rlglue.Attributes) error {
-	ctx := context.Background()
-	err := reattempt(func() error {
-		_, err := env.client.Initialize(ctx, &Attributes{Attributes: string(attr)})
+func (env *launcherEnvironment) Initialize(run uint, attr rlglue.Attributes) error {
+	port, err := getPort(2200+int(run), attr)
+	if err != nil {
+		return err
+	}
+
+	cc, err := dialGrpc(env.debug, port)
+	if err != nil {
+		return err
+	}
+	env.client = NewEnvironmentClient(cc)
+
+	err = launchCommands(run, attr, env.ctx, env.wg)
+	if err != nil {
+		return err
+	}
+
+	err = reattempt(func() error {
+		_, err := env.client.Initialize(env.ctx, &EnvironmentAttributes{
+			Run:        &Run{Run: uint64(run)},
+			Attributes: &Attributes{Attributes: string(attr)},
+		})
 		return err
 	})
+
 	return err
 }
 
 // Start returns an initial observation.
-func (env environmentWrapper) Start() rlglue.State {
+func (env *launcherEnvironment) Start() rlglue.State {
 	ctx := context.Background()
 	state, _ := env.client.Start(ctx, &Empty{})
 	return rlglue.State(state.Values)
 }
 
 // Step takes an action and provides the new observation, the resulting reward, and whether the state is terminal.
-func (env environmentWrapper) Step(action rlglue.Action) (rlglue.State, float64, bool) {
+func (env *launcherEnvironment) Step(action rlglue.Action) (rlglue.State, float64, bool) {
 	ctx := context.Background()
 	result, _ := env.client.Step(ctx, &Action{Action: uint64(action)})
 	return rlglue.State(result.State.Values), result.Reward, result.Terminal
 }
 
 // GetAttributes returns attributes for this environment.
-func (env environmentWrapper) GetAttributes() rlglue.Attributes {
+func (env *launcherEnvironment) GetAttributes() rlglue.Attributes {
 	ctx := context.Background()
 	attr, _ := env.client.GetAttributes(ctx, &Empty{})
 	return rlglue.Attributes(attr.Attributes)
