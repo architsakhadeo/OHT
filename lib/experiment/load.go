@@ -130,7 +130,7 @@ func hyphenatedStringify(attrs []rlglue.Attributes) (string, error) {
 	delete(sweepAttrMap, "path")
 	for name, value := range sweepAttrMap {
 		switch value := value.(type) {
-		case int, float64:
+		case int, float64, string:
 			pstrings = append(pstrings, fmt.Sprint(name, "-", value))
 		case bool:
 			pstrings = append(pstrings, fmt.Sprint(name, "-", boolToInt(value)))
