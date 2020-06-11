@@ -1,4 +1,4 @@
-package environment
+package state
 
 import (
 	"encoding/json"
@@ -44,6 +44,10 @@ type SensorDriftWrapper struct {
 	sensorSteps int64
 	noiseFns    []func(int) float64
 	rng         *rand.Rand
+}
+
+func init() {
+	Add("sensor-drift", NewSensorDriftWrapper)
 }
 
 func NewSensorDriftWrapper(logger logger.Debug, env rlglue.Environment) (rlglue.Environment, error) {

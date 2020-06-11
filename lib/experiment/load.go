@@ -14,6 +14,7 @@ import (
 	"github.com/stellentus/cartpoles/lib/environment"
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
+	"github.com/stellentus/cartpoles/lib/state"
 )
 
 // Execute executes the experiment described by the provided JSON.
@@ -21,11 +22,12 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
-	agentAttr, envAttr, err := conf.SweptAttributes(sweepIdx)
+	attrs, err := conf.SweptAttributes(sweepIdx)
+	agentAttr, envAttr, wrapperAttrs := attrs[0], attrs[1], attrs[2:]
 	if err != nil {
 		return errors.New("Cannot run sweep: " + err.Error())
 	}
-	savePath, err := hyphenatedStringify(agentAttr, envAttr)
+	savePath, err := hyphenatedStringify(attrs)
 	if err != nil {
 		return errors.New("Failed to format path: " + err.Error())
 	}
@@ -45,6 +47,11 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	environment, err := InitializeEnvironment(conf.EnvironmentName, run, envAttr, debugLogger)
 	if err != nil {
 		return errors.New("Could not initialize environment: " + err.Error())
+	}
+
+	environment, err = InitializeEnvWrapper(conf.WrapperNames, run, wrapperAttrs, environment, debugLogger)
+	if err != nil {
+		err = errors.New("Could not initialize wrapper: " + err.Error())
 	}
 
 	agent, err := InitializeAgent(conf.AgentName, run, agentAttr, environment, debugLogger)
@@ -72,10 +79,6 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	if err != nil {
 		err = errors.New("Could not initialize experiment: " + err.Error())
 	}
-	environment, err = InitializeEnvWrapper(debug, environment, run, attr)
-	if err != nil {
-		err = errors.New("Could not initialize wrapper: " + err.Error())
-	}
 	return environment, err
 }
 
@@ -94,23 +97,24 @@ func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.E
 	return agent, err
 }
 
-func InitializeEnvWrapper(debug logger.Debug, env rlglue.Environment,
-	run uint, attr rlglue.Attributes) (rlglue.Environment, error) {
+func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Environment, error) {
+	var err error
+	defer debug.Error(&err)
+
 	// Return raw environment if there is no parameter to sweep over.
-	var attrMap map[string]interface{}
-	err := json.Unmarshal(attr, &attrMap)
-	if err != nil {
-		return nil, errors.New("Could not parse attributes: " + err.Error())
+	envWrapper := &env
+	for i, wrapperName := range wrapperNames {
+		env, err := state.Create(wrapperName, *envWrapper, debug)
+		if err != nil {
+			return nil, errors.New("Could not create wrapper: " + err.Error())
+		}
+		err = env.Initialize(run, attr[i])
+		envWrapper = &env
+		if err != nil {
+			err = errors.New("Could not initialize experiment: " + err.Error())
+		}
 	}
-	env, err = environment.NewSensorDriftWrapper(debug, env)
-	if err != nil {
-		return nil, errors.New("Could not create experiment: " + err.Error())
-	}
-	err = env.Initialize(run, attr)
-	if err != nil {
-		err = errors.New("Could not initialize experiment: " + err.Error())
-	}
-	return env, nil
+	return *envWrapper, nil
 }
 
 func AddSweepAttr(attr rlglue.Attributes, sweepAttr rlglue.Attributes) (rlglue.Attributes, error) {
@@ -142,17 +146,17 @@ func AddSweepAttr(attr rlglue.Attributes, sweepAttr rlglue.Attributes) (rlglue.A
 	return attr, nil
 }
 
-func hyphenatedStringify(agentAttr rlglue.Attributes, envAttr rlglue.Attributes) (string, error) {
+func hyphenatedStringify(attrs []rlglue.Attributes) (string, error) {
 	pstrings := []string{}
 	var sweepAttrMap map[string]interface{}
-	err := json.Unmarshal(agentAttr, &sweepAttrMap)
-	if err != nil {
-		return "", errors.New("Could not parse agent attributes: " + err.Error())
+	for _, attr := range attrs {
+		err := json.Unmarshal(attr, &sweepAttrMap)
+		if err != nil {
+			return "", errors.New("Could not parse attributes: " + err.Error())
+		}
 	}
-	err = json.Unmarshal(envAttr, &sweepAttrMap)
-	if err != nil {
-		return "", errors.New("Could not parse environment attributes: " + err.Error())
-	}
+	delete(sweepAttrMap, "seed")
+	delete(sweepAttrMap, "path")
 	for name, value := range sweepAttrMap {
 		switch value := value.(type) {
 		case int, float64:

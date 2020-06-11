@@ -17,8 +17,11 @@ type Config struct {
 	Environment     rlglue.Attributes `json:"environment-settings"`
 	Agent           rlglue.Attributes `json:"agent-settings"`
 	Experiment      `json:"experiment-settings"`
+	StateWrappers   rlglue.Attributes `json:"state-wrappers"`
 	agentSweeper    sweeper
 	envSweeper      sweeper
+	wrapperSweepers []sweeper
+	WrapperNames    []string
 }
 
 type Experiment struct {
@@ -79,6 +82,25 @@ func parseOne(data json.RawMessage) (Config, error) {
 		return conf, errors.New("The config file is not valid JSON: " + err.Error())
 	}
 
+	if conf.StateWrappers != nil {
+		wrapperAttrs := []AttributeMapAttr{}
+		err = json.Unmarshal(conf.StateWrappers, &wrapperAttrs)
+		if err != nil {
+			return conf, errors.New("The attributes is not valid JSON: " + err.Error())
+		}
+		for _, wrapperAttr := range wrapperAttrs {
+			wrapperSwpr := sweeper{}
+			wrapperSwpr.Load(*wrapperAttr["settings"])
+			var wrapperName string
+			err := json.Unmarshal(*wrapperAttr["wrapper-name"], &wrapperName)
+			if err != nil {
+				return conf, errors.New("The wrapper attribute is not valid JSON: " + err.Error())
+			}
+			conf.WrapperNames = append(conf.WrapperNames, wrapperName)
+			conf.wrapperSweepers = append(conf.wrapperSweepers, wrapperSwpr)
+		}
+	}
+
 	err = conf.agentSweeper.Load(conf.Agent)
 	if err != nil {
 		return conf, errors.New("The agent sweeper could not be loaded: " + err.Error())
@@ -92,8 +114,12 @@ func parseOne(data json.RawMessage) (Config, error) {
 }
 
 func (conf Config) SweptAttrCount() int {
-	// Assume there is at least one parameter in the agent/environment setting.
-	return len(conf.agentSweeper.allAttributes) * len(conf.envSweeper.allAttributes)
+	// Assume there is at least one parameter in the agent/environment/wrapper setting.
+	count := len(conf.agentSweeper.allAttributes) * len(conf.envSweeper.allAttributes)
+	for _, wrapperSwpr := range conf.wrapperSweepers {
+		count = count * len(wrapperSwpr.allAttributes)
+	}
+	return count
 }
 
 func max(a, b int) int {
@@ -103,37 +129,58 @@ func max(a, b int) int {
 	return b
 }
 
-func (conf Config) sweepIndices(idx int) (int, int, error) {
+func (conf Config) sweepIndices(idx int) ([]int, error) {
+	totalCount := conf.SweptAttrCount()
 	agentCount := len(conf.agentSweeper.allAttributes)
 	envCount := len(conf.envSweeper.allAttributes)
-	agentIdx := idx % agentCount
-	envIdx := idx / agentCount
-	if envIdx >= envCount {
-		return 0, 0, errors.New("The sweep idx is invalid")
+	counts := []int{agentCount, envCount}
+	for _, wrapperSwpr := range conf.wrapperSweepers {
+		counts = append(counts, len(wrapperSwpr.allAttributes))
 	}
-	return agentIdx, envIdx, nil
+	indices := []int{}
+	for i := len(counts) - 1; i >= 0; i-- {
+		totalCount = totalCount / counts[i]
+		q := idx / totalCount
+		indices = append([]int{q}, indices...)
+		idx = idx % totalCount
+		if i == 1 {
+			indices = append([]int{idx}, indices...)
+			break
+		}
+	}
+	return indices, nil
 }
 
-func (conf Config) SweptAttributes(idx int) (rlglue.Attributes, rlglue.Attributes, error) {
+func (conf Config) SweptAttributes(idx int) ([]rlglue.Attributes, error) {
 	totalCount := conf.SweptAttrCount()
 	if idx >= totalCount {
-		return nil, nil, fmt.Errorf("Cannot run sweep %d (max idx %d)", idx, totalCount-1)
+		return nil, fmt.Errorf("Cannot run sweep %d (max idx %d)", idx, totalCount-1)
 	}
-	agentIdx, envIdx, err := conf.sweepIndices(idx)
+	indices, err := conf.sweepIndices(idx)
+	agentIdx, envIdx, wrapperIds := indices[0], indices[1], indices[2:]
 	if err != nil {
-		return nil, nil, errors.New("Cannot run sweep: " + err.Error())
+		return nil, errors.New("Cannot run sweep: " + err.Error())
 	}
 	agentAttrs := conf.agentSweeper.allAttributes[agentIdx]
 	agentAttributes, err := json.Marshal(agentAttrs)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Cannot run agent sweep %d", agentIdx)
+		return nil, fmt.Errorf("Cannot run agent sweep %d", agentIdx)
 	}
 	envAttrs := conf.envSweeper.allAttributes[envIdx]
 	envAttributes, err := json.Marshal(envAttrs)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Cannot run environment sweep %d", envIdx)
+		return nil, fmt.Errorf("Cannot run environment sweep %d", envIdx)
 	}
-	return agentAttributes, envAttributes, nil
+	attributes := []rlglue.Attributes{agentAttributes, envAttributes}
+	for i, wrapperSwpr := range conf.wrapperSweepers {
+		wrapperAttrs := wrapperSwpr.allAttributes[wrapperIds[i]]
+		wrapperAttributes, err := json.Marshal(wrapperAttrs)
+		if err != nil {
+			return nil, fmt.Errorf("Cannot run wrapper sweep %d", wrapperIds[i])
+		}
+		attributes = append(attributes, wrapperAttributes)
+	}
+	return attributes, nil
 }
 
 type sweeper struct {
@@ -141,6 +188,7 @@ type sweeper struct {
 }
 
 type AttributeMap map[string]*json.RawMessage
+type AttributeMapAttr map[string]*rlglue.Attributes
 
 func (am AttributeMap) String() string {
 	strs := []string{}
