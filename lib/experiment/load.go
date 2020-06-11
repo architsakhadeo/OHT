@@ -44,22 +44,22 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 
 	runtime.GOMAXPROCS(conf.MaxCPUs) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
 
-	environment, err := InitializeEnvironment(conf.EnvironmentName, run, envAttr, debugLogger)
+	env, err := InitializeEnvironment(conf.EnvironmentName, run, envAttr, debugLogger)
 	if err != nil {
 		return errors.New("Could not initialize environment: " + err.Error())
 	}
 
-	environment, err = InitializeEnvWrapper(conf.WrapperNames, run, wrapperAttrs, environment, debugLogger)
+	env, err = InitializeEnvWrapper(conf.WrapperNames, run, wrapperAttrs, env, debugLogger)
 	if err != nil {
 		err = errors.New("Could not initialize wrapper: " + err.Error())
 	}
 
-	agent, err := InitializeAgent(conf.AgentName, run, agentAttr, environment, debugLogger)
+	agnt, err := InitializeAgent(conf.AgentName, run, agentAttr, env, debugLogger)
 	if err != nil {
 		return err
 	}
 
-	expr, err := New(agent, environment, conf.Experiment, debugLogger, dataLogger)
+	expr, err := New(agnt, env, conf.Experiment, debugLogger, dataLogger)
 	if err != nil {
 		return err
 	}
@@ -71,30 +71,30 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	var err error
 	defer debug.Error(&err)
 
-	environment, err := environment.Create(name, debug)
+	env, err := environment.Create(name, debug)
 	if err != nil {
 		return nil, errors.New("Could not create experiment: " + err.Error())
 	}
-	err = environment.Initialize(run, attr)
+	err = env.Initialize(run, attr)
 	if err != nil {
 		err = errors.New("Could not initialize experiment: " + err.Error())
 	}
-	return environment, err
+	return env, err
 }
 
 func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Agent, error) {
 	var err error
 	defer debug.Error(&err)
 
-	agent, err := agent.Create(name, debug)
+	agnt, err := agent.Create(name, debug)
 	if err != nil {
 		return nil, errors.New("Could not create agent: " + err.Error())
 	}
-	err = agent.Initialize(run, attr, env.GetAttributes())
+	err = agnt.Initialize(run, attr, env.GetAttributes())
 	if err != nil {
 		err = errors.New("Could not initialize agent: " + err.Error())
 	}
-	return agent, err
+	return agnt, err
 }
 
 func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Environment, error) {
