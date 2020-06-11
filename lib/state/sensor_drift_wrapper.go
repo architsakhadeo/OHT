@@ -13,8 +13,7 @@ import (
 // SensorDriftWrapper is used to wrap an environment, adding sensor drift.
 type SensorDriftWrapper struct {
 	logger.Debug
-	Env  rlglue.Environment
-	Seed int64 `json:"seed"`
+	Env rlglue.Environment
 	// WrappedEnvAttrs is information loaded from the wrapped environment.
 	// The wrapped environment must provide all of the JSON attributes in WrappedEnvAttrs, otherwise Initialize will return an error.
 	WrappedEnvAttrs struct {
@@ -27,6 +26,7 @@ type SensorDriftWrapper struct {
 	}
 	// DriftAttrs is information loaded from the json config file.
 	DriftAttrs struct {
+		Seed int64 `json:"seed"`
 		// DriftScale is the scale of the drift with respect to the state range.
 		DriftScale float64 `json:"driftScale"`
 		// SensorLife is the number of time-steps after which the probability of drift will become nearly 1
@@ -56,14 +56,7 @@ func NewSensorDriftWrapper(logger logger.Debug, env rlglue.Environment) (rlglue.
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) error {
-	err := json.Unmarshal(attr, &wrapper)
-	if err != nil {
-		err = errors.New("environment.SensorDriftWrapper settings error: " + err.Error())
-		wrapper.Message("err", err)
-		return err
-	}
-	wrapper.rng = rand.New(rand.NewSource(wrapper.Seed + int64(run)))
-	err = json.Unmarshal(attr, &wrapper.DriftAttrs)
+	err := json.Unmarshal(attr, &wrapper.DriftAttrs)
 	if err != nil {
 		err = errors.New("environment.SensorDriftWrapper settings error: " + err.Error())
 		wrapper.Message("err", err)
@@ -74,6 +67,8 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 		wrapper.Message("err", err)
 		return err
 	}
+	wrapper.rng = rand.New(rand.NewSource(wrapper.DriftAttrs.Seed + int64(run)))
+
 	envAttr := wrapper.Env.GetAttributes()
 	err = json.Unmarshal(envAttr, &wrapper.WrappedEnvAttrs)
 	if err != nil {
