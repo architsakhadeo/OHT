@@ -3,21 +3,53 @@ import os
 import numpy as np
 import pandas as pd
 
-def load_data(alg_path):
-	dir_files = os.listdir(alg_path)
-	rewards_files = np.array([i for i in dir_files if 'rewards' in i])
-	numruns = len(rewards_files)
+# Loads the rewards from the csv files into a dictionary and return the dictionary
+def load_data(algpath):
+	rewardsData = np.array([])
+	dirFiles = os.listdir(algpath)
+	rewardsFiles = np.array([i for i in dirFiles if 'rewards' in i])
 
-	returns_list_files = np.array([])
+	for fileIndex in range(len(rewardsFiles)):
+		if fileIndex % 10 == 0:
+			print(fileIndex, algpath)
+		rewardsList = pd.read_csv(algpath+'/'+rewardsFiles[fileIndex])
 
-	for file in rewards_files:
-		rewards_list = pd.read_csv(alg_path+'/'+file)
-
-		returns_list = np.cumsum(rewards_list.rewards)
-
-		if returns_list_files.size != 0:
-			returns_list_files = np.vstack((returns_list_files, returns_list))
+		if rewardsData.size != 0:
+			rewardsData = np.vstack((rewardsData, rewardsList.rewards))
 		else:
-			returns_list_files = np.hstack((returns_list_files, returns_list))
+			rewardsData = np.hstack((rewardsData, rewardsList.rewards))
+	
+	return rewardsData
+	
 
-	return returns_list_files
+# Transforms the rewards to 'Rewards', 'Returns', 'Failures', 'Average-Rewards' 
+def transform_data(alg, rewardsData, transformation='Returns', window=0):
+	transformedData = np.array([])
+
+	for run in range(len(rewardsData)):
+		if run % 10 == 0:
+			print(run, alg)
+
+		if transformation == 'Rewards':
+			transformedRewards = rewardsData[run]
+
+		if transformation == 'Returns':	
+			returnsList = np.cumsum(rewardsData[run])
+			transformedRewards = returnsList
+		
+		if transformation == 'Failures':
+			returnsList = np.cumsum(rewardsData[run])
+			failuresList = -1 * returnsList
+			transformedRewards = failuresList
+		
+		if transformation == 'Average-Rewards':
+			rewardsList = rewardsData[run]
+			averageRewardsList = np.convolve(rewardsList, np.ones(window)/window, 'valid')
+			transformedRewards = averageRewardsList
+
+		if transformedData.size != 0:
+			transformedData = np.vstack((transformedData, transformedRewards))
+		else:
+			transformedData = np.hstack((transformedData, transformedRewards))
+
+	return transformedData
