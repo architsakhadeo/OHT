@@ -33,17 +33,24 @@ def transform_data(alg, rewardsData, transformation='Returns', window=0):
 		if transformation == 'Rewards':
 			transformedRewards = rewardsData[run]
 
+
+		# Returns are equal to sum of rewards
 		if transformation == 'Returns':	
 			returnsList = np.cumsum(rewardsData[run])
 			transformedRewards = returnsList
 		
+		# Failures are equal to negative returns
 		if transformation == 'Failures':
 			returnsList = np.cumsum(rewardsData[run])
 			failuresList = -1 * returnsList
 			transformedRewards = failuresList
 		
+		# Average rewards are calculated in a moving average manner 
+		# over a sliding window using the np.convolve method
 		if transformation == 'Average-Rewards':
 			rewardsList = rewardsData[run]
+
+			# Change this code carefully
 			averageRewardsList = np.convolve(rewardsList, np.ones(window)/window, 'valid')
 			transformedRewards = averageRewardsList
 
