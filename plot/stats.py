@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as st
 
 # Returns the mean of the runs per timestep
 def getMean(data):
@@ -53,11 +54,12 @@ def getWorst(data, transformation='Returns'):
 
 # Returns the confidence interval of the mean
 # Make this code adaptive using pandas/scipy so it finds the critical value given the confidence
+# confidence should be strictly less than 1.0
 def getConfidenceIntervalOfMean(data, confidence=0.95):
     numRuns = len(data)
     mean = np.mean(data, axis=0)
     stddev = np.std(data, axis=0)
-    criticalValue = 1.96
+    criticalValue = st.norm.ppf( (confidence + 1.0) / 2.0 )
     confidenceInterval = criticalValue * stddev / np.sqrt(numRuns)
     lowerbound = mean - confidenceInterval
     upperbound = mean + confidenceInterval
