@@ -73,7 +73,8 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 
 	env, err := environment.Create(name, debug)
 	if err != nil {
-		return nil, errors.New("Could not create experiment: " + err.Error())
+		err = errors.New("Could not create experiment: " + err.Error())
+		return nil, err
 	}
 	err = env.Initialize(run, attr)
 	if err != nil {
@@ -88,7 +89,8 @@ func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.E
 
 	agnt, err := agent.Create(name, debug)
 	if err != nil {
-		return nil, errors.New("Could not create agent: " + err.Error())
+		err = errors.New("Could not create agent: " + err.Error())
+		return nil, err
 	}
 	err = agnt.Initialize(run, attr, env.GetAttributes())
 	if err != nil {
@@ -106,12 +108,14 @@ func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attribu
 	for i, wrapperName := range wrapperNames {
 		env, err := state.Create(wrapperName, *envWrapper, debug)
 		if err != nil {
-			return nil, errors.New("Could not create wrapper: " + err.Error())
+			err = errors.New("Could not create wrapper: " + err.Error())
+			return nil, err
 		}
 		err = env.Initialize(run, attr[i])
 		envWrapper = &env
 		if err != nil {
 			err = errors.New("Could not initialize experiment: " + err.Error())
+			return nil, err
 		}
 	}
 	return *envWrapper, nil
