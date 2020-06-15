@@ -104,21 +104,19 @@ func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attribu
 	defer debug.Error(&err)
 
 	// Return raw environment if there is no parameter to sweep over.
-	envWrapper := &env
 	for i, wrapperName := range wrapperNames {
-		env, err := state.Create(wrapperName, *envWrapper, debug)
+		env, err = state.Create(wrapperName, env, debug)
 		if err != nil {
 			err = errors.New("Could not create wrapper: " + err.Error())
 			return nil, err
 		}
 		err = env.Initialize(run, attr[i])
-		envWrapper = &env
 		if err != nil {
 			err = errors.New("Could not initialize experiment: " + err.Error())
 			return nil, err
 		}
 	}
-	return *envWrapper, nil
+	return env, nil
 }
 
 func hyphenatedStringify(attrs []rlglue.Attributes) (string, error) {
