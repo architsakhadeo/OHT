@@ -1,17 +1,12 @@
 {
 	"comment": "This config file shows how to apply sensor drift to the environment. In 'sweep' of 'environment-settings', 'driftScale' specifies the scale of the drift with respect to the state range; 'sensorLife' specifies the number of time-steps after which the probability of drift will become nearly 1; 'driftProb' is the probability scale, if it's less than 0, drift occurs with prob=1, if it's between 0 and 1, the max prob is scaled by this value.",
-	"agent-name": "example",
+	"agent-name": "esarsa",
 	"environment-name": "cartpole",
 	"agent-settings": {
 		"lambda": 0.5,
+		"epsilon": 0.1,
 		"sweep": {
-			"alpha": [0.2, 0.5, 0.99],
-			"epsilon": [0.1],
-			"tilings": [
-				[1, 4, 5],
-				[3, 7, 9],
-				[1, 4]
-			]
+			"alpha": [0.2, 0.5, 0.99]
 		},
 		"enable-debug": true,
 		"seed": 25
@@ -19,19 +14,17 @@
 	"environment-settings": {
 		"seed": 15
 	},
-	"state-wrappers": [
-		{
-			"wrapper-name": "sensor-drift",
-			"settings": {
-				"seed": 35,
-				"sweep": {
-					"driftScale": [100],
-					"sensorLife": [[1,2,3,4]],
-					"driftProb": [[-1,0,0.5,1]]
-				}
-			}	
+	"state-wrappers": [{
+		"wrapper-name": "sensor-drift",
+		"settings": {
+			"seed": 35,
+			"sensorLife": [1, 2, 3, 4],
+			"driftProb": [-1, 0, 0.5, 1],
+			"sweep": {
+				"driftScale": [100, 50]
+			}
 		}
-	],
+	}],
 	"experiment-settings": {
 		"steps": 50,
 		"data-path": "data/example",
