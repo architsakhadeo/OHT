@@ -29,3 +29,9 @@ Unless otherwise noted, these commands are executed in the `cartpoles` directory
 * Install the go plugin: `go get -u github.com/golang/protobuf/protoc-gen-go`
 * From within an active `virtualenv` session, install the python plugin: `python -m pip install grpcio`
 * Now you can execute `lib/remote/generate.sh`
+
+### Plotting with Jupyter
+
+1. Make sure you're in the virtualenv: `source env/bin/activate`.
+2. Install Jupyter: `python -m pip install jupyterlab`.
+3. Launch Jupyter: `jupyter notebook --notebook-dir="plot"`. (The argument isn't necessary. It just opens the plot folder directly.)
