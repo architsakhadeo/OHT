@@ -41,7 +41,6 @@ type ESarsa struct {
 	delta                  float64
 	oldStateActiveFeatures []int
 	oldAction              rlglue.Action
-	alpha                  float64
 	stepsize               float64
 
 	esarsaSettings
