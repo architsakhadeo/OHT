@@ -33,5 +33,5 @@ Unless otherwise noted, these commands are executed in the `cartpoles` directory
 ### Plotting with Jupyter
 
 1. Make sure you're in the virtualenv: `source env/bin/activate`.
-2. Install Jupyter: `python -m pip install jupyterlab`.
+2. Install Jupyter from the pip file: `pip install -r requirements.txt`.
 3. Launch Jupyter: `jupyter notebook --notebook-dir="plot"`. (The argument isn't necessary. It just opens the plot folder directly.)
