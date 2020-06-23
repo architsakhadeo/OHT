@@ -2,6 +2,12 @@
 
 Cartpole agents and environments for real-world RL.
 
+## Running Experiments
+
+1. `go build cmd/experiment/main.go` This provides a slight speedup over using `go run` in the next step (about 3 seconds per run).
+2. `time parallel './main -config "config/esarsa.json" -run' ::: {1..60}` This runs 60 experiments in parallel. They'll all use the default `sweep=0`, but a different run number. Note this uses GNU Parallel.
+3. Change `config/esarsa.json` to a different config as necessary. (As much as possible it's good to run experiments based on versions of a config that have been committed. Then we have a history and can re-run previous versions.)
+
 ## Plotting with Jupyter
 
 1. Make sure you're in the virtualenv: `source env/bin/activate`.
