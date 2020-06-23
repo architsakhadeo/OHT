@@ -24,7 +24,7 @@
 		"seed": 1
 	},
 	"experiment-settings": {
-		"steps": 10000,
+		"steps": 1000000,
 		"data-path": "data/esarsa",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
