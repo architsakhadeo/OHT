@@ -2,16 +2,13 @@ package agent
 
 import (
 	"encoding/json"
-	"math/rand"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os/exec"
-	"fmt"
-	// "strconv"
-	// "reflect"
-	
+
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	// "github.com/tensorflow/tensorflow/tensorflow/go/op"
 
 	ao "github.com/stellentus/cartpoles/lib/utils/array-opr"
 
@@ -20,54 +17,53 @@ import (
 	"github.com/stellentus/cartpoles/lib/utils/buffer"
 )
 
-
 type Model struct {
 	graph *tf.Graph
 	sess  *tf.Session
 
-	behTruth tf.Output
+	behTruth  tf.Output
 	behArgmax tf.Output
-	behOut tf.Output
-	tarOut tf.Output
+	behOut    tf.Output
+	tarOut    tf.Output
 
-	behIn  tf.Output
+	behIn       tf.Output
 	behActionIn tf.Output
-	tarIn  tf.Output
-	gammaIn tf.Output
-	rewardIn tf.Output
+	tarIn       tf.Output
+	gammaIn     tf.Output
+	rewardIn    tf.Output
 
-	initOp         *tf.Operation
-	trainOp        *tf.Operation
+	initOp  *tf.Operation
+	trainOp *tf.Operation
 
-	syncOp1	*tf.Operation
-	syncOp2	*tf.Operation
-	syncOp3	*tf.Operation
+	syncOp1 *tf.Operation
+	syncOp2 *tf.Operation
+	syncOp3 *tf.Operation
 }
 
 type Dqn struct {
 	logger.Debug
-	rng					*rand.Rand
+	rng                 *rand.Rand
 	lastAction          int
-	lastState			rlglue.State
+	lastState           rlglue.State
 	EnableDebug         bool
-	NumberOfActions     int `json:"numberOfActions"`
-	StateContainsReplay bool `json:"state-contains-replay"`
-	Gamma				float64 `json:"gamma"`
-	Epsilon				float64 `json:"epsilon"`
-	Hidden				int `json:"dqn-hidden"`
-	Layer				int `json:"dqn-ly"`
-	Alpha				int `json:"alpha"`
-	Sync				int `json:"dqn-sync"`
-	updateNum			int
-	
-	bf					*buffer.Buffer
-	Bsize				int `json:"buffer-size"`
-	Btype				string `json:"buffer-type"`
+	NumberOfActions     int     `json:"numberOfActions"`
+	StateContainsReplay bool    `json:"state-contains-replay"`
+	Gamma               float64 `json:"gamma"`
+	Epsilon             float64 `json:"epsilon"`
+	Hidden              int     `json:"dqn-hidden"`
+	Layer               int     `json:"dqn-ly"`
+	Alpha               int     `json:"alpha"`
+	Sync                int     `json:"dqn-sync"`
+	updateNum           int
 
-	StateDim			int `json:"state-len"`
-	BatchSize			int `json:"dqn-batch"`
+	bf    *buffer.Buffer
+	Bsize int    `json:"buffer-size"`
+	Btype string `json:"buffer-type"`
 
-	valueNet			*Model	
+	StateDim  int `json:"state-len"`
+	BatchSize int `json:"dqn-batch"`
+
+	valueNet *Model
 }
 
 func init() {
@@ -78,25 +74,25 @@ func NewDqn(logger logger.Debug) (rlglue.Agent, error) {
 	return &Dqn{Debug: logger}, nil
 }
 
-func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
+func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	var ss struct {
 		Seed        int64
 		EnableDebug bool `json:"enable-debug"`
 
-		NumberOfActions     int `json:"numberOfActions"`
-		StateContainsReplay bool `json:"state-contains-replay"`
-		Gamma				float64 `json:"gamma"`
-		Epsilon				float64 `json:"epsilon"`
-		Hidden				int `json:"dqn-hidden"`
-		Layer				int `json:"dqn-ly"`
-		Alpha				int `json:"alpha"`
-		Sync				int `json:"dqn-sync"`
+		NumberOfActions     int     `json:"numberOfActions"`
+		StateContainsReplay bool    `json:"state-contains-replay"`
+		Gamma               float64 `json:"gamma"`
+		Epsilon             float64 `json:"epsilon"`
+		Hidden              int     `json:"dqn-hidden"`
+		Layer               int     `json:"dqn-ly"`
+		Alpha               int     `json:"alpha"`
+		Sync                int     `json:"dqn-sync"`
 
-		Bsize				int `json:"buffer-size"`
-		Btype				string `json:"buffer-type"`
+		Bsize int    `json:"buffer-size"`
+		Btype string `json:"buffer-type"`
 
-		StateDim			int `json:"state-len"`
-		BatchSize			int `json:"dqn-batch"`
+		StateDim  int `json:"state-len"`
+		BatchSize int `json:"dqn-batch"`
 	}
 	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
@@ -121,8 +117,9 @@ func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
 	if err != nil {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
 	}
-	agent.rng = rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
+	// agent.rng = rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
 	// agent.lastAction = rng.Intn(agent.NumberOfActions)
+	agent.rng = rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	if agent.EnableDebug {
 		agent.Message("msg", "agent.Example Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
@@ -137,10 +134,10 @@ func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
 		return err
 	}
-	
+
 	log.Print("Loading graph")
 	agent.valueNet = NewModel(graphDef)
-	
+
 	if _, err := agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.initOp}); err != nil {
 		panic(err)
 	}
@@ -152,7 +149,7 @@ func (agent *Dqn) Initialize(expAttr, envAttr rlglue.Attributes) error {
 func NewModel(graphDefFilename string) *Model {
 	graphDef, err := ioutil.ReadFile(graphDefFilename)
 	if err != nil {
-		log.Fatal("Failed to read ", graphDefFilename,": ", err)
+		log.Fatal("Failed to read ", graphDefFilename, ": ", err)
 	}
 	graph := tf.NewGraph()
 	if err = graph.Import(graphDef, ""); err != nil {
@@ -163,22 +160,22 @@ func NewModel(graphDefFilename string) *Model {
 	if err != nil {
 		panic(err)
 	}
-	return &Model {
-		graph: graph,
-		sess: sess,
-		initOp:  graph.Operation("init"),
-		trainOp: graph.Operation("beh_train"),
-		behIn: graph.Operation("beh_in").Output(0),
+	return &Model{
+		graph:       graph,
+		sess:        sess,
+		initOp:      graph.Operation("init"),
+		trainOp:     graph.Operation("beh_train"),
+		behIn:       graph.Operation("beh_in").Output(0),
 		behActionIn: graph.Operation("beh_action_in").Output(0),
-		behTruth: graph.Operation("beh_truth").Output(0),
-		behArgmax: graph.Operation("beh_out_argmax").Output(0),
+		behTruth:    graph.Operation("beh_truth").Output(0),
+		behArgmax:   graph.Operation("beh_out_argmax").Output(0),
 		// behOut: graph.Operation("beh_out").Output(0),
-		behOut: graph.Operation("beh_out_act").Output(0),
-		tarIn: graph.Operation("target_in").Output(0),
-		gammaIn: graph.Operation("gamma").Output(0),
+		behOut:   graph.Operation("beh_out_act").Output(0),
+		tarIn:    graph.Operation("target_in").Output(0),
+		gammaIn:  graph.Operation("gamma").Output(0),
 		rewardIn: graph.Operation("reward").Output(0),
 		// tarOut: graph.Operation("target_out").Output(0),
-		tarOut: graph.Operation("target").Output(0),
+		tarOut:  graph.Operation("target").Output(0),
 		syncOp1: graph.Operation("set1"),
 		syncOp2: graph.Operation("set2"),
 		syncOp3: graph.Operation("set3"),
@@ -227,8 +224,8 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 }
 
 func (agent *Dqn) Update() {
-	
-	if agent.updateNum % agent.Sync == 0 {
+
+	if agent.updateNum%agent.Sync == 0 {
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp1})
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp2})
 		agent.valueNet.sess.Run(nil, nil, []*tf.Operation{agent.valueNet.syncOp3})
@@ -242,7 +239,7 @@ func (agent *Dqn) Update() {
 	states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
 	rewards := ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2)
 	gammas := ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3)
-		
+
 	statesT, _ := tf.NewTensor(states)
 	rewardT, _ := tf.NewTensor(rewards)
 	gammaT, _ := tf.NewTensor(gammas)
@@ -250,10 +247,10 @@ func (agent *Dqn) Update() {
 	lastActionT, _ := tf.NewTensor(lastActions)
 
 	feeds := map[tf.Output]*tf.Tensor{
-		agent.valueNet.tarIn: statesT, 
-		agent.valueNet.gammaIn: gammaT, 
-		agent.valueNet.rewardIn: rewardT,
-		agent.valueNet.behIn: lastStatesT, 
+		agent.valueNet.tarIn:       statesT,
+		agent.valueNet.gammaIn:     gammaT,
+		agent.valueNet.rewardIn:    rewardT,
+		agent.valueNet.behIn:       lastStatesT,
 		agent.valueNet.behActionIn: lastActionT}
 
 	agent.valueNet.sess.Run(feeds, nil, []*tf.Operation{agent.valueNet.trainOp})
@@ -265,7 +262,7 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	var idx int
 	if rand.Float64() < agent.Epsilon {
 		idx = agent.rng.Intn(agent.NumberOfActions)
-	} else {		
+	} else {
 		var reshape [1][]float32
 		state32 := ao.StateTo32(agent.lastState)
 		reshape[0] = state32

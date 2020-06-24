@@ -4,14 +4,16 @@
 	"environment-name": "cartpole",
 	"agent-settings": {
 		"epsilon": 0.1,
-        "state-len": 4,
+		"state-len": 4,
 		"buffer-type": "random",
 		"dqn-hidden": 32,
 		"dqn-ly": 2,
-		"dqn-sync": 32,
+		"dqn-sync": 25,
 		"dqn-batch": 32,
 		"sweep": {
-			"alpha": [0.2, 0.5, 0.99]
+			"alpha": [
+				0.0001
+			]
 		},
 		"buffer-size": 500,
 		"enable-debug": false,
