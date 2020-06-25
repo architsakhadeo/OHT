@@ -199,5 +199,21 @@ func (env *Cartpole) getObservations() rlglue.State {
 
 // GetAttributes returns attributes for this environment.
 func (env *Cartpole) GetAttributes() rlglue.Attributes {
-	return rlglue.Attributes(`{"numberOfActions":2}`)
+	// Add elements to attributes.
+	attributes := struct {
+		NumAction  int       `json:"numberOfActions"`
+		StateDim   int       `json:"stateDimension"`
+		StateRange []float64 `json:"stateRange"`
+	}{
+		2,
+		4,
+		[]float64{4.8, 8.0, (2 * 12 * 2 * math.Pi / 360), 7.0},
+	}
+
+	attr, err := json.Marshal(&attributes)
+	if err != nil {
+		env.Message("err", "environment.Cartpole could not Marshal its JSON attributes: "+err.Error())
+	}
+
+	return attr
 }
