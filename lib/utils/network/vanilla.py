@@ -2,7 +2,8 @@ import tensorflow.compat.v1 as tf
 import os
 tf.disable_v2_behavior() 
 
-def graph_construction(save_name):
+def graph_construction(save_name, alpha="0.0001"):
+    alpha = float(alpha)
     # with tf.variable_scope("behaviour"):
     # Behaviour
     b_x = tf.placeholder(tf.float32, shape=[None, 4], name='beh_in')
@@ -39,7 +40,7 @@ def graph_construction(save_name):
     # Optimize loss
     # b_loss = tf.reduce_mean(tf.square(b_y_ - b_y), name='beh_loss')
     b_loss = tf.reduce_mean(tf.square(b_y_act - target), name='beh_loss')
-    b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.0001)
+    b_optimizer = tf.train.GradientDescentOptimizer(learning_rate=alpha)
     b_train_op = b_optimizer.minimize(b_loss, name='beh_train')
 
     # with tf.variable_scope("sync"):

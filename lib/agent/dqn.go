@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"os/exec"
+	"strconv"
 
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 
@@ -52,7 +53,7 @@ type Dqn struct {
 	Epsilon             float64 `json:"epsilon"`
 	Hidden              int     `json:"dqn-hidden"`
 	Layer               int     `json:"dqn-ly"`
-	Alpha               int     `json:"alpha"`
+	Alpha               float64 `json:"alpha"`
 	Sync                int     `json:"dqn-sync"`
 	updateNum           int
 
@@ -85,7 +86,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		Epsilon             float64 `json:"epsilon"`
 		Hidden              int     `json:"dqn-hidden"`
 		Layer               int     `json:"dqn-ly"`
-		Alpha               int     `json:"alpha"`
+		Alpha               float64 `json:"alpha"`
 		Sync                int     `json:"dqn-sync"`
 
 		Bsize int    `json:"buffer-size"`
@@ -128,7 +129,8 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim)
 
 	graphDef := "data/nn/graph.pb"
-	cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+graphDef+"')")
+	// cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+graphDef+"')")
+	cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+graphDef+"', '"+strconv.FormatFloat(agent.Alpha, 'E', -1, 32)+"')")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
