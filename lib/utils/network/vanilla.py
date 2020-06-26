@@ -1,16 +1,18 @@
 import tensorflow.compat.v1 as tf
 import os
+import sys
 tf.disable_v2_behavior() 
 
-def graph_construction(save_name, alpha="0.0001"):
+def graph_construction(save_name, alpha="0.0001", seed="0"):
+    tf.set_random_seed(int(seed))
     alpha = float(alpha)
     # with tf.variable_scope("behaviour"):
     # Behaviour
     b_x = tf.placeholder(tf.float32, shape=[None, 4], name='beh_in')
     # b_y = tf.placeholder(tf.float32, shape=[None, 2], name='beh_truth')
 
-    b_ly1= tf.layers.dense(b_x, 32, tf.nn.relu, name='beh_ly1')
-    b_ly2 = tf.layers.dense(b_ly1, 32, tf.nn.relu, name='beh_ly2')
+    b_ly1= tf.layers.dense(b_x, 128, tf.nn.relu, name='beh_ly1')
+    b_ly2 = tf.layers.dense(b_ly1, 128, tf.nn.relu, name='beh_ly2')
     b_ly3 = tf.layers.dense(b_ly2, 2, name='beh_ly3')
     b_y_ = tf.identity(b_ly3, name='beh_out')
 
@@ -27,8 +29,8 @@ def graph_construction(save_name, alpha="0.0001"):
     t_x_nog = tf.stop_gradient(t_x, name="target_in_no_g")
     t_y = tf.placeholder(tf.float32, shape=[None, 2], name='target_truth')
 
-    t_ly1 = tf.layers.dense(t_x_nog, 32, tf.nn.relu)#, name='target_ly1')
-    t_ly2 = tf.layers.dense(t_ly1, 32, tf.nn.relu)#, name='target_ly2')
+    t_ly1 = tf.layers.dense(t_x_nog, 128, tf.nn.relu)#, name='target_ly1')
+    t_ly2 = tf.layers.dense(t_ly1, 128, tf.nn.relu)#, name='target_ly2')
     t_ly3 = tf.layers.dense(t_ly2, 2)#, name='target_ly_3')
     t_y_ = tf.identity(t_ly3, name='target_out')
     t_y_max = tf.math.reduce_max(t_y_, axis=1, keepdims=True, name='target_out_max')

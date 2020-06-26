@@ -64,6 +64,8 @@ type Dqn struct {
 	StateDim  int `json:"state-len"`
 	BatchSize int `json:"dqn-batch"`
 
+	StateRange []float64
+
 	valueNet *Model
 }
 
@@ -94,6 +96,8 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 		StateDim  int `json:"state-len"`
 		BatchSize int `json:"dqn-batch"`
+
+		StateRange []float64 `json:"StateRange"`
 	}
 	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
@@ -113,8 +117,10 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.Btype = ss.Btype
 	agent.StateDim = ss.StateDim
 	agent.BatchSize = ss.BatchSize
+	agent.StateRange = ss.StateRange
 
 	err = json.Unmarshal(envAttr, &agent)
+
 	if err != nil {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
 	}
@@ -130,7 +136,10 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	graphDef := "data/nn/graph.pb"
 	// cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+graphDef+"')")
-	cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+graphDef+"', '"+strconv.FormatFloat(agent.Alpha, 'E', -1, 32)+"')")
+	cmd := exec.Command("python", "-c", "import lib.utils.network.vanilla; lib.utils.network.vanilla.graph_construction('"+
+		graphDef+"', '"+
+		strconv.FormatFloat(agent.Alpha, 'E', -1, 32)+"', '"+
+		strconv.FormatInt(ss.Seed+int64(run), 10)+"')")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
@@ -186,10 +195,11 @@ func NewModel(graphDefFilename string) *Model {
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
+	state = agent.StateNormalization(state)
+
 	if agent.EnableDebug {
 		agent.Message("msg", "start")
 	}
-	// act := agent.Step(state, 0)
 	agent.lastState = state
 	act := agent.Policy(state)
 	agent.lastAction = act
@@ -198,6 +208,9 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
+	// fmt.Println(state)
+	state = agent.StateNormalization(state)
+	// fmt.Println(state, "\n")
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	agent.Update()
 	agent.lastAction = agent.Policy(state)
@@ -219,6 +232,13 @@ func (agent *Dqn) End(state rlglue.State, reward float64) {
 	if agent.EnableDebug {
 		agent.Message("msg", "end", "state", state, "reward", reward)
 	}
+}
+
+func (agent *Dqn) StateNormalization(state rlglue.State) rlglue.State {
+	for i := 0; i < agent.StateDim; i++ {
+		state[i] = state[i] / agent.StateRange[i]
+	}
+	return state
 }
 
 func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward float64, gamma float64) {
