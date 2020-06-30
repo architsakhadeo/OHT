@@ -27,7 +27,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	if err != nil {
 		return errors.New("Cannot run sweep: " + err.Error())
 	}
-	savePath, err := hyphenatedStringify(attrs)
+	savePath, err := parameterStringify(attrs)
 	if err != nil {
 		return errors.New("Failed to format path: " + err.Error())
 	}
@@ -119,7 +119,7 @@ func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attribu
 	return env, nil
 }
 
-func hyphenatedStringify(attrs []rlglue.Attributes) (string, error) {
+func parameterStringify(attrs []rlglue.Attributes) (string, error) {
 	pstrings := []string{}
 	var sweepAttrMap map[string]interface{}
 	for _, attr := range attrs {
@@ -133,11 +133,11 @@ func hyphenatedStringify(attrs []rlglue.Attributes) (string, error) {
 	for name, value := range sweepAttrMap {
 		switch value := value.(type) {
 		case int, float64, string:
-			pstrings = append(pstrings, fmt.Sprint(name, "-", value))
+			pstrings = append(pstrings, fmt.Sprint(name, "=", value))
 		case bool:
-			pstrings = append(pstrings, fmt.Sprint(name, "-", boolToInt(value)))
+			pstrings = append(pstrings, fmt.Sprint(name, "=", boolToInt(value)))
 		case []interface{}:
-			pstrings = append(pstrings, fmt.Sprint(name, "-", arrayToString(value, ",")))
+			pstrings = append(pstrings, fmt.Sprint(name, "=", arrayToString(value, ",")))
 		default:
 			return "", errors.New("Unexpected type")
 		}
