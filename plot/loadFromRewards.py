@@ -17,7 +17,7 @@ def load_data(algpath):
 
 
 # Transforms the rewards to 'Rewards', 'Returns', 'Failures', 'Average-Rewards' 
-def transform_data(alg, rewardsData, totalTimesteps, transformation='Rewards', window=0):
+def transform_data(alg, rewardsData, transformation='Rewards', window=0):
 	
 	transformedData = []
 

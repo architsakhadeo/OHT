@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-# Loads the rewards from the csv files into a dictionary and return the dictionary
+# Loads the episode lengths from the csv files into a dictionary and return the dictionary
 def load_data(algpath):
 	Data = []
 	dirFiles = os.listdir(algpath)
@@ -37,7 +37,7 @@ def convert_data(alg, Data):
 	return convertedData, totalTimesteps	
 
 
-# Transforms the rewards to 'Rewards', 'Returns', 'Failures', 'Average-Rewards' 
+# Transforms the failures timesteps to 'Rewards', 'Returns', 'Failures', 'Average-Rewards' 
 def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Rewards', window=0):
 	
 	transformedData = []
