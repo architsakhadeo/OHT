@@ -5,6 +5,8 @@ algorithms = ['esarsa', 'dqn']
 basePath = '../data/'
 
 for i in range(len(algorithms)):
+	if os.path.isdir(basePath + algorithms[i]) == False:
+		continue
 	failuresList = []
 	parameterSettings = os.listdir(basePath + algorithms[i])
 	indexMinFailures = 0
