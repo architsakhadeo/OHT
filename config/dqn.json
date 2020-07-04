@@ -6,8 +6,10 @@
 		"epsilon": 0.2,
 		"state-len": 4,
 		"buffer-type": "random",
-		"dqn-hidden": 128,
-		"dqn-ly": 2,
+		"dqn-hidden": [
+			128,
+			128
+		],
 		"dqn-sync": 25,
 		"dqn-batch": 16,
 		"sweep": {

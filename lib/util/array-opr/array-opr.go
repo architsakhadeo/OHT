@@ -16,10 +16,10 @@ func A32Col(array [][]float32, col int) []float32 {
 /*
 Take block from 2-d array
 */
-func Index2d(array [][]float32, rowStart int, rowEnd int, colStart int, colEnd int) [][]float32 {
-	var new [][]float32
+func Index2d(array [][]float64, rowStart int, rowEnd int, colStart int, colEnd int) [][]float64 {
+	var new [][]float64
 	for i := rowStart; i < rowEnd; i++ {
-		var temp []float32
+		var temp []float64
 		new = append(new, temp)
 		for j := colStart; j < colEnd; j++ {
 			// new[i-rowStart][j-colStart] = array[i][j]
@@ -32,10 +32,10 @@ func Index2d(array [][]float32, rowStart int, rowEnd int, colStart int, colEnd i
 /*
 Index in each row of 2-d array
 */
-func RowIndexFloat(array [][]float32, idx []int) []float32 {
-	var new []float32
+func RowIndexFloat(array [][]float64, idx []int) []float64 {
+	var new []float64
 	for i := 0; i < len(array); i++ {
-		new[i] = array[i][idx[i]]
+		new = append(new, array[i][idx[i]])
 	}
 	return new
 }
@@ -43,11 +43,11 @@ func RowIndexFloat(array [][]float32, idx []int) []float32 {
 /*
 Max in each row of 2-d array
 */
-func RowIndexMax(array [][]float32) []float32 {
-	var new []float32
+func RowIndexMax(array [][]float64) []float64 {
+	var new []float64
 	for i := 0; i < len(array); i++ {
 		max, _ := ArrayMax(array[i])
-		new[i] = max
+		new = append(new, max)
 	}
 	return new
 }
@@ -55,8 +55,8 @@ func RowIndexMax(array [][]float32) []float32 {
 /*
 Max in each row of 1-d array
 */
-func ArrayMax(array []float32) (float32, int) {
-	var max float32
+func ArrayMax(array []float64) (float64, int) {
+	var max float64
 	var idx int
 	for j := 0; j < len(array); j++ {
 		if array[j] > max {
@@ -111,6 +111,21 @@ func A32ToInt(array []float32) []int {
 	return aInt
 }
 
+func A64ToInt(array []float64) []int {
+	var aInt []int
+	for _, f64 := range array {
+		aInt = append(aInt, int(f64))
+	}
+	return aInt
+}
+func A64ToInt2D(array [][]float64) [][]int {
+	var aInt [][]int
+	for i := 0; i < len(array); i++ {
+		aInt = append(aInt, A64ToInt(array[i]))
+	}
+	return aInt
+}
+
 func BitwiseAdd(a []float32, b []float32) []float32 {
 	var res []float32
 	// if len(a) != len(b) {
@@ -153,4 +168,24 @@ func BitwiseDivide(a []float32, b []float32) []float32 {
 		res[i] = a[i] / b[i]
 	}
 	return res
+}
+
+func Flatten2DFloat(inputData [][]float64) []float64 {
+	var flatten []float64
+	for i := 0; i < len(inputData); i++ {
+		for j := 0; j < len(inputData[0]); j++ {
+			flatten = append(flatten, inputData[i][j])
+		}
+	}
+	return flatten
+}
+
+func Flatten2DInt(inputData [][]int) []int {
+	var flatten []int
+	for i := 0; i < len(inputData); i++ {
+		for j := 0; j < len(inputData[0]); j++ {
+			flatten = append(flatten, inputData[i][j])
+		}
+	}
+	return flatten
 }
