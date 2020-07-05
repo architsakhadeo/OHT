@@ -23,37 +23,47 @@ type Network struct {
 	HiddenWeights []*mat.Dense
 	OutputWeights *mat.Dense
 	learningRate  float64
+	decay         float64
 
-	layerOut []mat.Matrix
+	layerOut  []mat.Matrix
+	iteration int
 }
 
 // CreateNetwork creates a neural network with random weights
-func CreateNetwork(input int, hidden []int, output int, rate float64) (net Network) {
+func CreateNetwork(input int, hidden []int, output int, rate float64, decay float64) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
 		outputs:      output,
 		learningRate: rate,
+		decay:        decay,
 	}
 	ipt := net.inputs
 	for i := 0; i < len(net.hiddens); i++ {
-		net.HiddenWeights = append(net.HiddenWeights, mat.NewDense(net.hiddens[i], ipt, randomArray(ipt*net.hiddens[i], float64(ipt))))
-		ipt = net.hiddens[i]
+		net.HiddenWeights = append(net.HiddenWeights,
+			mat.NewDense(net.hiddens[i], ipt,
+				randomArray(ipt*net.hiddens[i],
+					float64(ipt))))
+		ipt = net.hiddens[i] + 1
 	}
-	net.OutputWeights = mat.NewDense(net.outputs, net.hiddens[len(net.hiddens)-1],
-		randomArray(net.hiddens[len(net.hiddens)-1]*net.outputs,
-			float64(net.hiddens[len(net.hiddens)-1])))
+	net.OutputWeights = mat.NewDense(net.outputs, ipt, // +1: add bias
+		randomArray(ipt*net.outputs,
+			float64(ipt)))
+
+	net.iteration = 0
 	return
 }
 
 // Forward without gradient
 func (net *Network) Predict(inputData [][]float64) mat.Matrix {
-	// feedforward
 	flatten := ao.Flatten2DFloat(inputData)
 	ipt := mat.NewDense(len(inputData), len(inputData[0]), flatten).T()
+	_, c := ipt.Dims()
 	for i := 0; i < len(net.HiddenWeights); i++ {
 		ipt = dot(net.HiddenWeights[i], ipt)
 		ipt = apply(relu, ipt)
+		_, c = ipt.Dims()
+		ipt = stack(ipt, ones(1, c))
 	}
 	finalOutputs := dot(net.OutputWeights, ipt)
 	finalOutputs = finalOutputs.T()
@@ -64,6 +74,7 @@ func (net *Network) Predict(inputData [][]float64) mat.Matrix {
 func (net *Network) Forward(inputData [][]float64) mat.Matrix {
 	flatten := ao.Flatten2DFloat(inputData)
 	ipt := mat.NewDense(len(inputData), len(inputData[0]), flatten).T()
+	_, c := ipt.Dims()
 
 	var layerOutputs []mat.Matrix
 	layerOutputs = append(layerOutputs, ipt)
@@ -71,19 +82,19 @@ func (net *Network) Forward(inputData [][]float64) mat.Matrix {
 	for i := 0; i < len(net.HiddenWeights); i++ {
 		ipt = dot(net.HiddenWeights[i], ipt)
 		ipt = apply(relu, ipt)
+		_, c = ipt.Dims()
+		ipt = stack(ipt, ones(1, c))
 		layerOutputs = append(layerOutputs, ipt)
 	}
 	finalOutputs := dot(net.OutputWeights, ipt)
 	layerOutputs = append(layerOutputs, finalOutputs)
 	net.layerOut = layerOutputs
-
 	finalOutputs = finalOutputs.T()
 	return finalOutputs
 }
 
 // gradient and backward
 func (net *Network) Backward(loss float64) {
-	// error
 	r, c := net.layerOut[len(net.layerOut)-1].Dims()
 	lossMat := mat.NewDense(r, c, nil)
 	for i := 0; i < r; i++ {
@@ -91,28 +102,36 @@ func (net *Network) Backward(loss float64) {
 			lossMat.Set(i, j, loss)
 		}
 	}
-	// flatten := ao.Flatten2DFloat(loss)
-	// lossMat := mat.NewDense(len(loss), len(loss[0]), flatten).T()
 
-	var hiddenErrors []mat.Matrix
-	hiddenErrors = append(hiddenErrors, dot(net.OutputWeights.T(), lossMat))
-
-	for i := len(net.HiddenWeights) - 1; i >= 0; i-- {
-		hiddenErrors = append(hiddenErrors, dot(net.HiddenWeights[i].T(), hiddenErrors[len(hiddenErrors)-1]))
+	// var hiddenErrors []mat.Matrix
+	var noBias mat.Matrix
+	hiddenErrors := make([]mat.Matrix, len(net.HiddenWeights))
+	hiddenErrors[len(net.HiddenWeights)-1] = dot(net.OutputWeights.T(), lossMat)
+	for i := len(net.HiddenWeights) - 1; i >= 1; i-- {
+		r, c := hiddenErrors[i].Dims()
+		noBias = slice(0, r-1, 0, c, hiddenErrors[i])
+		hiddenErrors[i-1] = dot(net.HiddenWeights[i].T(), noBias)
 	}
+
+	lr := net.learningRate * (1 / (1 + net.decay*float64(net.iteration)))
 
 	net.OutputWeights = add(net.OutputWeights,
-		scale(net.learningRate,
-			dot(multiply(lossMat, net.layerOut[len(net.layerOut)-1]),
-				net.layerOut[len(net.layerOut)-2].T()))).(*mat.Dense)
+		scale(lr,
+			dot(multiply(lossMat, net.layerOut[len(net.HiddenWeights)+1]),
+				net.layerOut[len(net.HiddenWeights)].T()))).(*mat.Dense)
 
-	for i := len(net.HiddenWeights) - 1; i > 1; i-- {
+	var mulM mat.Matrix
+	for i := len(net.HiddenWeights) - 1; i >= 0; i-- {
+		mulM = multiply(hiddenErrors[i], apply(reluPrime, net.layerOut[i+1]))
+		r, c := mulM.Dims()
 		net.HiddenWeights[i] = add(net.HiddenWeights[i],
-			scale(net.learningRate,
-				dot(multiply(hiddenErrors[i-len(net.HiddenWeights)+1], apply(reluPrime, net.layerOut[i-1])),
-					net.layerOut[i-2].T()))).(*mat.Dense)
+			scale(lr,
+				dot(slice(0, r-1, 0, c, mulM),
+					net.layerOut[i].T()))).(*mat.Dense)
 	}
+
 	net.layerOut = nil
+	net.iteration = net.iteration + 1
 }
 
 func relu(r, c int, z float64) float64 {
@@ -135,26 +154,49 @@ func reluPrime(r, c int, z float64) float64 {
 // 	return 1.0 / (1 + math.Exp(-1*z))
 // }
 
-func sigmoidPrime(m mat.Matrix) mat.Matrix {
-	rows, _ := m.Dims()
-	o := make([]float64, rows)
-	for i := range o {
-		o[i] = 1
-	}
-	ones := mat.NewDense(rows, 1, o)
-	return multiply(m, subtract(ones, m)) // m * (1 - m)
-}
+// func sigmoidPrime(m mat.Matrix) mat.Matrix {
+// 	rows, _ := m.Dims()
+// 	o := make([]float64, rows)
+// 	for i := range o {
+// 		o[i] = 1
+// 	}
+// 	ones := mat.NewDense(rows, 1, o)
+// 	return multiply(m, subtract(ones, m)) // m * (1 - m)
+// }
 
 //
 // Helper functions to allow easier use of Gonum
 //
+func ones(r, c int) mat.Matrix {
+	one := make([]float64, r*c)
+	for i := 0; i < r*c; i++ {
+		one[i] = 1
+	}
+	oneM := mat.NewDense(r, c, nil)
+	return oneM
+}
+
+func stack(a, b mat.Matrix) mat.Matrix {
+	ra, c := a.Dims()
+	rb, _ := b.Dims()
+	o := mat.NewDense(ra+rb, c, nil)
+	o.Stack(a, b)
+	return o
+}
+
+func slice(rs, re, cs, ce int, a mat.Matrix) mat.Matrix {
+	var new [][]float64
+	for i := rs; i < re; i++ {
+		new = append(new, mat.Row(nil, i, a)[cs:ce])
+	}
+	flatten := ao.Flatten2DFloat(new)
+	o := mat.NewDense(re-rs, ce-cs, flatten)
+	return o
+}
 
 func dot(m, n mat.Matrix) mat.Matrix {
 	r, _ := m.Dims()
 	_, c := n.Dims()
-	// r, ct := m.Dims()
-	// rt, c := n.Dims()
-	// fmt.Println(r, ct, rt, c)
 	o := mat.NewDense(r, c, nil)
 	o.Product(m, n)
 	return o

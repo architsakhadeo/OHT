@@ -12,6 +12,7 @@
 		],
 		"dqn-sync": 25,
 		"dqn-batch": 16,
+		"dqn-decay": 0.9,
 		"sweep": {
 			"alpha": [
 				0.001,

@@ -30,6 +30,7 @@ type Dqn struct {
 	Hidden              []int   `json:"dqn-hidden"`
 	Alpha               float64 `json:"alpha"`
 	Sync                int     `json:"dqn-sync"`
+	Decay               float64 `json:"dqn-decay"`
 	updateNum           int
 
 	bf    *buffer.Buffer
@@ -65,6 +66,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		Hidden              []int   `json:"dqn-hidden"`
 		Alpha               float64 `json:"alpha"`
 		Sync                int     `json:"dqn-sync"`
+		Decay               float64 `json:"dqn-decay"`
 
 		Bsize int    `json:"buffer-size"`
 		Btype string `json:"buffer-type"`
@@ -92,6 +94,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.StateDim = ss.StateDim
 	agent.BatchSize = ss.BatchSize
 	agent.StateRange = ss.StateRange
+	agent.Decay = ss.Decay
 
 	err = json.Unmarshal(envAttr, &agent)
 
@@ -110,8 +113,8 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	// NN: Graph Construction
 	// NN: Weight Initialization
-	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha)
-	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha)
+	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay)
+	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay)
 	agent.updateNum = 0
 
 	return nil
@@ -132,9 +135,8 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
-	// fmt.Println(state)
+
 	state = agent.StateNormalization(state)
-	// fmt.Println(state, "\n")
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	agent.Update()
 	agent.lastAction = agent.Policy(state)
@@ -177,9 +179,9 @@ func (agent *Dqn) Update() {
 		copy(agent.targetNet.HiddenWeights, agent.learningNet.HiddenWeights)
 		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
 	}
+	// fmt.Println(mat.Row(nil, 0, agent.targetNet.OutputWeights)[0:3])
 
 	samples := agent.bf.Sample(agent.BatchSize)
-	// samples := ao.A64To32_2d(samples64)
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
 	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)))
 	states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
@@ -204,7 +206,7 @@ func (agent *Dqn) Update() {
 	for i := 0; i < len(lastQ); i++ {
 		loss = loss + math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
 	}
-	loss = loss / float64(len(lastQ))
+	loss = loss / float64(len(lastQ)) / 2.0
 	agent.learningNet.Backward(loss)
 	agent.updateNum += 1
 }
