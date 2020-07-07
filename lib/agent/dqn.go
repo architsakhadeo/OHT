@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -27,11 +28,15 @@ type Dqn struct {
 	StateContainsReplay bool    `json:"state-contains-replay"`
 	Gamma               float64 `json:"gamma"`
 	Epsilon             float64 `json:"epsilon"`
+	MinEpsilon          float64 `json:"min-epsilon"`
+	DecreasingEpsilon   string  `json:"decreasing-epsilon"`
 	Hidden              []int   `json:"dqn-hidden"`
 	Alpha               float64 `json:"alpha"`
 	Sync                int     `json:"dqn-sync"`
 	Decay               float64 `json:"dqn-decay"`
+	Momentum            float64 `json:"dqn-momentum"`
 	updateNum           int
+	learning            bool
 
 	bf    *buffer.Buffer
 	Bsize int    `json:"buffer-size"`
@@ -63,10 +68,14 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		StateContainsReplay bool    `json:"state-contains-replay"`
 		Gamma               float64 `json:"gamma"`
 		Epsilon             float64 `json:"epsilon"`
-		Hidden              []int   `json:"dqn-hidden"`
-		Alpha               float64 `json:"alpha"`
-		Sync                int     `json:"dqn-sync"`
-		Decay               float64 `json:"dqn-decay"`
+		MinEpsilon          float64 `json:"min-epsilon"`
+		DecreasingEpsilon   string  `json:"decreasing-epsilon"`
+
+		Hidden   []int   `json:"dqn-hidden"`
+		Alpha    float64 `json:"alpha"`
+		Sync     int     `json:"dqn-sync"`
+		Decay    float64 `json:"dqn-decay"`
+		Momentum float64 `json:"dqn-momentum"`
 
 		Bsize int    `json:"buffer-size"`
 		Btype string `json:"buffer-type"`
@@ -85,7 +94,15 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.NumberOfActions = ss.NumberOfActions
 	agent.StateContainsReplay = ss.StateContainsReplay
 	agent.Gamma = ss.Gamma
-	agent.Epsilon = ss.Epsilon
+
+	agent.DecreasingEpsilon = ss.DecreasingEpsilon
+	if agent.DecreasingEpsilon == "None" {
+		agent.Epsilon = ss.Epsilon
+	} else {
+		agent.MinEpsilon = ss.MinEpsilon
+		agent.Epsilon = 1.0
+	}
+
 	agent.Hidden = ss.Hidden
 	agent.Alpha = ss.Alpha
 	agent.Sync = ss.Sync
@@ -95,6 +112,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.BatchSize = ss.BatchSize
 	agent.StateRange = ss.StateRange
 	agent.Decay = ss.Decay
+	agent.learning = false
 
 	err = json.Unmarshal(envAttr, &agent)
 
@@ -113,8 +131,8 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	// NN: Graph Construction
 	// NN: Weight Initialization
-	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay)
-	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay)
+	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay, agent.Momentum)
+	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay, agent.Momentum)
 	agent.updateNum = 0
 
 	return nil
@@ -122,8 +140,11 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
-	state = agent.StateNormalization(state)
+	// if agent.DecreasingEpsilon == "ep" {
+	// 	agent.Epsilon = math.Max(agent.Epsilon-0.05, agent.MinEpsilon)
+	// }
 
+	state = agent.StateNormalization(state)
 	if agent.EnableDebug {
 		agent.Message("msg", "start")
 	}
@@ -135,6 +156,13 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
 func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
+	if reward != 0 {
+		agent.learning = true
+	}
+	if agent.DecreasingEpsilon == "step" {
+		agent.Epsilon = math.Max(agent.Epsilon-1.0/10000, agent.MinEpsilon)
+		fmt.Println(agent.Epsilon)
+	}
 
 	state = agent.StateNormalization(state)
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
@@ -178,8 +206,8 @@ func (agent *Dqn) Update() {
 		// NN: Synchronization
 		copy(agent.targetNet.HiddenWeights, agent.learningNet.HiddenWeights)
 		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
+		// fmt.Println("Sync")
 	}
-	// fmt.Println(mat.Row(nil, 0, agent.targetNet.OutputWeights)[0:3])
 
 	samples := agent.bf.Sample(agent.BatchSize)
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
@@ -207,30 +235,42 @@ func (agent *Dqn) Update() {
 		loss = loss + math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
 	}
 	loss = loss / float64(len(lastQ)) / 2.0
+	loss = math.Sqrt(loss)
+	// fmt.Println("Loss", loss)
+	// fmt.Println("output value ", mat.Row(nil, 0, agent.learningNet.LayerOut[2]))
+	// fmt.Println("hidden value ", mat.Row(nil, 0, agent.learningNet.LayerOut[1]))
+
 	agent.learningNet.Backward(loss)
+
+	// fmt.Println("output weight", mat.Row(nil, 0, agent.learningNet.OutputWeights))
+	// fmt.Println("hidden weight", mat.Row(nil, 0, agent.learningNet.HiddenWeights[0]))
+	// fmt.Println("Target  ", mat.Row(nil, 0, agent.targetNet.HiddenWeights[0]))
+
 	agent.updateNum += 1
 }
 
 // Choose action
 func (agent *Dqn) Policy(state rlglue.State) int {
 	var idx int
-	if rand.Float64() < agent.Epsilon {
+	if (rand.Float64() < agent.Epsilon) || (!agent.learning) {
 		idx = agent.rng.Intn(agent.NumberOfActions)
 	} else {
 		// NN: choose action
-		var inputS [][]float64 //rlglue.State
-		inputS = append(inputS, agent.lastState)
+		inputS := make([][]float64, 1)
+		inputS[0] = agent.lastState
 		allValueMat := agent.learningNet.Predict(inputS)
 		allValue := mat.Row(nil, 0, allValueMat)
 		var argmax int
+		var v float64
 		max := math.Inf(-1)
 		for i := 0; i < agent.NumberOfActions; i++ {
-			v := allValue[i]
+			v = allValue[i]
 			if v > max {
 				max = v
 				argmax = i
 			}
 		}
+		// fmt.Println(allValue, argmax)
 		idx = argmax
 	}
 	return idx

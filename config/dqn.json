@@ -3,18 +3,21 @@
 	"agent-name": "dqn",
 	"environment-name": "cartpole",
 	"agent-settings": {
-		"epsilon": 0.2,
+		"epsilon": 0.1,
+		"min-epsilon": 0.1,
+		"decreasing-epsilon": "None",
+		"gamma": 0.9,
 		"state-len": 4,
 		"buffer-type": "random",
 		"dqn-hidden": [
-			128,
 			128
 		],
 		"dqn-sync": 25,
 		"dqn-batch": 16,
-		"dqn-decay": 0.9,
+		"dqn-momentum": 0,
 		"sweep": {
 			"alpha": [
+				0.01,
 				0.001,
 				0.0003,
 				0.0001
@@ -22,7 +25,7 @@
 		},
 		"buffer-size": 500,
 		"enable-debug": false,
-		"seed": 25
+		"seed": 1
 	},
 	"environment-settings": {
 		"seed": 15

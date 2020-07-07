@@ -22,21 +22,25 @@ type Network struct {
 	outputs       int
 	HiddenWeights []*mat.Dense
 	OutputWeights *mat.Dense
+	HiddenUpdate  []mat.Matrix
+	OutputUpdate  mat.Matrix
 	learningRate  float64
 	decay         float64
+	momentum      float64
 
-	layerOut  []mat.Matrix
+	LayerOut  []mat.Matrix
 	iteration int
 }
 
 // CreateNetwork creates a neural network with random weights
-func CreateNetwork(input int, hidden []int, output int, rate float64, decay float64) (net Network) {
+func CreateNetwork(input int, hidden []int, output int, rate float64, decay float64, momentum float64) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
 		outputs:      output,
 		learningRate: rate,
 		decay:        decay,
+		momentum:     momentum,
 	}
 	ipt := net.inputs
 	for i := 0; i < len(net.hiddens); i++ {
@@ -51,6 +55,14 @@ func CreateNetwork(input int, hidden []int, output int, rate float64, decay floa
 			float64(ipt)))
 
 	net.iteration = 0
+
+	lastOut := input
+	for i := 0; i < len(hidden); i++ {
+		net.HiddenUpdate = append(net.HiddenUpdate, mat.NewDense(hidden[i], lastOut, nil))
+		lastOut = hidden[i] + 1
+	}
+	net.OutputUpdate = mat.NewDense(output, lastOut, nil)
+
 	return
 }
 
@@ -88,49 +100,44 @@ func (net *Network) Forward(inputData [][]float64) mat.Matrix {
 	}
 	finalOutputs := dot(net.OutputWeights, ipt)
 	layerOutputs = append(layerOutputs, finalOutputs)
-	net.layerOut = layerOutputs
+	net.LayerOut = layerOutputs
 	finalOutputs = finalOutputs.T()
 	return finalOutputs
 }
 
 // gradient and backward
 func (net *Network) Backward(loss float64) {
-	r, c := net.layerOut[len(net.layerOut)-1].Dims()
-	lossMat := mat.NewDense(r, c, nil)
-	for i := 0; i < r; i++ {
-		for j := 0; j < c; j++ {
-			lossMat.Set(i, j, loss)
-		}
+	r, c := net.LayerOut[len(net.LayerOut)-1].Dims()
+	lossMat := scale(loss, ones(r, c))
+	fmt.Println(loss)
+
+	lr := net.learningRate
+
+	var noBias, mulM mat.Matrix
+	var hr, hc, mr, mc int
+
+	hiddenE := make([]mat.Matrix, len(net.HiddenWeights))
+	hiddenE[len(net.HiddenWeights)-1] = dot(net.OutputWeights.T(), lossMat)
+	noBias = hiddenE[len(net.HiddenWeights)-1]
+	for i := len(net.HiddenWeights) - 2; i >= 0; i-- {
+		hiddenE[i] = dot(net.HiddenWeights[i+1].T(), noBias)
+		hr, hc = hiddenE[i].Dims()
+		noBias = slice(0, hr-1, 0, hc, hiddenE[i])
 	}
 
-	// var hiddenErrors []mat.Matrix
-	var noBias mat.Matrix
-	hiddenErrors := make([]mat.Matrix, len(net.HiddenWeights))
-	hiddenErrors[len(net.HiddenWeights)-1] = dot(net.OutputWeights.T(), lossMat)
-	for i := len(net.HiddenWeights) - 1; i >= 1; i-- {
-		r, c := hiddenErrors[i].Dims()
-		noBias = slice(0, r-1, 0, c, hiddenErrors[i])
-		hiddenErrors[i-1] = dot(net.HiddenWeights[i].T(), noBias)
-	}
+	// net.OutputUpdate = add(scale(net.momentum, net.OutputUpdate), scale(lr, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T())))
+	net.OutputUpdate = scale(lr, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T()))
+	net.OutputWeights = add(net.OutputWeights, net.OutputUpdate).(*mat.Dense)
 
-	lr := net.learningRate * (1 / (1 + net.decay*float64(net.iteration)))
-
-	net.OutputWeights = add(net.OutputWeights,
-		scale(lr,
-			dot(multiply(lossMat, net.layerOut[len(net.HiddenWeights)+1]),
-				net.layerOut[len(net.HiddenWeights)].T()))).(*mat.Dense)
-
-	var mulM mat.Matrix
 	for i := len(net.HiddenWeights) - 1; i >= 0; i-- {
-		mulM = multiply(hiddenErrors[i], apply(reluPrime, net.layerOut[i+1]))
-		r, c := mulM.Dims()
-		net.HiddenWeights[i] = add(net.HiddenWeights[i],
-			scale(lr,
-				dot(slice(0, r-1, 0, c, mulM),
-					net.layerOut[i].T()))).(*mat.Dense)
-	}
+		mulM = multiply(hiddenE[i], apply(reluPrime, net.LayerOut[i+1]))
+		mr, mc = mulM.Dims()
+		// net.HiddenUpdate[i] = add(scale(net.momentum, net.HiddenUpdate[i]), scale(lr, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T()))).(*mat.Dense)
+		net.HiddenUpdate[i] = scale(lr, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T())).(*mat.Dense)
+		net.HiddenWeights[i] = add(net.HiddenWeights[i], net.HiddenUpdate[i]).(*mat.Dense)
 
-	net.layerOut = nil
+	}
+	net.LayerOut = nil
 	net.iteration = net.iteration + 1
 }
 
@@ -144,7 +151,7 @@ func relu(r, c int, z float64) float64 {
 
 func reluPrime(r, c int, z float64) float64 {
 	if z >= 0 {
-		return 1
+		return z
 	} else {
 		return float64(0)
 	}
@@ -172,7 +179,7 @@ func ones(r, c int) mat.Matrix {
 	for i := 0; i < r*c; i++ {
 		one[i] = 1
 	}
-	oneM := mat.NewDense(r, c, nil)
+	oneM := mat.NewDense(r, c, one)
 	return oneM
 }
 
