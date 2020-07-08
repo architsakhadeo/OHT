@@ -37,6 +37,7 @@ type Dqn struct {
 	Momentum            float64 `json:"dqn-momentum"`
 	updateNum           int
 	learning            bool
+	stepNum             int
 
 	bf    *buffer.Buffer
 	Bsize int    `json:"buffer-size"`
@@ -113,6 +114,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.StateRange = ss.StateRange
 	agent.Decay = ss.Decay
 	agent.learning = false
+	agent.stepNum = 0
 
 	err = json.Unmarshal(envAttr, &agent)
 
@@ -127,7 +129,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		agent.Message("msg", "agent.Example Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
 	}
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim)
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, ss.Seed+int64(run))
 
 	// NN: Graph Construction
 	// NN: Weight Initialization
@@ -166,6 +168,7 @@ func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
 
 	state = agent.StateNormalization(state)
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
+	agent.stepNum = agent.stepNum + 1
 	agent.Update()
 	agent.lastAction = agent.Policy(state)
 	agent.lastState = state
@@ -209,6 +212,10 @@ func (agent *Dqn) Update() {
 		// fmt.Println("Sync")
 	}
 
+	if agent.stepNum < agent.BatchSize {
+		return
+	}
+
 	samples := agent.bf.Sample(agent.BatchSize)
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
 	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)))
@@ -235,7 +242,6 @@ func (agent *Dqn) Update() {
 		loss = loss + math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
 	}
 	loss = loss / float64(len(lastQ)) / 2.0
-	loss = math.Sqrt(loss)
 	// fmt.Println("Loss", loss)
 	// fmt.Println("output value ", mat.Row(nil, 0, agent.learningNet.LayerOut[2]))
 	// fmt.Println("hidden value ", mat.Row(nil, 0, agent.learningNet.LayerOut[1]))
@@ -252,7 +258,7 @@ func (agent *Dqn) Update() {
 // Choose action
 func (agent *Dqn) Policy(state rlglue.State) int {
 	var idx int
-	if (rand.Float64() < agent.Epsilon) || (!agent.learning) {
+	if (agent.rng.Float64() < agent.Epsilon) || (!agent.learning) {
 		idx = agent.rng.Intn(agent.NumberOfActions)
 	} else {
 		// NN: choose action

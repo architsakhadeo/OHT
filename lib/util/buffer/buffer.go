@@ -19,6 +19,7 @@ type Buffer struct {
 	seq_len     int
 	idx         int
 	queue       [][]float64
+	rng         *rand.Rand
 }
 
 // func init() {
@@ -29,7 +30,7 @@ func NewBuffer() *Buffer {
 	return &Buffer{}
 }
 
-func (bf *Buffer) Initialize(stype string, size int, slen int) {
+func (bf *Buffer) Initialize(stype string, size int, slen int, seed int64) {
 	bf.sample_type = stype
 	bf.size = size
 	bf.queue = make([][]float64, size)
@@ -38,6 +39,7 @@ func (bf *Buffer) Initialize(stype string, size int, slen int) {
 	for i := range bf.queue {
 		bf.queue[i] = make([]float64, bf.seq_len)
 	}
+	bf.rng = rand.New(rand.NewSource(seed))
 }
 
 func (bf *Buffer) Feed(laststate rlglue.State, lastaction int, state rlglue.State, reward float64, gamma float64) {
@@ -71,7 +73,7 @@ func (bf *Buffer) RandomSample(batchsize int) [][]float64 {
 		sample_range = bf.size
 	}
 	for i := 0; i < batchsize; i++ {
-		samples[i] = bf.queue[rand.Intn(sample_range)]
+		samples[i] = bf.queue[bf.rng.Intn(sample_range)]
 	}
 
 	return samples
