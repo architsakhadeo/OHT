@@ -35,8 +35,12 @@ type Dqn struct {
 	Sync                int     `json:"dqn-sync"`
 	Decay               float64 `json:"dqn-decay"`
 	Momentum            float64 `json:"dqn-momentum"`
-	updateNum           int
-	learning            bool
+	AdamBeta1           float64 `json:"dqn-adamBeta1"`
+	AdamBeta2           float64 `json:"dqn-adamBeta2"`
+	AdamEps             float64 `json:"dqn-adamEps"`
+
+	updateNum int
+	learning  bool
 
 	bf    *buffer.Buffer
 	Bsize int    `json:"buffer-size"`
@@ -71,11 +75,14 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		MinEpsilon          float64 `json:"min-epsilon"`
 		DecreasingEpsilon   string  `json:"decreasing-epsilon"`
 
-		Hidden   []int   `json:"dqn-hidden"`
-		Alpha    float64 `json:"alpha"`
-		Sync     int     `json:"dqn-sync"`
-		Decay    float64 `json:"dqn-decay"`
-		Momentum float64 `json:"dqn-momentum"`
+		Hidden    []int   `json:"dqn-hidden"`
+		Alpha     float64 `json:"alpha"`
+		Sync      int     `json:"dqn-sync"`
+		Decay     float64 `json:"dqn-decay"`
+		Momentum  float64 `json:"dqn-momentum"`
+		AdamBeta1 float64 `json:"dqn-adamBeta1"`
+		AdamBeta2 float64 `json:"dqn-adamBeta2"`
+		AdamEps   float64 `json:"dqn-adamEps"`
 
 		Bsize int    `json:"buffer-size"`
 		Btype string `json:"buffer-type"`
@@ -112,9 +119,30 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.BatchSize = ss.BatchSize
 	agent.StateRange = ss.StateRange
 	agent.Decay = ss.Decay
+	agent.Momentum = ss.Momentum
+	agent.AdamBeta1 = ss.AdamBeta1
+	agent.AdamBeta2 = ss.AdamBeta2
+	agent.AdamEps = ss.AdamEps
 	agent.learning = false
 
 	err = json.Unmarshal(envAttr, &agent)
+
+	// fmt.Println(agent.Gamma)
+	// fmt.Println(agent.Epsilon)
+	// fmt.Println(agent.DecreasingEpsilon)
+	// fmt.Println(agent.Hidden)
+	// fmt.Println(agent.Alpha)
+	// fmt.Println(agent.Sync)
+	// fmt.Println(agent.Bsize)
+	// fmt.Println(agent.Btype)
+	// fmt.Println(agent.StateDim)
+	// fmt.Println(agent.BatchSize)
+	// fmt.Println(agent.StateRange)
+	// fmt.Println(agent.learning)
+	// fmt.Println(agent.learning)
+	// fmt.Println(agent.Momentum)
+
+	// os.Exit(-1)
 
 	if err != nil {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
@@ -131,8 +159,10 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	// NN: Graph Construction
 	// NN: Weight Initialization
-	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay, agent.Momentum)
-	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha, agent.Decay, agent.Momentum)
+	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
+		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta1, agent.AdamEps)
+	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
+		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta1, agent.AdamEps)
 	agent.updateNum = 0
 
 	return nil
@@ -184,6 +214,7 @@ func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
 // End informs the agent that a terminal state has been reached, providing the final reward.
 func (agent *Dqn) End(state rlglue.State, reward float64) {
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, float64(0))
+	// agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	if agent.EnableDebug {
 		agent.Message("msg", "end", "state", state, "reward", reward)
 	}
@@ -204,9 +235,30 @@ func (agent *Dqn) Update() {
 
 	if agent.updateNum%agent.Sync == 0 {
 		// NN: Synchronization
-		copy(agent.targetNet.HiddenWeights, agent.learningNet.HiddenWeights)
+		// for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
+		// 	fmt.Println(agent.learningNet.HiddenWeights[i])
+		// 	fmt.Println(agent.targetNet.HiddenWeights[i])
+		// 	fmt.Println("---")
+		// }
+		// fmt.Println(agent.learningNet.OutputWeights)
+		// fmt.Println(agent.targetNet.OutputWeights)
+		// fmt.Println("===========")
+
+		for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
+			agent.targetNet.HiddenWeights[i] = agent.learningNet.HiddenWeights[i]
+		}
 		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
+
+		// for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
+		// 	fmt.Println(agent.learningNet.HiddenWeights[i])
+		// 	fmt.Println(agent.targetNet.HiddenWeights[i])
+		// 	fmt.Println("---")
+		// }
+		// fmt.Println(agent.learningNet.OutputWeights)
+		// fmt.Println(agent.targetNet.OutputWeights)
+
 		// fmt.Println("Sync")
+		// os.Exit(-1)
 	}
 
 	samples := agent.bf.Sample(agent.BatchSize)
@@ -217,6 +269,8 @@ func (agent *Dqn) Update() {
 	gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3))
 
 	// NN: Weight update
+	// fmt.Println("Input")
+	// fmt.Println(lastStates)
 	lastQMat := agent.learningNet.Forward(lastStates)
 	var lastQ [][]float64
 	for i := 0; i < len(lastStates); i++ {
@@ -230,22 +284,29 @@ func (agent *Dqn) Update() {
 	}
 	targetActionValue := ao.RowIndexMax(targetQ)
 
-	loss := float64(0)
+	// loss := float64(0)
+	// for i := 0; i < len(lastQ); i++ {
+	// 	// loss = loss + math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
+	// 	loss = loss + rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
+	// }
+	// loss = loss / float64(len(lastQ))
+	// fmt.Println(loss)
+
+	loss := make([][]float64, len(lastQ))
 	for i := 0; i < len(lastQ); i++ {
-		loss = loss + math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
+		loss[i] = make([]float64, agent.NumberOfActions)
 	}
-	loss = loss / float64(len(lastQ)) / 2.0
-	loss = math.Sqrt(loss)
-	// fmt.Println("Loss", loss)
-	// fmt.Println("output value ", mat.Row(nil, 0, agent.learningNet.LayerOut[2]))
-	// fmt.Println("hidden value ", mat.Row(nil, 0, agent.learningNet.LayerOut[1]))
+	for i := 0; i < len(lastQ); i++ {
+		for j := 0; j < agent.NumberOfActions; j++ {
+			loss[i][j] = 0
+		}
+		// loss[i][lastActions[i]] = math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
+		// loss[i][lastActions[i]] = math.Sqrt(loss[i][lastActions[i]] / 2.0)
+		loss[i][lastActions[i]] = rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
+	}
+	fmt.Println(loss[0][lastActions[0]])
 
 	agent.learningNet.Backward(loss)
-
-	// fmt.Println("output weight", mat.Row(nil, 0, agent.learningNet.OutputWeights))
-	// fmt.Println("hidden weight", mat.Row(nil, 0, agent.learningNet.HiddenWeights[0]))
-	// fmt.Println("Target  ", mat.Row(nil, 0, agent.targetNet.HiddenWeights[0]))
-
 	agent.updateNum += 1
 }
 

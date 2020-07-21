@@ -17,23 +17,30 @@ import (
 
 // Network is a neural network with 3 layers
 type Network struct {
-	inputs        int
-	hiddens       []int
-	outputs       int
-	HiddenWeights []*mat.Dense
-	OutputWeights *mat.Dense
-	HiddenUpdate  []mat.Matrix
-	OutputUpdate  mat.Matrix
-	learningRate  float64
-	decay         float64
-	momentum      float64
+	inputs  int
+	hiddens []int
+	outputs int
+	// HiddenWeights []*mat.Dense
+	// OutputWeights *mat.Dense
+	HiddenWeights  []mat.Matrix
+	OutputWeights  mat.Matrix
+	HiddenV        []mat.Matrix
+	OutputV        mat.Matrix
+	HiddenMomentum []mat.Matrix
+	OutputMomentum mat.Matrix
+	learningRate   float64
+	decay          float64
+	momentum       float64
+	beta1          float64
+	beta2          float64
+	eps            float64
 
 	LayerOut  []mat.Matrix
 	iteration int
 }
 
 // CreateNetwork creates a neural network with random weights
-func CreateNetwork(input int, hidden []int, output int, rate float64, decay float64, momentum float64) (net Network) {
+func CreateNetwork(input int, hidden []int, output int, rate float64, decay float64, momentum float64, beta1 float64, beta2 float64, eps float64) (net Network) {
 	net = Network{
 		inputs:       input,
 		hiddens:      hidden,
@@ -41,6 +48,9 @@ func CreateNetwork(input int, hidden []int, output int, rate float64, decay floa
 		learningRate: rate,
 		decay:        decay,
 		momentum:     momentum,
+		beta1:        beta1,
+		beta2:        beta2,
+		eps:          eps,
 	}
 	ipt := net.inputs
 	for i := 0; i < len(net.hiddens); i++ {
@@ -48,20 +58,30 @@ func CreateNetwork(input int, hidden []int, output int, rate float64, decay floa
 			mat.NewDense(net.hiddens[i], ipt,
 				randomArray(ipt*net.hiddens[i],
 					float64(ipt))))
+		// net.HiddenWeights = append(net.HiddenWeights,
+		// 	mat.NewDense(net.hiddens[i], ipt, nil))
 		ipt = net.hiddens[i] + 1
 	}
-	net.OutputWeights = mat.NewDense(net.outputs, ipt, // +1: add bias
+	net.OutputWeights = mat.NewDense(net.outputs, ipt,
 		randomArray(ipt*net.outputs,
 			float64(ipt)))
+	// net.OutputWeights = mat.NewDense(net.outputs, ipt, nil)
 
 	net.iteration = 0
 
 	lastOut := input
 	for i := 0; i < len(hidden); i++ {
-		net.HiddenUpdate = append(net.HiddenUpdate, mat.NewDense(hidden[i], lastOut, nil))
+		net.HiddenV = append(net.HiddenV, mat.NewDense(hidden[i], lastOut, nil))
 		lastOut = hidden[i] + 1
 	}
-	net.OutputUpdate = mat.NewDense(output, lastOut, nil)
+	net.OutputV = mat.NewDense(output, lastOut, nil)
+
+	lastOut = input
+	for i := 0; i < len(hidden); i++ {
+		net.HiddenMomentum = append(net.HiddenMomentum, mat.NewDense(hidden[i], lastOut, nil))
+		lastOut = hidden[i] + 1
+	}
+	net.OutputMomentum = mat.NewDense(output, lastOut, nil)
 
 	return
 }
@@ -99,46 +119,108 @@ func (net *Network) Forward(inputData [][]float64) mat.Matrix {
 		layerOutputs = append(layerOutputs, ipt)
 	}
 	finalOutputs := dot(net.OutputWeights, ipt)
-	layerOutputs = append(layerOutputs, finalOutputs)
+	// layerOutputs = append(layerOutputs, finalOutputs)
 	net.LayerOut = layerOutputs
 	finalOutputs = finalOutputs.T()
+
 	return finalOutputs
 }
 
-// gradient and backward
-func (net *Network) Backward(loss float64) {
-	r, c := net.LayerOut[len(net.LayerOut)-1].Dims()
-	lossMat := scale(loss, ones(r, c))
-	fmt.Println(loss)
+func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) mat.Matrix {
+	var grad, mHat, vHat mat.Matrix
+	grad = scale(-1, dot(lossMat, lastOut.T()))
+	m := add(scale(net.beta1, oldM), scale(1-net.beta1, grad))
+	v := add(scale(net.beta2, oldV), scale(1-net.beta2, multiply(grad, grad)))
+	ro, co := m.Dims()
+	mHat = scale(1.0/(1-math.Pow(net.beta1, float64(net.iteration+1))), m)
+	vHat = scale(1.0/(1-math.Pow(net.beta2, float64(net.iteration+1))), v)
+	// fmt.Println("div ones", ones(ro, co), net.eps)
+	// fmt.Println("div scale", scale(net.eps, ones(ro, co)))
+	weight = subtract(weight, scale(net.learningRate, division(mHat, add(sqrtEle(vHat), scale(net.eps, ones(ro, co)))))) //.(*mat.Dense)
+	// fmt.Println("--", net.iteration+1, net.beta1, net.beta2, oldM, oldV, grad, lossMat, lastOut)
+	return weight
+}
 
-	lr := net.learningRate
+// gradient and backward
+// func (net *Network) Backward(loss float64) {
+func (net *Network) Backward(loss [][]float64) {
+
+	flatten := ao.Flatten2DFloat(loss)
+	lossMat := mat.NewDense(len(loss), len(loss[0]), flatten).T()
+
+	// r, c := net.LayerOut[len(net.LayerOut)-1].Dims()
+	// lossMat := scale(loss, ones(r, c))
+
+	// lr := net.learningRate
 
 	var noBias, mulM mat.Matrix
 	var hr, hc, mr, mc int
 
 	hiddenE := make([]mat.Matrix, len(net.HiddenWeights))
-	hiddenE[len(net.HiddenWeights)-1] = dot(net.OutputWeights.T(), lossMat)
-	noBias = hiddenE[len(net.HiddenWeights)-1]
+
+	if len(net.HiddenWeights) > 0 {
+		hiddenE[len(net.HiddenWeights)-1] = dot(net.OutputWeights.T(), lossMat)
+		hr, hc = hiddenE[len(net.HiddenWeights)-1].Dims()
+		noBias = slice(0, hr-1, 0, hc, hiddenE[len(net.HiddenWeights)-1])
+	}
+
 	for i := len(net.HiddenWeights) - 2; i >= 0; i-- {
 		hiddenE[i] = dot(net.HiddenWeights[i+1].T(), noBias)
 		hr, hc = hiddenE[i].Dims()
 		noBias = slice(0, hr-1, 0, hc, hiddenE[i])
 	}
 
+	// var hiddenUpdate mat.Matrix
+	// var outputUpdate mat.Matrix
+
+	// fmt.Println("Loss")
+	// matrixPrint(lossMat)
+	// fmt.Println("Weight")
+	// matrixPrint(net.OutputWeights)
+	// fmt.Println("LR:", net.learningRate)
+
+	// ADAM
+	// var grad, mHat, vHat mat.Matrix
+	// grad = dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T())
+	// net.OutputMomentum = add(scale(net.beta1, net.OutputMomentum), scale(1-net.beta1, grad))
+	// net.OutputV = add(scale(net.beta2, net.OutputV), scale(lr*net.beta2, multiply(grad, grad)))
+	// ro, co := net.OutputMomentum.Dims()
+	// mHat = scale(1/(1-math.Pow(net.beta1, 2)), net.OutputMomentum)
+	// vHat = scale(1/(1-math.Pow(net.beta2, 2)), net.OutputV)
+	// net.OutputWeights = subtract(net.OutputWeights, scale(lr, division(mHat, add(sqrtEle(vHat), scale(net.eps, ones(ro, co)))))) //.(*mat.Dense)
+	net.OutputWeights = net.AdamUpdate(lossMat, net.LayerOut[len(net.HiddenWeights)], net.OutputWeights,
+		net.OutputMomentum, net.OutputV)
+
+	// // SGD
 	// net.OutputUpdate = add(scale(net.momentum, net.OutputUpdate), scale(lr, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T())))
-	net.OutputUpdate = scale(lr, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T()))
-	net.OutputWeights = add(net.OutputWeights, net.OutputUpdate).(*mat.Dense)
+	// net.OutputWeights = add(net.OutputWeights, net.OutputUpdate) //.(*mat.Dense)
+
+	// fmt.Println("hiddenOut")
+	// matrixPrint(net.LayerOut[len(net.HiddenWeights)].T())
+	// // fmt.Println("Update")
+	// // matrixPrint(outputUpdate)
+	// fmt.Println("Weight")
+	// matrixPrint(net.OutputWeights)
 
 	for i := len(net.HiddenWeights) - 1; i >= 0; i-- {
 		mulM = multiply(hiddenE[i], apply(reluPrime, net.LayerOut[i+1]))
 		mr, mc = mulM.Dims()
-		// net.HiddenUpdate[i] = add(scale(net.momentum, net.HiddenUpdate[i]), scale(lr, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T()))).(*mat.Dense)
-		net.HiddenUpdate[i] = scale(lr, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T())).(*mat.Dense)
-		net.HiddenWeights[i] = add(net.HiddenWeights[i], net.HiddenUpdate[i]).(*mat.Dense)
 
+		// ADAM
+		net.HiddenWeights[i] = net.AdamUpdate(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i], net.HiddenWeights[i],
+			net.HiddenMomentum[i], net.HiddenV[i])
+		// grad = dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T())
+		// net.HiddenMomentum[i] = add(scale(net.beta1, net.HiddenMomentum[i]), scale(1-net.beta1, grad))
+		// net.HiddenV[i] = add(scale(net.beta2, net.HiddenV[i]), scale(1-net.beta2, multiply(grad, grad)))
+
+		// // SGD
+		// net.HiddenUpdate[i] = add(scale(net.momentum, net.HiddenUpdate[i]), scale(lr, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T()))) //.(*mat.Dense)
+		// net.HiddenWeights[i] = add(net.HiddenWeights[i], net.HiddenUpdate[i])                                                                 //.(*mat.Dense)
 	}
 	net.LayerOut = nil
 	net.iteration = net.iteration + 1
+	// fmt.Println()
+
 }
 
 func relu(r, c int, z float64) float64 {
@@ -150,8 +232,8 @@ func relu(r, c int, z float64) float64 {
 }
 
 func reluPrime(r, c int, z float64) float64 {
-	if z >= 0 {
-		return z
+	if z > 0 {
+		return 1
 	} else {
 		return float64(0)
 	}
@@ -230,6 +312,24 @@ func multiply(m, n mat.Matrix) mat.Matrix {
 	return o
 }
 
+func division(m, n mat.Matrix) mat.Matrix {
+	r, c := m.Dims()
+	o := mat.NewDense(r, c, nil)
+	o.DivElem(m, n)
+	return o
+}
+
+func sqrtEle(m mat.Matrix) mat.Matrix {
+	r, c := m.Dims()
+	o := mat.NewDense(r, c, nil)
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			o.Set(i, j, math.Sqrt(m.At(i, j)))
+		}
+	}
+	return o
+}
+
 func add(m, n mat.Matrix) mat.Matrix {
 	r, c := m.Dims()
 	o := mat.NewDense(r, c, nil)
@@ -286,39 +386,39 @@ func matrixPrint(X mat.Matrix) {
 	fmt.Printf("%v\n", fa)
 }
 
-func save(net Network) {
-	h, err := os.Create("data/hweights.model")
-	defer h.Close()
-	if err == nil {
-		for i := 0; i < len(net.HiddenWeights); i++ {
-			net.HiddenWeights[i].MarshalBinaryTo(h)
-		}
-	}
-	o, err := os.Create("data/oweights.model")
-	defer o.Close()
-	if err == nil {
-		net.OutputWeights.MarshalBinaryTo(o)
-	}
-}
+// func save(net Network) {
+// 	h, err := os.Create("data/hweights.model")
+// 	defer h.Close()
+// 	if err == nil {
+// 		for i := 0; i < len(net.HiddenWeights); i++ {
+// 			net.HiddenWeights[i].MarshalBinaryTo(h)
+// 		}
+// 	}
+// 	o, err := os.Create("data/oweights.model")
+// 	defer o.Close()
+// 	if err == nil {
+// 		net.OutputWeights.MarshalBinaryTo(o)
+// 	}
+// }
 
-// load a neural network from file
-func load(net *Network) {
-	h, err := os.Open("data/hweights.model")
-	defer h.Close()
-	if err == nil {
-		for i := 0; i < len(net.HiddenWeights); i++ {
-			net.HiddenWeights[i].Reset()
-			net.HiddenWeights[i].UnmarshalBinaryFrom(h)
-		}
-	}
-	o, err := os.Open("data/oweights.model")
-	defer o.Close()
-	if err == nil {
-		net.OutputWeights.Reset()
-		net.OutputWeights.UnmarshalBinaryFrom(o)
-	}
-	return
-}
+// // load a neural network from file
+// func load(net *Network) {
+// 	h, err := os.Open("data/hweights.model")
+// 	defer h.Close()
+// 	if err == nil {
+// 		for i := 0; i < len(net.HiddenWeights); i++ {
+// 			net.HiddenWeights[i].Reset()
+// 			net.HiddenWeights[i].UnmarshalBinaryFrom(h)
+// 		}
+// 	}
+// 	o, err := os.Open("data/oweights.model")
+// 	defer o.Close()
+// 	if err == nil {
+// 		net.OutputWeights.Reset()
+// 		net.OutputWeights.UnmarshalBinaryFrom(o)
+// 	}
+// 	return
+// }
 
 // // predict a number from an image
 // // image should be 28 x 28 PNG file
