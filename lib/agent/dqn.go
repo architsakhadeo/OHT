@@ -35,12 +35,18 @@ type Dqn struct {
 	Sync                int     `json:"dqn-sync"`
 	Decay               float64 `json:"dqn-decay"`
 	Momentum            float64 `json:"dqn-momentum"`
+<<<<<<< HEAD
 	AdamBeta1           float64 `json:"dqn-adamBeta1"`
 	AdamBeta2           float64 `json:"dqn-adamBeta2"`
 	AdamEps             float64 `json:"dqn-adamEps"`
 
 	updateNum int
 	learning  bool
+=======
+	updateNum           int
+	learning            bool
+	stepNum             int
+>>>>>>> 6787cb24067cfbfbe46426f5745f47039997eb70
 
 	bf    *buffer.Buffer
 	Bsize int    `json:"buffer-size"`
@@ -124,6 +130,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.AdamBeta2 = ss.AdamBeta2
 	agent.AdamEps = ss.AdamEps
 	agent.learning = false
+	agent.stepNum = 0
 
 	err = json.Unmarshal(envAttr, &agent)
 
@@ -155,7 +162,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		agent.Message("msg", "agent.Example Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
 	}
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim)
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, ss.Seed+int64(run))
 
 	// NN: Graph Construction
 	// NN: Weight Initialization
@@ -196,6 +203,7 @@ func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
 
 	state = agent.StateNormalization(state)
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
+	agent.stepNum = agent.stepNum + 1
 	agent.Update()
 	agent.lastAction = agent.Policy(state)
 	agent.lastState = state
@@ -261,6 +269,10 @@ func (agent *Dqn) Update() {
 		// os.Exit(-1)
 	}
 
+	if agent.stepNum < agent.BatchSize {
+		return
+	}
+
 	samples := agent.bf.Sample(agent.BatchSize)
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
 	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)))
@@ -304,7 +316,7 @@ func (agent *Dqn) Update() {
 		// loss[i][lastActions[i]] = math.Sqrt(loss[i][lastActions[i]] / 2.0)
 		loss[i][lastActions[i]] = rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
 	}
-	fmt.Println(loss[0][lastActions[0]])
+	// fmt.Println(loss[0][lastActions[0]])
 
 	agent.learningNet.Backward(loss)
 	agent.updateNum += 1
@@ -313,7 +325,7 @@ func (agent *Dqn) Update() {
 // Choose action
 func (agent *Dqn) Policy(state rlglue.State) int {
 	var idx int
-	if (rand.Float64() < agent.Epsilon) || (!agent.learning) {
+	if (agent.rng.Float64() < agent.Epsilon) || (!agent.learning) {
 		idx = agent.rng.Intn(agent.NumberOfActions)
 	} else {
 		// NN: choose action
