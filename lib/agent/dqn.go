@@ -35,18 +35,13 @@ type Dqn struct {
 	Sync                int     `json:"dqn-sync"`
 	Decay               float64 `json:"dqn-decay"`
 	Momentum            float64 `json:"dqn-momentum"`
-<<<<<<< HEAD
 	AdamBeta1           float64 `json:"dqn-adamBeta1"`
 	AdamBeta2           float64 `json:"dqn-adamBeta2"`
 	AdamEps             float64 `json:"dqn-adamEps"`
 
 	updateNum int
 	learning  bool
-=======
-	updateNum           int
-	learning            bool
-	stepNum             int
->>>>>>> 6787cb24067cfbfbe46426f5745f47039997eb70
+	stepNum   int
 
 	bf    *buffer.Buffer
 	Bsize int    `json:"buffer-size"`
