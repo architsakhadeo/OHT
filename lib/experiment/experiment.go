@@ -98,9 +98,6 @@ func (exp *Experiment) runSingleEpisode() {
 			action = exp.agent.Step(newState, reward)
 			continue
 		} else if !isEpisodic {
-			exp.agent.End(newState, reward)
-			// exp.numStepsTaken += 1
-
 			// An episodic environment is being treated as continuous, so reset the environment
 			newState = exp.environment.Start()
 			episodeEnded = false
