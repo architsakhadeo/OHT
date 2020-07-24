@@ -128,27 +128,9 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	err = json.Unmarshal(envAttr, &agent)
 
-	// fmt.Println("Gamma", agent.Gamma)
-	// fmt.Println("Eps", agent.Epsilon)
-	// fmt.Println("Decreasing Eps", agent.DecreasingEpsilon)
-	// fmt.Println("Hidden", agent.Hidden)
-	// fmt.Println("Lr", agent.Alpha)
-	// fmt.Println("Sync", agent.Sync)
-	// fmt.Println("Bsize", agent.Bsize)
-	// fmt.Println("Btype", agent.Btype)
-	// fmt.Println("State dim", agent.StateDim)
-	// fmt.Println("Batch size", agent.BatchSize)
-	// fmt.Println("State range", agent.StateRange)
-	// fmt.Println("Learning", agent.learning)
-	// fmt.Println("Momentum", agent.Momentum)
-
-	// os.Exit(-1)
-
 	if err != nil {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
 	}
-	// agent.rng = rand.New(rand.NewSource(ss.Seed)) // Create a new rand source for reproducibility
-	// agent.lastAction = rng.Intn(agent.NumberOfActions)
 	agent.rng = rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	if agent.EnableDebug {
@@ -170,9 +152,6 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
-	// if agent.DecreasingEpsilon == "ep" {
-	// 	agent.Epsilon = math.Max(agent.Epsilon-0.05, agent.MinEpsilon)
-	// }
 
 	state = agent.StateNormalization(state)
 	agent.lastState = state
@@ -235,44 +214,13 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 func (agent *Dqn) Update() {
 
 	if agent.updateNum%agent.Sync == 0 {
-		// // NN: Synchronization
-		// for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
-		// 	fmt.Println(agent.learningNet.HiddenWeights[i])
-		// 	fmt.Println(agent.targetNet.HiddenWeights[i])
-		// 	fmt.Println("---")
-		// }
-		// fmt.Println(agent.learningNet.OutputWeights)
-		// fmt.Println(agent.targetNet.OutputWeights)
-		// fmt.Println("===========sync")
-
+		// NN: Synchronization
 		for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
 			agent.targetNet.HiddenWeights[i] = agent.learningNet.HiddenWeights[i]
 		}
 		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
 
-		// for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
-		// 	fmt.Println(agent.learningNet.HiddenWeights[i])
-		// 	fmt.Println(agent.targetNet.HiddenWeights[i])
-		// 	fmt.Println("---")
-		// }
-		// fmt.Println(agent.learningNet.OutputWeights)
-		// fmt.Println(agent.targetNet.OutputWeights)
-
-		// fmt.Println("Sync")
-		// os.Exit(-1)
 	}
-	// for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
-	// 	fmt.Println(agent.learningNet.HiddenWeights[i])
-	// 	fmt.Println(agent.targetNet.HiddenWeights[i])
-	// 	fmt.Println("---")
-	// }
-	// fmt.Println(agent.learningNet.OutputWeights)
-	// fmt.Println(agent.targetNet.OutputWeights)
-	// fmt.Println("===========")
-
-	// if agent.stepNum < agent.BatchSize {
-	// 	return
-	// }
 
 	samples := agent.bf.Sample(agent.BatchSize)
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
@@ -280,40 +228,12 @@ func (agent *Dqn) Update() {
 	states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
 	rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2))
 	gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3))
-	// fmt.Println(samples)
-	// fmt.Println(lastStates)
-	// fmt.Println(lastActions)
-	// fmt.Println(states)
-	// fmt.Println(rewards)
-	// fmt.Println(gammas)
-	// os.Exit(1)
 
 	// NN: Weight update
-	// fmt.Println("Input")
-	// fmt.Println(lastStates)
-	// lastQMat := agent.learningNet.Forward(lastStates)
 	lastQ := agent.learningNet.Forward(lastStates)
-	// var lastQ [][]float64
-	// for i := 0; i < len(lastStates); i++ {
-	// 	lastQ = append(lastQ, mat.Row(nil, i, lastQMat))
-	// }
 	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
-	// targetQMat := agent.learningNet.Predict(states)
 	targetQ := agent.learningNet.Predict(states)
-	// var targetQ [][]float64
-	// for i := 0; i < len(states); i++ {
-	// 	targetQ = append(targetQ, mat.Row(nil, i, targetQMat))
-	// }
 	targetActionValue := ao.RowIndexMax(targetQ)
-	// fmt.Println(targetQ)
-	// fmt.Println(targetActionValue, "---")
-	// loss := float64(0)
-	// for i := 0; i < len(lastQ); i++ {
-	// 	// loss = loss + math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
-	// 	loss = loss + rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
-	// }
-	// loss = loss / float64(len(lastQ))
-	// fmt.Println(loss)
 
 	loss := make([][]float64, len(lastQ))
 	for i := 0; i < len(lastQ); i++ {
@@ -323,11 +243,8 @@ func (agent *Dqn) Update() {
 		for j := 0; j < agent.NumberOfActions; j++ {
 			loss[i][j] = 0
 		}
-		// loss[i][lastActions[i]] = math.Pow(rewards[i]+gammas[i]*targetActionValue[i]-lastActionValue[i], 2)
-		// loss[i][lastActions[i]] = math.Sqrt(loss[i][lastActions[i]] / 2.0)
 		loss[i][lastActions[i]] = rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
 	}
-	// fmt.Println(loss[0][lastActions[0]])
 
 	agent.learningNet.Backward(loss)
 	agent.updateNum += 1
@@ -342,8 +259,6 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 		// NN: choose action
 		inputS := make([][]float64, 1)
 		inputS[0] = agent.lastState
-		// allValueMat := agent.learningNet.Predict(inputS)
-		// allValue := mat.Row(nil, 0, allValueMat)
 		allValue := agent.learningNet.Predict(inputS)[0]
 		var argmax int
 		var v float64

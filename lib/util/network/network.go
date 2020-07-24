@@ -60,14 +60,11 @@ func CreateNetwork(input int, hidden []int, output int, rate float64, decay floa
 			mat.NewDense(net.hiddens[i], ipt,
 				randomArray(ipt*net.hiddens[i],
 					float64(ipt))))
-		// net.HiddenWeights = append(net.HiddenWeights,
-		// 	mat.NewDense(net.hiddens[i], ipt, nil))
 		ipt = net.hiddens[i] + 1
 	}
 	net.OutputWeights = mat.NewDense(net.outputs, ipt,
 		randomArray(ipt*net.outputs,
 			float64(ipt)))
-	// net.OutputWeights = mat.NewDense(net.outputs, ipt, nil)
 
 	net.iteration = 0
 
@@ -129,7 +126,6 @@ func (net *Network) Forward(inputData [][]float64) [][]float64 {
 		layerOutputs = append(layerOutputs, ipt)
 	}
 	finalOutputs := dot(net.OutputWeights, ipt)
-	// layerOutputs = append(layerOutputs, finalOutputs)
 	net.LayerOut = layerOutputs
 	finalOutputs = finalOutputs.T()
 
@@ -145,24 +141,15 @@ func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) 
 	ro, co := m.Dims()
 	mHat = scale(1.0/(1-math.Pow(net.beta1, float64(net.iteration+1))), m)
 	vHat = scale(1.0/(1-math.Pow(net.beta2, float64(net.iteration+1))), v)
-	// fmt.Println("div ones", ones(ro, co), net.eps)
-	// fmt.Println("div scale", scale(net.eps, ones(ro, co)))
 	weight = subtract(weight, scale(net.learningRate, division(mHat, add(sqrtEle(vHat), scale(net.eps, ones(ro, co)))))) //.(*mat.Dense)
-	// fmt.Println("--", net.iteration+1, net.beta1, net.beta2, oldM, oldV, grad, lossMat, lastOut)
 	return weight
 }
 
 // gradient and backward
-// func (net *Network) Backward(loss float64) {
 func (net *Network) Backward(loss [][]float64) {
 
 	flatten := ao.Flatten2DFloat(loss)
 	lossMat := mat.NewDense(len(loss), len(loss[0]), flatten).T()
-
-	// r, c := net.LayerOut[len(net.LayerOut)-1].Dims()
-	// lossMat := scale(loss, ones(r, c))
-
-	// lr := net.learningRate
 
 	var noBias, mulM mat.Matrix
 	var hr, hc, mr, mc int
@@ -181,14 +168,6 @@ func (net *Network) Backward(loss [][]float64) {
 		noBias = slice(0, hr-1, 0, hc, hiddenE[i])
 	}
 
-	// var hiddenUpdate mat.Matrix
-	// var outputUpdate mat.Matrix
-
-	// fmt.Println("Loss")
-	// matrixPrint(lossMat)
-	// fmt.Println("Weight")
-	// matrixPrint(net.OutputWeights)
-	// fmt.Println("LR:", net.learningRate)
 
 	// // ADAM
 	// net.OutputWeights = net.AdamUpdate(lossMat, net.LayerOut[len(net.HiddenWeights)], net.OutputWeights,
@@ -197,13 +176,6 @@ func (net *Network) Backward(loss [][]float64) {
 	// SGD
 	net.OutputUpdate = add(scale(net.SgdMomentum, net.OutputUpdate), scale(net.learningRate, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T())))
 	net.OutputWeights = add(net.OutputWeights, net.OutputUpdate) //.(*mat.Dense)
-
-	// fmt.Println("hiddenOut")
-	// matrixPrint(net.LayerOut[len(net.HiddenWeights)].T())
-	// // fmt.Println("Update")
-	// // matrixPrint(outputUpdate)
-	// fmt.Println("Weight")
-	// matrixPrint(net.OutputWeights)
 
 	for i := len(net.HiddenWeights) - 1; i >= 0; i-- {
 		mulM = multiply(hiddenE[i], apply(reluPrime, net.LayerOut[i+1]))
@@ -219,7 +191,6 @@ func (net *Network) Backward(loss [][]float64) {
 	}
 	net.LayerOut = nil
 	net.iteration = net.iteration + 1
-	// fmt.Println()
 
 }
 
