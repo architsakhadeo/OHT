@@ -1,6 +1,8 @@
 package arrayOpr
 
 import (
+	"math"
+
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
@@ -33,9 +35,13 @@ func Index2d(array [][]float64, rowStart int, rowEnd int, colStart int, colEnd i
 Index in each row of 2-d array
 */
 func RowIndexFloat(array [][]float64, idx []int) []float64 {
-	var new []float64
+	// var new []float64
+	// for i := 0; i < len(array); i++ {
+	// 	new = append(new, array[i][idx[i]])
+	// }
+	new := make([]float64, len(array))
 	for i := 0; i < len(array); i++ {
-		new = append(new, array[i][idx[i]])
+		new[i] = array[i][idx[i]]
 	}
 	return new
 }
@@ -44,10 +50,10 @@ func RowIndexFloat(array [][]float64, idx []int) []float64 {
 Max in each row of 2-d array
 */
 func RowIndexMax(array [][]float64) []float64 {
-	var new []float64
+	new := make([]float64, len(array))
 	for i := 0; i < len(array); i++ {
 		max, _ := ArrayMax(array[i])
-		new = append(new, max)
+		new[i] = max
 	}
 	return new
 }
@@ -56,7 +62,7 @@ func RowIndexMax(array [][]float64) []float64 {
 Max in each row of 1-d array
 */
 func ArrayMax(array []float64) (float64, int) {
-	var max float64
+	max := math.Inf(-1)
 	var idx int
 	for j := 0; j < len(array); j++ {
 		if array[j] > max {

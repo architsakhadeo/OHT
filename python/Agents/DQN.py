@@ -95,17 +95,17 @@ class DQN(BaseAgent):
         self.learning = True # does not affect learning
         self._sample_seqs_from_buffer = self._sample_seqs_from_buffer_random # random buffer
 
-        self.alpha = param.alpha
-        self.epsilon = param.epsilon
-        self.decreasing_epsilon = param.decreasing_epsilon
-        self.gamma = param.gamma
+        self.alpha = 0.001 #param["alpha"]
+        self.epsilon = 0.1 #param["epsilon"]
+        self.decreasing_epsilon = None #param["decreasing_epsilon"]
+        self.gamma = 0.9 #param["gamma"]
 
-        self.num_planning = param.num_planning
+        self.num_planning = 1 #param["num_planning"]
 
-        self.num_action = param.num_action
+        self.num_action = 2#param["num_action"]
         self.action_list = [i for i in range(self.num_action)]
 
-        self.dim_observation = param.dim_state # observation dimension
+        self.dim_observation = 4#param["dim_state"] # observation dimension
 
         # non-linear function
         self._get_tde = self._get_tde_nonLinear
@@ -113,42 +113,49 @@ class DQN(BaseAgent):
         self._policy = self._policy_nonLinear
         self._single_planning = self._single_planning_nonLinear_ER
 
-        self.minibatch = param.dqn_minibatch
-        self.nlq_sync = param.dqn_sync
+        self.minibatch = 16 #param["dqn_minibatch"]
+        self.nlq_sync = 32 #param["dqn_sync"]
         self.nlq_count = 0
 
         self.param = param
-        self.state_normalize = self.param.state_normalize
+        self.state_normalize = np.array([4.8, 8.0, (2 * 12 * 2 * np.pi / 360), 7.0])#self.param["state_normalize"]
 
-        if self.param.rep_type == "sepTC":
-            self.div_actBit = self.param.num_tilings * self.dim_observation
-            self.alpha = param.alpha / float(self.div_actBit)
-            self.num_tiling = self.param.num_tilings
-            self.num_tile = self.param.num_tiles
-            self.tc_mem_size = self.param.tc_mem_size
-            self.iht = tc.IHT(self.tc_mem_size)
-            self.dim_state = self.tc_mem_size * self.dim_observation  # representation dimension
-            param.dim_state = self.dim_state
-            self._state_representation = self._separate_tc_rep
-        elif self.param.rep_type == "obs":
-            self.dim_state = self.dim_observation
-            self._state_representation = self._obs_normalization
-        else:
-            print(self.param.rep_type)
-            raise NotImplementedError
+        # if self.param["rep_type"] == "sepTC":
+        #     self.div_actBit = self.param["num_tilings"] * self.dim_observation
+        #     self.alpha = param["alpha"] / float(self.div_actBit)
+        #     self.num_tiling = self.param["num_tilings"]
+        #     self.num_tile = self.param["num_tiles"]
+        #     self.tc_mem_size = self.param["tc_mem_size"]
+        #     self.iht = tc.IHT(self.tc_mem_size)
+        #     self.dim_state = self.tc_mem_size * self.dim_observation  # representation dimension
+        #     param["dim_state"] = self.dim_state
+        #     self._state_representation = self._separate_tc_rep
+        # elif self.param["rep_type"] == "obs":
+        self.dim_state = self.dim_observation
+        self._state_representation = self._obs_normalization
+        # else:
+        #     print(self.param["rep_type"])
+        #     raise NotImplementedError
 
-        node = [self.dim_state] + param.nonLinearQ_node + [self.num_action]
+        nonLinearQ_node = [128, 128]
+        len_buffer = 500
+        dqn_beta = [0.9, 0.999]
+        # node = [self.dim_state] + param["nonLinearQ_node"] + [self.num_action]
+        node = [self.dim_state] + nonLinearQ_node + [self.num_action]
         self.nlq_learn = NonLinearVF(node).to(device)
         self.nlq_target = NonLinearVF(node).to(device)
         # print(self.nlq_learn)
         # print(self.nlq_target)
-        self.nlq_learn_optimizer = torch.optim.Adam(self.nlq_learn.parameters(), lr=self.alpha, betas=(self.param.dqn_beta[0], self.param.dqn_beta[1]))
+        # self.nlq_learn_optimizer = torch.optim.Adam(self.nlq_learn.parameters(), lr=self.alpha, betas=(self.param["dqn_beta"][0], self.param["dqn_beta"][1]))
+        self.nlq_learn_optimizer = torch.optim.Adam(self.nlq_learn.parameters(), lr=self.alpha, betas=(dqn_beta[0], dqn_beta[1]))
         self.nlq_loss = torch.nn.MSELoss()
 
-        self.len_buffer = param.len_buffer
+        # self.len_buffer = param["len_buffer"]
+        self.len_buffer = len_buffer
         self.buffer = np.zeros((self.len_buffer, self.dim_state * 2 + 4))
         self.b_control = BufferControl(self.len_buffer)
-        self.pri_thrshd = param.pri_thrshd # Not used in random buffer
+        # self.pri_thrshd = param["pri_thrshd"] # Not used in random buffer
+        self.pri_thrshd = 0
 
         return
 
@@ -178,8 +185,8 @@ class DQN(BaseAgent):
 
         # change epsilon based on number of episodes
         if self.decreasing_epsilon == "ep":
-            self.epsilon = max(self.epsilon - 0.05, self.param.epsilon)
-            # print("Change epsilon per episode:", self.epsilon)
+            # self.epsilon = max(self.epsilon - 0.05, self.param["epsilon"])
+            self.epsilon = max(self.epsilon - 0.05, self.epsilon)
 
         return self.action
 
@@ -190,8 +197,8 @@ class DQN(BaseAgent):
     def step(self, reward, state, end_of_ep=False):
         # change epsilon based on number of steps
         if self.decreasing_epsilon == "step":
-            self.epsilon = max(self.epsilon - 1.0/10000, self.param.epsilon)
-            # print("Change epsilon per step:", self.epsilon)
+            # self.epsilon = max(self.epsilon - 1.0/10000, self.param["epsilon"])
+            self.epsilon = max(self.epsilon - 1.0/10000, epsilon)
 
         if end_of_ep:
             gamma = 0
@@ -433,6 +440,8 @@ class DQN(BaseAgent):
     """
     def _obs_normalization(self, state):
         normalized = state / self.state_normalize
+        # print(state, normalized)
+        # exit()
         return normalized
 
 
