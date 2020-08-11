@@ -142,9 +142,9 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	// NN: Graph Construction
 	// NN: Weight Initialization
 	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
-		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta1, agent.AdamEps)
+		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
-		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta1, agent.AdamEps)
+		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.updateNum = 0
 
 	return nil
