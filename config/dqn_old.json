@@ -24,9 +24,7 @@
 				0.01,
 				0.003,
 				0.001,
-				0.0003,
-				0.0001,
-				0.00003
+				0.0003
 			]
 		},
 		"buffer-size": 500,
@@ -34,15 +32,12 @@
 		"seed": 1
 	},
 	"environment-settings": {
-		"seed": 1,
-		"sweep": {
-			"delays":[[0],[1],[2],[3],[4]]
-		}
+		"seed": 15
 	},
 	"experiment-settings": {
 		"steps": 1000000,
 		"data-path": "data/dqn",
-		"should-log-traces": false,
+		"should-log-traces": true,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
 	}

@@ -10,27 +10,24 @@
 		"epsilon": 0.05,
 		"alpha": 0.1,
 		"sweep": {
-			"tilings": [32],
-			"tiles": [4],
+			"tilings": [32, 1, 2, 4, 8, 16, 32, 64, 128],
+			"tiles": [4, 1, 2, 4, 8],
 			"gamma": [0.95],
-			"lambda": [0.8],
-			"epsilon": [0.05],
-			"alpha": [0.1]
+			"lambda": [0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+			"epsilon": [0.05, 0.0, 0.1, 0.2, 0.3],
+			"alpha": [0.1, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4]
 		},
 		"enable-debug": false,
 		"seed": 1
 	},
 	"environment-settings": {
-		"seed": 1,
-		"sweep":{
-			"delays": [[0],[1],[2],[3],[4]]
-		}
+		"seed": 1
 	},
 	"experiment-settings": {
-		"steps": 1000000,
+		"steps": 10000000,
 		"data-path": "data/esarsa",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
-		"debug-interval": 1000
+		"debug-interval": 0
 	}
 }
