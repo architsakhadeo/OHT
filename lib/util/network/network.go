@@ -133,7 +133,7 @@ func (net *Network) Forward(inputData [][]float64) [][]float64 {
 	return arrayOut
 }
 
-func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) mat.Matrix {
+func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) (mat.Matrix, mat.Matrix, mat.Matrix) {
 	var grad, m, v, mHat, vHat mat.Matrix
 	grad = scale(-1, dot(lossMat, lastOut.T()))
 	m = add(scale(net.beta1, oldM), scale(1-net.beta1, grad))
@@ -142,7 +142,7 @@ func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) 
 	mHat = scale(1.0/(1-math.Pow(net.beta1, float64(net.iteration+1))), m)
 	vHat = scale(1.0/(1-math.Pow(net.beta2, float64(net.iteration+1))), v)
 	weight = subtract(weight, scale(net.learningRate, division(mHat, add(sqrtEle(vHat), scale(net.eps, ones(ro, co)))))) //.(*mat.Dense)
-	return weight
+	return weight, m, v
 }
 
 // gradient and backward
@@ -169,25 +169,25 @@ func (net *Network) Backward(loss [][]float64) {
 	}
 
 
-	// // ADAM
-	// net.OutputWeights = net.AdamUpdate(lossMat, net.LayerOut[len(net.HiddenWeights)], net.OutputWeights,
-	// 	net.OutputMomentum, net.OutputV)
+	// ADAM
+	net.OutputWeights, net.OutputMomentum, net.OutputV = net.AdamUpdate(lossMat, net.LayerOut[len(net.HiddenWeights)],
+		net.OutputWeights, net.OutputMomentum, net.OutputV)
 
-	// SGD
-	net.OutputUpdate = add(scale(net.SgdMomentum, net.OutputUpdate), scale(net.learningRate, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T())))
-	net.OutputWeights = add(net.OutputWeights, net.OutputUpdate) //.(*mat.Dense)
+	//// SGD
+	//net.OutputUpdate = add(scale(net.SgdMomentum, net.OutputUpdate), scale(net.learningRate, dot(lossMat, net.LayerOut[len(net.HiddenWeights)].T())))
+	//net.OutputWeights = add(net.OutputWeights, net.OutputUpdate) //.(*mat.Dense)
 
 	for i := len(net.HiddenWeights) - 1; i >= 0; i-- {
 		mulM = multiply(hiddenE[i], apply(reluPrime, net.LayerOut[i+1]))
 		mr, mc = mulM.Dims()
 
-		// // ADAM
-		// net.HiddenWeights[i] = net.AdamUpdate(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i], net.HiddenWeights[i],
-		// 	net.HiddenMomentum[i], net.HiddenV[i])
+		// ADAM
+		net.HiddenWeights[i], net.HiddenMomentum[i], net.HiddenV[i] = net.AdamUpdate(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i], net.HiddenWeights[i],
+			net.HiddenMomentum[i], net.HiddenV[i])
 
-		// SGD
-		net.HiddenUpdate[i] = add(scale(net.SgdMomentum, net.HiddenUpdate[i]), scale(net.learningRate, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T()))) //.(*mat.Dense)
-		net.HiddenWeights[i] = add(net.HiddenWeights[i], net.HiddenUpdate[i])                                                                                  //.(*mat.Dense)
+		//// SGD
+		//net.HiddenUpdate[i] = add(scale(net.SgdMomentum, net.HiddenUpdate[i]), scale(net.learningRate, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T()))) //.(*mat.Dense)
+		//net.HiddenWeights[i] = add(net.HiddenWeights[i], net.HiddenUpdate[i])                                                                                  //.(*mat.Dense)
 	}
 	net.LayerOut = nil
 	net.iteration = net.iteration + 1

@@ -16,9 +16,7 @@
 		"dqn-sync": 32,
 		"dqn-batch": 16,
 		"dqn-momentum": 0.9,
-		"sweep": {
-			"alpha": [0.001]
-		},
+		"alpha": 0.001,
 		"buffer-size": 500,
 		"enable-debug": false,
 		"seed": 1
