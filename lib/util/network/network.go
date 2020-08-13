@@ -4,15 +4,10 @@ package network
 
 import (
 	"fmt"
-	"image"
-	"image/png"
-	"math"
-	"os"
-
+	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat/distuv"
-
-	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"math"
 )
 
 // Network is a neural network with 3 layers
@@ -134,14 +129,16 @@ func (net *Network) Forward(inputData [][]float64) [][]float64 {
 }
 
 func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) (mat.Matrix, mat.Matrix, mat.Matrix) {
-	var grad, m, v, mHat, vHat mat.Matrix
+	var grad, m, v mat.Matrix
+	var mHat, vHat mat.Matrix
 	grad = scale(-1, dot(lossMat, lastOut.T()))
 	m = add(scale(net.beta1, oldM), scale(1-net.beta1, grad))
-	v = add(scale(net.beta2, oldV), scale(1-net.beta2, multiply(grad, grad)))
+	v = add(scale(net.beta2, oldV), scale(1-net.beta2, pow(grad, 2.0)))
 	ro, co := m.Dims()
 	mHat = scale(1.0/(1-math.Pow(net.beta1, float64(net.iteration+1))), m)
 	vHat = scale(1.0/(1-math.Pow(net.beta2, float64(net.iteration+1))), v)
-	weight = subtract(weight, scale(net.learningRate, division(mHat, add(sqrtEle(vHat), scale(net.eps, ones(ro, co)))))) //.(*mat.Dense)
+	weight = subtract(weight,
+		scale(net.learningRate, division(mHat, add(pow(vHat, 0.5), scale(net.eps, ones(ro, co))))))
 	return weight, m, v
 }
 
@@ -182,8 +179,8 @@ func (net *Network) Backward(loss [][]float64) {
 		mr, mc = mulM.Dims()
 
 		// ADAM
-		net.HiddenWeights[i], net.HiddenMomentum[i], net.HiddenV[i] = net.AdamUpdate(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i], net.HiddenWeights[i],
-			net.HiddenMomentum[i], net.HiddenV[i])
+		net.HiddenWeights[i], net.HiddenMomentum[i], net.HiddenV[i] = net.AdamUpdate(slice(0, mr-1, 0, mc, mulM),
+			net.LayerOut[i], net.HiddenWeights[i], net.HiddenMomentum[i], net.HiddenV[i])
 
 		//// SGD
 		//net.HiddenUpdate[i] = add(scale(net.SgdMomentum, net.HiddenUpdate[i]), scale(net.learningRate, dot(slice(0, mr-1, 0, mc, mulM), net.LayerOut[i].T()))) //.(*mat.Dense)
@@ -290,12 +287,12 @@ func division(m, n mat.Matrix) mat.Matrix {
 	return o
 }
 
-func sqrtEle(m mat.Matrix) mat.Matrix {
+func pow(m mat.Matrix, x float64) mat.Matrix {
 	r, c := m.Dims()
 	o := mat.NewDense(r, c, nil)
 	for i := 0; i < r; i++ {
 		for j := 0; j < c; j++ {
-			o.Set(i, j, math.Sqrt(m.At(i, j)))
+			o.Set(i, j, math.Pow(m.At(i, j), x))
 		}
 	}
 	return o
@@ -420,35 +417,35 @@ func matrixPrint(X mat.Matrix) {
 // 	return best
 // }
 
-// get the pixel data from an image
-func dataFromImage(filePath string) (pixels []float64) {
-	// read the file
-	imgFile, err := os.Open(filePath)
-	defer imgFile.Close()
-	if err != nil {
-		fmt.Println("Cannot read file:", err)
-	}
-	img, err := png.Decode(imgFile)
-	if err != nil {
-		fmt.Println("Cannot decode file:", err)
-	}
-
-	// create a grayscale image
-	bounds := img.Bounds()
-	gray := image.NewGray(bounds)
-
-	for x := 0; x < bounds.Max.X; x++ {
-		for y := 0; y < bounds.Max.Y; y++ {
-			var rgba = img.At(x, y)
-			gray.Set(x, y, rgba)
-		}
-	}
-	// make a pixel array
-	pixels = make([]float64, len(gray.Pix))
-	// populate the pixel array subtract Pix from 255 because that's how
-	// the MNIST database was trained (in reverse)
-	for i := 0; i < len(gray.Pix); i++ {
-		pixels[i] = (float64(255-gray.Pix[i]) / 255.0 * 0.999) + 0.001
-	}
-	return
-}
+//// get the pixel data from an image
+//func dataFromImage(filePath string) (pixels []float64) {
+//	// read the file
+//	imgFile, err := os.Open(filePath)
+//	defer imgFile.Close()
+//	if err != nil {
+//		fmt.Println("Cannot read file:", err)
+//	}
+//	img, err := png.Decode(imgFile)
+//	if err != nil {
+//		fmt.Println("Cannot decode file:", err)
+//	}
+//
+//	// create a grayscale image
+//	bounds := img.Bounds()
+//	gray := image.NewGray(bounds)
+//
+//	for x := 0; x < bounds.Max.X; x++ {
+//		for y := 0; y < bounds.Max.Y; y++ {
+//			var rgba = img.At(x, y)
+//			gray.Set(x, y, rgba)
+//		}
+//	}
+//	// make a pixel array
+//	pixels = make([]float64, len(gray.Pix))
+//	// populate the pixel array subtract Pix from 255 because that's how
+//	// the MNIST database was trained (in reverse)
+//	for i := 0; i < len(gray.Pix); i++ {
+//		pixels[i] = (float64(255-gray.Pix[i]) / 255.0 * 0.999) + 0.001
+//	}
+//	return
+//}

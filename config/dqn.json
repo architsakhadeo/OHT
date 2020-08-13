@@ -10,15 +10,14 @@
 		"state-len": 4,
 		"buffer-type": "random",
 		"dqn-hidden": [
-			128,
-			128
+			128, 128
 		],
 		"dqn-sync": 32,
 		"dqn-batch": 16,
 		"dqn-adamBeta1": 0.9,
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
-		"alpha": 0.001,
+		"alpha": 3e-5,
 		"buffer-size": 500,
 		"enable-debug": false,
 		"seed": 1
