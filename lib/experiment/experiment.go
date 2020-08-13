@@ -2,6 +2,8 @@ package experiment
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/stellentus/cartpoles/lib/config"
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -80,6 +82,10 @@ func (exp *Experiment) runSingleEpisode() {
 	action := exp.agent.Start(prevState)
 	isEpisodic := exp.Settings.MaxSteps == 0
 
+	start := time.Now()
+	var end time.Time
+	var delta time.Duration
+
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 		newState, reward, episodeEnded := exp.environment.Step(action)
@@ -89,6 +95,13 @@ func (exp *Experiment) runSingleEpisode() {
 
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
+
+		if exp.numStepsTaken % 10000 == 0 {
+			end = time.Now()
+			delta = end.Sub(start)
+			fmt.Println("Running time", exp.numStepsTaken, delta)
+			start = time.Now()
+		}
 
 		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
