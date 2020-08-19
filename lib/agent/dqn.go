@@ -85,11 +85,6 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.learning = false
 	agent.stepNum = 0
 
-	err = json.Unmarshal(envAttr, &agent)
-
-	if err != nil {
-		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
-	}
 	agent.rng = rand.New(rand.NewSource(agent.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	if agent.EnableDebug {
