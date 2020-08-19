@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"runtime"
 	"sort"
 	"strconv"
@@ -18,7 +19,7 @@ import (
 )
 
 // Execute executes the experiment described by the provided JSON.
-func Execute(run uint, conf config.Config, sweepIdx int) error {
+func Execute(run uint, conf config.Config, sweepIdx int, savePath, loadPath string) error {
 	debugLogger := logger.NewDebug(logger.DebugConfig{
 		ShouldPrintDebug: true,
 	})
@@ -27,7 +28,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	if err != nil {
 		return errors.New("Cannot run sweep: " + err.Error())
 	}
-	savePath, err := parameterStringify(attrs)
+	parameterSavePath, err := parameterStringify(attrs)
 	if err != nil {
 		return errors.New("Failed to format path: " + err.Error())
 	}
@@ -35,7 +36,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
 		CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
-		BasePath:                fmt.Sprint(conf.Experiment.DataPath, "/", savePath),
+		BasePath:                fmt.Sprint(conf.Experiment.DataPath, "/", parameterSavePath),
 		FileSuffix:              strconv.Itoa(int(run)),
 	})
 	if err != nil {
@@ -54,7 +55,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		err = errors.New("Could not initialize wrapper: " + err.Error())
 	}
 
-	agnt, err := InitializeAgent(conf.AgentName, run, agentAttr, env, debugLogger)
+	agnt, err := InitializeAgent(conf.AgentName, run, agentAttr, env, debugLogger, loadPath)
 	if err != nil {
 		return err
 	}
@@ -64,7 +65,22 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		return err
 	}
 
-	return expr.Run()
+	err = expr.Run()
+	if err != nil {
+		return err
+	}
+
+	if savePath != "" {
+		f, err := os.Create(savePath)
+		if err != nil {
+			return errors.New("could not save agent because " + err.Error())
+		}
+		defer f.Close()
+
+		err = agnt.Save(f)
+	}
+
+	return err
 }
 
 func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {
@@ -83,7 +99,7 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	return env, err
 }
 
-func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Agent, error) {
+func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug, loadPath string) (rlglue.PersistentAgent, error) {
 	var err error
 	defer debug.Error(&err)
 
@@ -92,6 +108,21 @@ func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.E
 		err = errors.New("Could not create agent: " + err.Error())
 		return nil, err
 	}
+
+	if loadPath != "" {
+		f, err := os.Open(loadPath)
+		if err != nil {
+			return nil, errors.New("could not load agent because " + err.Error())
+		}
+		defer f.Close()
+
+		err = agnt.Load(f)
+		if err != nil {
+			err = errors.New("Could not load agent: " + err.Error())
+			return nil, err
+		}
+	}
+
 	err = agnt.Initialize(run, attr, env.GetAttributes())
 	if err != nil {
 		err = errors.New("Could not initialize agent: " + err.Error())

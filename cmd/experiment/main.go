@@ -14,6 +14,8 @@ var (
 	configPath = flag.String("config", "config/esarsa.json", "config file for the experiment")
 	run        = flag.Uint("run", 0, "Run number")
 	sweep      = flag.Int("sweep", 0, "Sweep number")
+	loadPath   = flag.String("load", "", "File to load agent from. (If not set, a new agent will be created.)")
+	savePath   = flag.String("save", "", "File to save agent after the experement is complete. (If not set, nothing will be saved.)")
 )
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 		if *sweep != 0 {
 			fmt.Printf("Running sweep %d of %d\n", *sweep, sweepLen)
 		}
-		err = experiment.Execute(*run, conf, *sweep)
+		err = experiment.Execute(*run, conf, *sweep, *savePath, *loadPath)
 
 		if err != nil {
 			panic("Could not create experiment: " + err.Error())
