@@ -14,9 +14,6 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 )
 
-type Model struct {
-}
-
 type Dqn struct {
 	logger.Debug
 	rng                 *rand.Rand
