@@ -124,8 +124,6 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 	agent.v[1] = make([]float64, agent.tiler.NumberOfIndices())
 
 	agent.timesteps = 0
-	agent.accumulatingbeta1 = 1
-	agent.accumulatingbeta2 = 1
 
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
 
