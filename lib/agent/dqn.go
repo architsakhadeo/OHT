@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -14,42 +15,48 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 )
 
-type Model struct {
-}
+type dqnSettings struct {
+	Seed        int64
+	EnableDebug bool `json:"enable-debug"`
 
-type Dqn struct {
-	logger.Debug
-	rng                 *rand.Rand
-	lastAction          int
-	lastState           rlglue.State
-	EnableDebug         bool
 	NumberOfActions     int     `json:"numberOfActions"`
 	StateContainsReplay bool    `json:"state-contains-replay"`
 	Gamma               float64 `json:"gamma"`
 	Epsilon             float64 `json:"epsilon"`
 	MinEpsilon          float64 `json:"min-epsilon"`
 	DecreasingEpsilon   string  `json:"decreasing-epsilon"`
-	Hidden              []int   `json:"dqn-hidden"`
-	Alpha               float64 `json:"alpha"`
-	Sync                int     `json:"dqn-sync"`
-	Decay               float64 `json:"dqn-decay"`
-	Momentum            float64 `json:"dqn-momentum"`
-	AdamBeta1           float64 `json:"dqn-adamBeta1"`
-	AdamBeta2           float64 `json:"dqn-adamBeta2"`
-	AdamEps             float64 `json:"dqn-adamEps"`
 
-	updateNum int
-	learning  bool
-	stepNum   int
+	Hidden    []int   `json:"dqn-hidden"`
+	Alpha     float64 `json:"alpha"`
+	Sync      int     `json:"dqn-sync"`
+	Decay     float64 `json:"dqn-decay"`
+	Momentum  float64 `json:"dqn-momentum"`
+	AdamBeta1 float64 `json:"dqn-adamBeta1"`
+	AdamBeta2 float64 `json:"dqn-adamBeta2"`
+	AdamEps   float64 `json:"dqn-adamEps"`
 
-	bf    *buffer.Buffer
 	Bsize int    `json:"buffer-size"`
 	Btype string `json:"buffer-type"`
 
 	StateDim  int `json:"state-len"`
 	BatchSize int `json:"dqn-batch"`
 
-	StateRange []float64
+	StateRange []float64 `json:"StateRange"`
+}
+
+type Dqn struct {
+	logger.Debug
+	rng        *rand.Rand
+	lastAction int
+	lastState  rlglue.State
+
+	dqnSettings
+
+	updateNum int
+	learning  bool
+	stepNum   int
+
+	bf *buffer.Buffer
 
 	learningNet network.Network
 	targetNet   network.Network
@@ -64,65 +71,17 @@ func NewDqn(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	var ss struct {
-		Seed        int64
-		EnableDebug bool `json:"enable-debug"`
-
-		NumberOfActions     int     `json:"numberOfActions"`
-		StateContainsReplay bool    `json:"state-contains-replay"`
-		Gamma               float64 `json:"gamma"`
-		Epsilon             float64 `json:"epsilon"`
-		MinEpsilon          float64 `json:"min-epsilon"`
-		DecreasingEpsilon   string  `json:"decreasing-epsilon"`
-
-		Hidden    []int   `json:"dqn-hidden"`
-		Alpha     float64 `json:"alpha"`
-		Sync      int     `json:"dqn-sync"`
-		Decay     float64 `json:"dqn-decay"`
-		Momentum  float64 `json:"dqn-momentum"`
-		AdamBeta1 float64 `json:"dqn-adamBeta1"`
-		AdamBeta2 float64 `json:"dqn-adamBeta2"`
-		AdamEps   float64 `json:"dqn-adamEps"`
-
-		Bsize int    `json:"buffer-size"`
-		Btype string `json:"buffer-type"`
-
-		StateDim  int `json:"state-len"`
-		BatchSize int `json:"dqn-batch"`
-
-		StateRange []float64 `json:"StateRange"`
-	}
-	err := json.Unmarshal(expAttr, &ss)
+	err := json.Unmarshal(expAttr, &agent.dqnSettings)
 	if err != nil {
-		agent.Message("warning", "agent.Example seed wasn't available: "+err.Error())
-		ss.Seed = 0
+		return errors.New("DQN agent attributes were not valid: " + err.Error())
 	}
-	agent.EnableDebug = ss.EnableDebug
-	agent.NumberOfActions = ss.NumberOfActions
-	agent.StateContainsReplay = ss.StateContainsReplay
-	agent.Gamma = ss.Gamma
 
-	agent.DecreasingEpsilon = ss.DecreasingEpsilon
 	if agent.DecreasingEpsilon == "None" {
-		agent.Epsilon = ss.Epsilon
+		agent.MinEpsilon = 0 // Not used
 	} else {
-		agent.MinEpsilon = ss.MinEpsilon
 		agent.Epsilon = 1.0
 	}
 
-	agent.Hidden = ss.Hidden
-	agent.Alpha = ss.Alpha
-	agent.Sync = ss.Sync
-	agent.Bsize = ss.Bsize
-	agent.Btype = ss.Btype
-	agent.StateDim = ss.StateDim
-	agent.BatchSize = ss.BatchSize
-	agent.StateRange = ss.StateRange
-	agent.Decay = ss.Decay
-	agent.Momentum = ss.Momentum
-	agent.AdamBeta1 = ss.AdamBeta1
-	agent.AdamBeta2 = ss.AdamBeta2
-	agent.AdamEps = ss.AdamEps
 	agent.learning = false
 	agent.stepNum = 0
 
@@ -131,13 +90,13 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	if err != nil {
 		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
 	}
-	agent.rng = rand.New(rand.NewSource(ss.Seed + int64(run))) // Create a new rand source for reproducibility
+	agent.rng = rand.New(rand.NewSource(agent.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	if agent.EnableDebug {
-		agent.Message("msg", "agent.Example Initialize", "seed", ss.Seed, "numberOfActions", agent.NumberOfActions)
+		agent.Message("msg", "agent.Example Initialize", "seed", agent.Seed, "numberOfActions", agent.NumberOfActions)
 	}
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, ss.Seed+int64(run))
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
 
 	// NN: Graph Construction
 	// NN: Weight Initialization
