@@ -50,6 +50,8 @@ type ESarsa struct {
 	m                      [][]float64
 	v                      [][]float64
 	timesteps              float64
+	accumulatingbeta1      float64
+	accumulatingbeta2      float64
 	esarsaSettings
 }
 
