@@ -143,7 +143,6 @@ func (net *Network) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) 
 	vHat = scale(1.0/(1-math.Pow(net.beta2, float64(net.iteration+1))), v)
 	weight = subtract(weight, scale(net.learningRate, division(mHat, add(sqrtEle(vHat), scale(net.eps, ones(ro, co)))))) //.(*mat.Dense)
 	return weight, m, v
-
 }
 
 // gradient and backward

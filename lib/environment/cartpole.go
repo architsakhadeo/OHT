@@ -124,9 +124,14 @@ func (env *Cartpole) noisyState() rlglue.State {
 		// Only add noise if it's configured
 		for i := range state {
 			state[i] += env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
+			state[i] = env.clamp(state[i], stateLowerBound[i], stateUpperBound[i])
 		}
 	}
 	return state
+}
+
+func (env *Cartpole) clamp(x float64, min float64, max float64) float64 {
+	return math.Max(min, math.Min(x, max))
 }
 
 func (env *Cartpole) randomizeState() {

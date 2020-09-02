@@ -44,6 +44,8 @@ type SensorDriftWrapper struct {
 	sensorSteps int64
 	noiseFns    []func(int) float64
 	rng         *rand.Rand
+	// stateProcessFn is the function that processes the state from the environment and passes the output to the agent.
+	stateProcessFn func(rlglue.State) rlglue.State
 }
 
 func init() {
@@ -62,7 +64,7 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 		wrapper.Message("err", err)
 		return err
 	}
-	if wrapper.DriftAttrs.DriftScale == 0 || wrapper.DriftAttrs.SensorLife == nil || wrapper.DriftAttrs.DriftProb == nil {
+	if wrapper.DriftAttrs.SensorLife == nil || wrapper.DriftAttrs.DriftProb == nil {
 		err = errors.New("environment.SensorDriftWrapper settings error: Invalid sensor drift attribute(s) in the config file")
 		wrapper.Message("err", err)
 		return err
@@ -82,22 +84,27 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 		return err
 	}
 
-	wrapper.noise = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
-	wrapper.noiseStd = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
-	for i := range wrapper.noiseStd {
-		wrapper.noiseStd[i] = wrapper.WrappedEnvAttrs.StateRange[i] / wrapper.DriftAttrs.DriftScale
-	}
-	wrapper.noiseMax = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
-	for i := range wrapper.noiseMax {
-		wrapper.noiseMax[i] = wrapper.WrappedEnvAttrs.StateRange[i] / 2
-	}
-	wrapper.noiseFns = make([]func(int) float64, wrapper.WrappedEnvAttrs.StateDim)
-	for i := range wrapper.DriftAttrs.DriftProb {
-		if wrapper.DriftAttrs.DriftProb[i] < 0 {
-			wrapper.noiseFns[i] = wrapper.gaussNoise
-		} else {
-			wrapper.noiseFns[i] = wrapper.probGaussNoise
+	if wrapper.DriftAttrs.DriftScale != 0 {
+		wrapper.noise = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
+		wrapper.noiseStd = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
+		for i := range wrapper.noiseStd {
+			wrapper.noiseStd[i] = wrapper.WrappedEnvAttrs.StateRange[i] / wrapper.DriftAttrs.DriftScale
 		}
+		wrapper.noiseMax = make([]float64, wrapper.WrappedEnvAttrs.StateDim)
+		for i := range wrapper.noiseMax {
+			wrapper.noiseMax[i] = wrapper.WrappedEnvAttrs.StateRange[i] / 2
+		}
+		wrapper.noiseFns = make([]func(int) float64, wrapper.WrappedEnvAttrs.StateDim)
+		for i := range wrapper.DriftAttrs.DriftProb {
+			if wrapper.DriftAttrs.DriftProb[i] < 0 {
+				wrapper.noiseFns[i] = wrapper.gaussNoise
+			} else {
+				wrapper.noiseFns[i] = wrapper.probGaussNoise
+			}
+		}
+		wrapper.stateProcessFn = wrapper.stateProcess
+	} else {
+		wrapper.stateProcessFn = wrapper.stateRaw
 	}
 
 	wrapper.Message("msg", "environment.SensorDriftWrapper Initialize",
@@ -116,7 +123,7 @@ func (wrapper *SensorDriftWrapper) Start() rlglue.State {
 // For this continuous environment, it's only terminal if the action was invalid.
 func (wrapper *SensorDriftWrapper) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	state, reward, done := wrapper.Env.Step(act)
-	state = wrapper.stateProcess(state)
+	state = wrapper.stateProcessFn(state)
 	return state, reward, done
 }
 
@@ -131,6 +138,10 @@ func (wrapper *SensorDriftWrapper) stateProcess(state rlglue.State) rlglue.State
 		wrapper.noise[i] = wrapper.clamp(wrapper.noise[i]+wrapper.noiseFns[i](i), i)
 		state[i] = wrapper.clamp(state[i]+wrapper.noise[i], i)
 	}
+	return state
+}
+
+func (wrapper *SensorDriftWrapper) stateRaw(state rlglue.State) rlglue.State {
 	return state
 }
 

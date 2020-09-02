@@ -19,14 +19,16 @@ const (
 )
 
 type esarsaSettings struct {
-	EnableDebug bool    `json:"enable-debug"`
-	Seed        int64   `json:"seed"`
-	NumTilings  int     `json:"tilings"`
-	NumTiles    int     `json:"tiles"`
-	Gamma       float64 `json:"gamma"`
-	Lambda      float64 `json:"lambda"`
-	Epsilon     float64 `json:"epsilon"`
-	Alpha       float64 `json:"alpha"`
+	EnableDebug        bool    `json:"enable-debug"`
+	Seed               int64   `json:"seed"`
+	NumTilings         int     `json:"tilings"`
+	NumTiles           int     `json:"tiles"`
+	Gamma              float64 `json:"gamma"`
+	Lambda             float64 `json:"lambda"`
+	Epsilon            float64 `json:"epsilon"`
+	Alpha              float64 `json:"alpha"`
+	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
+	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -42,7 +44,14 @@ type ESarsa struct {
 	oldStateActiveFeatures []int
 	oldAction              rlglue.Action
 	stepsize               float64
-
+	beta1                  float64
+	beta2                  float64
+	e                      float64
+	m                      [][]float64
+	v                      [][]float64
+	timesteps              float64
+	accumulatingbeta1      float64
+	accumulatingbeta2      float64
 	esarsaSettings
 }
 
@@ -58,12 +67,14 @@ func NewESarsa(logger logger.Debug) (rlglue.Agent, error) {
 func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	agent.esarsaSettings = esarsaSettings{
 		// These default settings will be used if the config doesn't set these values
-		NumTilings: 32,
-		NumTiles:   4,
-		Gamma:      0.99,
-		Lambda:     0.8,
-		Epsilon:    0.05,
-		Alpha:      0.1,
+		NumTilings:         32,
+		NumTiles:           4,
+		Gamma:              0.99,
+		Lambda:             0.8,
+		Epsilon:            0.05,
+		Alpha:              0.1,
+		AdaptiveAlpha:      0.001,
+		IsStepsizeAdaptive: false,
 	}
 
 	err := json.Unmarshal(expAttr, &agent.esarsaSettings)
@@ -72,7 +83,16 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		agent.esarsaSettings.Seed = 0
 	}
 
-	agent.stepsize = agent.Alpha / float64(agent.esarsaSettings.NumTilings) // Setting stepsize
+	if agent.IsStepsizeAdaptive == false {
+		agent.stepsize = agent.Alpha / float64(agent.esarsaSettings.NumTilings) // Setting stepsize
+	} else {
+		agent.stepsize = agent.AdaptiveAlpha / float64(agent.esarsaSettings.NumTilings) // Setting adaptive stepsize
+	}
+
+	agent.beta1 = 0.9
+	agent.beta2 = 0.999
+	agent.e = math.Pow(10, -8)
+
 	agent.esarsaSettings.Seed += int64(run)
 	agent.rng = rand.New(rand.NewSource(agent.esarsaSettings.Seed)) // Create a new rand source for reproducibility
 
@@ -97,6 +117,16 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 	agent.traces[0] = make([]float64, agent.tiler.NumberOfIndices())
 	agent.traces[1] = make([]float64, agent.tiler.NumberOfIndices())
 
+	agent.m = make([][]float64, 2)
+	agent.m[0] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.m[1] = make([]float64, agent.tiler.NumberOfIndices())
+
+	agent.v = make([][]float64, 2)
+	agent.v[0] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.v[1] = make([]float64, agent.tiler.NumberOfIndices())
+
+	agent.timesteps = 0
+
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
 
 	return nil
@@ -112,6 +142,7 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 	}
 
 	agent.oldAction, _ = agent.PolicyExpectedSarsaLambda(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
+	agent.timesteps++
 
 	if agent.EnableDebug {
 		agent.Message("msg", "start")
@@ -144,12 +175,26 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 		}
 	}
 
+	var g float64
+	var mhat float64
+	var vhat float64
+
 	// update for both actions for weights and traces
 	for j := range agent.weights {
 		for i := range agent.weights[j] {
 			if agent.traces[j][i] != 0 { // update only where traces are non-zero
-				agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
-				agent.traces[j][i] = agent.Gamma * agent.Lambda * agent.traces[j][i]     // update traces
+				if agent.IsStepsizeAdaptive == false {
+					agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
+				} else {
+					g = -agent.delta * agent.traces[j][i]
+					agent.m[j][i] = agent.beta1*agent.m[j][i] + (1-agent.beta1)*g
+					agent.v[j][i] = agent.beta1*agent.v[j][i] + (1-agent.beta1)*g*g
+
+					mhat = agent.m[j][i] / (1 - math.Pow(agent.beta1, agent.timesteps))
+					vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
+					agent.weights[j][i] -= agent.stepsize * mhat / (math.Pow(vhat, 0.5) + agent.e)
+				}
+				agent.traces[j][i] = agent.Gamma * agent.Lambda * agent.traces[j][i] // update traces
 			}
 		}
 	}
@@ -162,6 +207,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 		agent.Message("msg", "step", "state", state, "reward", reward, "action", agent.oldAction)
 	}
 
+	agent.timesteps++
 	return agent.oldAction
 }
 
