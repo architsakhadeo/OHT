@@ -2,7 +2,6 @@ package environment
 
 import (
 	"errors"
-
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
