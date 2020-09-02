@@ -4,20 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
-	"math/rand"
-	"os"
-
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/network"
+	"math"
+	"math/rand"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 )
 
-//type Model struct {
-//}
 type LockWeight struct {
 	UseLock		bool
 	DecCount	int
@@ -230,7 +226,6 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 
 func (agent *Dqn) Update() {
 	if agent.lw.UseLock {
-		os.Exit(1)
 		if agent.updateNum%agent.Bsize == 0 {
 			agent.lock = agent.CheckChange()
 		}
