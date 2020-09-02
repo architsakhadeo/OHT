@@ -49,13 +49,15 @@ func RowIndexFloat(array [][]float64, idx []int) []float64 {
 /*
 Max in each row of 2-d array
 */
-func RowIndexMax(array [][]float64) []float64 {
+func RowIndexMax(array [][]float64) ([]float64, []int) {
 	new := make([]float64, len(array))
+	arg := make([]int, len(array))
 	for i := 0; i < len(array); i++ {
-		max, _ := ArrayMax(array[i])
+		max, idx := ArrayMax(array[i])
 		new[i] = max
+		arg[i] = idx
 	}
-	return new
+	return new, arg
 }
 
 /*
@@ -194,4 +196,13 @@ func Flatten2DInt(inputData [][]int) []int {
 		}
 	}
 	return flatten
+}
+
+func Average(inputData []float64) float64{
+	sum := 0.0
+	for i := 0; i < len(inputData); i++ {
+		sum = sum + inputData[i]
+	}
+	sum = sum / float64(len(inputData))
+	return sum
 }
