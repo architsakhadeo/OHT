@@ -15,6 +15,22 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 )
 
+//type Model struct {
+//}
+type LockWeight struct {
+	DecCount	int
+	BestAvg 	float64
+	LockAvg		float64
+	LockThrd	int
+}
+func NewLockWeight() LockWeight {
+	lw := LockWeight{}
+	lw.DecCount = 0
+	lw.BestAvg = math.Inf(-1)
+	lw.LockThrd = 2
+	return lw
+}
+
 type dqnSettings struct {
 	Seed        int64
 	EnableDebug bool `json:"enable-debug"`
@@ -60,6 +76,9 @@ type Dqn struct {
 
 	learningNet network.Network
 	targetNet   network.Network
+
+	lw          LockWeight
+	lock 		bool
 }
 
 func init() {
@@ -105,6 +124,9 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
 		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.updateNum = 0
+
+	agent.lw = NewLockWeight()
+	agent.lock = false
 
 	return nil
 }
@@ -170,7 +192,15 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 	agent.bf.Feed(lastS, lastA, state, reward, gamma)
 }
 
+
 func (agent *Dqn) Update() {
+	//if agent.updateNum%agent.Bsize == 0 {
+	//	agent.lock = agent.CheckChange()
+	//}
+	//if agent.lock {
+	//	agent.updateNum += 1
+	//	return
+	//}
 
 	if agent.updateNum%agent.Sync == 0 {
 		// NN: Synchronization
@@ -178,32 +208,50 @@ func (agent *Dqn) Update() {
 			agent.targetNet.HiddenWeights[i] = agent.learningNet.HiddenWeights[i]
 		}
 		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
-
 	}
 
-	samples := agent.bf.Sample(agent.BatchSize)
-	lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
-	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)))
-	states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
-	rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2))
-	gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3))
+	lastStates, lastActions, states, rewards, gammas := agent.bf.Sample(agent.BatchSize)
+	//lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
+	//lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)))
+	//states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
+	//rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2))
+	//gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3))
 
 	// NN: Weight update
 	lastQ := agent.learningNet.Forward(lastStates)
 	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
 	targetQ := agent.learningNet.Predict(states)
-	targetActionValue := ao.RowIndexMax(targetQ)
+	targetActionValue, _ := ao.RowIndexMax(targetQ)
+	//fmt.Println(targetActionValue[0])
 
 	loss := make([][]float64, len(lastQ))
 	for i := 0; i < len(lastQ); i++ {
 		loss[i] = make([]float64, agent.NumberOfActions)
 	}
+
 	for i := 0; i < len(lastQ); i++ {
 		for j := 0; j < agent.NumberOfActions; j++ {
 			loss[i][j] = 0
 		}
 		loss[i][lastActions[i]] = rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
 	}
+	//fmt.Println(loss[len(lastQ)-1][lastActions[len(lastQ)-1]])
+
+	//temp := 0.0
+	//for i := 0; i < len(lastQ); i++ {
+	//	temp = temp + (rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i])
+	//}
+	//temp = temp / float64(len(lastQ))
+	//for i := 0; i < len(lastQ); i++ {
+	//	for j := 0; j < agent.NumberOfActions; j++ {
+	//		if j != lastActions[i] {
+	//			loss[i][j] = 0
+	//		} else {
+	//			loss[i][j] = temp
+	//		}
+	//	}
+	//}
+	//fmt.Println(loss[len(lastQ)-1][lastActions[len(lastQ)-1]])
 
 	agent.learningNet.Backward(loss)
 	agent.updateNum += 1
@@ -217,19 +265,85 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	} else {
 		// NN: choose action
 		inputS := make([][]float64, 1)
-		inputS[0] = agent.lastState
-		allValue := agent.learningNet.Predict(inputS)[0]
-		var argmax int
-		var v float64
-		max := math.Inf(-1)
-		for i := 0; i < len(allValue); i++ {
-			v = allValue[i]
-			if v > max {
-				max = v
-				argmax = i
-			}
-		}
-		idx = argmax
+		inputS[0] = state
+
+		allValue := agent.learningNet.Predict(inputS)
+		_, idxs := ao.RowIndexMax(allValue)
+		idx = idxs[0]
+
+		//allValue := agent.learningNet.Predict(inputS)[0]
+		//var argmax int
+		//var v float64
+		//max := math.Inf(-1)
+		//for i := 0; i < len(allValue); i++ {
+		//	v = allValue[i]
+		//	if v > max {
+		//		max = v
+		//		argmax = i
+		//	}
+		//}
+		//idx = argmax
+
 	}
 	return idx
+}
+
+func (agent *Dqn) CheckLock(avg float64) bool {
+	if agent.lw.BestAvg > avg {
+		agent.lw.DecCount += 1
+		fmt.Println("Count to lock", agent.lw.DecCount)
+	} else {
+		agent.lw.BestAvg = avg
+		agent.lw.DecCount = 0
+	}
+	var lock bool
+	if agent.lw.DecCount > agent.lw.LockThrd {
+		agent.lw.DecCount = 0
+		lock = true
+	} else {
+		lock = false
+	}
+	return lock
+}
+
+func (agent *Dqn) CheckUnlock(avg float64) bool {
+	if agent.lw.LockAvg > avg {
+		agent.lw.DecCount += 1
+		fmt.Println("Count to unlock", agent.lw.DecCount)
+	} else {
+		agent.lw.DecCount = 0
+	}
+	var lock bool
+	if agent.lw.DecCount > agent.lw.LockThrd {
+		agent.lw.DecCount = 0
+		lock = false
+	} else {
+		lock = true
+	}
+	return lock
+}
+
+func (agent *Dqn) CheckChange() bool {
+	_, _, _, rewards, _ := agent.bf.Content()
+	avg := ao.Average(rewards)
+	if len(rewards) < agent.Bsize {
+		return false
+	}
+	if agent.lock {
+		lock := agent.CheckUnlock(avg)
+		if !lock {
+			agent.lw.LockAvg = avg
+			agent.lw.DecCount = 0
+			fmt.Println("UnLocked")
+		}
+		return lock
+	} else {
+		lock := agent.CheckLock(avg)
+		if lock {
+			agent.lw.LockAvg = avg
+			agent.lw.DecCount = 0
+			fmt.Println("Locked")
+		}
+		return lock
+	}
 }
