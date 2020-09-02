@@ -43,6 +43,11 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		return errors.New("Could not create data logger: " + err.Error())
 	}
 
+	//err = logParameters(attrs, fmt.Sprint(conf.Experiment.DataPath, "/", savePath))
+	//if err != nil {
+	//	return errors.New("Could not create parameter logger: " + err.Error())
+	//}
+
 	runtime.GOMAXPROCS(conf.MaxCPUs) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
 
 	env, err := InitializeEnvironment(conf.EnvironmentName, run, envAttr, debugLogger)
@@ -148,10 +153,49 @@ func parameterStringify(attrs []rlglue.Attributes) (string, error) {
 	return strings.Join(pstrings, "_"), nil
 }
 //func parameterStringify(run uint, sweepIdx int) (string, error) {
-//	save := "/param_" + strconv.Itoa(sweepIdx) + "/run_" + strconv.FormatUint(uint64(run), 10)
+//	save := "/param_" + strconv.Itoa(sweepIdx) + "/"
 //	return save, nil
 //}
-
+//func logParameters(attrs []rlglue.Attributes, logPath string) error {
+//	fullPath := logPath+"/log_json.txt"
+//	if _, err := os.Stat(fullPath); err == nil {
+//		e := os.Remove(fullPath)
+//		if e != nil {
+//			log.Fatal(e)
+//		}
+//	}
+//	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	log.SetOutput(file)
+//
+//	var sweepAttrMap map[string]interface{}
+//	for _, attr := range attrs {
+//		err := json.Unmarshal(attr, &sweepAttrMap)
+//		if err != nil {
+//			return errors.New("Could not parse attributes: " + err.Error())
+//		}
+//	}
+//	pstrings := []string{}
+//	for name, value := range sweepAttrMap {
+//		switch value := value.(type) {
+//		case int, float64, string:
+//			pstrings = append(pstrings, fmt.Sprint(name, "=", value))
+//		case bool:
+//			pstrings = append(pstrings, fmt.Sprint(name, "=", boolToInt(value)))
+//		case []interface{}:
+//			pstrings = append(pstrings, fmt.Sprint(name, "=", arrayToString(value, ",")))
+//		default:
+//			return errors.New("Unexpected type")
+//		}
+//	}
+//	sort.Strings(pstrings)
+//	for _, param := range pstrings {
+//		log.Println(param)
+//	}
+//	return nil
+//}
 
 func boolToInt(x bool) int {
 	if x {
