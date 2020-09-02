@@ -169,6 +169,7 @@ func parameterStringify(attrs []rlglue.Attributes) (string, error) {
 //		log.Fatal(err)
 //	}
 //	log.SetOutput(file)
+//	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 //
 //	var sweepAttrMap map[string]interface{}
 //	for _, attr := range attrs {
