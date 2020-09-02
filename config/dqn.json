@@ -9,28 +9,32 @@
 		"gamma": 0.9,
 		"state-len": 4,
 		"buffer-type": "random",
-		"dqn-hidden": [
-			128, 128
-		],
-		"dqn-sync": 32,
-		"dqn-batch": 16,
 		"dqn-adamBeta1": 0.9,
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
-		"alpha": 3e-5,
-		"buffer-size": 500,
+		"sweep": {
+			"alpha": [1e-3, 1e-4, 1e-5, 1e-6],
+			"dqn-hidden": [
+				[64, 64],
+				[128, 128],
+				[256, 256]
+			],
+			"dqn-sync":[32, 256, 1024],
+			"dqn-batch":[16, 32, 64],
+			"buffer-size":[500, 2500, 5000]
+		},
 		"enable-debug": false,
 		"seed": 1
 	},
 	"environment-settings": {
 		"seed": 1,
 		"sweep": {
-			"delays":[[0],[1],[2],[3],[4]]
+			"delays":[[0]]
 		}
 	},
 	"experiment-settings": {
-		"steps": 1000000,
-		"data-path": "data/dqn",
+		"steps": 100000,
+		"data-path": "data/dqn/test",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
