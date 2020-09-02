@@ -23,6 +23,7 @@
 			"dqn-batch":[16, 32, 64],
 			"buffer-size":[500, 2500, 5000]
 		},
+		"lock-weight": false,
 		"enable-debug": false,
 		"seed": 1
 	},
