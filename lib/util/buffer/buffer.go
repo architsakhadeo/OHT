@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/lib/rlglue"
@@ -54,12 +55,21 @@ func (bf *Buffer) Feed(laststate rlglue.State, lastaction int, state rlglue.Stat
 	bf.idx += 1
 }
 
-func (bf *Buffer) Sample(batchsize int) [][]float64 {
+func (bf *Buffer) Array2Trans(samples [][]float64) ([][]float64, []int, [][]float64, []float64, []float64){
+	lastStates := ao.Index2d(samples, 0, len(samples), 0, bf.state_len)
+	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), bf.state_len, bf.state_len+1)))
+	states := ao.Index2d(samples, 0, len(samples), bf.state_len+1, bf.state_len*2+1)
+	rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), bf.state_len*2+1, bf.state_len*2+2))
+	gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), bf.state_len*2+2, bf.state_len*2+3))
+	return lastStates, lastActions, states, rewards, gammas
+}
+
+func (bf *Buffer) Sample(batchsize int) ([][]float64, []int, [][]float64, []float64, []float64){
 	var samples [][]float64
 	if bf.sample_type == "random" {
 		samples = bf.RandomSample(batchsize)
 	}
-	return samples
+	return bf.Array2Trans(samples)
 }
 
 func (bf *Buffer) RandomSample(batchsize int) [][]float64 {
@@ -77,4 +87,12 @@ func (bf *Buffer) RandomSample(batchsize int) [][]float64 {
 	}
 
 	return samples
+}
+
+func (bf *Buffer) Content() ([][]float64, []int, [][]float64, []float64, []float64){
+	if bf.idx < bf.size {
+		return bf.Array2Trans(bf.queue[:bf.idx])
+	} else {
+		return bf.Array2Trans(bf.queue)
+	}
 }
