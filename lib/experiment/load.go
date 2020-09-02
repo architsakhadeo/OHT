@@ -1,11 +1,9 @@
 package experiment
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -27,7 +25,8 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	if err != nil {
 		return errors.New("Cannot run sweep: " + err.Error())
 	}
-	savePath, err := parameterStringify(attrs)
+	//savePath, err := parameterStringify(attrs)
+	savePath, err := parameterStringify(run, sweepIdx)
 	if err != nil {
 		return errors.New("Failed to format path: " + err.Error())
 	}
@@ -119,33 +118,38 @@ func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attribu
 	return env, nil
 }
 
-func parameterStringify(attrs []rlglue.Attributes) (string, error) {
-	pstrings := []string{}
-	var sweepAttrMap map[string]interface{}
-	for _, attr := range attrs {
-		err := json.Unmarshal(attr, &sweepAttrMap)
-		if err != nil {
-			return "", errors.New("Could not parse attributes: " + err.Error())
-		}
-	}
-	delete(sweepAttrMap, "seed")
-	delete(sweepAttrMap, "path")
-	for name, value := range sweepAttrMap {
-		switch value := value.(type) {
-		case int, float64, string:
-			pstrings = append(pstrings, fmt.Sprint(name, "=", value))
-		case bool:
-			pstrings = append(pstrings, fmt.Sprint(name, "=", boolToInt(value)))
-		case []interface{}:
-			pstrings = append(pstrings, fmt.Sprint(name, "=", arrayToString(value, ",")))
-		default:
-			return "", errors.New("Unexpected type")
-		}
-	}
-	// TODO may need a better order.
-	sort.Strings(pstrings)
-	return strings.Join(pstrings, "_"), nil
+//func parameterStringify(attrs []rlglue.Attributes) (string, error) {
+//	pstrings := []string{}
+//	var sweepAttrMap map[string]interface{}
+//	for _, attr := range attrs {
+//		err := json.Unmarshal(attr, &sweepAttrMap)
+//		if err != nil {
+//			return "", errors.New("Could not parse attributes: " + err.Error())
+//		}
+//	}
+//	delete(sweepAttrMap, "seed")
+//	delete(sweepAttrMap, "path")
+//	for name, value := range sweepAttrMap {
+//		switch value := value.(type) {
+//		case int, float64, string:
+//			pstrings = append(pstrings, fmt.Sprint(name, "=", value))
+//		case bool:
+//			pstrings = append(pstrings, fmt.Sprint(name, "=", boolToInt(value)))
+//		case []interface{}:
+//			pstrings = append(pstrings, fmt.Sprint(name, "=", arrayToString(value, ",")))
+//		default:
+//			return "", errors.New("Unexpected type")
+//		}
+//	}
+//	// TODO may need a better order.
+//	sort.Strings(pstrings)
+//	return strings.Join(pstrings, "_"), nil
+//}
+func parameterStringify(run uint, sweepIdx int) (string, error) {
+	save := "/param_" + strconv.Itoa(sweepIdx) + "/run_" + strconv.FormatUint(uint64(run), 10)
+	return save, nil
 }
+
 
 func boolToInt(x bool) int {
 	if x {
