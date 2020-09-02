@@ -57,6 +57,7 @@ type dqnSettings struct {
 	BatchSize int `json:"dqn-batch"`
 
 	StateRange []float64 `json:"StateRange"`
+	UseLock	   bool      `json:"lock-weight"`
 }
 
 type Dqn struct {
@@ -89,38 +90,7 @@ func NewDqn(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-
-	var ss struct {
-		Seed        int64
-		EnableDebug bool `json:"enable-debug"`
-
-		NumberOfActions     int     `json:"numberOfActions"`
-		StateContainsReplay bool    `json:"state-contains-replay"`
-		Gamma               float64 `json:"gamma"`
-		Epsilon             float64 `json:"epsilon"`
-		MinEpsilon          float64 `json:"min-epsilon"`
-		DecreasingEpsilon   string  `json:"decreasing-epsilon"`
-
-		Hidden    []int   `json:"dqn-hidden"`
-		Alpha     float64 `json:"alpha"`
-		Sync      int     `json:"dqn-sync"`
-		Decay     float64 `json:"dqn-decay"`
-		Momentum  float64 `json:"dqn-momentum"`
-		AdamBeta1 float64 `json:"dqn-adamBeta1"`
-		AdamBeta2 float64 `json:"dqn-adamBeta2"`
-		AdamEps   float64 `json:"dqn-adamEps"`
-
-		Bsize int    `json:"buffer-size"`
-		Btype string `json:"buffer-type"`
-
-		StateDim  int `json:"state-len"`
-		BatchSize int `json:"dqn-batch"`
-
-		StateRange []float64 `json:"StateRange"`
-
-		UseLock   bool    `json:"lock-weight"`
-	}
-	err := json.Unmarshal(expAttr, &ss)
+	err := json.Unmarshal(expAttr, &agent.dqnSettings)
 	if err != nil {
 		return errors.New("DQN agent attributes were not valid: " + err.Error())
 	}
@@ -157,7 +127,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	agent.lw = NewLockWeight()
 	agent.lock = false
-	agent.lw.UseLock = ss.UseLock
+	agent.lw.UseLock = agent.dqnSettings.UseLock
 
 	return nil
 }
