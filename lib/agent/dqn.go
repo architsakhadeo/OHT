@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/network"
@@ -17,6 +18,7 @@ import (
 //type Model struct {
 //}
 type LockWeight struct {
+	UseLock		bool
 	DecCount	int
 	BestAvg 	float64
 	LockAvg		float64
@@ -27,6 +29,7 @@ func NewLockWeight() LockWeight {
 	lw.DecCount = 0
 	lw.BestAvg = math.Inf(-1)
 	lw.LockThrd = 2
+	lw.UseLock = false
 	return lw
 }
 
@@ -107,6 +110,8 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		BatchSize int `json:"dqn-batch"`
 
 		StateRange []float64 `json:"StateRange"`
+
+		UseLock   bool    `json:"lock-weight"`
 	}
 	err := json.Unmarshal(expAttr, &ss)
 	if err != nil {
@@ -165,6 +170,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	agent.lw = NewLockWeight()
 	agent.lock = false
+	agent.lw.UseLock = ss.UseLock
 
 	return nil
 }
@@ -232,13 +238,16 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 
 
 func (agent *Dqn) Update() {
-	//if agent.updateNum%agent.Bsize == 0 {
-	//	agent.lock = agent.CheckChange()
-	//}
-	//if agent.lock {
-	//	agent.updateNum += 1
-	//	return
-	//}
+	if agent.lw.UseLock {
+		os.Exit(1)
+		if agent.updateNum%agent.Bsize == 0 {
+			agent.lock = agent.CheckChange()
+		}
+		if agent.lock {
+			agent.updateNum += 1
+			return
+		}
+	}
 
 	if agent.updateNum%agent.Sync == 0 {
 		// NN: Synchronization
@@ -249,18 +258,12 @@ func (agent *Dqn) Update() {
 	}
 
 	lastStates, lastActions, states, rewards, gammas := agent.bf.Sample(agent.BatchSize)
-	//lastStates := ao.Index2d(samples, 0, len(samples), 0, agent.StateDim)
-	//lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), agent.StateDim, agent.StateDim+1)))
-	//states := ao.Index2d(samples, 0, len(samples), agent.StateDim+1, agent.StateDim*2+1)
-	//rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+1, agent.StateDim*2+2))
-	//gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), agent.StateDim*2+2, agent.StateDim*2+3))
 
 	// NN: Weight update
 	lastQ := agent.learningNet.Forward(lastStates)
 	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
 	targetQ := agent.learningNet.Predict(states)
 	targetActionValue, _ := ao.RowIndexMax(targetQ)
-	//fmt.Println(targetActionValue[0])
 
 	loss := make([][]float64, len(lastQ))
 	for i := 0; i < len(lastQ); i++ {
@@ -308,19 +311,6 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 		allValue := agent.learningNet.Predict(inputS)
 		_, idxs := ao.RowIndexMax(allValue)
 		idx = idxs[0]
-
-		//allValue := agent.learningNet.Predict(inputS)[0]
-		//var argmax int
-		//var v float64
-		//max := math.Inf(-1)
-		//for i := 0; i < len(allValue); i++ {
-		//	v = allValue[i]
-		//	if v > max {
-		//		max = v
-		//		argmax = i
-		//	}
-		//}
-		//idx = argmax
 
 	}
 	return idx
