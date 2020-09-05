@@ -27,13 +27,13 @@
 	"environment-settings": {
 		"seed": 1,
 		"sweep":{
-			"delays": [[0],[1],[2],[3],[4]]
+			"delays": [[0]]
 		}
 	},
 	"experiment-settings": {
-		"steps": 100000,
+		"steps": 100,
 		"data-path": "data/esarsa",
-		"should-log-traces": false,
+		"should-log-traces": true,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
 	}
