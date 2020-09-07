@@ -78,8 +78,15 @@ func (exp *Experiment) runEpisodic() {
 // runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
 // strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() {
+
 	prevState := exp.environment.Start()
+	tempPrev := make(rlglue.State, len(prevState))
+	//tempNew := make(rlglue.State, len(prevState))
+
+	copy(tempPrev, prevState)
 	action := exp.agent.Start(prevState)
+	copy(prevState, tempPrev)
+
 	isEpisodic := exp.Settings.MaxSteps == 0
 
 	start := time.Now()
@@ -88,10 +95,12 @@ func (exp *Experiment) runSingleEpisode() {
 
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
+
 		newState, reward, episodeEnded := exp.environment.Step(action)
 
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
-		prevState = newState
+
+		copy(prevState, newState)
 
 		exp.numStepsTaken += 1
 		numStepsThisEpisode += 1
@@ -109,12 +118,14 @@ func (exp *Experiment) runSingleEpisode() {
 
 		if !episodeEnded {
 			action = exp.agent.Step(newState, reward)
+			copy(newState, prevState)
 			continue
 		} else if !isEpisodic {
 			// An episodic environment is being treated as continuous, so reset the environment
-			newState = exp.environment.Start()
+			// environment gets reset in env.step() if the reward is -1, do not start() environment
+			// again here
+
 			episodeEnded = false
-			action = exp.agent.Step(newState, reward)
 		}
 
 		exp.logEndOfEpisode(numStepsThisEpisode)
