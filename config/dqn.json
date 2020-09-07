@@ -1,10 +1,8 @@
 {
-	"comment": "This config file shows the basic structure. The 'agent-name' and 'environment-name' strings provide the agent and environment to load. The 'agent-settings' and 'environment-settings' objects are passed to the agent and environment, respectively. The 'experiment-settings' configure the experiment itself. Anything inside of 'sweep' must be an array. The program will calculate how many combinations of parameters are described by the sweep, and run the experiment once for each combination. The selected value is placed directly into 'agent-settings' and the entire 'sweep' object is not visible to the agent.",
 	"agent-name": "dqn",
 	"environment-name": "cartpole",
 	"agent-settings": {
 		"epsilon": 0.1,
-		"min-epsilon": 0.1,
 		"decreasing-epsilon": "None",
 		"gamma": 0.9,
 		"state-len": 4,
@@ -13,15 +11,14 @@
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
 		"sweep": {
-			"alpha": [1e-3, 1e-4, 1e-5, 1e-6],
+			"alpha": [3e-5, 1e-5, 3e-6],
 			"dqn-hidden": [
 				[64, 64],
-				[128, 128],
-				[256, 256]
+				[128, 128]
 			],
-			"dqn-sync":[32, 256, 1024],
-			"dqn-batch":[16, 32, 64],
-			"buffer-size":[500, 2500, 5000]
+			"dqn-sync":[32],
+			"dqn-batch":[32, 64],
+			"buffer-size":[2500]
 		},
 		"lock-weight": false,
 		"enable-debug": false,
@@ -34,7 +31,7 @@
 		}
 	},
 	"experiment-settings": {
-		"steps": 100000,
+		"steps": 10000000,
 		"data-path": "data/dqn/test",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
