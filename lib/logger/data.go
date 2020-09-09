@@ -43,6 +43,7 @@ type dataLogger struct {
 	prevState []rlglue.State
 	currState []rlglue.State
 	actions   []rlglue.Action
+	terminals []int
 	others    [][]float64
 
 	// file is used for writing out the trace.
@@ -107,7 +108,7 @@ func NewData(debug Debug, config DataConfig) (Data, error) {
 
 func (lg *dataLogger) writeTraceHeader(headers ...string) error {
 	// Write header row
-	str := "new state,previous state,action,reward"
+	str := "new state,previous state,action,reward,terminal"
 	for _, hdr := range headers {
 		str += "," + hdr
 	}
@@ -136,8 +137,8 @@ func (lg *dataLogger) LogEpisodeLength(steps int) {
 // LogStep adds information from a step to the step log. It must contain previous state, current state,
 // and reward. It can optionally add other float64 values to be logged. (If so, LogStepHeader must be
 // called to provide headers and so the logger knows how many to expect.)
-func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) {
-	str := lg.logStep(prevState, currState, action, reward)
+func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) {
+	str := lg.logStep(prevState, currState, action, reward, terminal)
 	if lg.ShouldLogTraces {
 		_, err := lg.Writer.WriteString(str + "\n")
 		if err != nil {
@@ -148,8 +149,8 @@ func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.A
 
 // LogStepMulti is like LogStep, but it can optionally add other float64 values to be logged. (If so,
 // LogStepHeader must be called to provide headers and so the logger knows how many to expect.)
-func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlglue.Action, reward float64, others ...float64) {
-	str := lg.logStep(prevState, currState, action, reward)
+func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool, others ...float64) {
+	str := lg.logStep(prevState, currState, action, reward, terminal)
 
 	if lg.CacheTracesInRAM {
 		for i, other := range others {
@@ -168,20 +169,27 @@ func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 	}
 }
 
-func (lg *dataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64) string {
+func (lg *dataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) string {
 	lg.rewards = append(lg.rewards, reward)
 
+	var termInt int
+	if terminal {
+		termInt = 1
+	} else {
+		termInt = 0
+	}
 	if lg.CacheTracesInRAM {
 		lg.prevState = append(lg.prevState, prevState)
 		lg.currState = append(lg.currState, currState)
 		lg.actions = append(lg.actions, action)
+		lg.terminals = append(lg.terminals, termInt)
 	}
 
 	if !lg.ShouldLogTraces {
 		return ""
 	}
 
-	return fmt.Sprintf("%v,%v,%d,%f", currState, prevState, action, reward)
+	return fmt.Sprintf("%v,%v,%d,%f,%d", currState, prevState, action, reward, termInt)
 }
 
 // Save persists the logged information to disk.

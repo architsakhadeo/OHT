@@ -98,7 +98,7 @@ func (exp *Experiment) runSingleEpisode() {
 
 		newState, reward, episodeEnded := exp.environment.Step(action)
 
-		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
+		exp.LogStep(prevState, newState, action, reward, episodeEnded) // TODO add gamma at end
 
 		copy(prevState, newState)
 
