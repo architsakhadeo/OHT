@@ -96,3 +96,11 @@ func (bf *Buffer) Content() ([][]float64, []int, [][]float64, []float64, []float
 		return bf.Array2Trans(bf.queue)
 	}
 }
+
+func (bf *Buffer) GetLength() int {
+	if bf.idx < bf.size {
+		return bf.idx
+	} else {
+		return bf.size
+	}
+}
