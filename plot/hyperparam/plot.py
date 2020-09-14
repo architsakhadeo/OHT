@@ -72,14 +72,25 @@ def transform_data(failureTimesteps, totalTimesteps, transformation='Rewards', w
     transformedData = np.array(transformedData)
     return transformedData
 
-def avg_episode_data(path):
-    # data = load_data(path, "episodes")
-    # convertedData, totalTimesteps = convert_data_ep(data)
+def sliding_window(data, window=2500):
+    new = np.zeros(data.shape)
+    # for i in range(window):
+    #     new[:, i] = np.mean(data[:, :window], axis=1)
+    for i in range(window, len(data[0])):
+        new[:, i] = np.mean(data[:, i-window: i+1], axis=1)
+    return new[:, window:]
 
+def avg_episode_data_failures(path):
     data = load_data(path, "rewards")
     convertedData, totalTimesteps = convert_data_reward(data)
     avg = np.mean(convertedData, axis=0)
     avg = -1 * avg
+    return avg
+
+def avg_episode_data(path):
+    data = load_data(path, "rewards")
+    # data = sliding_window(data)
+    avg = np.mean(data, axis=0)
     return avg
 
 def setting_from_json(file, keys):
@@ -115,6 +126,8 @@ def sweep(basepath, label_keys):
             best_data = data
     plt.title(basepath)
     plt.legend()
+    # plt.ylim(np.mean(best_data)*5, 0)
+    plt.ylim(-0.02, 0)
     plt.savefig("../../img/"+basepath.split("/")[-1]+".png")
 
     sort_auc = [[k, v] for k, v in sorted(auc_rec.items(), key=lambda item: item[1])]
@@ -144,23 +157,14 @@ def format_print_auc(auc_dic):
             print(label.split("=")[1], end=",\t")
         print("\n")
 
-# paths = [
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-sgd/step10k_env/lockat_baseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-sgd/step10k_env/lockat_halfbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-sgd/step10k_env/lockat_quarterbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-sgd/step10k_env/lockat_-0.1",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-sgd/step10k_env/lockat_random",
-#     "../../data/hyperparam/cartpole/online_learning/dqn-sgd/step50k/sweep_lr",
-# ]
-
-# paths = [
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_baseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_halfbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_quarterbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_-0.1",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_random",
-#     "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_lr",
-# ]
+paths = [
+    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_baseline",
+    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_halfbaseline",
+    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_quarterbaseline",
+    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_-0.1",
+    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_random",
+    "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_lr",
+]
 # paths = [
 #     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_baseline",
 #     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_halfbaseline",
@@ -170,4 +174,14 @@ def format_print_auc(auc_dic):
 #     "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_lr",
 # ]
 keys = ["alpha"]
+
+# paths = [
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_baseline",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_halfbaseline",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_quarterbaseline",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_-0.1",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_random",
+#     "../../data/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep_lr",
+# ]
+# keys = ["adaptive-alpha"]
 all_path(paths, keys)
