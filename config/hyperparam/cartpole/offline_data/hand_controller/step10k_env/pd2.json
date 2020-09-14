@@ -1,0 +1,24 @@
+{
+    "agent-name": "hand-controller",
+    "environment-name": "cartpole",
+    "agent-settings": {
+        "sweep": {
+            "plan-duration": [2]
+        },
+        "enable-debug": false,
+        "seed": 100
+    },
+    "environment-settings": {
+        "seed": 100,
+        "sweep": {
+            "delays":[[0]]
+        }
+    },
+    "experiment-settings": {
+      "steps": 10000,
+      "data-path": "data/hyperparam/cartpole/offline_data/hand_controller/step10k_env/pd2/",
+      "should-log-traces": true,
+      "should-log-episode-lengths": false,
+      "debug-interval": 1000
+    }
+}

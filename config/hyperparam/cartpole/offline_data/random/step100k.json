@@ -1,0 +1,18 @@
+{
+	"agent-name": "random",
+	"environment-name": "cartpole",
+	"agent-settings": {
+		"enable-debug": false,
+		"seed": 15
+	},
+	"environment-settings": {
+		"seed": 15
+	},
+	"experiment-settings": {
+		"steps": 100000,
+		"data-path": "data/hyperparam/cartpole/random/step100k",
+		"should-log-traces": true,
+		"should-log-episode-lengths": false,
+		"debug-interval": 1000
+	}
+}

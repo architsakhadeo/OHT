@@ -1,0 +1,40 @@
+{
+	"agent-name": "dqn",
+	"environment-name": "knnModel",
+	"agent-settings": {
+		"epsilon": 0.1,
+		"decreasing-epsilon": "None",
+		"gamma": 0.9,
+		"state-len": 4,
+		"buffer-type": "random",
+		"dqn-adamBeta1": 0.9,
+		"dqn-adamBeta2": 0.999,
+		"dqn-adamEps": 1e-8,
+		"sweep": {
+			"alpha": [1e-3, 1e-4, 1e-5, 1e-6, 1e-7],
+			"dqn-hidden": [
+				[64, 64]
+			],
+			"dqn-sync":[32],
+			"dqn-batch":[64],
+			"buffer-size":[2500]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1,
+		"sweep": {
+			"delays":[[0]]
+		},
+		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step100k_env/lockat_-0.1/param_0/"
+	},
+	"experiment-settings": {
+		"steps": 50000,
+		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/step100k_env/lockat_-0.1/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": true,
+		"debug-interval": 1000
+	}
+}
