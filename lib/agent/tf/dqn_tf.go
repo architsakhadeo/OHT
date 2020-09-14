@@ -321,3 +321,7 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	}
 	return idx
 }
+
+func (agent *Dqn) GetLock() bool {
+	return false
+}

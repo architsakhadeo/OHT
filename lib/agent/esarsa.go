@@ -134,6 +134,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
+
 	var err error
 	agent.oldStateActiveFeatures, err = agent.tiler.Tile(state) // Indices of active features of the tile-coded state
 
@@ -255,4 +256,8 @@ func (agent *ESarsa) ActionValue(tileCodedStateActiveFeatures []int, action rlgl
 	}
 
 	return actionValue
+}
+
+func (agent *ESarsa) GetLock() bool {
+	return false
 }

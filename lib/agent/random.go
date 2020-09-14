@@ -77,3 +77,7 @@ func (agent *Random) End(state rlglue.State, reward float64) {
 		agent.Message("msg", "end", "state", state, "reward", reward)
 	}
 }
+
+func (agent *Random) GetLock() bool {
+	return false
+}

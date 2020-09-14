@@ -88,3 +88,7 @@ func (agent *Example) End(state rlglue.State, reward float64) {
 		agent.Message("msg", "end", "state", state, "reward", reward)
 	}
 }
+
+func (agent *Example) GetLock() bool {
+	return false
+}

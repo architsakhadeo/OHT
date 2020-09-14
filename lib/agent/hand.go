@@ -159,3 +159,7 @@ func (agent *HandController) selectActions(state rlglue.State) {
 		agent.scaledCreateActionSeries(angle / agent.FailAngle)
 	}
 }
+
+func (agent *HandController) GetLock() bool {
+	return false
+}
