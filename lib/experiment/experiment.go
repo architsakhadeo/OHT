@@ -78,6 +78,8 @@ func (exp *Experiment) runEpisodic() {
 // runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
 // strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() {
+	countStep := true
+	stepBeforeCount := 0
 
 	prevState := exp.environment.Start()
 	tempPrev := make(rlglue.State, len(prevState))
@@ -86,6 +88,9 @@ func (exp *Experiment) runSingleEpisode() {
 	copy(tempPrev, prevState)
 	action := exp.agent.Start(prevState)
 	copy(prevState, tempPrev)
+	if exp.Settings.CountAfterLock {
+		countStep = exp.agent.GetLock()
+	}
 
 	isEpisodic := exp.Settings.MaxSteps == 0
 
@@ -98,21 +103,34 @@ func (exp *Experiment) runSingleEpisode() {
 
 		newState, reward, episodeEnded := exp.environment.Step(action)
 
-		exp.LogStep(prevState, newState, action, reward, episodeEnded) // TODO add gamma at end
+		if exp.Settings.CountAfterLock {
+			countStep = exp.agent.GetLock()
+		}
+		if countStep {
+			exp.LogStep(prevState, newState, action, reward, episodeEnded)
+			exp.numStepsTaken += 1
+			numStepsThisEpisode += 1
+		} else {
+			stepBeforeCount += 1
+			if stepBeforeCount % 10000 == 0 {
+				exp.MessageDelta("total steps", stepBeforeCount)
+			}
+		}
 
 		copy(prevState, newState)
 
-		exp.numStepsTaken += 1
-		numStepsThisEpisode += 1
-
-		if exp.numStepsTaken % 10000 == 0 {
+		if exp.numStepsTaken % 10000 == 0 &&
+			(!exp.Settings.CountAfterLock ||
+				(exp.Settings.CountAfterLock && countStep)){
 			end = time.Now()
 			delta = end.Sub(start)
 			fmt.Println("Running time", exp.numStepsTaken, delta)
 			start = time.Now()
 		}
 
-		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 {
+		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 &&
+			(!exp.Settings.CountAfterLock ||
+				(exp.Settings.CountAfterLock && countStep)){
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 
@@ -127,7 +145,11 @@ func (exp *Experiment) runSingleEpisode() {
 			action = exp.agent.Step(newState, reward)
 		}
 
-		exp.logEndOfEpisode(numStepsThisEpisode)
+		if !countStep {
+			fmt.Println("Episode", numStepsThisEpisode, "Step", stepBeforeCount)
+		} else {
+			exp.logEndOfEpisode(numStepsThisEpisode)
+		}
 		exp.numEpisodesDone += 1
 		numStepsThisEpisode = 0
 
@@ -137,7 +159,6 @@ func (exp *Experiment) runSingleEpisode() {
 			break
 		}
 	}
-
 	if numStepsThisEpisode > 0 || isEpisodic {
 		// If there are leftover steps, we're ending after a partial episode.
 		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
