@@ -4,29 +4,38 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stellentus/cartpoles/lib/logger"
+	"github.com/stellentus/cartpoles/lib/rlglue"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"github.com/stellentus/cartpoles/lib/util/buffer"
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"math"
 	"math/rand"
-
-	"github.com/stellentus/cartpoles/lib/logger"
-	"github.com/stellentus/cartpoles/lib/rlglue"
-	"github.com/stellentus/cartpoles/lib/util/buffer"
 )
 
 type LockWeight struct {
-	UseLock		bool
-	DecCount	int
-	BestAvg 	float64
-	LockAvg		float64
-	LockThrd	int
+	UseLock       bool      `json:"lock-weight"`
+	LockCondition string    `json:"lock-condition"`
+
+	DecCount int
+	BestAvg  float64
+	LockAvg  float64 `json:"lock-condition-reward"`
+	LockThrd int	`json:"lock-condition-thrd"`
+
+	CheckChange LockFunc
 }
-func NewLockWeight() LockWeight {
-	lw := LockWeight{}
+
+func InitLockWeight(agent *Dqn, lw LockWeight) LockWeight {
 	lw.DecCount = 0
 	lw.BestAvg = math.Inf(-1)
-	lw.LockThrd = 2
-	lw.UseLock = false
+
+	if lw.LockCondition == "dynamic-reward" {
+		lw.CheckChange = agent.DynamicLock
+	} else if lw.LockCondition == "onetime-reward" {
+		lw.CheckChange = agent.OnetimeLock
+	} else if lw.LockCondition == "beginning" {
+		lw.CheckChange = agent.KeepLock
+	}
 	return lw
 }
 
@@ -56,8 +65,7 @@ type dqnSettings struct {
 	StateDim  int `json:"state-len"`
 	BatchSize int `json:"dqn-batch"`
 
-	StateRange []float64 `json:"StateRange"`
-	UseLock	   bool      `json:"lock-weight"`
+	StateRange    []float64 `json:"StateRange"`
 }
 
 type Dqn struct {
@@ -77,8 +85,9 @@ type Dqn struct {
 	learningNet network.Network
 	targetNet   network.Network
 
-	lw          LockWeight
-	lock 		bool
+	lw   LockWeight
+	lock bool
+
 }
 
 func init() {
@@ -94,6 +103,12 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	if err != nil {
 		return errors.New("DQN agent attributes were not valid: " + err.Error())
 	}
+
+	err = json.Unmarshal(expAttr, &agent.lw)
+	if err != nil {
+		return errors.New("DQN agent LockWeight attributes were not valid: " + err.Error())
+	}
+	agent.lw = InitLockWeight(agent, agent.lw)
 
 	if agent.DecreasingEpsilon == "None" {
 		agent.MinEpsilon = 0 // Not used
@@ -125,15 +140,14 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.updateNum = 0
 
-	agent.lw = NewLockWeight()
-	agent.lock = false
-	agent.lw.UseLock = agent.dqnSettings.UseLock
-
 	return nil
 }
 
 // Start provides an initial observation to the agent and returns the agent's action.
-func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
+//func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
+func (agent *Dqn) Start(oristate rlglue.State) rlglue.Action {
+	state := make([]float64, agent.StateDim)
+	copy(state, oristate)
 
 	state = agent.StateNormalization(state)
 	agent.lastState = state
@@ -147,7 +161,8 @@ func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
 }
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
-func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
+//func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
+func (agent *Dqn) Step(oristate rlglue.State, reward float64) rlglue.Action {
 	if reward != 0 {
 		agent.learning = true
 	}
@@ -155,7 +170,8 @@ func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
 		agent.Epsilon = math.Max(agent.Epsilon-1.0/10000, agent.MinEpsilon)
 		fmt.Println(agent.Epsilon)
 	}
-
+	state := make([]float64, agent.StateDim)
+	copy(state, oristate)
 	state = agent.StateNormalization(state)
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	agent.stepNum = agent.stepNum + 1
@@ -184,7 +200,7 @@ func (agent *Dqn) End(state rlglue.State, reward float64) {
 
 func (agent *Dqn) StateNormalization(state rlglue.State) rlglue.State {
 	for i := 0; i < agent.StateDim; i++ {
-		state[i] = state[i] / agent.StateRange[i]
+		state[i] = state[i] / agent.StateRange[i] * 2 // if state range is -1 to 1, StateRange returns 2. Thus use *2 to normalize state to correct range
 	}
 	return state
 }
@@ -193,12 +209,12 @@ func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward
 	agent.bf.Feed(lastS, lastA, state, reward, gamma)
 }
 
-
 func (agent *Dqn) Update() {
 	if agent.lw.UseLock {
-		if agent.updateNum%agent.Bsize == 0 {
-			agent.lock = agent.CheckChange()
-		}
+		//if agent.updateNum%agent.Bsize == 0 {
+		//	agent.lock = agent.lw.CheckChange()
+		//}
+		agent.lock = agent.lw.CheckChange()
 		if agent.lock {
 			agent.updateNum += 1
 			return
@@ -272,7 +288,7 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	return idx
 }
 
-func (agent *Dqn) CheckLock(avg float64) bool {
+func (agent *Dqn) CheckAvgRwdLock(avg float64) bool {
 	if agent.lw.BestAvg > avg {
 		agent.lw.DecCount += 1
 		fmt.Println("Count to lock", agent.lw.DecCount)
@@ -290,7 +306,7 @@ func (agent *Dqn) CheckLock(avg float64) bool {
 	return lock
 }
 
-func (agent *Dqn) CheckUnlock(avg float64) bool {
+func (agent *Dqn) CheckAvgRwdUnlock(avg float64) bool {
 	if agent.lw.LockAvg > avg {
 		agent.lw.DecCount += 1
 		fmt.Println("Count to unlock", agent.lw.DecCount)
@@ -307,14 +323,17 @@ func (agent *Dqn) CheckUnlock(avg float64) bool {
 	return lock
 }
 
-func (agent *Dqn) CheckChange() bool {
+type LockFunc func() bool
+
+//func (agent *Dqn) CheckChange() bool {
+func (agent *Dqn) DynamicLock() bool {
 	_, _, _, rewards, _ := agent.bf.Content()
 	avg := ao.Average(rewards)
 	if len(rewards) < agent.Bsize {
 		return false
 	}
 	if agent.lock {
-		lock := agent.CheckUnlock(avg)
+		lock := agent.CheckAvgRwdUnlock(avg)
 		if !lock {
 			agent.lw.LockAvg = avg
 			agent.lw.DecCount = 0
@@ -322,7 +341,7 @@ func (agent *Dqn) CheckChange() bool {
 		}
 		return lock
 	} else {
-		lock := agent.CheckLock(avg)
+		lock := agent.CheckAvgRwdLock(avg)
 		if lock {
 			agent.lw.LockAvg = avg
 			agent.lw.DecCount = 0
@@ -330,4 +349,28 @@ func (agent *Dqn) CheckChange() bool {
 		}
 		return lock
 	}
+}
+
+func (agent *Dqn) OnetimeLock() bool {
+	if agent.lock {
+		return true
+	} else {
+		_, _, _, rewards, _ := agent.bf.Content()
+		avg := ao.Average(rewards)
+		if len(rewards) < agent.Bsize {
+			return false
+		}
+		if avg > agent.lw.LockAvg {
+			return true
+		}
+		return false
+	}
+}
+
+func (agent *Dqn) KeepLock() bool {
+	return true
+}
+
+func (agent *Dqn) GetLock() bool {
+	return agent.lock
 }
