@@ -148,13 +148,16 @@ func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) []int {
 
 func (env *KnnModelEnv) randomizeState() rlglue.State {
 	randIdx := env.rng.Intn(len(env.offlineStarts))
-	return env.offlineData[env.offlineStarts[randIdx]][:env.stateDim]
+	state := env.offlineData[env.offlineStarts[randIdx]][:env.stateDim]
+	return state
 }
 
 // Start returns an initial observation.
 func (env *KnnModelEnv) Start() rlglue.State {
 	env.state = env.randomizeState()
-	return env.state
+	state_copy := make([]float64, env.stateDim)
+	copy(state_copy, env.state)
+	return state_copy
 }
 
 func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
@@ -168,8 +171,10 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	} else {
 		done = true
 	}
-	//fmt.Println(env.state)
-	return env.state, rewards[0], done
+
+	state_copy := make([]float64, env.stateDim)
+	copy(state_copy, env.state)
+	return state_copy, rewards[0], done
 }
 
 //GetAttributes returns attributes for this environment.
