@@ -18,10 +18,10 @@
 		"wrapper-name": "sensor-drift",
 		"settings": {
 			"seed": 35,
-			"sensorLife": [1, 2, 3, 4],
-			"driftProb": [-1, 0, 0.5, 1],
+			"sensorLife": [2],
 			"sweep": {
-				"driftScale": [100, 50]
+				"driftProb": [[0.5], [-1, 0, 0.5, 1]],
+				"driftScale": [[0.01], [0.01, 0.02, 0.03, 0.04]]
 			}
 		}
 	}],
