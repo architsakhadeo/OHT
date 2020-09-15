@@ -36,7 +36,8 @@ def convert_data(alg, Data):
 
 
 # Transforms the failures timesteps to 'Rewards', 'Returns', 'Failures', 'Average-Rewards' 
-def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Rewards', window=0):
+# type = 'exponential-averaging' or 'sample-averaging'
+def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Rewards', window=0, type='exponential-averaging', alpha=0.9):
 	
 	transformedData = []
 
@@ -68,7 +69,16 @@ def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Reward
 		# over a sliding window using the np.convolve method
 		elif transformation == 'Average-Rewards':
 			# Change this code carefully
-			AverageRewardsList = np.convolve(rewardsList, np.ones(window)/window, 'valid')
+			if type == 'sample-averaging':
+				AverageRewardsList = np.convolve(rewardsList, np.ones(window)/window, 'valid')
+			elif type == 'exponential-averaging':
+				AverageRewardsList = [rewardsList[0]]
+				o_n_minus_1 = 0
+				for i in range(1, len(rewardsList)):
+					o_n = o_n_minus_1  + alpha*(1 - o_n_minus_1)
+					beta_n = alpha / (o_n)
+					AverageRewardsList.append(AverageRewardsList[-1] + beta_n * (rewardsList[i] - AverageRewardsList[-1]))
+					o_n_minus_1 = o_n
 			tempData = pd.DataFrame({'averageRewards': AverageRewardsList})
 
 		transformedData.append(tempData)
