@@ -28,11 +28,11 @@
 		"sweep": {
 			"delays":[[0]]
 		},
-		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step100k_env/lockat_halfbaseline/param_0/"
+		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_-0.1/param_0/"
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/step100k_env/lockat_halfbaseline/",
+		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_-0.1/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000

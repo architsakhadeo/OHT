@@ -1,8 +1,8 @@
 {
 	"agent-name": "dqn",
-	"environment-name": "knnModel",
+	"environment-name": "cartpole",
 	"agent-settings": {
-		"epsilon": 0.1,
+		"epsilon": 0.2,
 		"decreasing-epsilon": "None",
 		"gamma": 0.9,
 		"state-len": 4,
@@ -11,30 +11,34 @@
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
 		"sweep": {
-			"alpha": [1e-3, 1e-4, 1e-5, 1e-6, 1e-7],
+			"alpha": [0.001],
 			"dqn-hidden": [
 				[64, 64]
 			],
 			"dqn-sync":[32],
 			"dqn-batch":[64],
-			"buffer-size":[2500]
+			"buffer-size":[100]
 		},
-		"lock-weight": false,
+
+		"lock-weight": true,
+		"lock-condition": "onetime-reward",
+		"lock-condition-reward": -0.005,
+
 		"enable-debug": false,
-		"seed": 1
+		"seed": 100
 	},
 	"environment-settings": {
-		"seed": 1,
+		"seed": 100,
 		"sweep": {
 			"delays":[[0]]
-		},
-		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step100k_env/lockat_-0.1/param_0/"
+		}
 	},
 	"experiment-settings": {
-		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/step100k_env/lockat_-0.1/",
-		"should-log-traces": false,
-		"should-log-episode-lengths": true,
+		"steps": 20000,
+		"count-step-after-lock": true,
+		"data-path": "data/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_baseline/",
+		"should-log-traces": true,
+		"should-log-episode-lengths": false,
 		"debug-interval": 1000
 	}
 }

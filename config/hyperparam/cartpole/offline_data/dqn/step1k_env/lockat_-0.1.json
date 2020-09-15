@@ -22,7 +22,7 @@
 
     "lock-weight": true,
     "lock-condition": "onetime-reward",
-    "lock-condition-reward": -1,
+    "lock-condition-reward": -0.1,
 
     "enable-debug": false,
     "seed": 100

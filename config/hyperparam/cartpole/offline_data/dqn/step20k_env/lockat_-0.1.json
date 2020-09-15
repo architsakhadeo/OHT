@@ -21,7 +21,8 @@
     },
 
     "lock-weight": true,
-    "lock-condition": "beginning",
+    "lock-condition": "onetime-reward",
+    "lock-condition-reward": -0.1,
 
     "enable-debug": false,
     "seed": 100
@@ -33,9 +34,9 @@
     }
   },
   "experiment-settings": {
-    "steps": 100000,
+    "steps": 20000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam/cartpole/offline_data/dqn/step100k_env/lockat_random/",
+    "data-path": "data/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_-0.1/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "debug-interval": 1000
