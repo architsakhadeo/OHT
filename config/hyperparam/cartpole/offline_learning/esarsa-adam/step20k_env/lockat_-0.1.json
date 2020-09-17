@@ -1,6 +1,6 @@
 {
 	"agent-name": "esarsa",
-	"environment-name": "cartpole",
+	"environment-name": "knnModel",
 	"agent-settings": {
 		"gamma": 0.9,
 		"state-len": 4,
@@ -19,13 +19,11 @@
 	},
 	"environment-settings": {
 		"seed": 1,
-		"sweep": {
-			"delays":[[0]]
-		}
+		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_-0.1/param_0/"
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep_lr/",
+		"data-path": "data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env/lockat_-0.1/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
