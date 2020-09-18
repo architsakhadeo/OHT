@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/stellentus/cartpoles/lib/rlglue"
@@ -230,9 +231,15 @@ func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
 	}
 
 	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
-	for key, val := range sweepRawJon {
+	// Sort keys for reproducibility.
+	keys := make([]string, 0)
+	for key := range sweepRawJon {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
 		arrayVals := []json.RawMessage{}
-		err = json.Unmarshal(val, &arrayVals)
+		err = json.Unmarshal(sweepRawJon[key], &arrayVals)
 		if err != nil {
 			return errors.New("The attributes is not valid JSON: " + err.Error())
 		}
