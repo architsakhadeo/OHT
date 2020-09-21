@@ -14,13 +14,13 @@ import (
 )
 
 type LockWeight struct {
-	UseLock       bool      `json:"lock-weight"`
-	LockCondition string    `json:"lock-condition"`
+	UseLock       bool   `json:"lock-weight"`
+	LockCondition string `json:"lock-condition"`
 
 	DecCount int
 	BestAvg  float64
 	LockAvg  float64 `json:"lock-condition-reward"`
-	LockThrd int	`json:"lock-condition-thrd"`
+	LockThrd int     `json:"lock-condition-thrd"`
 
 	CheckChange LockFunc
 }
@@ -62,10 +62,11 @@ type dqnSettings struct {
 	Bsize int    `json:"buffer-size"`
 	Btype string `json:"buffer-type"`
 
-	StateDim  int `json:"state-len"`
-	BatchSize int `json:"dqn-batch"`
+	StateDim   int  `json:"state-len"`
+	BatchSize  int  `json:"dqn-batch"`
+	IncreaseBS bool `json:"increasing-batch"`
 
-	StateRange    []float64 `json:"StateRange"`
+	StateRange []float64 `json:"StateRange"`
 }
 
 type Dqn struct {
@@ -78,7 +79,7 @@ type Dqn struct {
 
 	updateNum int
 	learning  bool
-	stepNum   int
+	//stepNum   int
 
 	bf *buffer.Buffer
 
@@ -87,7 +88,6 @@ type Dqn struct {
 
 	lw   LockWeight
 	lock bool
-
 }
 
 func init() {
@@ -117,7 +117,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	}
 
 	agent.learning = false
-	agent.stepNum = 0
+	//agent.stepNum = 0
 
 	err = json.Unmarshal(envAttr, &agent)
 
@@ -174,7 +174,7 @@ func (agent *Dqn) Step(oristate rlglue.State, reward float64) rlglue.Action {
 	copy(state, oristate)
 	state = agent.StateNormalization(state)
 	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
-	agent.stepNum = agent.stepNum + 1
+	//agent.stepNum = agent.stepNum + 1
 	agent.Update()
 	agent.lastState = state
 	agent.lastAction = agent.Policy(state)
@@ -221,12 +221,23 @@ func (agent *Dqn) Update() {
 		}
 	}
 
+	if agent.IncreaseBS {
+		if agent.updateNum%1000 == 0 {
+			//inc := int(math.Min(float64(agent.BatchSize) * agent.Alpha, 1.0))
+			inc := int(1 / (1 - float64(agent.AdamBeta1)))
+			agent.BatchSize = int(math.Min(float64(agent.BatchSize+inc),
+				float64(agent.Bsize/2)))
+			fmt.Println("batch size increase to", agent.BatchSize)
+		}
+	}
+
 	if agent.updateNum%agent.Sync == 0 {
 		// NN: Synchronization
 		for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
 			agent.targetNet.HiddenWeights[i] = agent.learningNet.HiddenWeights[i]
 		}
 		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
+		//fmt.Println("sync", agent.updateNum)
 	}
 
 	lastStates, lastActions, states, rewards, gammas := agent.bf.Sample(agent.BatchSize)
