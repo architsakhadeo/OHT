@@ -160,10 +160,11 @@ func parameterStringify(run uint, sweepIdx int) (string, error) {
 func logParameters(agentAttr, envAttr, extraAttr rlglue.Attributes, logPath string) error {
 	fullPath := logPath+"/log_json.txt"
 	if _, err := os.Stat(fullPath); err == nil {
-		e := os.Remove(fullPath)
-		if e != nil {
-			log.Fatal(e)
-		}
+		//e := os.Remove(fullPath)
+		//if e != nil {
+		//	log.Fatal(e)
+		//}
+		return nil
 	}
 	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
