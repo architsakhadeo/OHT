@@ -40,7 +40,7 @@ def convert_data_reward(data):
     return convertedData, data.shape[1]
 
 
-def transform_data(failureTimesteps, totalTimesteps, transformation='Rewards', window=0):
+def transform_data(failureTimesteps, totalTimesteps, transformation='Rewards', window=0, alpha=0.0004):
     transformedData = []
     for run in range(len(failureTimesteps)):
         # Calculate rewards from failure timesteps
@@ -65,6 +65,16 @@ def transform_data(failureTimesteps, totalTimesteps, transformation='Rewards', w
             # Change this code carefully
             AverageRewardsList = np.convolve(rewardsList, np.ones(window)/window, 'valid')
             tempData = pd.DataFrame({'averageRewards': AverageRewardsList})
+        # # excersize 2.7 on textbook
+        # elif type == 'exponential-averaging':
+        #     AverageRewardsList = [rewardsList[0]]
+        #     o_n_minus_1 = 0
+        #     for i in range(1, len(rewardsList)):
+        #         o_n = o_n_minus_1  + alpha*(1 - o_n_minus_1)
+        #         beta_n = alpha / (o_n)
+        #         AverageRewardsList.append(AverageRewardsList[-1] + beta_n * (rewardsList[i] - AverageRewardsList[-1]))
+        #         o_n_minus_1 = o_n
+        # tempData = pd.DataFrame({'averageRewards': AverageRewardsList})
         transformedData.append(tempData)
     # Change DataFrames to numpy arrays
     for i in range(len(transformedData)):
@@ -80,6 +90,26 @@ def sliding_window(data, window=2500):
         new[:, i] = np.mean(data[:, i-window: i+1], axis=1)
     return new[:, window:]
 
+# def exponential_avg(rewardsList, alpha):
+#     AverageRewardsList = [rewardsList[0]]
+#     o_n_minus_1 = 0
+#     for i in range(1, len(rewardsList)):
+#         o_n = o_n_minus_1  + alpha*(1 - o_n_minus_1)
+#         beta_n = alpha / (o_n)
+#         AverageRewardsList.append(AverageRewardsList[-1] + beta_n * (rewardsList[i] - AverageRewardsList[-1]))
+#         o_n_minus_1 = o_n
+#     return np.array(AverageRewardsList)
+def exponential_avg(data, alpha):
+    avg_r = np.zeros(data.shape)
+    avg_r[:, 0] = data[:, 0]
+    o_n_minus_1 = 0
+    for i in range(1, data.shape[1]):
+        o_n = o_n_minus_1  + alpha*(1 - o_n_minus_1)
+        beta_n = alpha / (o_n)
+        avg_r[:, i] = avg_r[:, i-1] + beta_n * (data[:, i] - avg_r[:, i-1])
+        o_n_minus_1 = o_n
+    return avg_r
+
 def avg_episode_data_failures(path):
     data = load_data(path, "rewards")
     convertedData, totalTimesteps = convert_data_reward(data)
@@ -89,7 +119,8 @@ def avg_episode_data_failures(path):
 
 def avg_episode_data(path):
     data = load_data(path, "rewards")
-    # data = sliding_window(data)
+    data = sliding_window(data)
+    # data = exponential_avg(data, alpha=0.0004)
     avg = np.mean(data, axis=0)
     return avg
 
@@ -111,11 +142,17 @@ def sweep(basepath, label_keys):
     best_label = None
     plt.figure()
     auc_rec = {}
+    i = 0
+    temp = {}
     for param in all_param:
         folder = basepath + "/" + param
         setting = folder + "/log_json.txt"
         label = setting_from_json(setting, label_keys)
         label = " ".join([str(k)+"="+str(v) for k, v in label.items()])
+        i += 1
+        if label in temp.keys():
+            print("=======================Exist:", label, temp[label], temp)
+        temp[label] = i
         data = avg_episode_data(folder)
         plt.plot(data, label=label)
         auc = np.sum(data)
@@ -125,9 +162,8 @@ def sweep(basepath, label_keys):
             best_label = label
             best_data = data
     plt.title(basepath)
-    plt.legend()
-    # plt.ylim(np.mean(best_data)*5, 0)
-    plt.ylim(-0.02, 0)
+    # plt.legend()
+    # plt.ylim(-0.02, 0)
     plt.savefig("../../img/"+basepath.split("/")[-1]+".png")
 
     sort_auc = [[k, v] for k, v in sorted(auc_rec.items(), key=lambda item: item[1])]
@@ -137,51 +173,63 @@ def all_path(path_list, label_keys):
     best_list = []
     auc_allpath = {}
     for path in path_list:
+        sweep(path, label_keys)
         best_setting, sort_auc = sweep(path, label_keys)
         best_setting["label"] = path.split("/")[-1]+" "+best_setting["label"]
         best_list.append(best_setting)
         auc_allpath[path.split("/")[-1]] = sort_auc
-    # plt.figure()
-    # for data in best_list:
-    #     plt.plot(data["data"], label=data["label"])
-    # plt.legend()
-    # plt.show()
     format_print_auc(auc_allpath)
     return
 
 def format_print_auc(auc_dic):
     for key, rank in auc_dic.items():
-        print(key, ":")
+        print("OfflineData:", key, ":")
         for item in rank:
             label, auc = item
-            print(label.split("=")[1], end=",\t")
+            print(label, "sum="+str(auc))
+            # for var in label.split(","):
+            #     print(var)#.split("=")[1])
         print("\n")
 
 paths = [
-    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_baseline",
-    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_halfbaseline",
-    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_quarterbaseline",
-    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_-0.1",
-    "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_random",
-    "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_lr",
-]
-# paths = [
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_baseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_halfbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_quarterbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_-0.1",
-#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env/lockat_random",
-#     "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_lr",
-# ]
-keys = ["alpha"]
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_baseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_halfbaseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_quarterbaseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_-0.1",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_random",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_baseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_halfbaseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_quarterbaseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_-0.1",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_random",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_baseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_halfbaseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_quarterbaseline",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_-0.1",
+    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_random",
 
+    "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_alpha_hidden_epsilon/",
+]
+# keys = ["alpha", "epsilon", "dqn-sync"]
+keys = ["alpha", "epsilon", "dqn-hidden"]
 # paths = [
-#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_baseline",
-#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_halfbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_quarterbaseline",
-#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_-0.1",
-#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_random",
-#     "../../data/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep_lr",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_baseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_halfbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_quarterbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_-0.1",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_random",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_baseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_halfbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_quarterbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_-0.1",
+#     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env/lockat_random",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env/lockat_baseline",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env/lockat_halfbaseline",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env/lockat_quarterbaseline",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env/lockat_-0.1",
+#     "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env/lockat_random",
+#
+#     "../../data/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep",
 # ]
-# keys = ["adaptive-alpha"]
+# keys = ["adaptive-alpha", "epsilon", "tilings"]
 all_path(paths, keys)
