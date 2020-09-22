@@ -165,7 +165,6 @@ func (net *Network) Backward(loss [][]float64) {
 		noBias = slice(0, hr-1, 0, hc, hiddenE[i])
 	}
 
-
 	// ADAM
 	net.OutputWeights, net.OutputMomentum, net.OutputV = net.AdamUpdate(lossMat, net.LayerOut[len(net.HiddenWeights)],
 		net.OutputWeights, net.OutputMomentum, net.OutputV)
@@ -220,6 +219,14 @@ func reluPrime(r, c int, z float64) float64 {
 // 	ones := mat.NewDense(rows, 1, o)
 // 	return multiply(m, subtract(ones, m)) // m * (1 - m)
 // }
+
+func Synchronization(from, to Network) Network {
+	for i := 0; i < len(to.HiddenWeights); i++ {
+		to.HiddenWeights[i] = from.HiddenWeights[i]
+	}
+	to.OutputWeights = from.OutputWeights
+	return to
+}
 
 //
 // Helper functions to allow easier use of Gonum

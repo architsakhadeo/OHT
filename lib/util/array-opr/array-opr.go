@@ -1,10 +1,29 @@
 package arrayOpr
 
 import (
+	"errors"
+	"fmt"
 	"math"
+	"os"
 
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
+
+func Concatenate(arr1, arr2 [][]float64) [][]float64 {
+	if len(arr1) != len(arr2) {
+		fmt.Println("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d", len(arr1), len(arr2))
+		os.Exit(1)
+	}
+	new := make([][]float64, len(arr1))
+	dim1 := len(arr1[0])
+	dim2 := len(arr2[0])
+	for i := 0; i < len(new); i++ {
+		new[i] = make([]float64, dim1+dim2)
+		copy(new[i][:dim1], arr1[i])
+		copy(new[i][dim1:], arr2[i])
+	}
+	return new
+}
 
 func A32Col(array [][]float32, col int) []float32 {
 	var new []float32
@@ -119,13 +138,6 @@ func A32ToInt(array []float32) []int {
 	return aInt
 }
 
-func A64ToInt(array []float64) []int {
-	var aInt []int
-	for _, f64 := range array {
-		aInt = append(aInt, int(f64))
-	}
-	return aInt
-}
 func A64ToInt2D(array [][]float64) [][]int {
 	var aInt [][]int
 	for i := 0; i < len(array); i++ {
@@ -133,47 +145,161 @@ func A64ToInt2D(array [][]float64) [][]int {
 	}
 	return aInt
 }
+func A64ToInt(array []float64) []int {
+	var aInt []int
+	for _, f64 := range array {
+		aInt = append(aInt, int(f64))
+	}
+	return aInt
+}
 
-func BitwiseAdd(a []float32, b []float32) []float32 {
-	var res []float32
-	// if len(a) != len(b) {
-	// 	errors.New("Arrays should have same length")
-	// }
+func IntToA642D(array [][]int) [][]float64 {
+	aFloat := make([][]float64, len(array))
+	for i := 0; i < len(array); i++ {
+		aFloat[i] = make([]float64, len(array[i]))
+		copy(aFloat[i], IntToA64(array[i]))
+	}
+	return aFloat
+}
+func IntToA64(array []int) []float64 {
+	var aFloat []float64
+	for _, i := range array {
+		aFloat = append(aFloat, float64(i))
+	}
+	return aFloat
+}
+
+func A64ArrayMulti2D(a float64, arr [][]float64) [][]float64 {
+	res := make([][]float64, len(arr))
+	for i := 0; i < len(arr); i++ {
+		res[i] = make([]float64, len(arr[i]))
+		copy(res[i], A64ArrayMulti(a, arr[i]))
+	}
+	return res
+}
+func A64ArrayMulti(a float64, arr []float64) []float64 {
+	res := make([]float64, len(arr))
+	for i := 0; i < len(arr); i++ {
+		res[i] = a * arr[i]
+	}
+	return res
+}
+
+func BitwiseAdd2D(a [][]float64, b[][]float64) [][]float64 {
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
+	res := make([][]float64, len(a))
+	for i := 0; i < len(a); i++ {
+		res[i] = make([]float64, len(a[i]))
+		copy(res[i], BitwiseAdd(a[i], b[i]))
+	}
+	return res
+}
+func BitwiseAdd(a []float64, b []float64) []float64 {
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
+	res := make([]float64, len(a))
 	for i := 0; i < len(a); i++ {
 		res[i] = a[i] + b[i]
 	}
 	return res
 }
 
-func BitwiseMulti(a []float32, b []float32) []float32 {
-	var res []float32
-	// if len(a) != len(b) {
-	// 	errors.New("Arrays should have same length")
-	// }
+func BitwiseMulti2D(a [][]float64, b [][]float64) [][]float64 {
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
+	res := make([][]float64, len(a))
+	for i := 0; i < len(a); i++ {
+		res[i] = make([]float64, len(a[i]))
+		copy(res[i], BitwiseMulti(a[i], b[i]))
+	}
+	return res
+}
+func BitwiseMulti(a []float64, b []float64) []float64 {
+	res := make([]float64, len(a))
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
 	for i := 0; i < len(a); i++ {
 		res[i] = a[i] * b[i]
 	}
 	return res
 }
 
-func BitwiseMinus(a []float32, b []float32) []float32 {
-	var res []float32
-	// if len(a) != len(b) {
-	// 	errors.New("Arrays should have same length")
-	// }
+func BitwiseMinus2D(a [][]float64, b [][]float64) [][]float64 {
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
+	res := make([][]float64, len(a))
+	for i := 0; i < len(a); i++ {
+		res[i] = make([]float64, len(a[i]))
+		copy(res[i], BitwiseMinus(a[i], b[i]))
+	}
+	return res
+}
+func BitwiseMinus(a []float64, b []float64) []float64 {
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
+	res := make([]float64, len(a))
 	for i := 0; i < len(a); i++ {
 		res[i] = a[i] - b[i]
 	}
 	return res
 }
 
-func BitwiseDivide(a []float32, b []float32) []float32 {
-	var res []float32
-	// if len(a) != len(b) {
-	// 	errors.New("Arrays should have same length")
-	// }
+func BitwiseDivide(a []float64, b []float64) []float64 {
+	if len(a) != len(b) {
+		errors.New("Arrays should have same length")
+	}
+	res := make([]float64, len(a))
 	for i := 0; i < len(a); i++ {
 		res[i] = a[i] / b[i]
+	}
+	return res
+}
+
+func BitwisePower2D(array [][]float64, p float64) [][]float64 {
+	res := make([][]float64, len(array))
+	for i := 0; i < len(array); i++ {
+		res[i] = make([]float64, len(array[i]))
+		copy(res[i], BitwisePower(array[i], p))
+	}
+	return res
+}
+func BitwisePower(array []float64, p float64) []float64 {
+	res := make([]float64, len(array))
+	for i := 0; i < len(array); i++ {
+		res[i] = math.Pow(array[i], p)
+	}
+	return res
+}
+
+func ReSize1DInt(inputData []int, rows, columns int) [][]int {
+	if rows*columns != len(inputData) {
+		fmt.Println("ReSize1DInt: Wrong Size")
+		os.Exit(1)
+	}
+	res := make([][]int, rows)
+	for i := 0; i < rows; i++ {
+		res[i] = make([]int, columns)
+		copy(res[i], inputData[rows*columns:rows*(columns+1)])
+	}
+	return res
+}
+
+func ReSize1DA64(inputData []float64, rows, columns int) [][]float64 {
+	if rows*columns != len(inputData) {
+		fmt.Println("ReSize1DA64: Wrong Size")
+		os.Exit(1)
+	}
+	res := make([][]float64, rows)
+	for i := 0; i < rows; i++ {
+		res[i] = make([]float64, columns)
+		copy(res[i], inputData[rows*columns:rows*(columns+1)])
 	}
 	return res
 }
@@ -198,7 +324,7 @@ func Flatten2DInt(inputData [][]int) []int {
 	return flatten
 }
 
-func Average(inputData []float64) float64{
+func Average(inputData []float64) float64 {
 	sum := 0.0
 	for i := 0; i < len(inputData); i++ {
 		sum = sum + inputData[i]
