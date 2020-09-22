@@ -30,9 +30,8 @@ from loadFromEpisodeLengths import transform_data
 
 labels = ['esarsa-3e-6', 'dqn-1e-5']
 dataPath = ['esarsa1/adaptive-alpha=3e-06_adaptive-stepsize=1_alpha=0.1_delays=0_enable-debug=0_epsilon=0.1_gamma=0.9_is-stepsize-adaptive=1_lambda=0.7_tiles=8_tilings=32/', 'dqn4/alpha=1e-05_buffer-size=2500_buffer-type=random_decreasing-epsilon=None_delays=0_dqn-adamBeta1=0.9_dqn-adamBeta2=0.999_dqn-adamEps=1e-08_dqn-batch=64_dqn-hidden=64,64_dqn-sync=32_enable-debug=0_']
-
-#labels = ['dqn-1e-5']
-#dataPath = ['dqn4/alpha=1e-05_buffer-size=2500_buffer-type=random_decreasing-epsilon=None_delays=0_dqn-adamBeta1=0.9_dqn-adamBeta2=0.999_dqn-adamEps=1e-08_dqn-batch=64_dqn-hidden=64,64_dqn-sync=32_enable-debug=0_']
+#labels = ['esarsa-3e-6']
+#dataPath = ['esarsa1/adaptive-alpha=3e-06_adaptive-stepsize=1_alpha=0.1_delays=0_enable-debug=0_epsilon=0.1_gamma=0.9_is-stepsize-adaptive=1_lambda=0.7_tiles=8_tilings=32/']
 
 #labels = ['adam']
 #dataPath = ['esarsa_adam/adaptive-alpha=0.001_alpha=0.1_delays=0_enable-debug=0_epsilon=0.05_gamma=0.95_is-stepsize-adaptive=1_lambda=0.8_tiles=4_tilings=32/']
@@ -132,7 +131,7 @@ for i in range(len(dataPath)):
 
     transformation = 'Average-Rewards'
     window = 2500
-    alpha = 0.01
+    alpha = 0.0004
     averaging_type='exponential-averaging'
 
 
@@ -169,9 +168,9 @@ for i in range(len(dataPath)):
             upperBound = np.clip(upperBound, a_min = None, a_max=0.0)
         plt.fill_between(xAxis, lowerBound, upperBound, alpha=0.25, color=color)
 
-    def plotMeanAndPercentileRegions(xAxis, data, lower, upper, transformation, color, label):
+    def plotMeanAndPercentileRegions(xAxis, data, lower, upper, transformation, color, label, type):
         plotMean(xAxis, data, color, label)
-        lowerRun, upperRun = getRegion(data, lower, upper, transformation)
+        lowerRun, upperRun = getRegion(data, lower, upper, transformation, type)
         if transformation == 'Average-Rewards':    
             upperRun = np.clip(upperRun, a_min = None, a_max=0.0)
         plt.fill_between(xAxis, lowerRun, upperRun, alpha=0.25, color=color)
@@ -269,14 +268,16 @@ for i in range(len(dataPath)):
             tempdata = data[:,j:j+temp]
 
             if j + plotwindow >= len(xAxis):
-                plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=labels[i])
                 #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=labels[i])
-                #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=1.0, transformation=transformation, color=colors[i], label=labels[i])
+                #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=labels[i])
+                #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=0.10, transformation=transformation, color=colors[i], label=labels[i]+'-lower', type='pertimestep')
+                plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.9, upper=1.00, transformation=transformation, color=colors[i], label=labels[i]+'-upper', type='pertimestep')
                 #plotBest(tempxAxis, tempdata, transformation=transformation, color=colors[i], label=labels[i])
             else:
-                plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=None)
                 #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=None)
-                #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=1.0, transformation=transformation, color=colors[i], label=labels[i])
+                #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=None)
+                #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=0.10, transformation=transformation, color=colors[i], label=labels[i] +'-lower', type='pertimestep')
+                plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.9, upper=1.00, transformation=transformation, color=colors[i], label=labels[i] + '-upper', type='pertimestep')
                 #plotBest(tempxAxis, tempdata, transformation=transformation, color=colors[i], label=labels[i])
         
         #plotMeanAndPercentileRegions(xAxis, data, lower=0.025, upper=0.975, transformation=transformation, color=color, label='')
@@ -298,4 +299,4 @@ plt.ylim(-0.02, top)
 plt.tight_layout()
 #plt.show()
 #plt.savefig('../img/dqn-10M-'+transformation+'.png',dpi=500, bbox_inches='tight')
-plt.savefig('../img/comparison-'+str(averaging_type)+'-alpha='+str(alpha)+'-'+str(transformation)+'.png',dpi=500, bbox_inches='tight')
+plt.savefig('../img/compare-upperpertimesteppercentile-'+str(averaging_type)+'-alpha='+str(alpha)+'-'+str(transformation)+'.png',dpi=500, bbox_inches='tight')
