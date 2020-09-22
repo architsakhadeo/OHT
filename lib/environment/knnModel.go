@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/stellentus/cartpoles/lib/util/convformat"
 	transModel "github.com/stellentus/cartpoles/lib/util/kdtree"
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"log"
 	"math/rand"
 	"os"
@@ -161,7 +162,8 @@ func (env *KnnModelEnv) Start() rlglue.State {
 }
 
 func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
-	_, nextStates, rewards, terminals, _ := env.offlineModel.SearchTree(env.state, int(act), 1)
+	actInt, _ := tpo.GetInt(act)
+	_, nextStates, rewards, terminals, _ := env.offlineModel.SearchTree(env.state, actInt, 1)
 	//fmt.Println(env.state, act)
 	//fmt.Println(nextStates, rewards, terminals, "\n")
 	env.state = nextStates[0] // only 1 neighbor

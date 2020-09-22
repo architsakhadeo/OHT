@@ -3,6 +3,7 @@ package environment
 import (
 	"encoding/json"
 	"fmt"
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -67,7 +68,8 @@ func (env *Example) Start() rlglue.State {
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
 func (env *Example) Step(act rlglue.Action) (rlglue.State, float64, bool) {
-	action := int(act)
+	//action := int(act)
+	action, _ := tpo.GetInt(act)
 	if action < -ExampleActionMax || action > ExampleActionMax {
 		return rlglue.State{}, 0, true //, error.New("example.Example action must be between -10 and 10")
 	}

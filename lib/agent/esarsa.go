@@ -3,6 +3,7 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"math"
 	"math/rand"
 
@@ -142,7 +143,8 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 		agent.Message("err", "agent.ESarsa is acting on garbage state because it couldn't create tiles: "+err.Error())
 	}
 
-	agent.oldAction, _ = agent.PolicyExpectedSarsaLambda(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
+	oldA, _ := agent.PolicyExpectedSarsaLambda(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
+	agent.oldAction, _ = tpo.GetInt(oldA)
 	agent.timesteps++
 
 	if agent.EnableDebug {
@@ -164,8 +166,9 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	agent.delta = reward // TD error calculation begins
 
 	for _, value := range agent.oldStateActiveFeatures {
-		agent.delta -= agent.weights[agent.oldAction][value] // TD error prediction calculation
-		agent.traces[agent.oldAction][value] = 1             // replacing active traces to 1
+		oldA, _ := tpo.GetInt(agent.oldAction)
+		agent.delta -= agent.weights[oldA][value] // TD error prediction calculation
+		agent.traces[oldA][value] = 1             // replacing active traces to 1
 	}
 
 	newAction, epsilons := agent.PolicyExpectedSarsaLambda(newStateActiveFeatures) // Exp-Sarsa-L policy
@@ -252,7 +255,8 @@ func (agent *ESarsa) ActionValue(tileCodedStateActiveFeatures []int, action rlgl
 
 	// Calculates action value as linear function (dot product) between weights and binary featured state
 	for _, value := range tileCodedStateActiveFeatures {
-		actionValue += agent.weights[action][value]
+		a, _ := tpo.GetInt(action)
+		actionValue += agent.weights[a][value]
 	}
 
 	return actionValue

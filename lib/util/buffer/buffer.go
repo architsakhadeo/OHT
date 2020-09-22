@@ -2,6 +2,7 @@ package buffer
 
 import (
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"math/rand"
 
 	"github.com/stellentus/cartpoles/lib/rlglue"
@@ -23,10 +24,6 @@ type Buffer struct {
 	rng         *rand.Rand
 }
 
-// func init() {
-// 	// fmt.Println("Init Buffer")
-// }
-
 func NewBuffer() *Buffer {
 	return &Buffer{}
 }
@@ -43,10 +40,10 @@ func (bf *Buffer) Initialize(stype string, size int, slen int, seed int64) {
 	bf.rng = rand.New(rand.NewSource(seed))
 }
 
-func (bf *Buffer) Feed(laststate rlglue.State, lastaction int, state rlglue.State, reward float64, gamma float64) {
+func (bf *Buffer) Feed(laststate rlglue.State, lastaction interface{}, state rlglue.State, reward float64, gamma float64) {
 	seq := make([]float64, bf.seq_len)
 	copy(seq[:bf.state_len], laststate)
-	seq[bf.state_len] = float64(lastaction)
+	seq[bf.state_len], _ = tpo.GetFloat(lastaction)
 	copy(seq[bf.state_len+1:bf.state_len*2+1], state)
 	seq[bf.state_len*2+1] = reward
 	seq[bf.state_len*2+2] = gamma
@@ -55,16 +52,19 @@ func (bf *Buffer) Feed(laststate rlglue.State, lastaction int, state rlglue.Stat
 	bf.idx += 1
 }
 
-func (bf *Buffer) Array2Trans(samples [][]float64) ([][]float64, []int, [][]float64, []float64, []float64){
+func (bf *Buffer) Array2Trans(samples [][]float64) ([][]float64, [][]float64, [][]float64, [][]float64, [][]float64){
 	lastStates := ao.Index2d(samples, 0, len(samples), 0, bf.state_len)
-	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), bf.state_len, bf.state_len+1)))
+	//lastActions := ao.Flatten2DInt(ao.A64ToInt2D(ao.Index2d(samples, 0, len(samples), bf.state_len, bf.state_len+1)))
+	lastActions := ao.Index2d(samples, 0, len(samples), bf.state_len, bf.state_len+1)
 	states := ao.Index2d(samples, 0, len(samples), bf.state_len+1, bf.state_len*2+1)
-	rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), bf.state_len*2+1, bf.state_len*2+2))
-	gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), bf.state_len*2+2, bf.state_len*2+3))
+	//rewards := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), bf.state_len*2+1, bf.state_len*2+2))
+	rewards := ao.Index2d(samples, 0, len(samples), bf.state_len*2+1, bf.state_len*2+2)
+	//gammas := ao.Flatten2DFloat(ao.Index2d(samples, 0, len(samples), bf.state_len*2+2, bf.state_len*2+3))
+	gammas := ao.Index2d(samples, 0, len(samples), bf.state_len*2+2, bf.state_len*2+3)
 	return lastStates, lastActions, states, rewards, gammas
 }
 
-func (bf *Buffer) Sample(batchsize int) ([][]float64, []int, [][]float64, []float64, []float64){
+func (bf *Buffer) Sample(batchsize int) ([][]float64, [][]float64, [][]float64, [][]float64, [][]float64){
 	var samples [][]float64
 	if bf.sample_type == "random" {
 		samples = bf.RandomSample(batchsize)
@@ -89,7 +89,7 @@ func (bf *Buffer) RandomSample(batchsize int) [][]float64 {
 	return samples
 }
 
-func (bf *Buffer) Content() ([][]float64, []int, [][]float64, []float64, []float64){
+func (bf *Buffer) Content() ([][]float64, [][]float64, [][]float64, [][]float64, [][]float64){
 	if bf.idx < bf.size {
 		return bf.Array2Trans(bf.queue[:bf.idx])
 	} else {
