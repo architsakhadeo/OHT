@@ -9,6 +9,7 @@ import (
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 	"github.com/stellentus/cartpoles/lib/util/network"
+	"github.com/stellentus/cartpoles/lib/util/normalizer"
 	"math"
 	"math/rand"
 )
@@ -81,6 +82,7 @@ type Dqn struct {
 	learning  bool
 	//stepNum   int
 
+	nml normalizer.Normalizer
 	bf *buffer.Buffer
 
 	learningNet network.Network
@@ -132,6 +134,8 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.bf = buffer.NewBuffer()
 	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
 
+	agent.nml = normalizer.Normalizer{agent.StateDim, agent.StateRange}
+
 	// NN: Graph Construction
 	// NN: Weight Initialization
 	agent.learningNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
@@ -149,7 +153,7 @@ func (agent *Dqn) Start(oristate rlglue.State) rlglue.Action {
 	state := make([]float64, agent.StateDim)
 	copy(state, oristate)
 
-	state = agent.StateNormalization(state)
+	state = agent.nml.MeanZeroNormalization(state)
 	agent.lastState = state
 	act := agent.Policy(state)
 	agent.lastAction = act
@@ -172,8 +176,8 @@ func (agent *Dqn) Step(oristate rlglue.State, reward float64) rlglue.Action {
 	}
 	state := make([]float64, agent.StateDim)
 	copy(state, oristate)
-	state = agent.StateNormalization(state)
-	agent.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
+	state = agent.nml.MeanZeroNormalization(state)
+	agent.bf.Feed(agent.lastState, agent.lastAction, state, reward, agent.Gamma)
 	//agent.stepNum = agent.stepNum + 1
 	agent.Update()
 	agent.lastState = state
@@ -192,21 +196,11 @@ func (agent *Dqn) Step(oristate rlglue.State, reward float64) rlglue.Action {
 
 // End informs the agent that a terminal state has been reached, providing the final reward.
 func (agent *Dqn) End(state rlglue.State, reward float64) {
-	agent.Feed(agent.lastState, agent.lastAction, state, reward, float64(0))
+	agent.bf.Feed(agent.lastState, agent.lastAction, state, reward, float64(0)) // gamma=0
+	agent.Update()
 	if agent.EnableDebug {
 		agent.Message("msg", "end", "state", state, "reward", reward)
 	}
-}
-
-func (agent *Dqn) StateNormalization(state rlglue.State) rlglue.State {
-	for i := 0; i < agent.StateDim; i++ {
-		state[i] = state[i] / agent.StateRange[i] * 2 // if state range is -1 to 1, StateRange returns 2. Thus use *2 to normalize state to correct range
-	}
-	return state
-}
-
-func (agent *Dqn) Feed(lastS rlglue.State, lastA int, state rlglue.State, reward float64, gamma float64) {
-	agent.bf.Feed(lastS, lastA, state, reward, gamma)
 }
 
 func (agent *Dqn) Update() {
@@ -233,14 +227,16 @@ func (agent *Dqn) Update() {
 
 	if agent.updateNum%agent.Sync == 0 {
 		// NN: Synchronization
-		for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
-			agent.targetNet.HiddenWeights[i] = agent.learningNet.HiddenWeights[i]
-		}
-		agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
-		//fmt.Println("sync", agent.updateNum)
+		//for i := 0; i < len(agent.targetNet.HiddenWeights); i++ {
+		//	agent.targetNet.HiddenWeights[i] = agent.learningNet.HiddenWeights[i]
+		//}
+		//agent.targetNet.OutputWeights = agent.learningNet.OutputWeights
+		////fmt.Println("sync", agent.updateNum)
+		agent.targetNet = network.Synchronization(agent.learningNet, agent.targetNet)
 	}
 
-	lastStates, lastActions, states, rewards, gammas := agent.bf.Sample(agent.BatchSize)
+	lastStates, lastActionsFloat, states, rewards, gammas := agent.bf.Sample(agent.BatchSize)
+	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(lastActionsFloat))
 
 	// NN: Weight update
 	lastQ := agent.learningNet.Forward(lastStates)
@@ -252,32 +248,24 @@ func (agent *Dqn) Update() {
 	for i := 0; i < len(lastQ); i++ {
 		loss[i] = make([]float64, agent.NumberOfActions)
 	}
-
 	for i := 0; i < len(lastQ); i++ {
 		for j := 0; j < agent.NumberOfActions; j++ {
 			loss[i][j] = 0
 		}
-		loss[i][lastActions[i]] = rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i]
+		loss[i][lastActions[i]] = rewards[i][0] + gammas[i][0]*targetActionValue[i] - lastActionValue[i]
 	}
-	//fmt.Println(loss[len(lastQ)-1][lastActions[len(lastQ)-1]])
-
-	//temp := 0.0
-	//for i := 0; i < len(lastQ); i++ {
-	//	temp = temp + (rewards[i] + gammas[i]*targetActionValue[i] - lastActionValue[i])
-	//}
-	//temp = temp / float64(len(lastQ))
-	//for i := 0; i < len(lastQ); i++ {
-	//	for j := 0; j < agent.NumberOfActions; j++ {
-	//		if j != lastActions[i] {
-	//			loss[i][j] = 0
-	//		} else {
-	//			loss[i][j] = temp
-	//		}
-	//	}
-	//}
-	//fmt.Println(loss[len(lastQ)-1][lastActions[len(lastQ)-1]])
+	avgLoss := make([][]float64, 1)
+	avgLoss[0] = make([]float64, agent.NumberOfActions)
+	for j := 0; j < agent.NumberOfActions; j++ {
+		sum := 0.0
+		for i := 0; i < len(loss); i++ {
+			sum += loss[i][j]
+		}
+		avgLoss[0][j] = sum / float64(len(loss))
+	}
 
 	agent.learningNet.Backward(loss)
+	//agent.learningNet.Backward(avgLoss)
 	agent.updateNum += 1
 }
 
@@ -338,7 +326,8 @@ type LockFunc func() bool
 
 //func (agent *Dqn) CheckChange() bool {
 func (agent *Dqn) DynamicLock() bool {
-	_, _, _, rewards, _ := agent.bf.Content()
+	_, _, _, rewards2D, _ := agent.bf.Content()
+	rewards := ao.Flatten2DFloat(rewards2D)
 	avg := ao.Average(rewards)
 	if len(rewards) < agent.Bsize {
 		return false
@@ -366,7 +355,8 @@ func (agent *Dqn) OnetimeLock() bool {
 	if agent.lock {
 		return true
 	} else {
-		_, _, _, rewards, _ := agent.bf.Content()
+		_, _, _, rewards2D, _ := agent.bf.Content()
+		rewards := ao.Flatten2DFloat(rewards2D)
 		avg := ao.Average(rewards)
 		if len(rewards) < agent.Bsize {
 			return false
