@@ -67,22 +67,43 @@ def getConfidenceIntervalOfMean(data, confidence=0.95):
 
 # Sorts the performances in an ascending manner
 # Returns the lower and upper performances based on their percentile
-def getRegion(data, lower=0.0, upper=1.0, transformation='Returns'):
-    numRuns = len(data)
+# type = 'asymptotic' or 'pertimestep'
+def getRegion(data, lower=0.0, upper=1.0, transformation='Returns', type='asymptotic'):
+    if type == 'asymptotic':
+        numRuns = len(data)
 
-    # Sorts runs w.r.t. final performance in an ascending manner
-    indices = np.argsort(data[:,-1])
-    lowerIndex = int(round( lower * ( numRuns-1 ) ))
-    upperIndex = int(round( upper * ( numRuns-1 ) ))
+        # Sorts runs w.r.t. final performance in an ascending manner
+        indices = np.argsort(data[:,-1])
+        lowerIndex = int(round( lower * ( numRuns-1 ) ))
+        upperIndex = int(round( upper * ( numRuns-1 ) ))
 
-    # Change this code carefully
-    if transformation == 'Failures':
-        # li and ui are important and not redundant. They act like temp variables
-        li = lowerIndex
-        ui = upperIndex
-        lowerIndex = numRuns - 1 - ui
-        upperIndex = numRuns - 1 - li
+        # Change this code carefully
+        if transformation == 'Failures':
+            # li and ui are important and not redundant. They act like temp variables
+            li = lowerIndex
+            ui = upperIndex
+            lowerIndex = numRuns - 1 - ui
+            upperIndex = numRuns - 1 - li
+            
+        lowerRun = data[indices[lowerIndex]]
+        upperRun = data[indices[upperIndex]]
+        return lowerRun, upperRun
+    
+    elif type == 'pertimestep':
+        numRuns = len(data)
+
+        sorteddata = np.sort(data, axis=0)
+        lowerIndex = int(round( lower * ( numRuns-1 ) ))
+        upperIndex = int(round( upper * ( numRuns-1 ) ))
+
+        if transformation == 'Failures':
+            li = lowerIndex
+            ui = upperIndex
+            lowerIndex = numRuns - 1 - ui
+            upperIndex = numRuns - 1 - li
         
-    lowerRun = data[indices[lowerIndex]]
-    upperRun = data[indices[upperIndex]]
-    return lowerRun, upperRun
+        lowerRun = sorteddata[lowerIndex]
+        upperRun = sorteddata[upperIndex]
+        
+        return lowerRun, upperRun
+

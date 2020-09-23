@@ -12,7 +12,7 @@
     "experiment-settings": {
         "steps": 50000,
         "data-path": "data/expS",
-        "should-log-traces": true,
+        "should-log-traces": false,
         "should-log-episode-lengths": true,
         "debug-interval": 100
     }
