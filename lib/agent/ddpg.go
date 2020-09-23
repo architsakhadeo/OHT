@@ -9,6 +9,7 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/normalizer"
+	"github.com/stellentus/cartpoles/lib/util/optimizer"
 	"math/rand"
 )
 
@@ -21,7 +22,7 @@ type ddpgSettings struct {
 	Gamma               float64 `json:"gamma"`
 
 	ActorHidden  []int   `json:"actor-hidden"`
-	ActionStd	 float64 `json:"action-std"`
+	ActionStd    float64 `json:"action-std"`
 	CriticHidden []int   `json:"critic-hidden"`
 	Alpha        float64 `json:"alpha"`
 	Sync         int     `json:"ddpg-sync"`
@@ -39,6 +40,8 @@ type ddpgSettings struct {
 	IncreaseBS bool `json:"increasing-batch"`
 
 	StateRange []float64 `json:"StateRange"`
+
+	OptName string `json:"optimizer"`
 }
 
 type Ddpg struct {
@@ -59,6 +62,9 @@ type Ddpg struct {
 	CriticTarget   network.Network
 	ActorLearning  network.Network
 	ActorTarget    network.Network
+
+	CriticOpt optimizer.Optimizer
+	ActorOpt  optimizer.Optimizer
 }
 
 func init() {
@@ -100,6 +106,20 @@ func (agent *Ddpg) Initialize(run uint, expAttr, envAttr rlglue.Attributes) erro
 	agent.ActorTarget = network.CreateNetwork(agent.StateDim, agent.ActorHidden, agent.ActionDim, agent.Alpha,
 		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.updateNum = 0
+
+	if agent.OptName == "Adam" {
+		agent.ActorOpt = new(optimizer.Adam)
+		agent.ActorOpt.Init(agent.Alpha, []float64{agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps}, agent.StateDim, agent.ActorHidden, agent.ActionDim)
+		agent.CriticOpt = new(optimizer.Adam)
+		agent.CriticOpt.Init(agent.Alpha, []float64{agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps}, agent.StateDim+agent.ActionDim, agent.CriticHidden, 1)
+	} else if agent.OptName == "Sgd" {
+		agent.ActorOpt = new(optimizer.Sgd)
+		agent.ActorOpt.Init(agent.Alpha, []float64{agent.Momentum}, agent.StateDim, agent.ActorHidden, agent.ActionDim)
+		agent.CriticOpt = new(optimizer.Sgd)
+		agent.CriticOpt.Init(agent.Alpha, []float64{agent.Momentum}, agent.StateDim+agent.ActionDim, agent.CriticHidden, 1)
+	} else {
+		errors.New("Optimizer NotImplemented")
+	}
 
 	return nil
 }
@@ -169,14 +189,14 @@ func (agent *Ddpg) Update() {
 	temp = ao.Concatenate(lastStates, lastActions)
 	currentBufferQ := agent.CriticLearning.Forward(temp)
 	criticLoss := MseLoss(y, currentBufferQ)
-	agent.CriticLearning.Backward(criticLoss)
+	agent.CriticLearning.Backward(criticLoss, agent.CriticOpt)
 
 	// Actor: Weight update
 	currentActor := agent.ActorLearning.Forward(lastStates)
 	temp = ao.Concatenate(lastStates, currentActor)
 	currentActorQ := agent.CriticLearning.Predict(temp)
 	negQ := ao.A64ArrayMulti2D(-1.0, currentActorQ)
-	agent.ActorLearning.Backward(negQ)
+	agent.ActorLearning.Backward(negQ, agent.ActorOpt)
 
 	agent.updateNum += 1
 }
@@ -187,14 +207,13 @@ func (agent *Ddpg) Policy(state rlglue.State) float64 {
 	inputS := make([][]float64, 1)
 	inputS[0] = state
 	mu := agent.ActorLearning.Predict(inputS)[0]
-	action := mu[0] + rand.NormFloat64() * agent.ActionStd
+	action := mu[0] + rand.NormFloat64()*agent.ActionStd
 	return action
 }
 
 func (agent *Ddpg) GetLock() bool {
 	return false
 }
-
 
 func MseLoss(target, predict [][]float64) [][]float64 {
 	loss := ao.BitwisePower2D(ao.BitwiseMinus2D(target, predict), 2.0)
@@ -210,4 +229,3 @@ func MseLoss(target, predict [][]float64) [][]float64 {
 	}
 	return avgLoss
 }
-

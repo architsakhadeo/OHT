@@ -13,9 +13,9 @@
 		"sweep": {
 			"alpha": [1e-3, 1e-4, 1e-5, 1e-6],
 			"dqn-hidden": [
-				[4, 4], [16, 16], [64, 64]
+				[64, 64]
 			],
-			"dqn-sync":[512],
+			"dqn-sync":[32, 512, 1024],
 			"dqn-batch":[64],
 			"buffer-size":[2500],
 			"epsilon": [0.1, 0.05, 0]
@@ -29,11 +29,11 @@
 		"sweep": {
 			"delays":[[0]]
 		},
-		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_random/param_0/"
+		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_halfbaseline/param_0/"
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_random/",
+		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_sync_epsilon/step1k_env/lockat_halfbaseline/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000

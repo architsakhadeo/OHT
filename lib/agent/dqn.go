@@ -10,6 +10,7 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/normalizer"
+	"github.com/stellentus/cartpoles/lib/util/optimizer"
 	"math"
 	"math/rand"
 )
@@ -68,6 +69,8 @@ type dqnSettings struct {
 	IncreaseBS bool `json:"increasing-batch"`
 
 	StateRange []float64 `json:"StateRange"`
+
+	OptName  string `json:"optimizer"`
 }
 
 type Dqn struct {
@@ -83,10 +86,11 @@ type Dqn struct {
 	//stepNum   int
 
 	nml normalizer.Normalizer
-	bf *buffer.Buffer
+	bf  *buffer.Buffer
 
 	learningNet network.Network
 	targetNet   network.Network
+	opt         optimizer.Optimizer
 
 	lw   LockWeight
 	lock bool
@@ -143,6 +147,16 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.targetNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
 		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.updateNum = 0
+
+	if agent.OptName == "Adam" {
+		agent.opt = new(optimizer.Adam)
+		agent.opt.Init(agent.Alpha, []float64{agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
+	} else if agent.OptName == "Sgd" {
+		agent.opt = new(optimizer.Sgd)
+		agent.opt.Init(agent.Alpha, []float64{agent.Momentum}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
+	} else {
+		errors.New("Optimizer NotImplemented")
+	}
 
 	return nil
 }
@@ -264,7 +278,7 @@ func (agent *Dqn) Update() {
 		avgLoss[0][j] = sum / float64(len(loss))
 	}
 
-	agent.learningNet.Backward(loss)
+	agent.learningNet.Backward(loss, agent.opt)
 	//agent.learningNet.Backward(avgLoss)
 	agent.updateNum += 1
 }

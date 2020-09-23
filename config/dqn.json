@@ -11,14 +11,14 @@
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
 		"sweep": {
-			"alpha": [3e-5, 1e-5, 3e-6],
+			"alpha": [0.001],
 			"dqn-hidden": [
-				[64, 64],
-				[128, 128]
+				[64, 64]
 			],
 			"dqn-sync":[32],
-			"dqn-batch":[32, 64],
-			"buffer-size":[2500]
+			"dqn-batch":[64],
+			"buffer-size":[2500],
+			"increasing-batch": [false]
 		},
 		"lock-weight": false,
 		"enable-debug": false,
@@ -31,8 +31,8 @@
 		}
 	},
 	"experiment-settings": {
-		"steps": 10000000,
-		"data-path": "data/dqn/test",
+		"steps": 100000,
+		"data-path": "data/dqn/temp",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000

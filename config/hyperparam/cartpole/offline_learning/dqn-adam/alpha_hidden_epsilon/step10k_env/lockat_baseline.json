@@ -6,6 +6,7 @@
 		"gamma": 0.9,
 		"state-len": 4,
 		"buffer-type": "random",
+		"optimizer": "Adam",
 		"dqn-adamBeta1": 0.9,
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
@@ -32,7 +33,7 @@
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env/lockat_baseline/",
+		"data-path": "data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_baseline/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
