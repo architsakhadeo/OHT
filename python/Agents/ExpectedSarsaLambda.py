@@ -275,9 +275,6 @@ class ExpectedSarsaTileCodingContinuing(BaseAgent):
 	
 	def load(self, path):
 		self.w = np.load(path + '.npy')
-	
-	def GetLock(self, boolean):
-		return False
 
 
 def init_agent():
