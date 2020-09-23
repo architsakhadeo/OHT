@@ -14,6 +14,4 @@ type Agent interface {
 
 	// End informs the agent that a terminal state has been reached, providing the final reward.
 	End(state State, reward float64)
-
-	GetLock() bool
 }
