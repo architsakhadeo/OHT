@@ -35,7 +35,7 @@ type Experiment struct {
 	CacheTracesInRAM        bool   `json:"cache-traces-in-ram"`
 	ShouldLogEpisodeLengths bool   `json:"should-log-episode-lengths"`
 	CountAfterLock          bool   `json:"count-step-after-lock"`
-
+	TotalAfterCount			int    `json:"total-step-after-lock"`
 	// MaxCPUs, if set, specifies the maximum number of CPUs this experiment is allowed to use
 	MaxCPUs int `json:"max-cpus"`
 }
@@ -50,6 +50,7 @@ func (set *Experiment) SetToDefault() {
 	set.CacheTracesInRAM = false
 	set.MaxCPUs = 0 // Does not change the default value
 	set.CountAfterLock = false
+	set.TotalAfterCount = 0
 }
 
 // Parse parses a json.RawMessage. If the input is a JSON array, then that array as parsed as an array of config objects.
