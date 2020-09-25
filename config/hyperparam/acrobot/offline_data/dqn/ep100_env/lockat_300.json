@@ -1,0 +1,46 @@
+{
+  "agent-name": "dqn",
+  "environment-name": "acrobot",
+  "agent-settings": {
+    "epsilon": 0.2,
+    "decreasing-epsilon": "None",
+    "gamma": 1.0,
+    "state-len": 6,
+    "buffer-type": "random",
+    "optimizer": "Adam",
+    "dqn-adamBeta1": 0.9,
+    "dqn-adamBeta2": 0.999,
+    "dqn-adamEps": 1e-8,
+    "sweep": {
+      "alpha": [0.001],
+      "dqn-hidden": [
+        [128, 128]
+      ],
+      "dqn-sync":[32],
+      "dqn-batch":[64],
+      "buffer-size":[5000]
+    },
+
+    "lock-weight": true,
+    "lock-condition": "onetime-epLength",
+    "lock-condition-length": 300,
+
+    "enable-debug": false,
+    "seed": 100
+  },
+  "environment-settings": {
+    "seed": 100,
+    "sweep": {
+      "delays":[[0]]
+    }
+  },
+  "experiment-settings": {
+    "steps": 0,
+    "episodes": 100,
+    "count-step-after-lock": true,
+    "data-path": "data/hyperparam/acrobot/offline_data/dqn/step30k_env/lockat_300/",
+    "should-log-traces": true,
+    "should-log-episode-lengths": false,
+    "debug-interval": 1000
+  }
+}

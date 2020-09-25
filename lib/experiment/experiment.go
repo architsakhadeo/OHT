@@ -24,6 +24,8 @@ type Experiment struct {
 	logger.Data
 	numStepsTaken   int
 	numEpisodesDone int
+
+	stepBeforeCount int
 }
 
 func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experiment, debug logger.Debug, log logger.Data) (*Experiment, error) {
@@ -65,11 +67,13 @@ func (exp *Experiment) Run() error {
 
 func (exp *Experiment) runContinuous() {
 	exp.Message("msg", "Starting continuous experiment")
+	exp.stepBeforeCount = 0
 	exp.runSingleEpisode()
 }
 
 func (exp *Experiment) runEpisodic() {
 	exp.Message("msg", "Starting episodic experiment")
+	exp.stepBeforeCount = 0
 	for exp.numEpisodesDone < exp.Settings.MaxEpisodes {
 		exp.runSingleEpisode()
 	}
@@ -79,7 +83,6 @@ func (exp *Experiment) runEpisodic() {
 // strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() {
 	countStep := true
-	stepBeforeCount := 0
 
 	prevState := exp.environment.Start()
 	tempPrev := make(rlglue.State, len(prevState))
@@ -114,9 +117,9 @@ func (exp *Experiment) runSingleEpisode() {
 				episodeEnded = true
 			}
 		} else {
-			stepBeforeCount += 1
-			if stepBeforeCount%10000 == 0 {
-				exp.MessageDelta("total steps", stepBeforeCount)
+			exp.stepBeforeCount += 1
+			if exp.stepBeforeCount%10000 == 0 {
+				exp.MessageDelta("total steps", exp.stepBeforeCount)
 			}
 		}
 
@@ -149,7 +152,7 @@ func (exp *Experiment) runSingleEpisode() {
 		}
 
 		if !countStep {
-			fmt.Println("Episode", numStepsThisEpisode, "Step", stepBeforeCount)
+			fmt.Println("Episode", numStepsThisEpisode, "Step", exp.stepBeforeCount)
 		} else {
 			exp.logEndOfEpisode(numStepsThisEpisode)
 		}

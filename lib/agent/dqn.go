@@ -21,7 +21,8 @@ type LockWeight struct {
 
 	DecCount int
 	BestAvg  float64
-	LockAvg  float64 `json:"lock-condition-reward"`
+	LockAvgRwd  float64 `json:"lock-condition-reward"`
+	LockAvgLen  float64 `json:"lock-condition-length"`
 	LockThrd int     `json:"lock-condition-thrd"`
 
 	CheckChange LockFunc
@@ -34,7 +35,9 @@ func InitLockWeight(agent *Dqn, lw LockWeight) LockWeight {
 	if lw.LockCondition == "dynamic-reward" {
 		lw.CheckChange = agent.DynamicLock
 	} else if lw.LockCondition == "onetime-reward" {
-		lw.CheckChange = agent.OnetimeLock
+		lw.CheckChange = agent.OnetimeRwdLock
+	} else if lw.LockCondition == "onetime-epLength" {
+		lw.CheckChange = agent.OnetimeEpLenLock
 	} else if lw.LockCondition == "beginning" {
 		lw.CheckChange = agent.KeepLock
 	}
@@ -320,7 +323,7 @@ func (agent *Dqn) CheckAvgRwdLock(avg float64) bool {
 }
 
 func (agent *Dqn) CheckAvgRwdUnlock(avg float64) bool {
-	if agent.lw.LockAvg > avg {
+	if agent.lw.LockAvgRwd > avg {
 		agent.lw.DecCount += 1
 		fmt.Println("Count to unlock", agent.lw.DecCount)
 	} else {
@@ -349,7 +352,7 @@ func (agent *Dqn) DynamicLock() bool {
 	if agent.lock {
 		lock := agent.CheckAvgRwdUnlock(avg)
 		if !lock {
-			agent.lw.LockAvg = avg
+			agent.lw.LockAvgRwd = avg
 			agent.lw.DecCount = 0
 			fmt.Println("UnLocked")
 		}
@@ -357,7 +360,7 @@ func (agent *Dqn) DynamicLock() bool {
 	} else {
 		lock := agent.CheckAvgRwdLock(avg)
 		if lock {
-			agent.lw.LockAvg = avg
+			agent.lw.LockAvgRwd = avg
 			agent.lw.DecCount = 0
 			fmt.Println("Locked")
 		}
@@ -365,7 +368,7 @@ func (agent *Dqn) DynamicLock() bool {
 	}
 }
 
-func (agent *Dqn) OnetimeLock() bool {
+func (agent *Dqn) OnetimeRwdLock() bool {
 	if agent.lock {
 		return true
 	} else {
@@ -375,8 +378,33 @@ func (agent *Dqn) OnetimeLock() bool {
 		if len(rewards) < agent.Bsize {
 			return false
 		}
-		if avg > agent.lw.LockAvg {
+		if avg > agent.lw.LockAvgRwd {
 			return true
+		}
+		return false
+	}
+}
+
+func (agent *Dqn) OnetimeEpLenLock() bool {
+	if agent.lock {
+		return true
+	} else {
+		_, _, _, rewards2D, _ := agent.bf.Content()
+		rewards := ao.Flatten2DFloat(rewards2D)
+		if len(rewards) < agent.Bsize {
+			return false
+		}
+		zeros := 0
+		for i:=0;i<len(rewards);i++ {
+			if rewards[i] == 0 {
+				zeros += 1
+			}
+		}
+		if zeros != 0 {
+			avg := float64(agent.Bsize) / float64(zeros)
+			if avg < agent.lw.LockAvgLen {
+				return true
+			}
 		}
 		return false
 	}
