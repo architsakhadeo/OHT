@@ -22,8 +22,7 @@
     },
 
     "lock-weight": true,
-    "lock-condition": "onetime-epLength",
-    "lock-condition-length": 300,
+    "lock-condition": "beginning",
 
     "enable-debug": false,
     "seed": 100
@@ -39,7 +38,7 @@
     "episodes": 100,
     "total-step-after-lock": 30000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam/acrobot/offline_data/dqn/step30k/lockat_300/",
+    "data-path": "data/hyperparam/acrobot/offline_data/dqn/step30k/lockat_random/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "debug-interval": 1000
