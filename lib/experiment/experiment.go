@@ -110,18 +110,21 @@ func (exp *Experiment) runSingleEpisode() {
 			exp.LogStep(prevState, newState, action, reward, episodeEnded)
 			exp.numStepsTaken += 1
 			numStepsThisEpisode += 1
+			if numStepsThisEpisode == exp.Settings.MaxStepsInEpisode {
+				episodeEnded = true
+			}
 		} else {
 			stepBeforeCount += 1
-			if stepBeforeCount % 10000 == 0 {
+			if stepBeforeCount%10000 == 0 {
 				exp.MessageDelta("total steps", stepBeforeCount)
 			}
 		}
 
 		copy(prevState, newState)
 
-		if exp.numStepsTaken % 10000 == 0 &&
+		if exp.numStepsTaken%10000 == 0 &&
 			(!exp.Settings.CountAfterLock ||
-				(exp.Settings.CountAfterLock && countStep)){
+				(exp.Settings.CountAfterLock && countStep)) {
 			end = time.Now()
 			delta = end.Sub(start)
 			fmt.Println("Running time", exp.numStepsTaken, delta)
@@ -130,7 +133,7 @@ func (exp *Experiment) runSingleEpisode() {
 
 		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 &&
 			(!exp.Settings.CountAfterLock ||
-				(exp.Settings.CountAfterLock && countStep)){
+				(exp.Settings.CountAfterLock && countStep)) {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 
@@ -159,7 +162,7 @@ func (exp *Experiment) runSingleEpisode() {
 			break
 		}
 	}
-	if numStepsThisEpisode > 0 || isEpisodic {
+	if numStepsThisEpisode > 0 {
 		// If there are leftover steps, we're ending after a partial episode.
 		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
