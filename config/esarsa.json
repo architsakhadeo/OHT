@@ -31,7 +31,7 @@
 		}
 	},
 	"experiment-settings": {
-		"steps": 1000,
+		"steps": 15,
 		"data-path": "data/esarsa",
 		"should-log-traces": true,
 		"should-log-episode-lengths": true,

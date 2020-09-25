@@ -86,7 +86,6 @@ func (exp *Experiment) runSingleEpisode() {
 
 	prevState := exp.environment.Start()
 	tempPrev := make(rlglue.State, len(prevState))
-	//tempNew := make(rlglue.State, len(prevState))
 
 	copy(tempPrev, prevState)
 	action := exp.agent.Start(prevState)
@@ -94,7 +93,6 @@ func (exp *Experiment) runSingleEpisode() {
 	if exp.Settings.CountAfterLock {
 		countStep = exp.agent.GetLock()
 	}
-
 	isEpisodic := exp.Settings.MaxSteps == 0
 
 	start := time.Now()
@@ -103,26 +101,24 @@ func (exp *Experiment) runSingleEpisode() {
 
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
-
 		newState, reward, episodeEnded := exp.environment.Step(action)
 
 		if exp.Settings.CountAfterLock {
 			countStep = exp.agent.GetLock()
 		}
 		if countStep {
-			exp.LogStep(prevState, newState, action, reward, episodeEnded)
 			exp.numStepsTaken += 1
 			numStepsThisEpisode += 1
 			if numStepsThisEpisode == exp.Settings.MaxStepsInEpisode {
 				episodeEnded = true
 			}
+			exp.LogStep(prevState, newState, action, reward, episodeEnded)
 		} else {
 			exp.stepBeforeCount += 1
 			if exp.stepBeforeCount%10000 == 0 {
 				exp.MessageDelta("total steps", exp.stepBeforeCount)
 			}
 		}
-
 		copy(prevState, newState)
 
 		if exp.numStepsTaken%10000 == 0 &&
@@ -142,6 +138,7 @@ func (exp *Experiment) runSingleEpisode() {
 
 		if !episodeEnded {
 			action = exp.agent.Step(newState, reward)
+			copy(newState, prevState)
 			continue
 		} else if !isEpisodic {
 			// An episodic environment is being treated as continuous, so reset the environment
@@ -149,6 +146,7 @@ func (exp *Experiment) runSingleEpisode() {
 			// again here
 			episodeEnded = false
 			action = exp.agent.Step(newState, reward)
+			copy(newState, prevState)
 		}
 
 		if !countStep {
@@ -162,6 +160,7 @@ func (exp *Experiment) runSingleEpisode() {
 		if isEpisodic {
 			// We're in the episodic setting, so we are done with this episode
 			exp.agent.End(newState, reward)
+			copy(newState, prevState)
 			break
 		}
 	}
