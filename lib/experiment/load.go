@@ -1,11 +1,14 @@
 package experiment
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -27,7 +30,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 	if err != nil {
 		return errors.New("Cannot run sweep: " + err.Error())
 	}
-	savePath, err := parameterStringify(attrs)
+	basePath, err := parameterStringify(conf, attrs)
 	if err != nil {
 		return errors.New("Failed to format path: " + err.Error())
 	}
@@ -35,7 +38,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
 		CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
-		BasePath:                fmt.Sprint(conf.Experiment.DataPath, "/", savePath),
+		BasePath:                basePath,
 		FileSuffix:              strconv.Itoa(int(run)),
 	})
 	if err != nil {
@@ -119,32 +122,56 @@ func InitializeEnvWrapper(wrapperNames []string, run uint, attr []rlglue.Attribu
 	return env, nil
 }
 
-func parameterStringify(attrs []rlglue.Attributes) (string, error) {
-	pstrings := []string{}
-	var sweepAttrMap map[string]interface{}
-	for _, attr := range attrs {
-		err := json.Unmarshal(attr, &sweepAttrMap)
+func parameterStringify(conf config.Config, attrs []rlglue.Attributes) (string, error) {
+	// Generate parameter config.
+	sweepAttrMaps := make([]map[string]interface{}, len(attrs))
+	for idx, attr := range attrs {
+		err := json.Unmarshal(attr, &sweepAttrMaps[idx])
 		if err != nil {
 			return "", errors.New("Could not parse attributes: " + err.Error())
 		}
 	}
-	delete(sweepAttrMap, "seed")
-	delete(sweepAttrMap, "path")
-	for name, value := range sweepAttrMap {
-		switch value := value.(type) {
-		case int, float64, string:
-			pstrings = append(pstrings, fmt.Sprint(name, "=", value))
-		case bool:
-			pstrings = append(pstrings, fmt.Sprint(name, "=", boolToInt(value)))
-		case []interface{}:
-			pstrings = append(pstrings, fmt.Sprint(name, "=", arrayToString(value, ",")))
-		default:
-			return "", errors.New("Unexpected type")
-		}
+
+	paramConfig := struct {
+		AgentName       string                   `json:"agent-name"`
+		EnvironmentName string                   `json:"environment-name"`
+		Agent           map[string]interface{}   `json:"agent-settings"`
+		Environment     map[string]interface{}   `json:"environment-settings"`
+		StateWrappers   []map[string]interface{} `json:"state-wrappers"`
+		Experiment      config.Experiment        `json:"experiment-settings"`
+	}{
+		conf.AgentName,
+		conf.EnvironmentName,
+		sweepAttrMaps[0],
+		sweepAttrMaps[1],
+		sweepAttrMaps[2:],
+		conf.Experiment,
 	}
-	// TODO may need a better order.
-	sort.Strings(pstrings)
-	return strings.Join(pstrings, "_"), nil
+	params, err := json.MarshalIndent(&paramConfig, "", "\t")
+	if err != nil {
+		return "", errors.New("Could not Marshal hyperparameter config: " + err.Error())
+	}
+
+	// Get git commit hash.
+	gitHashCmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	gitHash, err := gitHashCmd.Output()
+	if err != nil {
+		return "", errors.New("Could not get the git commit hash: " + err.Error())
+	}
+	hashPath := strings.Trim(fmt.Sprintf("%s", gitHash), "\n")
+
+	paramHash := sha256.Sum256(params)
+	hashPath = fmt.Sprintf("%s_%x", hashPath, paramHash)[:16]
+	basePath := fmt.Sprintf("%s/%s", conf.Experiment.DataPath, hashPath)
+	if _, err := os.Stat(basePath); os.IsNotExist(err) {
+		os.MkdirAll(basePath, os.ModePerm)
+	}
+	configPath := fmt.Sprintf("%s/config.json", basePath)
+	err = ioutil.WriteFile(configPath, params, os.ModePerm)
+	if err != nil {
+		return "", errors.New("Could not save config json: " + err.Error())
+	}
+	return basePath, nil
 }
 
 func boolToInt(x bool) int {
