@@ -9,18 +9,18 @@ import (
 // ReplayData is used to replay Data.
 // TODO consider whether Data stores and replays episodes correctly, since terminal states are visited.
 type ReplayData struct {
-	dataLogger
+	DataLogger
 	numSteps int
 	nextStep int
 }
 
 func NewReplayData(pth, suffix string, debug Debug) (ReplayData, error) {
 	rd := ReplayData{
-		dataLogger: dataLogger{
+		DataLogger: DataLogger{
 			Debug: debug,
 		},
 	}
-	err := rd.dataLogger.loadLog(pth, suffix, false, false, true)
+	err := rd.DataLogger.loadLog(pth, suffix, false, false, true)
 	return rd, err
 }
 
