@@ -114,9 +114,8 @@ func (agent *ESarsa) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWei
 	return lw
 }
 
-// Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	set := EsarsaSettings{
+func DefaultESarsaSettings() EsarsaSettings {
+	return EsarsaSettings{
 		// These default settings will be used if the config doesn't set these values
 		NumTilings:         32,
 		NumTiles:           4,
@@ -131,6 +130,11 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		WInit:              0.0,
 		EnvName:            "cartpole",
 	}
+}
+
+// Initialize configures the agent with the provided parameters and resets any internal state.
+func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+	set := DefaultESarsaSettings()
 	err := json.Unmarshal(expAttr, &set)
 	if err != nil {
 		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
