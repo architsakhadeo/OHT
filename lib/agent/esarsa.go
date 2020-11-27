@@ -18,7 +18,7 @@ const (
 	maxAngularVelocity = 3.5
 )
 
-type esarsaSettings struct {
+type EsarsaSettings struct {
 	EnableDebug        bool    `json:"enable-debug"`
 	Seed               int64   `json:"seed"`
 	NumTilings         int     `json:"tilings"`
@@ -52,7 +52,7 @@ type ESarsa struct {
 	timesteps              float64
 	accumulatingbeta1      float64
 	accumulatingbeta2      float64
-	esarsaSettings
+	EsarsaSettings
 }
 
 func init() {
@@ -65,7 +65,7 @@ func NewESarsa(logger logger.Debug) (rlglue.Agent, error) {
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
 func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	agent.esarsaSettings = esarsaSettings{
+	agent.EsarsaSettings = EsarsaSettings{
 		// These default settings will be used if the config doesn't set these values
 		NumTilings:         32,
 		NumTiles:           4,
@@ -77,34 +77,34 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		IsStepsizeAdaptive: false,
 	}
 
-	err := json.Unmarshal(expAttr, &agent.esarsaSettings)
+	err := json.Unmarshal(expAttr, &agent.EsarsaSettings)
 	if err != nil {
 		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
-		agent.esarsaSettings.Seed = 0
+		agent.EsarsaSettings.Seed = 0
 	}
 
 	if agent.IsStepsizeAdaptive == false {
-		agent.stepsize = agent.Alpha / float64(agent.esarsaSettings.NumTilings) // Setting stepsize
+		agent.stepsize = agent.Alpha / float64(agent.EsarsaSettings.NumTilings) // Setting stepsize
 	} else {
-		agent.stepsize = agent.AdaptiveAlpha / float64(agent.esarsaSettings.NumTilings) // Setting adaptive stepsize
+		agent.stepsize = agent.AdaptiveAlpha / float64(agent.EsarsaSettings.NumTilings) // Setting adaptive stepsize
 	}
 
 	agent.beta1 = 0.9
 	agent.beta2 = 0.999
 	agent.e = math.Pow(10, -8)
 
-	agent.esarsaSettings.Seed += int64(run)
-	agent.rng = rand.New(rand.NewSource(agent.esarsaSettings.Seed)) // Create a new rand source for reproducibility
+	agent.EsarsaSettings.Seed += int64(run)
+	agent.rng = rand.New(rand.NewSource(agent.EsarsaSettings.Seed)) // Create a new rand source for reproducibility
 
 	// scales the input observations for tile-coding
 	scalers := []util.Scaler{
-		util.NewScaler(-maxPosition, maxPosition, agent.esarsaSettings.NumTiles),
-		util.NewScaler(-maxVelocity, maxVelocity, agent.esarsaSettings.NumTiles),
-		util.NewScaler(-maxAngle, maxAngle, agent.esarsaSettings.NumTiles),
-		util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.esarsaSettings.NumTiles),
+		util.NewScaler(-maxPosition, maxPosition, agent.EsarsaSettings.NumTiles),
+		util.NewScaler(-maxVelocity, maxVelocity, agent.EsarsaSettings.NumTiles),
+		util.NewScaler(-maxAngle, maxAngle, agent.EsarsaSettings.NumTiles),
+		util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.EsarsaSettings.NumTiles),
 	}
 
-	agent.tiler, err = util.NewMultiTiler(4, agent.esarsaSettings.NumTilings, scalers)
+	agent.tiler, err = util.NewMultiTiler(4, agent.EsarsaSettings.NumTilings, scalers)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	agent.timesteps = 0
 
-	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
+	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.EsarsaSettings))
 
 	return nil
 }
