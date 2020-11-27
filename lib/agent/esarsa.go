@@ -116,7 +116,7 @@ func (agent *ESarsa) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWei
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
 func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	agent.EsarsaSettings = EsarsaSettings{
+	set := EsarsaSettings{
 		// These default settings will be used if the config doesn't set these values
 		NumTilings:         32,
 		NumTiles:           4,
@@ -131,18 +131,28 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		WInit:              0.0,
 		EnvName:            "cartpole",
 	}
-
-	err := json.Unmarshal(expAttr, &agent.EsarsaSettings)
+	err := json.Unmarshal(expAttr, &set)
 	if err != nil {
 		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
-		agent.EsarsaSettings.Seed = 0
+		set.Seed = 0
 	}
-	err = json.Unmarshal(expAttr, &agent.lw)
+	set.Seed += int64(run)
+
+	lw := lockweight.LockWeight{}
+	err = json.Unmarshal(expAttr, &lw)
 	if err != nil {
 		return errors.New("ESarsa agent LockWeight attributes were not valid: " + err.Error())
 	}
+
+	return agent.InitializeWithSettings(set, lw)
+}
+
+func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.LockWeight) error {
+	agent.EsarsaSettings = set
+	agent.lw = lw
+
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed)
 	agent.lw = agent.InitLockWeight(agent.lw)
 
 	if agent.EsarsaSettings.IsStepsizeAdaptive == false {
@@ -155,10 +165,10 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 	agent.beta2 = 0.999
 	agent.e = math.Pow(10, -8)
 
-	agent.EsarsaSettings.Seed += int64(run)
 	agent.rng = rand.New(rand.NewSource(agent.EsarsaSettings.Seed)) // Create a new rand source for reproducibility
 
 	// scales the input observations for tile-coding
+	var err error
 	if agent.EsarsaSettings.EnvName == "cartpole" {
 		agent.NumActions = 2
 		scalers := []util.Scaler{
