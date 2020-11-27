@@ -106,6 +106,10 @@ func NewData(debug Debug, config DataConfig) (*DataLogger, error) {
 	return NewDataWithExtraVariables(debug, config)
 }
 
+func (lg *DataLogger) NumberOfEpisodes() int {
+	return len(lg.episodeLengths)
+}
+
 func (lg *DataLogger) writeTraceHeader(headers ...string) error {
 	// Write header row
 	str := "new state,previous state,action,reward,terminal"
