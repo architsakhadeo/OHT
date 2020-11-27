@@ -31,7 +31,7 @@ type DataConfig struct {
 	FileSuffix string
 }
 
-type dataLogger struct {
+type DataLogger struct {
 	Debug
 
 	DataConfig
@@ -54,7 +54,7 @@ type dataLogger struct {
 // NewDataWithExtraVariables creates a new Data with extra headers. The length of headers
 // should match the length of 'others' in every call to LogStepMulti.
 func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string) (Data, error) {
-	lg := &dataLogger{
+	lg := &DataLogger{
 		Debug:      debug,
 		DataConfig: config,
 		rewards:    []float64{},
@@ -106,7 +106,7 @@ func NewData(debug Debug, config DataConfig) (Data, error) {
 	return NewDataWithExtraVariables(debug, config)
 }
 
-func (lg *dataLogger) writeTraceHeader(headers ...string) error {
+func (lg *DataLogger) writeTraceHeader(headers ...string) error {
 	// Write header row
 	str := "new state,previous state,action,reward,terminal"
 	for _, hdr := range headers {
@@ -117,7 +117,7 @@ func (lg *dataLogger) writeTraceHeader(headers ...string) error {
 	return err
 }
 
-func (lg *dataLogger) RewardSince(step int) float64 {
+func (lg *DataLogger) RewardSince(step int) float64 {
 	var sum float64
 	end := len(lg.rewards)
 	for i := step; i < end; i++ {
@@ -127,7 +127,7 @@ func (lg *dataLogger) RewardSince(step int) float64 {
 }
 
 // LogEpisodeLength adds the provided episode length to the episode length log.
-func (lg *dataLogger) LogEpisodeLength(steps int) {
+func (lg *DataLogger) LogEpisodeLength(steps int) {
 	if !lg.ShouldLogEpisodeLengths {
 		return
 	}
@@ -137,7 +137,7 @@ func (lg *dataLogger) LogEpisodeLength(steps int) {
 // LogStep adds information from a step to the step log. It must contain previous state, current state,
 // and reward. It can optionally add other float64 values to be logged. (If so, LogStepHeader must be
 // called to provide headers and so the logger knows how many to expect.)
-func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) {
+func (lg *DataLogger) LogStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) {
 	str := lg.logStep(prevState, currState, action, reward, terminal)
 	if lg.ShouldLogTraces {
 		_, err := lg.Writer.WriteString(str + "\n")
@@ -149,7 +149,7 @@ func (lg *dataLogger) LogStep(prevState, currState rlglue.State, action rlglue.A
 
 // LogStepMulti is like LogStep, but it can optionally add other float64 values to be logged. (If so,
 // LogStepHeader must be called to provide headers and so the logger knows how many to expect.)
-func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool, others ...float64) {
+func (lg *DataLogger) LogStepMulti(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool, others ...float64) {
 	str := lg.logStep(prevState, currState, action, reward, terminal)
 
 	if lg.CacheTracesInRAM {
@@ -169,7 +169,7 @@ func (lg *dataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 	}
 }
 
-func (lg *dataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) string {
+func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) string {
 	lg.rewards = append(lg.rewards, reward)
 
 	var termInt int
@@ -193,7 +193,7 @@ func (lg *dataLogger) logStep(prevState, currState rlglue.State, action rlglue.A
 }
 
 // Save persists the logged information to disk.
-func (lg *dataLogger) SaveLog() error {
+func (lg *DataLogger) SaveLog() error {
 	if lg.BasePath == "" {
 		return nil
 	}
@@ -245,11 +245,11 @@ func (lg *dataLogger) SaveLog() error {
 	return nil
 }
 
-func (lg *dataLogger) GetBasePath() string {
+func (lg *DataLogger) GetBasePath() string {
 	return path.Base(lg.BasePath)
 }
 
-func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisodes, loadTraces bool) error {
+func (lg *DataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisodes, loadTraces bool) error {
 	lg.DataConfig = DataConfig{
 		ShouldLogTraces:         loadTraces,
 		ShouldLogEpisodeLengths: loadEpisodes,
