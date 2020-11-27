@@ -53,7 +53,7 @@ type DataLogger struct {
 
 // NewDataWithExtraVariables creates a new Data with extra headers. The length of headers
 // should match the length of 'others' in every call to LogStepMulti.
-func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string) (Data, error) {
+func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string) (*DataLogger, error) {
 	lg := &DataLogger{
 		Debug:      debug,
 		DataConfig: config,
@@ -102,7 +102,7 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 	return lg, nil
 }
 
-func NewData(debug Debug, config DataConfig) (Data, error) {
+func NewData(debug Debug, config DataConfig) (*DataLogger, error) {
 	return NewDataWithExtraVariables(debug, config)
 }
 
