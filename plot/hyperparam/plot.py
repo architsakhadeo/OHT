@@ -17,7 +17,8 @@ def load_data(algpath, name='episodes'):
         elif name == "rewards":
             List = pd.read_csv(algpath+'/'+Files[fileIndex])
             Data.append(List['rewards'])
-    return np.array(Data) if len(Data) !=1 else Data
+    # return np.array(Data) if len(Data) !=1 else np.array([Data])
+    return np.array(Data)
 
 def convert_data_ep(Data):
     convertedData = []
@@ -124,6 +125,12 @@ def avg_episode_data(path):
     avg = np.mean(data, axis=0)
     return avg
 
+def episode_length_data(path):
+    data = load_data(path, "episodes")
+    avg = np.mean(data, axis=0)
+    print(avg.shape)
+    return avg
+
 def setting_from_json(file, keys):
     with open(file, "r") as f:
         lines = f.readlines()
@@ -153,7 +160,9 @@ def sweep(basepath, label_keys):
         if label in temp.keys():
             print("=======================Exist:", label, temp[label], temp)
         temp[label] = i
-        data = avg_episode_data(folder)
+
+        # data = avg_episode_data(folder)
+        data = episode_length_data(folder)
         plt.plot(data, label=label)
         auc = np.sum(data)
         auc_rec[label] = auc
@@ -173,7 +182,7 @@ def all_path(path_list, label_keys):
     best_list = []
     auc_allpath = {}
     for path in path_list:
-        sweep(path, label_keys)
+        # sweep(path, label_keys)
         best_setting, sort_auc = sweep(path, label_keys)
         best_setting["label"] = path.split("/")[-1]+" "+best_setting["label"]
         best_list.append(best_setting)
@@ -183,7 +192,7 @@ def all_path(path_list, label_keys):
 
 def format_print_auc(auc_dic):
     for key, rank in auc_dic.items():
-        print("OfflineData:", key, ":")
+        print(key, ":")
         for item in rank:
             label, auc = item
             print(label, "sum="+str(auc))
@@ -191,27 +200,27 @@ def format_print_auc(auc_dic):
             #     print(var)#.split("=")[1])
         print("\n")
 
-paths = [
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_baseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_halfbaseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_quarterbaseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_-0.1",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_random",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_baseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_halfbaseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_quarterbaseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_-0.1",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_random",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_baseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_halfbaseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_quarterbaseline",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_-0.1",
-    # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_random",
-
-    "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_alpha_hidden_epsilon/",
-]
-# keys = ["alpha", "epsilon", "dqn-sync"]
-keys = ["alpha", "epsilon", "dqn-hidden"]
+# paths = [
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_baseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_halfbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_quarterbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_-0.1",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env/lockat_random",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_baseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_halfbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_quarterbaseline",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_-0.1",
+#     # "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env/lockat_random",
+#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_baseline",
+#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_halfbaseline",
+#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_quarterbaseline",
+#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_-0.1",
+#     "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env/lockat_random",
+#
+#     "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_alpha_hidden_epsilon",
+# ]
+# # keys = ["alpha", "epsilon", "dqn-sync"]
+# keys = ["alpha", "epsilon", "dqn-hidden"]
 # paths = [
 #     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_baseline",
 #     # "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step1k_env/lockat_halfbaseline",
@@ -232,4 +241,9 @@ keys = ["alpha", "epsilon", "dqn-hidden"]
 #     "../../data/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep",
 # ]
 # keys = ["adaptive-alpha", "epsilon", "tilings"]
+
+paths = [
+    "../../data/hyperparam/acrobot/online_learning/dqn-adam/step1k/sweep"
+]
+keys = ["alpha"]
 all_path(paths, keys)

@@ -42,7 +42,6 @@ def corr_from_log(offline_path, offline_key, online_key, title):
         off_lines = off.readlines()
     for idx in range(len(off_lines)):
         content = off_lines[idx].strip().strip(":").strip()
-        print(content)
         if (content in offline_key) or (content == online_key):
             start = idx
             key = content
@@ -63,11 +62,10 @@ def corr_from_log(offline_path, offline_key, online_key, title):
 
 def dqn_corr(offline_key, online_key):
     offline_paths = {
-        "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step1k_env": "1k data",
-        "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step10k_env": "10k data",
-        "../../data/hyperparam/cartpole/offline_learning/dqn-adam/step20k_env": "20k data",
+        "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step1k_env": "1k data",
+        "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step10k_env": "10k data",
+        "../../data/hyperparam/cartpole/offline_learning/dqn-adam/alpha_hidden_epsilon/step20k_env": "20k data",
     }
-    # online_path = "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k"
     for op in offline_paths.keys():
         corr_from_log(op, offline_key, online_key, offline_paths[op])
 
@@ -77,7 +75,6 @@ def esarsa_corr(offline_key, online_key):
         "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step10k_env": "10k data",
         "../../data/hyperparam/cartpole/offline_learning/esarsa-adam/step20k_env": "20k data",
     }
-    # online_path = "../../data/hyperparam/cartpole/online_learning/dqn-adam/step50k"
     for op in offline_paths.keys():
         corr_from_log(op, offline_key, online_key, offline_paths[op])
 
@@ -90,9 +87,9 @@ def main():
         "lockat_-0.1",
         "lockat_random",
     ]
-    online = "sweep"
-    # dqn_corr(offlines, online)
-    esarsa_corr(offlines, online)
+    online = "sweep_alpha_hidden_epsilon"
+    dqn_corr(offlines, online)
+    # esarsa_corr(offlines, online)
 
 if __name__ == '__main__':
     main()
