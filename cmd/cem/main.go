@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"math"
@@ -48,10 +49,14 @@ func main() {
 		meanHyperparams[i] = (lower[i] + upper[i]) / 2.0
 	}
 
-	covariance := make([][]float64, len(hyperparams))
-	for i := range covariance {
-		covariance[i] = make([]float64, len(hyperparams))
-	}
+	//covariance := make([][]float64, len(hyperparams))
+	//for i := range covariance {
+	//	covariance[i] = make([]float64, len(hyperparams))
+	//}
+
+	covariance := mat.NewDense(len(hyperparams), len(hyperparams), nil)
+	covarianceRows, covarianceColumns := covariance.Dims()
+
 	minLower := lower[0]
 	maxUpper := upper[0]
 
@@ -66,22 +71,25 @@ func main() {
 		}
 	}
 
-	for i := range covariance {
-		for j := range covariance[i] {
+	for i := 0; i < covarianceRows; i++ {
+		for j := 0; j < covarianceColumns; j++ {
 			if i == j {
-				covariance[i][j] = math.Pow(maxUpper-minLower, 2) + e
+				covariance.Set(i, j, math.Pow(maxUpper-minLower, 2)+e)
 			} else {
-				covariance[i][j] = e
+				covariance.Set(i, j, e)
 			}
 		}
 	}
 
-	fmt.Println(covariance)
+	fmt.Println("Before")
+	//matPrint(covariance)
 	covariance = nearestPD(covariance) // write code for that
-	fmt.Println(covariance)
+	fmt.Println("After")
+	matPrint(covariance)
 
 	// to create MVD you need to use gonum NewNormal
-
+	fmt.Println("-------------------")
+	fmt.Println("-------------------")
 	fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, iterations, meanHyperparams, covariance)
 
 	for {
@@ -129,59 +137,214 @@ func panicIfError(err error, reason string) {
 	}
 }
 
-func nearestPD(A [][]float64) [][]float64 {
-	B := make([][]float64, len(A))
-	for i := range A {
-		B[i] = make([]float64, len(A))
-	}
+func nearestPD(A *mat.Dense) *mat.Dense {
+	ARows, AColumns := A.Dims()
+	fmt.Println("A")
+	matPrint(A)
+	fmt.Println("B")
+
+	B := mat.NewDense(ARows, AColumns, nil)
 
 	transposedA := transpose(A)
 
-	for i := range B {
-		for j := range B[i] {
-			B[i][j] = A[i][j] + transposedA[i][j]
+	for i := 0; i < ARows; i++ {
+		for j := 0; j < AColumns; j++ {
+			value := (A.At(i, j) + transposedA.At(i, j)) / 2.0
+			B.Set(i, j, value)
+		}
+	}
+	matPrint(B)
+
+	u, s, v, err := svd(B)
+	fmt.Println("U")
+	matPrint(&u)
+	fmt.Println("s")
+	fmt.Println(s)
+	fmt.Println("V")
+	matPrint(&v)
+
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("")
+		//fmt.Println(u)
+		//fmt.Println(s)
+		//fmt.Println(v)
+
+	}
+
+	uRows, uColumns := u.Dims()
+	vRows, vColumns := v.Dims()
+	uDense := mat.NewDense(uRows, uColumns, nil)
+	vDense := mat.NewDense(vRows, vColumns, nil)
+
+	for i := 0; i < uRows; i++ {
+		for j := 0; j < uColumns; j++ {
+			uDense.Set(i, j, u.At(i, j))
 		}
 	}
 
-	Matrix := mat.NewDense(len(B), len(B), nil)
-	for i := range B {
-		for j := range B[i] {
-			Matrix.Set(i, j, B[i][j])
+	for i := 0; i < vRows; i++ {
+		for j := 0; j < vColumns; j++ {
+			vDense.Set(i, j, v.At(i, j))
 		}
 	}
-	fmt.Println(B)
-	fmt.Println(Matrix)
 
-	var svd mat.SVD
-	//S := svd.Values(Matrix)
-	V := svd.VTo(Matrix)
+	diagonalSMatrix := mat.NewDense(ARows, AColumns, nil)
+	for i := 0; i < ARows; i++ {
+		for j := 0; j < AColumns; j++ {
+			if i == j {
+				diagonalSMatrix.Set(i, j, s[i])
+			} else {
+				diagonalSMatrix.Set(i, j, 0.0)
+			}
 
-	fmt.Println("---------")
-	// fmt.Println(svd.VTo(Matrix))
-	//fmt.Println(S)
-	fmt.Println(V)
+		}
+	}
 
-	//A2 := (B + H) / 2.0
-	//A3 := (A2 + transpose(A2)) / 2.0
-	return B
+	var H mat.Dense
+	H.Mul(diagonalSMatrix, vDense)
+	hRows, hColumns := H.Dims()
+	hDense := mat.NewDense(hRows, hColumns, nil)
+
+	for i := 0; i < hRows; i++ {
+		for j := 0; j < hColumns; j++ {
+			hDense.Set(i, j, H.At(i, j))
+		}
+	}
+
+	fmt.Println("H")
+	matPrint(hDense)
+
+	A2 := mat.NewDense(ARows, AColumns, nil)
+
+	for i := 0; i < ARows; i++ {
+		for j := 0; j < AColumns; j++ {
+			A2.Set(i, j, (B.At(i, j)+hDense.At(i, j))/2.0) // it is H[i][j]
+		}
+	}
+
+	fmt.Println("A2")
+	matPrint(A2)
+	A3 := mat.NewDense(ARows, AColumns, nil)
+
+	transposedA2 := transpose(A2)
+
+	for i := 0; i < ARows; i++ {
+		for j := 0; j < AColumns; j++ {
+			A3.Set(i, j, (A2.At(i, j)+transposedA2.At(i, j))/2.0)
+		}
+	}
+
+	fmt.Println("A3")
+	matPrint(A3)
+	//fmt.Println(A3)
+
+	if isPD(A3) {
+		return A3
+	}
+
+	normA := mat.Norm(A, 2)
+	nextNearestDistance := math.Nextafter(normA, normA+1) - normA
+	previousNearestDistance := normA - math.Nextafter(normA, normA-1)
+
+	spacing := math.Min(nextNearestDistance, previousNearestDistance)
+
+	I := mat.NewDense(ARows, ARows, nil)
+	for i := 0; i < ARows; i++ {
+		for j := 0; j < ARows; j++ {
+			if i == j {
+				I.Set(i, j, 1)
+			} else {
+				I.Set(i, j, 0)
+			}
+		}
+	}
+
+	k := 1.0
+
+	for !isPD(A3) {
+
+		var eig mat.Eigen
+		ok := eig.Factorize(A3, mat.EigenNone)
+		if !ok {
+			fmt.Println("Eigen decomposition failed")
+		}
+		eigenvalues := eig.Values(nil)
+
+		realeigenvalues := make([]float64, len(eigenvalues))
+		for i := range eigenvalues {
+			realeigenvalues[i] = real(eigenvalues[i])
+		}
+
+		minrealeigenvalues := realeigenvalues[0]
+		for _, value := range realeigenvalues {
+			if minrealeigenvalues > value {
+				minrealeigenvalues = value
+			}
+		}
+		for i := 0; i < ARows; i++ {
+			for j := 0; j < AColumns; j++ {
+				A3.Set(i, j, I.At(i, j)*((-minrealeigenvalues*math.Pow(k, 2))+spacing))
+			}
+		}
+		k++
+	}
+
+	return A3
 }
 
-func isPD(matrix [][]float64) bool {
+func isPD(matrix mat.Matrix) bool {
 	boolean := true
+
+	var eig mat.Eigen
+	ok := eig.Factorize(matrix, mat.EigenNone)
+	if !ok {
+		fmt.Println("Eigen decomposition failed")
+	}
+	eigenvalues := eig.Values(nil)
+
+	realeigenvalues := make([]float64, len(eigenvalues))
+	for i := range eigenvalues {
+		realeigenvalues[i] = real(eigenvalues[i])
+	}
+
+	for i := range realeigenvalues {
+		if realeigenvalues[i] <= 0 {
+			boolean = false
+			break
+		}
+	}
+
 	return boolean
 }
 
-func transpose(matrix [][]float64) [][]float64 {
-	transposeMatrix := make([][]float64, len(matrix))
-	for i := range transposeMatrix {
-		transposeMatrix[i] = make([]float64, len(matrix))
-	}
+func transpose(matrix *mat.Dense) *mat.Dense {
+	rows, columns := matrix.Dims()
+	transposeMatrix := mat.NewDense(rows, columns, nil)
 
-	for i := range matrix {
-		for j := range matrix[i] {
-			transposeMatrix[i][j] = matrix[j][i]
+	for i := 0; i < rows; i++ {
+		for j := 0; j < columns; j++ {
+			transposeMatrix.Set(i, j, matrix.At(i, j))
 		}
-
 	}
 	return transposeMatrix
+}
+
+func svd(Matrix mat.Matrix) (mat.Dense, []float64, mat.Dense, error) {
+	var svd mat.SVD
+	if ok := svd.Factorize(Matrix, mat.SVDFull); !ok {
+		var nilMat mat.Dense
+		return nilMat, nil, nilMat, errors.New("SVD factorization failed")
+	}
+	var v, u mat.Dense
+	svd.VTo(&v)
+	svd.UTo(&u)
+	s := svd.Values(nil)
+	return u, s, v, nil
+}
+
+func matPrint(X mat.Matrix) {
+	fa := mat.Formatted(X, mat.Prefix(""), mat.Squeeze())
+	fmt.Printf("%v\n", fa)
 }
