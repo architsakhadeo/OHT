@@ -11,38 +11,12 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/normalizer"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
+	"github.com/stellentus/cartpoles/lib/util/lockweight"
 	"math"
 	"math/rand"
 )
 
-type LockWeight struct {
-	UseLock       bool   `json:"lock-weight"`
-	LockCondition string `json:"lock-condition"`
 
-	DecCount int
-	BestAvg  float64
-	LockAvgRwd  float64 `json:"lock-condition-reward"`
-	LockAvgLen  float64 `json:"lock-condition-length"`
-	LockThrd int     `json:"lock-condition-thrd"`
-
-	CheckChange LockFunc
-}
-
-func InitLockWeight(agent *Dqn, lw LockWeight) LockWeight {
-	lw.DecCount = 0
-	lw.BestAvg = math.Inf(-1)
-
-	if lw.LockCondition == "dynamic-reward" {
-		lw.CheckChange = agent.DynamicLock
-	} else if lw.LockCondition == "onetime-reward" {
-		lw.CheckChange = agent.OnetimeRwdLock
-	} else if lw.LockCondition == "onetime-epLength" {
-		lw.CheckChange = agent.OnetimeEpLenLock
-	} else if lw.LockCondition == "beginning" {
-		lw.CheckChange = agent.KeepLock
-	}
-	return lw
-}
 
 type dqnSettings struct {
 	Seed        int64
@@ -95,7 +69,7 @@ type Dqn struct {
 	targetNet   network.Network
 	opt         optimizer.Optimizer
 
-	lw   LockWeight
+	lw   lockweight.LockWeight
 	lock bool
 }
 
@@ -105,6 +79,22 @@ func init() {
 
 func NewDqn(logger logger.Debug) (rlglue.Agent, error) {
 	return &Dqn{Debug: logger}, nil
+}
+
+func (agent *Dqn) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight {
+	lw.DecCount = 0
+	lw.BestAvg = math.Inf(-1)
+
+	if lw.LockCondition == "dynamic-reward" {
+		lw.CheckChange = agent.DynamicLock
+	} else if lw.LockCondition == "onetime-reward" {
+		lw.CheckChange = agent.OnetimeRwdLock
+	} else if lw.LockCondition == "onetime-epLength" {
+		lw.CheckChange = agent.OnetimeEpLenLock
+	} else if lw.LockCondition == "beginning" {
+		lw.CheckChange = agent.KeepLock
+	}
+	return lw
 }
 
 func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
@@ -117,7 +107,7 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	if err != nil {
 		return errors.New("DQN agent LockWeight attributes were not valid: " + err.Error())
 	}
-	agent.lw = InitLockWeight(agent, agent.lw)
+	agent.lw = agent.InitLockWeight(agent.lw)
 
 	if agent.DecreasingEpsilon == "None" {
 		agent.MinEpsilon = 0 // Not used
@@ -338,8 +328,6 @@ func (agent *Dqn) CheckAvgRwdUnlock(avg float64) bool {
 	}
 	return lock
 }
-
-type LockFunc func() bool
 
 //func (agent *Dqn) CheckChange() bool {
 func (agent *Dqn) DynamicLock() bool {

@@ -2,7 +2,11 @@ package agent
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"github.com/stellentus/cartpoles/lib/util/buffer"
+	"github.com/stellentus/cartpoles/lib/util/lockweight"
 	"math"
 	"math/rand"
 
@@ -31,6 +35,10 @@ type esarsaSettings struct {
 	Alpha              float64 `json:"alpha"`
 	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
+
+	StateDim   int  `json:"state-len"`
+	Bsize int    `json:"buffer-size"`
+	Btype string `json:"buffer-type"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -43,6 +51,7 @@ type ESarsa struct {
 	weights                [][]float64 // weights is a slice of weights for each action
 	traces                 [][]float64
 	delta                  float64
+	oldState 			   rlglue.State
 	oldStateActiveFeatures []int
 	oldAction              rlglue.Action
 	stepsize               float64
@@ -55,6 +64,10 @@ type ESarsa struct {
 	accumulatingbeta1      float64
 	accumulatingbeta2      float64
 	esarsaSettings
+
+	bf  *buffer.Buffer
+	lw   lockweight.LockWeight
+	lock bool
 }
 
 func init() {
@@ -63,6 +76,23 @@ func init() {
 
 func NewESarsa(logger logger.Debug) (rlglue.Agent, error) {
 	return &ESarsa{Debug: logger}, nil
+}
+
+func (agent *ESarsa) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight {
+
+	lw.DecCount = 0
+	lw.BestAvg = math.Inf(-1)
+
+	if lw.LockCondition == "dynamic-reward" {
+		lw.CheckChange = agent.DynamicLock
+	} else if lw.LockCondition == "onetime-reward" {
+		lw.CheckChange = agent.OnetimeRwdLock
+	} else if lw.LockCondition == "onetime-epLength" {
+		lw.CheckChange = agent.OnetimeEpLenLock
+	} else if lw.LockCondition == "beginning" {
+		lw.CheckChange = agent.KeepLock
+	}
+	return lw
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
@@ -84,6 +114,13 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
 		agent.esarsaSettings.Seed = 0
 	}
+	err = json.Unmarshal(expAttr, &agent.lw)
+	if err != nil {
+		return errors.New("ESarsa agent LockWeight attributes were not valid: " + err.Error())
+	}
+	agent.bf = buffer.NewBuffer()
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
+	agent.lw = agent.InitLockWeight(agent.lw)
 
 	if agent.IsStepsizeAdaptive == false {
 		agent.stepsize = agent.Alpha / float64(agent.esarsaSettings.NumTilings) // Setting stepsize
@@ -175,37 +212,45 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 
 	newAction, epsilons := agent.PolicyExpectedSarsaLambda(newStateActiveFeatures) // Exp-Sarsa-L policy
 
-	for j := range agent.weights {
-		for _, value := range newStateActiveFeatures {
-			agent.delta += agent.Gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
-		}
+	if agent.lw.UseLock {
+		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.Gamma)
+		agent.lock = agent.lw.CheckChange()
 	}
 
-	var g float64
-	var mhat float64
-	var vhat float64
+	if agent.lock == false {
+		for j := range agent.weights {
+			for _, value := range newStateActiveFeatures {
+				agent.delta += agent.Gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
+			}
+		}
 
-	// update for both actions for weights and traces
-	for j := range agent.weights {
-		for i := range agent.weights[j] {
-			if agent.traces[j][i] != 0 { // update only where traces are non-zero
-				if agent.IsStepsizeAdaptive == false {
-					agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
-				} else {
-					g = -agent.delta * agent.traces[j][i]
-					agent.m[j][i] = agent.beta1*agent.m[j][i] + (1-agent.beta1)*g
-					agent.v[j][i] = agent.beta1*agent.v[j][i] + (1-agent.beta1)*g*g
+		var g float64
+		var mhat float64
+		var vhat float64
 
-					mhat = agent.m[j][i] / (1 - math.Pow(agent.beta1, agent.timesteps))
-					vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
-					agent.weights[j][i] -= agent.stepsize * mhat / (math.Pow(vhat, 0.5) + agent.e)
+		// update for both actions for weights and traces
+		for j := range agent.weights {
+			for i := range agent.weights[j] {
+				if agent.traces[j][i] != 0 { // update only where traces are non-zero
+					if agent.IsStepsizeAdaptive == false {
+						agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
+					} else {
+						g = -agent.delta * agent.traces[j][i]
+						agent.m[j][i] = agent.beta1*agent.m[j][i] + (1-agent.beta1)*g
+						agent.v[j][i] = agent.beta1*agent.v[j][i] + (1-agent.beta1)*g*g
+
+						mhat = agent.m[j][i] / (1 - math.Pow(agent.beta1, agent.timesteps))
+						vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
+						agent.weights[j][i] -= agent.stepsize * mhat / (math.Pow(vhat, 0.5) + agent.e)
+					}
+					agent.traces[j][i] = agent.Gamma * agent.Lambda * agent.traces[j][i] // update traces
 				}
-				agent.traces[j][i] = agent.Gamma * agent.Lambda * agent.traces[j][i] // update traces
 			}
 		}
 	}
 
 	// New information is old for the next time step
+	agent.oldState = state
 	agent.oldStateActiveFeatures = newStateActiveFeatures
 	agent.oldAction = newAction
 
@@ -270,6 +315,113 @@ func (agent *ESarsa) ActionValue(tileCodedStateActiveFeatures []int, action rlgl
 	return actionValue
 }
 
+func (agent *ESarsa) CheckAvgRwdLock(avg float64) bool {
+	if agent.lw.BestAvg > avg {
+		agent.lw.DecCount += 1
+		fmt.Println("Count to lock", agent.lw.DecCount)
+	} else {
+		agent.lw.BestAvg = avg
+		agent.lw.DecCount = 0
+	}
+	var lock bool
+	if agent.lw.DecCount > agent.lw.LockThrd {
+		agent.lw.DecCount = 0
+		lock = true
+	} else {
+		lock = false
+	}
+	return lock
+}
+
+func (agent *ESarsa) CheckAvgRwdUnlock(avg float64) bool {
+	if agent.lw.LockAvgRwd > avg {
+		agent.lw.DecCount += 1
+		fmt.Println("Count to unlock", agent.lw.DecCount)
+	} else {
+		agent.lw.DecCount = 0
+	}
+	var lock bool
+	if agent.lw.DecCount > agent.lw.LockThrd {
+		agent.lw.DecCount = 0
+		lock = false
+	} else {
+		lock = true
+	}
+	return lock
+}
+
+func (agent *ESarsa) DynamicLock() bool {
+	_, _, _, rewards2D, _ := agent.bf.Content()
+	rewards := ao.Flatten2DFloat(rewards2D)
+	avg := ao.Average(rewards)
+	if len(rewards) < agent.Bsize {
+		return false
+	}
+	if agent.lock {
+		lock := agent.CheckAvgRwdUnlock(avg)
+		if !lock {
+			agent.lw.LockAvgRwd = avg
+			agent.lw.DecCount = 0
+			fmt.Println("UnLocked")
+		}
+		return lock
+	} else {
+		lock := agent.CheckAvgRwdLock(avg)
+		if lock {
+			agent.lw.LockAvgRwd = avg
+			agent.lw.DecCount = 0
+			fmt.Println("Locked")
+		}
+		return lock
+	}
+}
+
+func (agent *ESarsa) OnetimeRwdLock() bool {
+	if agent.lock {
+		return true
+	} else {
+		_, _, _, rewards2D, _ := agent.bf.Content()
+		rewards := ao.Flatten2DFloat(rewards2D)
+		avg := ao.Average(rewards)
+		if len(rewards) < agent.Bsize {
+			return false
+		}
+		if avg > agent.lw.LockAvgRwd {
+			return true
+		}
+		return false
+	}
+}
+
+func (agent *ESarsa) OnetimeEpLenLock() bool {
+	if agent.lock {
+		return true
+	} else {
+		_, _, _, rewards2D, _ := agent.bf.Content()
+		rewards := ao.Flatten2DFloat(rewards2D)
+		if len(rewards) < agent.Bsize {
+			return false
+		}
+		zeros := 0
+		for i:=0;i<len(rewards);i++ {
+			if rewards[i] == 0 {
+				zeros += 1
+			}
+		}
+		if zeros != 0 {
+			avg := float64(agent.Bsize) / float64(zeros)
+			if avg < agent.lw.LockAvgLen {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func (agent *ESarsa) KeepLock() bool {
+	return true
+}
+
 func (agent *ESarsa) GetLock() bool {
-	return false
+	return agent.lock
 }

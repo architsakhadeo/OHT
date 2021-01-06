@@ -35,8 +35,11 @@
     }
   },
   "experiment-settings": {
-    "steps": 1000,
+    "steps": 0,
+    "episodes": 10000000,
+    "total-step-after-lock": 1000,
     "count-step-after-lock": true,
+
     "data-path": "data/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_quarterbaseline/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
