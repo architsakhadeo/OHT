@@ -75,29 +75,13 @@ func main() {
 		}
 	}
 
+	fmt.Println(covariance)
 	covariance = nearestPD(covariance) // write code for that
+	fmt.Println(covariance)
 
 	// to create MVD you need to use gonum NewNormal
 
 	fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, iterations, meanHyperparams, covariance)
-
-	Matrix := mat.NewDense(len(covariance), len(covariance), nil)
-	for i := range covariance {
-		for j := range covariance[i] {
-			Matrix.Set(i, j, covariance[i][j])
-		}
-	}
-	fmt.Println(covariance)
-	fmt.Println(Matrix)
-
-	var svd mat.SVD
-	//S := svd.Values(Matrix)
-	//V := svd.VTo(Matrix)
-
-	fmt.Println("---------")
-	fmt.Println(svd.VTo(Matrix))
-	//fmt.Println(S)
-	//fmt.Println(V)
 
 	for {
 		agentSettings := agent.DefaultESarsaSettings()
@@ -145,11 +129,40 @@ func panicIfError(err error, reason string) {
 }
 
 func nearestPD(A [][]float64) [][]float64 {
-	//B := (A + transpose(A)) / 2.0
+	B := make([][]float64, len(A))
+	for i := range A {
+		B[i] = make([]float64, len(A))
+	}
+
+	transposedA := transpose(A)
+
+	for i := range B {
+		for j := range B[i] {
+			B[i][j] = A[i][j] + transposedA[i][j]
+		}
+	}
+
+	Matrix := mat.NewDense(len(B), len(B), nil)
+	for i := range B {
+		for j := range B[i] {
+			Matrix.Set(i, j, B[i][j])
+		}
+	}
+	fmt.Println(B)
+	fmt.Println(Matrix)
+
+	var svd mat.SVD
+	//S := svd.Values(Matrix)
+	V := svd.VTo(Matrix)
+
+	fmt.Println("---------")
+	// fmt.Println(svd.VTo(Matrix))
+	//fmt.Println(S)
+	fmt.Println(V)
 
 	//A2 := (B + H) / 2.0
 	//A3 := (A2 + transpose(A2)) / 2.0
-	return A
+	return B
 }
 
 func isPD(matrix [][]float64) bool {
