@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"github.com/stellentus/cartpoles/lib/util/convformat"
 	transModel "github.com/stellentus/cartpoles/lib/util/kdtree"
+	"github.com/stellentus/cartpoles/lib/util/random"
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -22,6 +24,7 @@ import (
 type knnSettings struct {
 	DataLog string `json:"datalog"`
 	Seed    int64  `json:"seed"`
+	Neighbor_num	int `json:"neighbor-num"`
 }
 
 type KnnModelEnv struct {
@@ -35,6 +38,7 @@ type KnnModelEnv struct {
 	stateDim        int
 	NumberOfActions int
 	stateRange      []float64
+	neighbor_prob	[]float64
 }
 
 func init() {
@@ -134,6 +138,22 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineStarts = env.SearchOfflineStart(allTrans)
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim, "euclidean")
 	env.offlineModel.BuildTree(allTrans)
+
+	pdf := make([]float64, env.Neighbor_num)
+	temp := 0.0
+	for i := 0; i < env.Neighbor_num; i++ {
+		pdf[i] = math.Pow(0.5, float64(i+1))
+		temp += pdf[i]
+	}
+	for i := 0; i < env.Neighbor_num; i++ {
+		pdf[i] = pdf[i] / temp
+	}
+	env.neighbor_prob = make([]float64, env.Neighbor_num)
+	temp1 := 0.0
+	for i := 0; i < env.Neighbor_num; i++ {
+		env.neighbor_prob[i] = temp1 + pdf[i]
+		temp1 = env.neighbor_prob[i]
+	}
 	return nil
 }
 
@@ -163,12 +183,11 @@ func (env *KnnModelEnv) Start() rlglue.State {
 
 func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	actInt, _ := tpo.GetInt(act)
-	_, nextStates, rewards, terminals, _ := env.offlineModel.SearchTree(env.state, actInt, 1)
-	//fmt.Println(env.state, act)
-	//fmt.Println(nextStates, rewards, terminals, "\n")
-	env.state = nextStates[0] // only 1 neighbor
+	_, nextStates, rewards, terminals, _ := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+	chosen := random.FreqSample(env.neighbor_prob)
+	env.state = nextStates[chosen]
 	var done bool
-	if terminals[0] == 0 {
+	if terminals[chosen] == 0 {
 		done = false
 	} else {
 		done = true
@@ -176,7 +195,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
-	return state_copy, rewards[0], done
+	return state_copy, rewards[chosen], done
 }
 
 //GetAttributes returns attributes for this environment.
