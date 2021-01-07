@@ -1,0 +1,32 @@
+{
+	"agent-name": "esarsa",
+	"environment-name": "knnModel",
+	"agent-settings": {
+		"gamma": 0.9,
+		"state-len": 4,
+		"sweep": {
+			"epsilon": [0.0, 0.05, 0.1],
+			"tilings": [2, 8, 16],
+			"tiles": [4],
+			"lambda": [0.7],
+			"alpha": [0.1],
+			"is-stepsize-adaptive": [true],
+			"adaptive-alpha": [1, 1e-03, 1e-06]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1,
+		"neighbor-num": 1,
+		"datalog": "data/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_baseline/param_0/"
+	},
+	"experiment-settings": {
+		"steps": 50000,
+		"data-path": "data/hyperparam/cartpole/offline_learning/knn/k1/esarsa-adam/step10k_env/lockat_baseline/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": true,
+		"debug-interval": 1000
+	}
+}
