@@ -15,6 +15,7 @@ require (
 	github.com/stellentus/tile v0.9.1
 	github.com/stretchr/testify v1.5.1
 	github.com/tensorflow/tensorflow v2.1.0+incompatible
+	golang.org/x/exp v0.0.0-20190125153040-c74c464bbbf2
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	gonum.org/v1/gonum v0.7.0
 	google.golang.org/grpc v1.29.1

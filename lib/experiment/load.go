@@ -71,7 +71,9 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		return errors.New("Could not create parameter logger: " + err.Error())
 	}
 
-	return expr.Run()
+	_, err = expr.Run()
+
+	return err
 }
 
 func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug logger.Debug) (rlglue.Environment, error) {

@@ -54,25 +54,40 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experime
 	return ci, nil
 }
 
-func (exp *Experiment) Run() error {
+//func (exp *Experiment) Run() error {
+//	if exp.Settings.MaxSteps != 0 {
+//		exp.runContinuous()
+//	} else {
+//		exp.runEpisodic()
+//	}
+//
+//	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
+//
+//	return exp.SaveLog()
+//}
+
+func (exp *Experiment) Run() ([]float64, error) {
+	var listOfRewards []float64
 	if exp.Settings.MaxSteps != 0 {
-		exp.runContinuous()
+		listOfRewards = exp.runContinuous()
 	} else {
-		exp.runEpisodic()
+		listOfRewards = exp.runEpisodic()
 	}
 
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
 
-	return exp.SaveLog()
+	//return exp.SaveLog()
+	return listOfRewards, exp.SaveLog()
 }
 
-func (exp *Experiment) runContinuous() {
+func (exp *Experiment) runContinuous() []float64 {
 	exp.Message("msg", "Starting continuous experiment")
 	exp.stepBeforeCount = 0
-	exp.runSingleEpisode()
+	listOfRewards := exp.runSingleEpisode()
+	return listOfRewards
 }
 
-func (exp *Experiment) runEpisodic() {
+func (exp *Experiment) runEpisodic() []float64 {
 	exp.Message("msg", "Starting episodic experiment")
 	exp.stepBeforeCount = 0
 	exp.timeOut = false
@@ -82,11 +97,12 @@ func (exp *Experiment) runEpisodic() {
 			break
 		}
 	}
+	return nil
 }
 
 // runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
 // strings together many episodes (if necessary) to make a single episode.
-func (exp *Experiment) runSingleEpisode() {
+func (exp *Experiment) runSingleEpisode() []float64 {
 	countStep := true
 
 	prevState := exp.environment.Start()
@@ -103,10 +119,12 @@ func (exp *Experiment) runSingleEpisode() {
 	start := time.Now()
 	var end time.Time
 	var delta time.Duration
+	var listOfRewards []float64
 
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 		newState, reward, episodeEnded := exp.environment.Step(action)
+		listOfRewards = append(listOfRewards, reward)
 
 		if exp.Settings.CountAfterLock {
 			countStep = exp.agent.GetLock()
@@ -127,6 +145,7 @@ func (exp *Experiment) runSingleEpisode() {
 			if numStepsThisEpisode == exp.Settings.MaxStepsInEpisode {
 				episodeEnded = true
 			}
+
 			exp.LogStep(prevState, newState, action, reward, episodeEnded)
 		} else {
 			exp.stepBeforeCount += 1
@@ -187,6 +206,8 @@ func (exp *Experiment) runSingleEpisode() {
 
 	// Save FA weights.
 	exp.saveAgentWeights()
+
+	return listOfRewards
 }
 
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
