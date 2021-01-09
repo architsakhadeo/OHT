@@ -21,7 +21,8 @@
 		"seed": 1,
 		"neighbor-num": 1,
 		"datalog": "data/hyperparam/cartpole/offline_data/esarsa/step7.5k_env/lockat_baseline/param_0/",
-		"ensemble-seed": 3
+		"ensemble-seed": 3,
+		"drop-percent": 0.1
 	},
 	"experiment-settings": {
 		"steps": 50000,

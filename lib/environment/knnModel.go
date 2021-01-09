@@ -26,6 +26,7 @@ type knnSettings struct {
 	Seed    int64  `json:"seed"`
 	Neighbor_num	int `json:"neighbor-num"`
 	EnsembleSeed	int `json:"ensemble-seed"`
+	DropPerc    float64 `json:"drop-percent"`
 }
 
 type KnnModelEnv struct {
@@ -139,7 +140,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	var allTrans [][]float64
 	if env.EnsembleSeed != 0 {
 		tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
-		filteredLen := int(float32(len(allTransTemp)) * (1-0.1))
+		filteredLen := int(float64(len(allTransTemp)) * (1-env.DropPerc))
 		filteredIdx := tempRnd.Perm(len(allTransTemp))[:filteredLen]
 		allTrans = make([][]float64, filteredLen)
 		for i:=0; i<filteredLen; i++ {
