@@ -12,7 +12,9 @@ import (
 	"github.com/stellentus/cartpoles/lib/environment"
 	"github.com/stellentus/cartpoles/lib/experiment"
 	"github.com/stellentus/cartpoles/lib/logger"
+	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/stat/distmv"
 )
 
 var (
@@ -37,7 +39,7 @@ func main() {
 	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
 
-	numSamples := 300
+	numSamples := 50 // 300
 	percentElite := 0.5
 	numElite := int64(float64(numSamples) * percentElite)
 	e := math.Pow(10, -8)
@@ -81,16 +83,79 @@ func main() {
 	}
 
 	fmt.Println("Before")
-	//matPrint(covariance)
-	covariance = nearestPD(covariance) // write code for that
+	matPrint(covariance)
+	covariance = nearestPD(covariance)
 	fmt.Println("After")
 	matPrint(covariance)
 
-	// to create MVD you need to use gonum NewNormal
+	symmetricCovariance := mat.NewSymDense(len(hyperparams), nil)
+	for i := 0; i < len(hyperparams); i++ {
+		for j := 0; j < len(hyperparams); j++ {
+			symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
+		}
+	}
+
+	fmt.Println("Symmetric")
+	matPrint(symmetricCovariance)
+
+	var choleskySymmetricCovariance mat.Cholesky
+	choleskySymmetricCovariance.Factorize(symmetricCovariance)
+
+	samples := make([][]float64, numSamples)
+	realvaluedSamples := make([][]float64, numSamples)
+	var src rand.Source
+	i := 0
+
+	// CODE IS BUGGY RIGHT NOW
+	for i < numSamples {
+		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
+		flag := 0
+		for j := 0; j < len(hyperparams); j++ {
+			if sample[j] < lower[j] || sample[j] > upper[j] {
+				flag = 1
+				break
+			}
+		}
+		if flag == 0 {
+			realvaluedSamples[i] = sample
+			var temp []float64
+			for j := 0; j < len(hyperparams); j++ {
+				if containsInt(discreteHyperparamsIndices[:], int64(j)) {
+					for k := 0; k < len(discreteMidRanges); k++ {
+						if sample[j] <= discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
+							temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
+							break
+						}
+					}
+					if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
+						temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
+					}
+
+				} else {
+					temp = append(temp, sample[j])
+				}
+			}
+			samples[i] = temp
+			i++
+		}
+
+	}
+
+	// to create MVND you need to use gonum NewNormal and covariance = (covariance + covariance.T)/2.0 to make it symmetric
+	for i := 0; i < numSamples; i++ {
+		fmt.Println(realvaluedSamples[i])
+		fmt.Println(samples[i])
+		fmt.Println("")
+		fmt.Println("")
+	}
+
 	fmt.Println("-------------------")
 	fmt.Println("-------------------")
 	fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, iterations, meanHyperparams, covariance)
 
+	//iterations
+	//    samples
+	//        runs
 	for {
 		agentSettings := agent.DefaultESarsaSettings()
 		// Do CEM stuff to change settings and SEED
@@ -111,8 +176,8 @@ func main() {
 		panicIfError(err, "Couldn't create logger.Data")
 
 		expConf := config.Experiment{
-			MaxEpisodes:             1,
-			MaxSteps:                0,
+			MaxEpisodes:             0,
+			MaxSteps:                10,
 			DebugInterval:           0,
 			DataPath:                "",
 			ShouldLogTraces:         false,
@@ -123,7 +188,8 @@ func main() {
 		exp, err := experiment.New(ag, env, expConf, debug, data)
 		panicIfError(err, "Couldn't create experiment")
 
-		exp.Run()
+		listOfRewards, _ := exp.Run()
+		fmt.Println(listOfRewards)
 
 		//fmt.Println(data.NumberOfEpisodes())
 		break
@@ -138,9 +204,9 @@ func panicIfError(err error, reason string) {
 
 func nearestPD(A *mat.Dense) *mat.Dense {
 	ARows, AColumns := A.Dims()
-	fmt.Println("A")
-	matPrint(A)
-	fmt.Println("B")
+	//fmt.Println("A")
+	//matPrint(A)
+	//fmt.Println("B")
 
 	B := mat.NewDense(ARows, AColumns, nil)
 
@@ -152,15 +218,15 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 			B.Set(i, j, value)
 		}
 	}
-	matPrint(B)
+	//matPrint(B)
 
 	u, s, v, err := svd(B)
-	fmt.Println("U")
-	matPrint(&u)
-	fmt.Println("s")
-	fmt.Println(s)
-	fmt.Println("V")
-	matPrint(&v)
+	//fmt.Println("U")
+	//matPrint(&u)
+	//fmt.Println("s")
+	//fmt.Println(s)
+	//fmt.Println("V")
+	//matPrint(&v)
 
 	if err != nil {
 		fmt.Println(err)
@@ -201,8 +267,25 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 		}
 	}
 
+	var temp mat.Dense
+	var original mat.Dense
+	temp.Mul(uDense, diagonalSMatrix)
+	original.Mul(&temp, transpose(vDense))
+	originalRows, originalColumns := original.Dims()
+	originalDense := mat.NewDense(originalRows, originalColumns, nil)
+
+	for i := 0; i < originalRows; i++ {
+		for j := 0; j < originalColumns; j++ {
+			originalDense.Set(i, j, original.At(i, j))
+		}
+	}
+	//fmt.Println("Original")
+	//matPrint(originalDense)
+
+	var temp0 mat.Dense
 	var H mat.Dense
-	H.Mul(diagonalSMatrix, vDense)
+	temp0.Mul(diagonalSMatrix, vDense)
+	H.Mul(transpose(vDense), &temp0)
 	hRows, hColumns := H.Dims()
 	hDense := mat.NewDense(hRows, hColumns, nil)
 
@@ -212,8 +295,8 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 		}
 	}
 
-	fmt.Println("H")
-	matPrint(hDense)
+	//fmt.Println("H")
+	//matPrint(hDense)
 
 	A2 := mat.NewDense(ARows, AColumns, nil)
 
@@ -223,8 +306,8 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 		}
 	}
 
-	fmt.Println("A2")
-	matPrint(A2)
+	//fmt.Println("A2")
+	//matPrint(A2)
 	A3 := mat.NewDense(ARows, AColumns, nil)
 
 	transposedA2 := transpose(A2)
@@ -235,8 +318,8 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 		}
 	}
 
-	fmt.Println("A3")
-	matPrint(A3)
+	//fmt.Println("A3")
+	//matPrint(A3)
 	//fmt.Println(A3)
 
 	if isPD(A3) {
@@ -324,7 +407,7 @@ func transpose(matrix *mat.Dense) *mat.Dense {
 
 	for i := 0; i < rows; i++ {
 		for j := 0; j < columns; j++ {
-			transposeMatrix.Set(i, j, matrix.At(i, j))
+			transposeMatrix.Set(i, j, matrix.At(j, i))
 		}
 	}
 	return transposeMatrix
@@ -337,8 +420,8 @@ func svd(Matrix mat.Matrix) (mat.Dense, []float64, mat.Dense, error) {
 		return nilMat, nil, nilMat, errors.New("SVD factorization failed")
 	}
 	var v, u mat.Dense
-	svd.VTo(&v)
 	svd.UTo(&u)
+	svd.VTo(&v)
 	s := svd.Values(nil)
 	return u, s, v, nil
 }
@@ -346,4 +429,22 @@ func svd(Matrix mat.Matrix) (mat.Dense, []float64, mat.Dense, error) {
 func matPrint(X mat.Matrix) {
 	fa := mat.Formatted(X, mat.Prefix(""), mat.Squeeze())
 	fmt.Printf("%v\n", fa)
+}
+
+func containsInt(s []int64, e int64) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func indexOfInt(element int64, data []int64) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1 //not found.
 }

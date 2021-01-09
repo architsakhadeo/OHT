@@ -50,33 +50,49 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experime
 	return ci, nil
 }
 
-func (exp *Experiment) Run() error {
+//func (exp *Experiment) Run() error {
+//	if exp.Settings.MaxSteps != 0 {
+//		exp.runContinuous()
+//	} else {
+//		exp.runEpisodic()
+//	}
+//
+//	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
+//
+//	return exp.SaveLog()
+//}
+
+func (exp *Experiment) Run() ([]float64, error) {
+	var listOfRewards []float64
 	if exp.Settings.MaxSteps != 0 {
-		exp.runContinuous()
+		listOfRewards = exp.runContinuous()
 	} else {
-		exp.runEpisodic()
+		listOfRewards = exp.runEpisodic()
 	}
 
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
 
-	return exp.SaveLog()
+	//return exp.SaveLog()
+	return listOfRewards, exp.SaveLog()
 }
 
-func (exp *Experiment) runContinuous() {
+func (exp *Experiment) runContinuous() []float64 {
 	exp.Message("msg", "Starting continuous experiment")
-	exp.runSingleEpisode()
+	listOfRewards := exp.runSingleEpisode()
+	return listOfRewards
 }
 
-func (exp *Experiment) runEpisodic() {
+func (exp *Experiment) runEpisodic() []float64 {
 	exp.Message("msg", "Starting episodic experiment")
 	for exp.numEpisodesDone < exp.Settings.MaxEpisodes {
 		exp.runSingleEpisode()
 	}
+	return nil
 }
 
 // runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
 // strings together many episodes (if necessary) to make a single episode.
-func (exp *Experiment) runSingleEpisode() {
+func (exp *Experiment) runSingleEpisode() []float64 {
 
 	prevState := exp.environment.Start()
 	tempPrev := make(rlglue.State, len(prevState))
@@ -88,10 +104,14 @@ func (exp *Experiment) runSingleEpisode() {
 
 	isEpisodic := exp.Settings.MaxSteps == 0
 
+	var listOfRewards []float64
+
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 
 		newState, reward, episodeEnded := exp.environment.Step(action)
+
+		listOfRewards = append(listOfRewards, reward)
 
 		exp.LogStep(prevState, newState, action, reward) // TODO add gamma at end
 
@@ -131,6 +151,8 @@ func (exp *Experiment) runSingleEpisode() {
 		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
 	}
+
+	return listOfRewards
 }
 
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
