@@ -25,6 +25,8 @@ type knnSettings struct {
 	DataLog string `json:"datalog"`
 	Seed    int64  `json:"seed"`
 	Neighbor_num	int `json:"neighbor-num"`
+	EnsembleSeed	int `json:"ensemble-seed"`
+	DropPerc    float64 `json:"drop-percent"`
 }
 
 type KnnModelEnv struct {
@@ -110,7 +112,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	allTrans := make([][]float64, len(allTransStr)-1)
+	allTransTemp := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
 		row := make([]float64, env.stateDim*2+3)
@@ -132,8 +134,22 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 				}
 			}
 		}
-		allTrans[i-1] = row
+		allTransTemp[i-1] = row
 	}
+
+	var allTrans [][]float64
+	if env.EnsembleSeed != 0 {
+		tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
+		filteredLen := int(float64(len(allTransTemp)) * (1-env.DropPerc))
+		filteredIdx := tempRnd.Perm(len(allTransTemp))[:filteredLen]
+		allTrans = make([][]float64, filteredLen)
+		for i:=0; i<filteredLen; i++ {
+			allTrans[i] = allTransTemp[filteredIdx[i]]
+		}
+	} else {
+		allTrans = allTransTemp
+	}
+
 	env.offlineData = allTrans
 	env.offlineStarts = env.SearchOfflineStart(allTrans)
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim, "euclidean")
