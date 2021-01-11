@@ -5,12 +5,13 @@ from loadFromEpisodeLengths import convert_data
 from loadFromEpisodeLengths import transform_data
 
 
-dirpath = '../data/renamedEsarsaModel/'
+#dirpath = '../data/hyperparam/cartpole/offline_learning/knn/k3/esarsa-adam/step20k_env/lockat_baseline/'
+dirpath = '../data/hyperparam/cartpole/online_learning/esarsa-adam/step250k/sweep_hyperparams/'
 subdirs = os.listdir(dirpath)
 
 def AUC(data):
     averageAcrossRuns = np.mean(data, axis=0)
-    return np.sum(averageAcrossRuns)
+    return np.sum(averageAcrossRuns[-100000:])
 
 def bottom50percentile(data):
     return np.sort(np.concatenate(data).ravel())[int(len(data)/2.0)]
