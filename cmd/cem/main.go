@@ -43,7 +43,8 @@ func main() {
 	percentElite := 0.5
 	numElite := int64(float64(numSamples) * percentElite)
 	e := math.Pow(10, -8)
-	iterations := 0
+	iterations := 100
+	runs := 30
 
 	var meanHyperparams [len(hyperparams)]float64
 	for i := range meanHyperparams {
@@ -120,19 +121,19 @@ func main() {
 			realvaluedSamples[i] = sample
 			var temp []float64
 			for j := 0; j < len(hyperparams); j++ {
-				if containsInt(discreteHyperparamsIndices[:], int64(j)) {
-					for k := 0; k < len(discreteMidRanges); k++ {
+				if !containsInt(discreteHyperparamsIndices[:], int64(j)) {
+					temp = append(temp, sample[j])
+				} else {
+					for k := 0; k < len(discreteMidRanges[j]); k++ {
 						if sample[j] <= discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
 							temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
 							break
 						}
 					}
 					if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
-						temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
+						temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
 					}
 
-				} else {
-					temp = append(temp, sample[j])
 				}
 			}
 			samples[i] = temp
@@ -149,13 +150,17 @@ func main() {
 		fmt.Println("")
 	}
 
+	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
+
 	fmt.Println("-------------------")
 	fmt.Println("-------------------")
-	fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, iterations, meanHyperparams, covariance)
+	fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, iterations, runs, meanHyperparams, covariance)
 
 	//iterations
 	//    samples
 	//        runs
+
+	for iterat
 	for {
 		agentSettings := agent.DefaultESarsaSettings()
 		// Do CEM stuff to change settings and SEED
