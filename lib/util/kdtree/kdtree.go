@@ -37,11 +37,12 @@ func (t *TransTrees) BuildTree(allTrans [][]float64) {
 	dataInTree := make([][][]float64, t.numAction)
 	for i := 0; i < len(allTrans); i++ {
 		action = int(allTrans[i][t.stateDim])
-		t.data[action] = append(t.data[action], allTrans[i])                  // sort current state
+		t.data[action] = append(t.data[action], allTrans[i])                      // sort current state
 		dataInTree[action] = append(dataInTree[action], allTrans[i][:t.stateDim]) // sort current state
 	}
 	for i := 0; i < t.numAction; i++ {
 		err := t.trees[i].Build(dataInTree[i])
+		//fmt.Println("Data in Build Tree: ", len(dataInTree[i]))
 		if err != nil {
 			panic("Error when building tree: " + string(err.Error()))
 		}
@@ -57,6 +58,7 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 	nextStates := make([][]float64, k)
 	rewards := make([]float64, k)
 	terminals := make([]float64, k)
+	//fmt.Println("Indices: ", neighborIdxs)
 	for i := 0; i < k; i++ {
 		states[i] = t.data[action][neighborIdxs[i]][:t.stateDim]
 		nextStates[i] = t.data[action][neighborIdxs[i]][t.stateDim+1 : t.stateDim*2+1]

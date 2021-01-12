@@ -6,10 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/stellentus/cartpoles/lib/util/convformat"
-	transModel "github.com/stellentus/cartpoles/lib/util/kdtree"
-	"github.com/stellentus/cartpoles/lib/util/random"
-	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"log"
 	"math"
 	"math/rand"
@@ -17,16 +13,21 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/stellentus/cartpoles/lib/util/convformat"
+	transModel "github.com/stellentus/cartpoles/lib/util/kdtree"
+	"github.com/stellentus/cartpoles/lib/util/random"
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
+
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
 type knnSettings struct {
-	DataLog string `json:"datalog"`
-	Seed    int64  `json:"seed"`
-	Neighbor_num	int `json:"neighbor-num"`
-	EnsembleSeed	int `json:"ensemble-seed"`
-	DropPerc    float64 `json:"drop-percent"`
+	DataLog      string  `json:"datalog"`
+	Seed         int64   `json:"seed"`
+	Neighbor_num int     `json:"neighbor-num"`
+	EnsembleSeed int     `json:"ensemble-seed"`
+	DropPerc     float64 `json:"drop-percent"`
 }
 
 type KnnModelEnv struct {
@@ -40,7 +41,7 @@ type KnnModelEnv struct {
 	stateDim        int
 	NumberOfActions int
 	stateRange      []float64
-	neighbor_prob	[]float64
+	neighbor_prob   []float64
 }
 
 func init() {
@@ -140,10 +141,10 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	var allTrans [][]float64
 	if env.EnsembleSeed != 0 {
 		tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
-		filteredLen := int(float64(len(allTransTemp)) * (1-env.DropPerc))
+		filteredLen := int(float64(len(allTransTemp)) * (1 - env.DropPerc))
 		filteredIdx := tempRnd.Perm(len(allTransTemp))[:filteredLen]
 		allTrans = make([][]float64, filteredLen)
-		for i:=0; i<filteredLen; i++ {
+		for i := 0; i < filteredLen; i++ {
 			allTrans[i] = allTransTemp[filteredIdx[i]]
 		}
 	} else {
@@ -198,9 +199,44 @@ func (env *KnnModelEnv) Start() rlglue.State {
 }
 
 func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
+	//fmt.Println("---------------------")
 	actInt, _ := tpo.GetInt(act)
-	_, nextStates, rewards, terminals, _ := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+	_, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+
+	sum := 0.0
+	for i := 0; i < len(distances); i++ {
+		sum += distances[i] + math.Pow(10, -6)
+	}
+	pdf := make([]float64, len(distances))
+	for i := 0; i < len(distances); i++ {
+		pdf[i] = 1.0 - ((distances[i] + math.Pow(10, -6)) / sum)
+	}
+
+	normalizedPdf := make([]float64, len(distances))
+	normalizedSum := 0.0
+	for i := 0; i < len(distances); i++ {
+		normalizedSum += pdf[i]
+	}
+	for i := 0; i < len(distances); i++ {
+		normalizedPdf[i] = (pdf[i] / normalizedSum)
+	}
+
+	env.neighbor_prob = make([]float64, len(distances))
+	temp1 := 0.0
+	for i := 0; i < len(distances); i++ {
+		env.neighbor_prob[i] = temp1 + normalizedPdf[i]
+		temp1 = env.neighbor_prob[i]
+	}
+
+	//fmt.Println("Distances: ", distances)
+	//fmt.Println("PDF: ", pdf)
+	//fmt.Println("Normalized PDF: ", normalizedPdf)
+	//fmt.Println("CDF: ", env.neighbor_prob)
+	//fmt.Println("Current State: ", env.state)
+	//fmt.Println("Neighbour states: ", neighbourStates)
+	//fmt.Println(nextStates)
 	chosen := random.FreqSample(env.neighbor_prob)
+	//fmt.Println(chosen)
 	env.state = nextStates[chosen]
 	var done bool
 	if terminals[chosen] == 0 {
@@ -231,4 +267,15 @@ func (env *KnnModelEnv) GetAttributes() rlglue.Attributes {
 		env.Message("err", "environment.knnModel could not Marshal its JSON attributes: "+err.Error())
 	}
 	return attr
+}
+
+func (env *KnnModelEnv) Distance(state1 rlglue.State, state2 rlglue.State) float64 {
+	var distance float64
+	var squareddistance float64
+	squareddistance = 0.0
+	for i := 0; i < len(state1); i++ {
+		squareddistance += math.Pow(state1[i]-state2[i], 2)
+	}
+	distance = math.Pow(squareddistance, 0.5)
+	return distance
 }
