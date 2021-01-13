@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 Data
-data
+data*
 img
 .vscode/
 plot/.ipynb_checkpoints

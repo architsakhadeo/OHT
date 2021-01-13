@@ -2,7 +2,6 @@ package experiment
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/stellentus/cartpoles/lib/config"
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -158,7 +157,7 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	exp.LogEpisodeLength(numStepsThisEpisode)
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
-	fmt.Println("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	//fmt.Println("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	if exp.Settings.DebugInterval != 0 {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	}

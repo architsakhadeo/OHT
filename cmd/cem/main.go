@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"math"
 	"runtime"
+	"sort"
 
+	"github.com/mkmik/argsort"
 	"github.com/stellentus/cartpoles/lib/agent"
 	"github.com/stellentus/cartpoles/lib/config"
 	"github.com/stellentus/cartpoles/lib/environment"
@@ -14,6 +16,7 @@ import (
 	"github.com/stellentus/cartpoles/lib/logger"
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/stat"
 	"gonum.org/v1/gonum/stat/distmv"
 )
 
@@ -28,23 +31,23 @@ func main() {
 
 	debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
 
-	numTimesteps := 1000000
-	numRuns := 1
-	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "alpha"}
+	numTimesteps := 75000
+	//gamma := 0.9
+	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
-	upper := [len(hyperparams)]float64{7.5, 4.5, 1.0, 1.0, 10}
+	upper := [len(hyperparams)]float64{7.5, 4.5, 1.0, 1.0, 1}
 
 	//typeOfHyperparams := [5]string{"discrete", "discrete", "continuous", "continuous", "continuous"}
 	discreteHyperparamsIndices := [2]int64{0, 1}
 	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
 
-	numSamples := 50 // 300
+	numSamples := 20 // 300
 	percentElite := 0.5
 	numElite := int64(float64(numSamples) * percentElite)
 	e := math.Pow(10, -8)
-	iterations := 100
-	runs := 30
+	numIterations := 10
+	numRuns := 1
 
 	var meanHyperparams [len(hyperparams)]float64
 	for i := range meanHyperparams {
@@ -56,6 +59,7 @@ func main() {
 	//	covariance[i] = make([]float64, len(hyperparams))
 	//}
 
+	// Copy all of this
 	covariance := mat.NewDense(len(hyperparams), len(hyperparams), nil)
 	covarianceRows, covarianceColumns := covariance.Dims()
 
@@ -83,11 +87,11 @@ func main() {
 		}
 	}
 
-	fmt.Println("Before")
-	matPrint(covariance)
+	//fmt.Println("Before")
+	//matPrint(covariance)
 	covariance = nearestPD(covariance)
-	fmt.Println("After")
-	matPrint(covariance)
+	//fmt.Println("After")
+	//matPrint(covariance)
 
 	symmetricCovariance := mat.NewSymDense(len(hyperparams), nil)
 	for i := 0; i < len(hyperparams); i++ {
@@ -96,18 +100,23 @@ func main() {
 		}
 	}
 
-	fmt.Println("Symmetric")
-	matPrint(symmetricCovariance)
+	//fmt.Println("Symmetric")
+	//matPrint(symmetricCovariance)
 
 	var choleskySymmetricCovariance mat.Cholesky
 	choleskySymmetricCovariance.Factorize(symmetricCovariance)
 
+	fmt.Println("Mean :", meanHyperparams)
+	fmt.Println("")
+	//fmt.Println(symmetricCovariance)
+
 	samples := make([][]float64, numSamples)
 	realvaluedSamples := make([][]float64, numSamples)
+
+	//Think of how to make this random
 	var src rand.Source
 	i := 0
 
-	// CODE IS BUGGY RIGHT NOW
 	for i < numSamples {
 		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
 		flag := 0
@@ -142,62 +151,228 @@ func main() {
 
 	}
 
+	fmt.Println("Samples: ", samples)
+	fmt.Println("")
+
 	// to create MVND you need to use gonum NewNormal and covariance = (covariance + covariance.T)/2.0 to make it symmetric
-	for i := 0; i < numSamples; i++ {
-		fmt.Println(realvaluedSamples[i])
-		fmt.Println(samples[i])
-		fmt.Println("")
-		fmt.Println("")
-	}
+	//for i := 0; i < numSamples; i++ {
+	//fmt.Println(realvaluedSamples[i])
+	//fmt.Println(samples[i])
+	//fmt.Println("")
+	//fmt.Println("")
+	//}
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
-	fmt.Println("-------------------")
-	fmt.Println("-------------------")
-	fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, iterations, runs, meanHyperparams, covariance)
+	//fmt.Println("-------------------")
+	//fmt.Println("-------------------")
+	//fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, numIterations, numRuns, meanHyperparams, covariance)
 
 	//iterations
 	//    samples
 	//        runs
 
-	for iterat
-	for {
-		agentSettings := agent.DefaultESarsaSettings()
-		// Do CEM stuff to change settings and SEED
+	for iteration := 0; iteration < numIterations; iteration++ {
+		fmt.Println("Iteration: ", iteration)
+		fmt.Println("")
+		var samplesMetrics []float64
+		fmt.Println("Samples before iteration: ", samples)
+		fmt.Println("")
+		for s := 0; s < len(samples); s++ {
+			//fmt.Println("Sample number: ", s)
+			//fmt.Println("Sample: ", samples[s])
+			//fmt.Println("Real valued: ", realvaluedSamples[s])
+			tilings := samples[s][0]
+			tiles := samples[s][1]
+			lambda := samples[s][2]
+			epsilon := samples[s][3]
+			adaptiveAlpha := samples[s][4]
+			var run_metrics []float64
+			for run := 0; run < numRuns; run++ {
+				//agentSettings := agent.DefaultESarsaSettings()
+				// Do CEM stuff to change settings and SEED
+				seed := int64((numRuns * iteration) + run)
+				agentSettings := agent.EsarsaSettings{
+					EnableDebug:        false,
+					Seed:               seed,
+					NumTilings:         int(tilings),
+					NumTiles:           int(tiles),
+					Gamma:              0.9,
+					Lambda:             float64(lambda),
+					Epsilon:            float64(epsilon),
+					Alpha:              0.0,
+					AdaptiveAlpha:      float64(adaptiveAlpha),
+					IsStepsizeAdaptive: true,
+				}
+				//fmt.Println("Agent Settings: ", agentSettings)
 
-		ag := &agent.ESarsa{Debug: debug}
-		ag.InitializeWithSettings(agentSettings)
+				ag := &agent.ESarsa{Debug: debug}
+				ag.InitializeWithSettings(agentSettings)
 
-		env := &environment.Cartpole{Debug: debug}
-		env.InitializeWithSettings(environment.CartpoleSettings{Seed: int64(0)}) // TODO change seed
+				env := &environment.Cartpole{Debug: debug}
+				env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed}) // TODO change seed
 
-		data, err := logger.NewData(debug, logger.DataConfig{
-			ShouldLogTraces:         false,
-			CacheTracesInRAM:        false,
-			ShouldLogEpisodeLengths: false,
-			BasePath:                "",
-			FileSuffix:              "",
-		})
-		panicIfError(err, "Couldn't create logger.Data")
+				// Does not log data yet
+				data, err := logger.NewData(debug, logger.DataConfig{
+					ShouldLogTraces:         false,
+					CacheTracesInRAM:        false,
+					ShouldLogEpisodeLengths: false,
+					BasePath:                "", //"data/CEM"
+					FileSuffix:              "", //strconv.Itoa(int(run))
+				})
+				panicIfError(err, "Couldn't create logger.Data")
 
-		expConf := config.Experiment{
-			MaxEpisodes:             0,
-			MaxSteps:                10,
-			DebugInterval:           0,
-			DataPath:                "",
-			ShouldLogTraces:         false,
-			CacheTracesInRAM:        false,
-			ShouldLogEpisodeLengths: false,
-			MaxCPUs:                 *cpus,
+				expConf := config.Experiment{
+					MaxEpisodes:             0,
+					MaxSteps:                numTimesteps,
+					DebugInterval:           0,
+					DataPath:                "",
+					ShouldLogTraces:         false,
+					CacheTracesInRAM:        false,
+					ShouldLogEpisodeLengths: false,
+					MaxCPUs:                 *cpus,
+				}
+				exp, err := experiment.New(ag, env, expConf, debug, data)
+				panicIfError(err, "Couldn't create experiment")
+
+				listOfRewards, _ := exp.Run()
+				result := 0.0
+				for index := 0; index < len(listOfRewards); index++ {
+					result += listOfRewards[index]
+				}
+
+				run_metrics = append(run_metrics, result)
+				//fmt.Println("Iteration: ", iteration)
+				//fmt.Println("Sample: ", s)
+				//fmt.Println("Run: ", run)
+				//fmt.Println(result)
+
+				//fmt.Println(data.NumberOfEpisodes())
+			}
+			//fmt.Println(run_metrics)
+			average := 0.0
+			for _, v := range run_metrics {
+				average += v
+			}
+			average /= float64(len(run_metrics))
+			//fmt.Println("Performance: ", average)
+			//fmt.Println("")
+			samplesMetrics = append(samplesMetrics, average)
+
 		}
-		exp, err := experiment.New(ag, env, expConf, debug, data)
-		panicIfError(err, "Couldn't create experiment")
+		//fmt.Println(realvaluedSamples)
+		//fmt.Println("")
+		fmt.Println("Sample Metric: ", samplesMetrics)
+		fmt.Println("")
+		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
+		descendingIndices := make([]int, len(samples))
+		for ind := 0; ind < len(samples); ind++ {
+			descendingIndices[len(samples)-1-ind] = ascendingIndices[ind]
+		}
 
-		listOfRewards, _ := exp.Run()
-		fmt.Println(listOfRewards)
+		descendingSamplesMetrics := make([]float64, len(samples))
+		descendingSamples := make([][]float64, len(samples))
+		descendingRealValuedSamples := make([][]float64, len(samples))
+		for ds := 0; ds < len(samples); ds++ {
+			descendingSamplesMetrics[ds] = samplesMetrics[descendingIndices[ds]]
+			descendingSamples[ds] = samples[descendingIndices[ds]]
+			descendingRealValuedSamples[ds] = realvaluedSamples[descendingIndices[ds]]
+		}
 
-		//fmt.Println(data.NumberOfEpisodes())
-		break
+		elitePoints := make([][]float64, numElite)
+		eliteSamplePoints := make([][]float64, numElite)
+		elitePoints = descendingRealValuedSamples[:numElite]
+		eliteSamplePoints = descendingSamples[:numElite]
+		var meanSampleHyperparams [len(hyperparams)]float64
+		copy(meanHyperparams[:], elitePoints[0])
+		copy(meanSampleHyperparams[:], eliteSamplePoints[0])
+		fmt.Println("Elite points: ", eliteSamplePoints)
+		fmt.Println("")
+		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:numElite])
+		fmt.Println("")
+		//fmt.Println("--------------------------------------------")
+
+		elitePointsMatrix := mat.NewDense(len(elitePoints), len(hyperparams), nil)
+		for rows := 0; rows < len(elitePoints); rows++ {
+			for cols := 0; cols < len(hyperparams); cols++ {
+				elitePointsMatrix.Set(rows, cols, elitePoints[rows][cols])
+			}
+		}
+		//fmt.Println(elitePoints)
+		//matPrint(elitePointsMatrix)
+
+		cov := mat.NewSymDense(len(hyperparams), nil)
+		stat.CovarianceMatrix(cov, elitePointsMatrix, nil)
+
+		covWithE := mat.NewDense(len(hyperparams), len(hyperparams), nil)
+		for rows := 0; rows < len(hyperparams); rows++ {
+			for cols := 0; cols < len(hyperparams); cols++ {
+				if rows == cols {
+					covWithE.Set(rows, cols, cov.At(rows, cols)+e)
+				} else {
+					covWithE.Set(rows, cols, cov.At(rows, cols)-e)
+				}
+			}
+		}
+
+		covariance = nearestPD(covWithE)
+
+		symmetricCovariance := mat.NewSymDense(len(hyperparams), nil)
+		for i := 0; i < len(hyperparams); i++ {
+			for j := 0; j < len(hyperparams); j++ {
+				symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
+			}
+		}
+
+		var choleskySymmetricCovariance mat.Cholesky
+		choleskySymmetricCovariance.Factorize(symmetricCovariance)
+
+		//samples := make([][]float64, numSamples)
+		//realvaluedSamples := make([][]float64, numSamples)
+
+		for m := 0; m < int(numElite/2); m++ {
+			realvaluedSamples[m] = elitePoints[m]
+			samples[m] = eliteSamplePoints[m]
+		}
+		i := int(numElite / 2.0)
+
+		//fmt.Println(meanHyperparams)
+		//fmt.Println(symmetricCovariance)
+		for i < numSamples {
+			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
+			flag := 0
+			for j := 0; j < len(hyperparams); j++ {
+				if sample[j] < lower[j] || sample[j] > upper[j] {
+					flag = 1
+					break
+				}
+			}
+			if flag == 0 {
+				realvaluedSamples[i] = sample
+				var temp []float64
+				for j := 0; j < len(hyperparams); j++ {
+					if !containsInt(discreteHyperparamsIndices[:], int64(j)) {
+						temp = append(temp, sample[j])
+					} else {
+						for k := 0; k < len(discreteMidRanges[j]); k++ {
+							if sample[j] <= discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
+								temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
+								break
+							}
+						}
+						if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
+							temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
+						}
+
+					}
+				}
+				samples[i] = temp
+				i++
+			}
+
+		}
+
+		fmt.Println("--------------------------------------------------")
 	}
 }
 
@@ -445,6 +620,7 @@ func containsInt(s []int64, e int64) bool {
 	return false
 }
 
+// Works if data has unique elements without repetition
 func indexOfInt(element int64, data []int64) int {
 	for k, v := range data {
 		if element == v {

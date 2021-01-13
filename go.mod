@@ -9,6 +9,7 @@ require (
 	github.com/gonum/internal v0.0.0-20181124074243-f884aa714029 // indirect
 	github.com/gonum/lapack v0.0.0-20181123203213-e4cdc5a0bff9 // indirect
 	github.com/gonum/matrix v0.0.0-20181209220409-c518dec07be9 // indirect
+	github.com/mkmik/argsort v1.1.0 // indirect
 	github.com/stellentus/tile v0.9.1
 	github.com/stretchr/testify v1.5.1
 	github.com/tensorflow/tensorflow v2.1.0+incompatible
