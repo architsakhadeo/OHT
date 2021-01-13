@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/stellentus/cartpoles/lib/util/convformat"
-	transModel "github.com/stellentus/cartpoles/lib/util/kdtree"
+	transModel "github.com/stellentus/cartpoles/lib/util/transkdtree"
 	"github.com/stellentus/cartpoles/lib/util/random"
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
@@ -153,7 +153,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	env.offlineData = allTrans
 	env.offlineStarts = env.SearchOfflineStart(allTrans)
-	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim, "euclidean")
+	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(allTrans)
 
 	pdf := make([]float64, env.Neighbor_num)

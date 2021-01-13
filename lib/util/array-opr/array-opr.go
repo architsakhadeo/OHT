@@ -9,6 +9,26 @@ import (
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
+func InArrayInt(a int, list []int) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func AllEqualInt(arr []int) bool {
+	var equal bool
+	equal = true
+	for i:=1;i<len(arr);i++ {
+		if arr[i] != arr[0] {
+			equal = false
+		}
+	}
+	return equal
+}
+
 func Concatenate(arr1, arr2 [][]float64) [][]float64 {
 	if len(arr1) != len(arr2) {
 		fmt.Println("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d", len(arr1), len(arr2))
