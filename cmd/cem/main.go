@@ -31,8 +31,6 @@ func main() {
 
 	debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
 
-	numTimesteps := 75000
-	//gamma := 0.9
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
 	upper := [len(hyperparams)]float64{7.5, 4.5, 1.0, 1.0, 1}
@@ -42,9 +40,11 @@ func main() {
 	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
 
-	numSamples := 20 // 300
+	numTimesteps := 7500 //250000
+	numSamples := 10     // 300
 	percentElite := 0.5
 	numElite := int64(float64(numSamples) * percentElite)
+	numEliteElite := int(numElite / 2.0)
 	e := math.Pow(10, -8)
 	numIterations := 10
 	numRuns := 1
@@ -54,12 +54,6 @@ func main() {
 		meanHyperparams[i] = (lower[i] + upper[i]) / 2.0
 	}
 
-	//covariance := make([][]float64, len(hyperparams))
-	//for i := range covariance {
-	//	covariance[i] = make([]float64, len(hyperparams))
-	//}
-
-	// Copy all of this
 	covariance := mat.NewDense(len(hyperparams), len(hyperparams), nil)
 	covarianceRows, covarianceColumns := covariance.Dims()
 
@@ -87,11 +81,7 @@ func main() {
 		}
 	}
 
-	//fmt.Println("Before")
-	//matPrint(covariance)
 	covariance = nearestPD(covariance)
-	//fmt.Println("After")
-	//matPrint(covariance)
 
 	symmetricCovariance := mat.NewSymDense(len(hyperparams), nil)
 	for i := 0; i < len(hyperparams); i++ {
@@ -100,18 +90,14 @@ func main() {
 		}
 	}
 
-	//fmt.Println("Symmetric")
-	//matPrint(symmetricCovariance)
-
 	var choleskySymmetricCovariance mat.Cholesky
 	choleskySymmetricCovariance.Factorize(symmetricCovariance)
 
 	fmt.Println("Mean :", meanHyperparams)
 	fmt.Println("")
-	//fmt.Println(symmetricCovariance)
 
-	samples := make([][]float64, numSamples)
-	realvaluedSamples := make([][]float64, numSamples)
+	samples := make([][]float64, numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
+	realvaluedSamples := make([][]float64, numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
 
 	//Think of how to make this random
 	var src rand.Source
@@ -151,26 +137,7 @@ func main() {
 
 	}
 
-	fmt.Println("Samples: ", samples)
-	fmt.Println("")
-
-	// to create MVND you need to use gonum NewNormal and covariance = (covariance + covariance.T)/2.0 to make it symmetric
-	//for i := 0; i < numSamples; i++ {
-	//fmt.Println(realvaluedSamples[i])
-	//fmt.Println(samples[i])
-	//fmt.Println("")
-	//fmt.Println("")
-	//}
-
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
-
-	//fmt.Println("-------------------")
-	//fmt.Println("-------------------")
-	//fmt.Println(numTimesteps, numRuns, hyperparams, lower, upper, discreteHyperparamsIndices, discreteMidRanges, discreteRanges, numSamples, numElite, e, numIterations, numRuns, meanHyperparams, covariance)
-
-	//iterations
-	//    samples
-	//        runs
 
 	for iteration := 0; iteration < numIterations; iteration++ {
 		fmt.Println("Iteration: ", iteration)
@@ -179,9 +146,6 @@ func main() {
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 		for s := 0; s < len(samples); s++ {
-			//fmt.Println("Sample number: ", s)
-			//fmt.Println("Sample: ", samples[s])
-			//fmt.Println("Real valued: ", realvaluedSamples[s])
 			tilings := samples[s][0]
 			tiles := samples[s][1]
 			lambda := samples[s][2]
@@ -189,8 +153,6 @@ func main() {
 			adaptiveAlpha := samples[s][4]
 			var run_metrics []float64
 			for run := 0; run < numRuns; run++ {
-				//agentSettings := agent.DefaultESarsaSettings()
-				// Do CEM stuff to change settings and SEED
 				seed := int64((numRuns * iteration) + run)
 				agentSettings := agent.EsarsaSettings{
 					EnableDebug:        false,
@@ -204,13 +166,12 @@ func main() {
 					AdaptiveAlpha:      float64(adaptiveAlpha),
 					IsStepsizeAdaptive: true,
 				}
-				//fmt.Println("Agent Settings: ", agentSettings)
 
 				ag := &agent.ESarsa{Debug: debug}
 				ag.InitializeWithSettings(agentSettings)
 
 				env := &environment.Cartpole{Debug: debug}
-				env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed}) // TODO change seed
+				env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed})
 
 				// Does not log data yet
 				data, err := logger.NewData(debug, logger.DataConfig{
@@ -236,32 +197,22 @@ func main() {
 				panicIfError(err, "Couldn't create experiment")
 
 				listOfRewards, _ := exp.Run()
-				result := 0.0
+				result := 0.0 // returns
 				for index := 0; index < len(listOfRewards); index++ {
 					result += listOfRewards[index]
 				}
 
 				run_metrics = append(run_metrics, result)
-				//fmt.Println("Iteration: ", iteration)
-				//fmt.Println("Sample: ", s)
-				//fmt.Println("Run: ", run)
-				//fmt.Println(result)
-
-				//fmt.Println(data.NumberOfEpisodes())
 			}
-			//fmt.Println(run_metrics)
-			average := 0.0
+			average := 0.0 //returns averaged across runs
 			for _, v := range run_metrics {
 				average += v
 			}
 			average /= float64(len(run_metrics))
-			//fmt.Println("Performance: ", average)
-			//fmt.Println("")
 			samplesMetrics = append(samplesMetrics, average)
 
 		}
-		//fmt.Println(realvaluedSamples)
-		//fmt.Println("")
+
 		fmt.Println("Sample Metric: ", samplesMetrics)
 		fmt.Println("")
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
@@ -290,7 +241,6 @@ func main() {
 		fmt.Println("")
 		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:numElite])
 		fmt.Println("")
-		//fmt.Println("--------------------------------------------")
 
 		elitePointsMatrix := mat.NewDense(len(elitePoints), len(hyperparams), nil)
 		for rows := 0; rows < len(elitePoints); rows++ {
@@ -298,8 +248,6 @@ func main() {
 				elitePointsMatrix.Set(rows, cols, elitePoints[rows][cols])
 			}
 		}
-		//fmt.Println(elitePoints)
-		//matPrint(elitePointsMatrix)
 
 		cov := mat.NewSymDense(len(hyperparams), nil)
 		stat.CovarianceMatrix(cov, elitePointsMatrix, nil)
@@ -327,17 +275,12 @@ func main() {
 		var choleskySymmetricCovariance mat.Cholesky
 		choleskySymmetricCovariance.Factorize(symmetricCovariance)
 
-		//samples := make([][]float64, numSamples)
-		//realvaluedSamples := make([][]float64, numSamples)
-
-		for m := 0; m < int(numElite/2); m++ {
+		for m := 0; m < int(numEliteElite); m++ {
 			realvaluedSamples[m] = elitePoints[m]
 			samples[m] = eliteSamplePoints[m]
 		}
-		i := int(numElite / 2.0)
+		i := int(numEliteElite)
 
-		//fmt.Println(meanHyperparams)
-		//fmt.Println(symmetricCovariance)
 		for i < numSamples {
 			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
 			flag := 0
@@ -384,9 +327,6 @@ func panicIfError(err error, reason string) {
 
 func nearestPD(A *mat.Dense) *mat.Dense {
 	ARows, AColumns := A.Dims()
-	//fmt.Println("A")
-	//matPrint(A)
-	//fmt.Println("B")
 
 	B := mat.NewDense(ARows, AColumns, nil)
 
@@ -398,24 +338,11 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 			B.Set(i, j, value)
 		}
 	}
-	//matPrint(B)
 
 	u, s, v, err := svd(B)
-	//fmt.Println("U")
-	//matPrint(&u)
-	//fmt.Println("s")
-	//fmt.Println(s)
-	//fmt.Println("V")
-	//matPrint(&v)
 
 	if err != nil {
 		fmt.Println(err)
-	} else {
-		fmt.Println("")
-		//fmt.Println(u)
-		//fmt.Println(s)
-		//fmt.Println(v)
-
 	}
 
 	uRows, uColumns := u.Dims()
@@ -459,8 +386,6 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 			originalDense.Set(i, j, original.At(i, j))
 		}
 	}
-	//fmt.Println("Original")
-	//matPrint(originalDense)
 
 	var temp0 mat.Dense
 	var H mat.Dense
@@ -475,19 +400,14 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 		}
 	}
 
-	//fmt.Println("H")
-	//matPrint(hDense)
-
 	A2 := mat.NewDense(ARows, AColumns, nil)
 
 	for i := 0; i < ARows; i++ {
 		for j := 0; j < AColumns; j++ {
-			A2.Set(i, j, (B.At(i, j)+hDense.At(i, j))/2.0) // it is H[i][j]
+			A2.Set(i, j, (B.At(i, j)+hDense.At(i, j))/2.0)
 		}
 	}
 
-	//fmt.Println("A2")
-	//matPrint(A2)
 	A3 := mat.NewDense(ARows, AColumns, nil)
 
 	transposedA2 := transpose(A2)
@@ -497,10 +417,6 @@ func nearestPD(A *mat.Dense) *mat.Dense {
 			A3.Set(i, j, (A2.At(i, j)+transposedA2.At(i, j))/2.0)
 		}
 	}
-
-	//fmt.Println("A3")
-	//matPrint(A3)
-	//fmt.Println(A3)
 
 	if isPD(A3) {
 		return A3
