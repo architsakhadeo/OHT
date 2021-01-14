@@ -36,8 +36,6 @@ func main() {
 
 	runtime.GOMAXPROCS(*cpus) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
 
-	debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
-
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
 	upper := [len(hyperparams)]float64{7.5, 4.5, 1.0, 1.0, 1}
@@ -146,71 +144,8 @@ func main() {
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 		for s := 0; s < len(samples); s++ {
-			tilings := samples[s][0]
-			tiles := samples[s][1]
-			lambda := samples[s][2]
-			epsilon := samples[s][3]
-			adaptiveAlpha := samples[s][4]
-			var run_metrics []float64
-			for run := 0; run < *numRuns; run++ {
-				seed := int64((*numRuns * iteration) + run)
-				agentSettings := agent.EsarsaSettings{
-					EnableDebug:        false,
-					Seed:               seed,
-					NumTilings:         int(tilings),
-					NumTiles:           int(tiles),
-					Gamma:              0.9,
-					Lambda:             float64(lambda),
-					Epsilon:            float64(epsilon),
-					Alpha:              0.0,
-					AdaptiveAlpha:      float64(adaptiveAlpha),
-					IsStepsizeAdaptive: true,
-				}
-
-				ag := &agent.ESarsa{Debug: debug}
-				ag.InitializeWithSettings(agentSettings)
-
-				env := &environment.Cartpole{Debug: debug}
-				env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed})
-
-				// Does not log data yet
-				data, err := logger.NewData(debug, logger.DataConfig{
-					ShouldLogTraces:         false,
-					CacheTracesInRAM:        false,
-					ShouldLogEpisodeLengths: false,
-					BasePath:                "", //"data/CEM"
-					FileSuffix:              "", //strconv.Itoa(int(run))
-				})
-				panicIfError(err, "Couldn't create logger.Data")
-
-				expConf := config.Experiment{
-					MaxEpisodes:             0,
-					MaxSteps:                *numTimesteps,
-					DebugInterval:           0,
-					DataPath:                "",
-					ShouldLogTraces:         false,
-					CacheTracesInRAM:        false,
-					ShouldLogEpisodeLengths: false,
-					MaxCPUs:                 *cpus,
-				}
-				exp, err := experiment.New(ag, env, expConf, debug, data)
-				panicIfError(err, "Couldn't create experiment")
-
-				listOfRewards, _ := exp.Run()
-				result := 0.0 // returns
-				for index := 0; index < len(listOfRewards); index++ {
-					result += listOfRewards[index]
-				}
-
-				run_metrics = append(run_metrics, result)
-			}
-			average := 0.0 //returns averaged across runs
-			for _, v := range run_metrics {
-				average += v
-			}
-			average /= float64(len(run_metrics))
+			average := runOneSample(samples[s], *numRuns, iteration)
 			samplesMetrics = append(samplesMetrics, average)
-
 		}
 
 		fmt.Println("Sample Metric: ", samplesMetrics)
@@ -544,4 +479,73 @@ func indexOfInt(element int64, data []int64) int {
 		}
 	}
 	return -1 //not found.
+}
+
+func runOneSample(sample []float64, numRuns, iteration int) float64 {
+	tilings := sample[0]
+	tiles := sample[1]
+	lambda := sample[2]
+	epsilon := sample[3]
+	adaptiveAlpha := sample[4]
+	var run_metrics []float64
+	for run := 0; run < numRuns; run++ {
+		seed := int64((numRuns * iteration) + run)
+		agentSettings := agent.EsarsaSettings{
+			EnableDebug:        false,
+			Seed:               seed,
+			NumTilings:         int(tilings),
+			NumTiles:           int(tiles),
+			Gamma:              0.9,
+			Lambda:             float64(lambda),
+			Epsilon:            float64(epsilon),
+			Alpha:              0.0,
+			AdaptiveAlpha:      float64(adaptiveAlpha),
+			IsStepsizeAdaptive: true,
+		}
+
+		debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
+
+		ag := &agent.ESarsa{Debug: debug}
+		ag.InitializeWithSettings(agentSettings)
+
+		env := &environment.Cartpole{Debug: debug}
+		env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed})
+
+		// Does not log data yet
+		data, err := logger.NewData(debug, logger.DataConfig{
+			ShouldLogTraces:         false,
+			CacheTracesInRAM:        false,
+			ShouldLogEpisodeLengths: false,
+			BasePath:                "", //"data/CEM"
+			FileSuffix:              "", //strconv.Itoa(int(run))
+		})
+		panicIfError(err, "Couldn't create logger.Data")
+
+		expConf := config.Experiment{
+			MaxEpisodes:             0,
+			MaxSteps:                *numTimesteps,
+			DebugInterval:           0,
+			DataPath:                "",
+			ShouldLogTraces:         false,
+			CacheTracesInRAM:        false,
+			ShouldLogEpisodeLengths: false,
+			MaxCPUs:                 *cpus,
+		}
+		exp, err := experiment.New(ag, env, expConf, debug, data)
+		panicIfError(err, "Couldn't create experiment")
+
+		listOfRewards, _ := exp.Run()
+		result := 0.0 // returns
+		for index := 0; index < len(listOfRewards); index++ {
+			result += listOfRewards[index]
+		}
+
+		run_metrics = append(run_metrics, result)
+	}
+	average := 0.0 //returns averaged across runs
+	for _, v := range run_metrics {
+		average += v
+	}
+	average /= float64(len(run_metrics))
+	return average
 }
