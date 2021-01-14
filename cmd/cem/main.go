@@ -141,12 +141,12 @@ func main() {
 	for iteration := 0; iteration < *numIterations; iteration++ {
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
-		var samplesMetrics []float64
+		samplesMetrics := make([]float64, len(samples))
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 		for s := 0; s < len(samples); s++ {
 			average := runOneSample(samples[s], *numRuns, iteration)
-			samplesMetrics = append(samplesMetrics, average)
+			samplesMetrics[s] = average
 		}
 
 		fmt.Println("Sample Metric: ", samplesMetrics)
