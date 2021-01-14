@@ -21,7 +21,12 @@ import (
 )
 
 var (
-	cpus = flag.Int("cpus", 2, "Number of CPUs")
+	cpus          = flag.Int("cpus", 2, "Number of CPUs")
+	numIterations = flag.Int("iterations", 3, "Total number of iterations")
+	numSamples    = flag.Int("samples", 10, "Number of samples per iteration")
+	numRuns       = flag.Int("runs", 2, "Number of runs per sample")
+	numTimesteps  = flag.Int("timesteps", 1000, "Number of timesteps per run")
+	percentElite  = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
 )
 
 func main() {
@@ -40,14 +45,10 @@ func main() {
 	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
 
-	numTimesteps := 1000 //250000
-	numSamples := 10     // 300
-	percentElite := 0.5
-	numElite := int64(float64(numSamples) * percentElite)
-	numEliteElite := int(numElite / 2.0)
 	e := 10.e-8
-	numIterations := 3
-	numRuns := 2
+
+	numElite := int64(float64(*numSamples) * *percentElite)
+	numEliteElite := int(numElite / 2.0)
 
 	var meanHyperparams [len(hyperparams)]float64
 	for i := range meanHyperparams {
@@ -96,14 +97,14 @@ func main() {
 	fmt.Println("Mean :", meanHyperparams)
 	fmt.Println("")
 
-	samples := make([][]float64, numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
-	realvaluedSamples := make([][]float64, numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
+	samples := make([][]float64, *numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
+	realvaluedSamples := make([][]float64, *numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
 
 	//Think of how to make this random
 	var src rand.Source
 	i := 0
 
-	for i < numSamples {
+	for i < *numSamples {
 		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
 		flag := 0
 		for j := 0; j < len(hyperparams); j++ {
@@ -138,7 +139,7 @@ func main() {
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
-	for iteration := 0; iteration < numIterations; iteration++ {
+	for iteration := 0; iteration < *numIterations; iteration++ {
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
 		var samplesMetrics []float64
@@ -151,8 +152,8 @@ func main() {
 			epsilon := samples[s][3]
 			adaptiveAlpha := samples[s][4]
 			var run_metrics []float64
-			for run := 0; run < numRuns; run++ {
-				seed := int64((numRuns * iteration) + run)
+			for run := 0; run < *numRuns; run++ {
+				seed := int64((*numRuns * iteration) + run)
 				agentSettings := agent.EsarsaSettings{
 					EnableDebug:        false,
 					Seed:               seed,
@@ -184,7 +185,7 @@ func main() {
 
 				expConf := config.Experiment{
 					MaxEpisodes:             0,
-					MaxSteps:                numTimesteps,
+					MaxSteps:                *numTimesteps,
 					DebugInterval:           0,
 					DataPath:                "",
 					ShouldLogTraces:         false,
@@ -280,7 +281,7 @@ func main() {
 		}
 		i := int(numEliteElite)
 
-		for i < numSamples {
+		for i < *numSamples {
 			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
 			flag := 0
 			for j := 0; j < len(hyperparams); j++ {
