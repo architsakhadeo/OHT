@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	cpus          = flag.Int("cpus", 2, "Number of CPUs")
+	numWorkers    = flag.Int("workers", -1, "Maximum number of workers; defaults to the number of CPUs if -1")
 	numIterations = flag.Int("iterations", 3, "Total number of iterations")
 	numSamples    = flag.Int("samples", 10, "Number of samples per iteration")
 	numRuns       = flag.Int("runs", 2, "Number of runs per sample")
@@ -34,7 +34,9 @@ const e = 10.e-8
 func main() {
 	flag.Parse()
 
-	runtime.GOMAXPROCS(*cpus) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
+	if *numWorkers <= 0 {
+		*numWorkers = runtime.NumCPU()
+	}
 
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
@@ -147,8 +149,7 @@ func main() {
 		jobs := make(chan int, len(samples))
 		results := make(chan averageAtIndex, len(samples))
 
-		const numWorkers = 2
-		for w := 0; w < numWorkers; w++ {
+		for w := 0; w < *numWorkers; w++ {
 			go worker(jobs, results, samples, *numRuns, iteration)
 		}
 
@@ -557,7 +558,7 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 			ShouldLogTraces:         false,
 			CacheTracesInRAM:        false,
 			ShouldLogEpisodeLengths: false,
-			MaxCPUs:                 *cpus,
+			MaxCPUs:                 1,
 		}
 		exp, err := experiment.New(ag, env, expConf, debug, data)
 		panicIfError(err, "Couldn't create experiment")
