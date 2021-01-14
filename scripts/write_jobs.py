@@ -11,31 +11,58 @@ def write_job(sweep, run, config_list, prev=0, line_per_file=1):
                     prev += 1
                     f = open("tasks_{}.sh".format(prev), "w")
 
+write_job(27, 30, [
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.1/ensembleseed0/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.1/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.1/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.1/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.1/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.1/ensembleseed5/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.2/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.2/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.2/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.2/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.2/ensembleseed5/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.3/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.3/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.3/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.3/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/drop0.3/ensembleseed5/lockat_baseline.json",
 
-#write_job(1, 30, ["config/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_-0.1.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_baseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_halfbaseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_quarterbaseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step10k_env/lockat_random.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_-0.1.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_baseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_halfbaseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_quarterbaseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step1k_env/lockat_random.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_-0.1.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_baseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_halfbaseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_quarterbaseline.json",
-#                   "config/hyperparam/cartpole/offline_data/dqn/step20k_env/lockat_random.json"]
-#           , prev=0, line_per_file=1)
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.1/ensembleseed0/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.1/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.1/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.1/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.1/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.1/ensembleseed5/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.2/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.2/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.2/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.2/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.2/ensembleseed5/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.3/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.3/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.3/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.3/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k3/esarsa/step7.5k_env/drop0.3/ensembleseed5/lockat_baseline.json",
 
-# write_job(36, 30, ["config/hyperparam/cartpole/offline_learning/dqn-adam/step20k_env/lockat_-0.1.json",
-#                   "config/hyperparam/cartpole/offline_learning/dqn-adam/step20k_env/lockat_baseline.json",
-#                   "config/hyperparam/cartpole/offline_learning/dqn-adam/step20k_env/lockat_halfbaseline.json",
-#                   "config/hyperparam/cartpole/offline_learning/dqn-adam/step20k_env/lockat_quarterbaseline.json",
-#                   "config/hyperparam/cartpole/offline_learning/dqn-adam/step20k_env/lockat_random.json",
-#                   ]
-#           , prev=0, line_per_file=40)
-#
-# write_job(36, 30, ["config/hyperparam/cartpole/online_learning/dqn-adam/step50k/sweep_lr.json"]
-#           , prev=180, line_per_file=120)
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.1/ensembleseed0/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.1/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.1/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.1/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.1/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.1/ensembleseed5/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.2/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.2/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.2/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.2/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.2/ensembleseed5/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.3/ensembleseed1/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.3/ensembleseed2/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.3/ensembleseed3/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.3/ensembleseed4/lockat_baseline.json",
+            "config/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/drop0.3/ensembleseed5/lockat_baseline.json",
+
+            "config/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep.json"
+            ]
+          , prev=0, line_per_file=20) #1h

@@ -42,8 +42,8 @@ def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Reward
 	transformedData = []
 
 	for run in range(len(failureTimesteps)):
-		if run % 10 == 0:
-			print(run, alg)
+		# if run % 10 == 0:
+		# 	print(run, alg)
 
 		# Calculate rewards from failure timesteps
 		indexing = (failureTimesteps[run] - 1).to_numpy().flatten()
