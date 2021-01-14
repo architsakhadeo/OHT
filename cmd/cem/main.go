@@ -142,18 +142,18 @@ func main() {
 	for iteration := 0; iteration < *numIterations; iteration++ {
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
-		samplesMetrics := make([]float64, len(samples))
+		samplesMetrics := make([]float64, *numSamples)
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 
-		jobs := make(chan int, len(samples))
-		results := make(chan averageAtIndex, len(samples))
+		jobs := make(chan int, *numSamples)
+		results := make(chan averageAtIndex, *numSamples)
 
 		for w := 0; w < *numWorkers; w++ {
 			go worker(jobs, results, samples, *numRuns, iteration)
 		}
 
-		for s := 0; s < len(samples); s++ {
+		for s := 0; s < *numSamples; s++ {
 			jobs <- s
 		}
 		close(jobs)
