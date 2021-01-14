@@ -145,22 +145,23 @@ func main() {
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 
-		ch := make(chan averageAtIndex)
+		jobs := make(chan int, len(samples))
+		results := make(chan averageAtIndex, len(samples))
+
+		const numWorkers = 2
+		for w := 0; w < numWorkers; w++ {
+			go worker(jobs, results, samples, *numRuns, iteration)
+		}
 
 		for s := 0; s < len(samples); s++ {
-			go func(idx int) {
-				average := runOneSample(samples[idx], *numRuns, iteration)
-				ch <- averageAtIndex{
-					average: average,
-					idx:     idx,
-				}
-			}(s)
+			jobs <- s
 		}
+		close(jobs)
 
 		count := 0
 		for count < len(samples) {
 			select {
-			case avg := <-ch:
+			case avg := <-results:
 				count++
 				samplesMetrics[avg.idx] = avg.average
 			}
@@ -269,6 +270,16 @@ func main() {
 		}
 
 		fmt.Println("--------------------------------------------------")
+	}
+}
+
+func worker(jobs <-chan int, results chan<- averageAtIndex, samples [][]float64, numRuns, iteration int) {
+	for idx := range jobs {
+		average := runOneSample(samples[idx], numRuns, iteration)
+		results <- averageAtIndex{
+			average: average,
+			idx:     idx,
+		}
 	}
 }
 
