@@ -21,12 +21,12 @@
 		"seed": 1,
 		"neighbor-num": 1,
 		"datalog": "data/hyperparam/cartpole/offline_data/esarsa/step7.5k_env/lockat_baseline/param_0/",
-		"ensemble-seed": 0,
-		"drop-percent": 0.1
+		"ensemble-seed": 4,
+		"drop-percent": 0.2
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/lockat_baseline/drop0.1/ensembleseed0/",
+		"data-path": "data/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/lockat_baseline/drop0.2/ensembleseed4/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000

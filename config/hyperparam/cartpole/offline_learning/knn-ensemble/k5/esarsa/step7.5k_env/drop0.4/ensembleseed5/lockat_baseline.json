@@ -19,14 +19,14 @@
 	},
 	"environment-settings": {
 		"seed": 1,
-		"neighbor-num": 1,
+		"neighbor-num": 5,
 		"datalog": "data/hyperparam/cartpole/offline_data/esarsa/step7.5k_env/lockat_baseline/param_0/",
-		"ensemble-seed": 0,
-		"drop-percent": 0.1
+		"ensemble-seed": 5,
+		"drop-percent": 0.4
 	},
 	"experiment-settings": {
 		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/offline_learning/knn-ensemble/k1/esarsa/step7.5k_env/lockat_baseline/drop0.1/ensembleseed0/",
+		"data-path": "data/hyperparam/cartpole/offline_learning/knn-ensemble/k5/esarsa/step7.5k_env/lockat_baseline/drop0.4/ensembleseed5/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
