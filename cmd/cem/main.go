@@ -35,6 +35,7 @@ var (
 const e = 10.e-8
 
 func main() {
+	startTime := time.Now()
 	flag.Parse()
 
 	if *numWorkers <= 0 {
@@ -276,6 +277,8 @@ func main() {
 
 		fmt.Println("--------------------------------------------------")
 	}
+fmt.Println("")
+fmt.Println("Execution time: ", time.Since(startTime))
 }
 
 func worker(jobs <-chan int, results chan<- averageAtIndex, samples [][]float64, numRuns, iteration int) {
@@ -516,6 +519,7 @@ func indexOfInt(element int64, data []int64) int {
 }
 
 func runOneSample(sample []float64, numRuns, iteration int) float64 {
+	startTimeOfSample := time.Now()
 	tilings := sample[0]
 	tiles := sample[1]
 	lambda := sample[2]
@@ -581,6 +585,9 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 		average += v
 	}
 	average /= float64(len(run_metrics))
+	fmt.Println("")
+	fmt.Println("Time for the sample: ", time.Since(startTimeOfSample))
+	fmt.Println("")
 	return average
 }
 
