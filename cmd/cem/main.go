@@ -30,6 +30,8 @@ var (
 	percentElite  = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
 )
 
+const e = 10.e-8
+
 func main() {
 	flag.Parse()
 
@@ -45,8 +47,6 @@ func main() {
 	discreteHyperparamsIndices := [2]int64{0, 1}
 	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
-
-	e := 10.e-8
 
 	numElite := int64(float64(*numSamples) * *percentElite)
 	numEliteElite := int(numElite / 2.0)
