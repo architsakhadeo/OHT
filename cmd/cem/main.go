@@ -41,14 +41,14 @@ func main() {
 	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
 
-	numTimesteps := 7500 //250000
+	numTimesteps := 1000 //250000
 	numSamples := 10     // 300
 	percentElite := 0.5
 	numElite := int64(float64(numSamples) * percentElite)
 	numEliteElite := int(numElite / 2.0)
-	e := math.Pow(10, -8)
-	numIterations := 10
-	numRuns := 1
+	e := 10.e-8
+	numIterations := 3
+	numRuns := 2
 
 	var meanHyperparams [len(hyperparams)]float64
 	for i := range meanHyperparams {
@@ -135,7 +135,6 @@ func main() {
 			samples[i] = temp
 			i++
 		}
-
 	}
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
