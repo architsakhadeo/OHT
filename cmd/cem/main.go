@@ -143,9 +143,26 @@ func main() {
 		samplesMetrics := make([]float64, len(samples))
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
+
+		ch := make(chan averageAtIndex)
+
 		for s := 0; s < len(samples); s++ {
-			average := runOneSample(samples[s], *numRuns, iteration)
-			samplesMetrics[s] = average
+			go func(idx int) {
+				average := runOneSample(samples[idx], *numRuns, iteration)
+				ch <- averageAtIndex{
+					average: average,
+					idx:     idx,
+				}
+			}(s)
+		}
+
+		count := 0
+		for count < len(samples) {
+			select {
+			case avg := <-ch:
+				count++
+				samplesMetrics[avg.idx] = avg.average
+			}
 		}
 
 		fmt.Println("Sample Metric: ", samplesMetrics)
@@ -548,4 +565,9 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 	}
 	average /= float64(len(run_metrics))
 	return average
+}
+
+type averageAtIndex struct {
+	average float64
+	idx     int
 }
