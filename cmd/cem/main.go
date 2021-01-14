@@ -7,6 +7,7 @@ import (
 	"math"
 	"runtime"
 	"sort"
+	"time"
 
 	"github.com/mkmik/argsort"
 	"github.com/stellentus/cartpoles/lib/agent"
@@ -22,6 +23,7 @@ import (
 )
 
 var (
+	seed          = flag.Uint64("seed", math.MaxUint64, "Seed to use; if 0xffffffffffffffff, use the time")
 	numWorkers    = flag.Int("workers", -1, "Maximum number of workers; defaults to the number of CPUs if -1")
 	numIterations = flag.Int("iterations", 3, "Total number of iterations")
 	numSamples    = flag.Int("samples", 10, "Number of samples per iteration")
@@ -101,12 +103,14 @@ func main() {
 	samples := make([][]float64, *numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
 	realvaluedSamples := make([][]float64, *numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
 
-	//Think of how to make this random
-	var src rand.Source
+	if *seed == math.MaxUint64 {
+		*seed = uint64(time.Now().UnixNano())
+	}
+	rng := rand.New(rand.NewSource(*seed))
 	i := 0
 
 	for i < *numSamples {
-		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
+		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(rng.Uint64()))
 		flag := 0
 		for j := 0; j < len(hyperparams); j++ {
 			if sample[j] < lower[j] || sample[j] > upper[j] {
@@ -237,7 +241,7 @@ func main() {
 		i := int(numEliteElite)
 
 		for i < *numSamples {
-			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, src)
+			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(rng.Uint64()))
 			flag := 0
 			for j := 0; j < len(hyperparams); j++ {
 				if sample[j] < lower[j] || sample[j] > upper[j] {
