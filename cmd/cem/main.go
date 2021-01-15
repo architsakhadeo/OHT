@@ -43,7 +43,7 @@ func main() {
 
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
-	upper := [len(hyperparams)]float64{7.5, 4.5, 1.0, 1.0, 1}
+	upper := [len(hyperparams)]float64{6.5, 3.5, 1.0, 1.0, 1}
 
 	//typeOfHyperparams := [5]string{"discrete", "discrete", "continuous", "continuous", "continuous"}
 	discreteHyperparamsIndices := [2]int64{0, 1}
@@ -126,14 +126,15 @@ func main() {
 					temp = append(temp, sample[j])
 				} else {
 					for k := 0; k < len(discreteMidRanges[j]); k++ {
-						if sample[j] <= discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
+						if sample[j] < discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
 							temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
 							break
 						}
 					}
-					if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
-						temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
-					}
+					//Not needed - possibly wrong
+					//if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
+					//	temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
+					//}
 
 				}
 			}
@@ -257,14 +258,15 @@ func main() {
 						temp = append(temp, sample[j])
 					} else {
 						for k := 0; k < len(discreteMidRanges[j]); k++ {
-							if sample[j] <= discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
+							if sample[j] < discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
 								temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
 								break
 							}
 						}
-						if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
-							temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
-						}
+						//Not needed - possibly wrong
+						//if sample[j] > discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1] {
+						//	temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][len(discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])])-1])
+						//}
 
 					}
 				}
@@ -276,8 +278,8 @@ func main() {
 
 		fmt.Println("--------------------------------------------------")
 	}
-fmt.Println("")
-fmt.Println("Execution time: ", time.Since(startTime))
+	fmt.Println("")
+	fmt.Println("Execution time: ", time.Since(startTime))
 }
 
 func worker(jobs <-chan int, results chan<- averageAtIndex, samples [][]float64, numRuns, iteration int) {
