@@ -40,7 +40,8 @@ type esarsaSettings struct {
 	Bsize int    `json:"buffer-size"`
 	Btype string `json:"buffer-type"`
 
-	numActions int
+	NumActions int `json:"numberOfActions"`
+	WInit			   float64 `json:"weight-init"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -70,6 +71,7 @@ type ESarsa struct {
 	bf  *buffer.Buffer
 	lw   lockweight.LockWeight
 	lock bool
+
 }
 
 func init() {
@@ -103,12 +105,14 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		// These default settings will be used if the config doesn't set these values
 		NumTilings:         32,
 		NumTiles:           4,
+		NumActions:         2,
 		Gamma:              0.99,
 		Lambda:             0.8,
 		Epsilon:            0.05,
 		Alpha:              0.1,
 		AdaptiveAlpha:      0.001,
 		IsStepsizeAdaptive: false,
+		WInit: 				0.0,
 	}
 
 	err := json.Unmarshal(expAttr, &agent.esarsaSettings)
@@ -168,7 +172,11 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	agent.timesteps = 0
 
-	agent.numActions = 2
+	for i:=0; i<len(agent.weights); i++ {
+		for j:=0; j<len(agent.weights[0]); j++ {
+			agent.weights[i][j] = agent.WInit
+		}
+	}
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
 
 	return nil
@@ -289,7 +297,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	if actionValue0 < actionValue1 {
 		greedyAction = 1
 	} else if actionValue0 == actionValue1{
-		greedyAction = agent.rng.Int() % 2 //agent.numActions
+		greedyAction = agent.rng.Int() % 2 //agent.esarsaSettings.NumActions
 	}
 
 	// Calculates Epsilon-greedy probabilities for both actions
