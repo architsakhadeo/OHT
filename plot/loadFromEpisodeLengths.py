@@ -12,7 +12,7 @@ def load_data(algpath):
 	for fileIndex in range(len(Files)):
 		List = pd.read_csv(algpath+'/'+Files[fileIndex])
 		Data.append(List['episode lengths'])
-	return np.array(Data) if len(Data) !=1 else Data
+	return np.array(Data)
 
 
 # Converts episode lengths into failure timesteps
@@ -20,7 +20,10 @@ def convert_data(alg, Data):
 	convertedData = []
 	
 	for run in range(len(Data)):
-		episodeLengthsData = Data[run].to_numpy()
+		if len(Data) == 1:
+			episodeLengthsData = Data[run]
+		else:	
+			episodeLengthsData = Data[run].to_numpy()
 		failureTimesteps = np.cumsum(episodeLengthsData)
 		totalTimesteps = failureTimesteps[-1]
 
