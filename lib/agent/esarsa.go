@@ -39,6 +39,8 @@ type esarsaSettings struct {
 	StateDim   int  `json:"state-len"`
 	Bsize int    `json:"buffer-size"`
 	Btype string `json:"buffer-type"`
+
+	numActions int
 }
 
 // Expected sarsa-lambda with tile coding
@@ -166,6 +168,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	agent.timesteps = 0
 
+	agent.numActions = 2
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
 
 	return nil
@@ -280,10 +283,13 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	// Calculates action values
 	actionValue0 := agent.ActionValue(tileCodedStateActiveFeatures, 0)
 	actionValue1 := agent.ActionValue(tileCodedStateActiveFeatures, 1)
+	//fmt.Println("action value", actionValue0, actionValue1)
 
 	greedyAction := 0
 	if actionValue0 < actionValue1 {
 		greedyAction = 1
+	} else if actionValue0 == actionValue1{
+		greedyAction = agent.rng.Int() % 2 //agent.numActions
 	}
 
 	// Calculates Epsilon-greedy probabilities for both actions
