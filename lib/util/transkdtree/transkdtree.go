@@ -3,6 +3,7 @@ package transModel
 import (
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/spatial/kdtree"
+	"log"
 )
 
 
@@ -89,8 +90,12 @@ func (t *TransTrees) BuildTree(allTrans [][]float64) {
 		dataInTree[action] = append(dataInTree[action], node{allTrans[i][:t.stateDim], allTrans[i]}) // sort current state
 	}
 	for i := 0; i < t.numAction; i++ {
-		t.trees[i] = kdtree.New(nodes(dataInTree[i]), false)
-		t.count[i] = len(dataInTree[i])
+		if len(t.data[i])==0 {
+			log.Print("Warning: There is no data for action %d \n", i)
+		} else {
+			t.trees[i] = kdtree.New(nodes(dataInTree[i]), false)
+			t.count[i] = len(dataInTree[i])
+		}
 	}
 }
 
@@ -132,6 +137,9 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 	return states, nextStates, rewards, terminals, dists
 }
 
+func (t *TransTrees) TreeSize(action int) int {
+	return len(t.data[action])
+}
 //func test() {
 //
 //	raw := [][]float64{{2, 3}, {5, 4}, {9, 6}, {4, 7}, {8, 1}, {7, 2}}

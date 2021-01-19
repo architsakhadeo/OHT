@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"log"
 	"math"
 	"math/rand"
@@ -14,8 +15,8 @@ import (
 	"strings"
 
 	"github.com/stellentus/cartpoles/lib/util/convformat"
-	transModel "github.com/stellentus/cartpoles/lib/util/transkdtree"
 	"github.com/stellentus/cartpoles/lib/util/random"
+	transModel "github.com/stellentus/cartpoles/lib/util/transkdtree"
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -42,6 +43,9 @@ type KnnModelEnv struct {
 	NumberOfActions int
 	stateRange      []float64
 	neighbor_prob   []float64
+	rewardBound 	[]float64
+
+	DebugArr   [][]float64
 }
 
 func init() {
@@ -114,6 +118,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		log.Fatal(err)
 	}
 	allTransTemp := make([][]float64, len(allTransStr)-1)
+	rewards := make([]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
 		row := make([]float64, env.stateDim*2+3)
@@ -128,6 +133,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 				row[env.stateDim], _ = strconv.ParseFloat(num, 64)
 			} else if j == 3 { //reward
 				row[env.stateDim*2+1], _ = strconv.ParseFloat(num, 64)
+				rewards[i-1] = row[env.stateDim*2+1]
 				if row[env.stateDim*2+1] == -1 { // termination
 					row[env.stateDim*2+2] = 1
 				} else {
@@ -137,6 +143,10 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		}
 		allTransTemp[i-1] = row
 	}
+
+	env.rewardBound = make([]float64, 2)
+	env.rewardBound[0], _ = ao.ArrayMin(rewards)
+	env.rewardBound[1], _ = ao.ArrayMax(rewards)
 
 	var allTrans [][]float64
 	if env.EnsembleSeed != 0 {
@@ -201,6 +211,11 @@ func (env *KnnModelEnv) Start() rlglue.State {
 func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	//fmt.Println("---------------------")
 	actInt, _ := tpo.GetInt(act)
+	if env.offlineModel.TreeSize(actInt)==0 {
+		log.Print("Warning: There is no data for action %d, terminating the episode \n", act)
+		return env.Start(), env.rewardBound[0], true
+	}
+
 	_, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
 
 	sum := 0.0
@@ -211,7 +226,6 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	for i := 0; i < len(distances); i++ {
 		pdf[i] = 1.0 - ((distances[i] + math.Pow(10, -6)) / sum)
 	}
-
 	normalizedPdf := make([]float64, len(distances))
 	normalizedSum := 0.0
 	for i := 0; i < len(distances); i++ {
@@ -238,12 +252,23 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	chosen := random.FreqSample(env.neighbor_prob)
 	//fmt.Println(chosen)
 	env.state = nextStates[chosen]
+
+	//idx := ao.Search2D(env.state, env.DebugArr)
+	//if idx > -1 {
+	//	fmt.Printf("%d, %d, %.2f, %d, \n", act, idx, env.DebugArr[idx], terminals[chosen])
+	//} else {
+	//	fmt.Println(act, idx, terminals[chosen])
+	//}
+	//env.DebugArr = append(env.DebugArr, env.state)
+
+
 	var done bool
 	if terminals[chosen] == 0 {
 		done = false
 	} else {
 		done = true
 	}
+
 
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
