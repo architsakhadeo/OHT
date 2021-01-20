@@ -21,13 +21,23 @@ type node struct {
 	value []float64
 }
 func (n node) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
+	//q := c.(node)
+	//vectorX := mat.NewDense(len(q.key), 1, q.key)
+	//vectorY := mat.NewDense(len(n.key), 1, n.key)
+	//var temp mat.Dense
+	//temp.Sub(vectorX, vectorY)
+	//dist := mat.Norm(&temp, 2)
 	q := c.(node)
-	vectorX := mat.NewDense(len(q.key), 1, q.key)
-	vectorY := mat.NewDense(len(n.key), 1, n.key)
-	var temp mat.Dense
-	temp.Sub(vectorX, vectorY)
-	dist := mat.Norm(&temp, 2)
-	return dist
+	return n.key[d] - q.key[d]
+	//switch d {
+	//case 0:
+	//	return p.lat - q.lat
+	//case 1:
+	//	return p.lon - q.lon
+	//default:
+	//	panic("illegal dimension")
+	//}
+	//return dist
 }
 func (n node) Dims() int { return len(n.key) }
 func (n node) Distance(c kdtree.Comparable) float64 {
@@ -39,7 +49,6 @@ func (n node) Distance(c kdtree.Comparable) float64 {
 	dist := mat.Norm(&temp, 2)
 	return dist
 }
-
 
 /* helper */
 type plane struct {
@@ -78,10 +87,6 @@ func New(numAction int, actionIdx int) TransTrees {
 }
 
 func (t *TransTrees) BuildTree(allTrans [][]float64) {
-	//for i := 0; i < numAction; i++ {
-	//	ts[i] = kdtree.New()
-	//	cs[i] = 0
-	//}
 	var action int
 	dataInTree := make([][]node, t.numAction)
 	for i := 0; i < len(allTrans); i++ {
@@ -104,11 +109,11 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 	q := node{target, nil} // we don't need value for a compared node
 
 	/* all neighbors in a fixed range */
-	//keep = kdtree.NewDistKeeper(10000.0) // Give a large enough upper bound
+	//keep = kdtree.NewDistKeeper(0.001)
 	//t.trees[action].NearestSet(keep, q)
 	//for _, c := range keep.(*kdtree.DistKeeper).Heap {
 	//	p := c.Comparable.(node)
-	//	fmt.Println(p.data, p.Distance(q))
+	//	fmt.Println(p.key, p.Distance(q))
 	//}
 	//fmt.Println()
 
@@ -133,7 +138,7 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 		//fmt.Println(i, p.key, p.Distance(q))
 	}
 	//fmt.Println()
-
+	//fmt.Println(states, nextStates, rewards, terminals, dists)
 	return states, nextStates, rewards, terminals, dists
 }
 
