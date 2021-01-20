@@ -110,6 +110,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		Gamma:              0.99,
 		Lambda:             0.8,
 		Epsilon:            0.05,
+		EpsilonAfterLock:   0.05,
 		Alpha:              0.1,
 		AdaptiveAlpha:      0.001,
 		IsStepsizeAdaptive: false,
