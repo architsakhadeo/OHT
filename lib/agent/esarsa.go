@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
+
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 	"github.com/stellentus/cartpoles/lib/util/lockweight"
-	"math"
-	"math/rand"
 
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
@@ -32,16 +33,17 @@ type esarsaSettings struct {
 	Gamma              float64 `json:"gamma"`
 	Lambda             float64 `json:"lambda"`
 	Epsilon            float64 `json:"epsilon"`
+	EpsilonAfterLock   float64 `json:"epsilon-after-lock"`
 	Alpha              float64 `json:"alpha"`
 	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
 
-	StateDim   int  `json:"state-len"`
-	Bsize int    `json:"buffer-size"`
-	Btype string `json:"buffer-type"`
+	StateDim int    `json:"state-len"`
+	Bsize    int    `json:"buffer-size"`
+	Btype    string `json:"buffer-type"`
 
-	NumActions int `json:"numberOfActions"`
-	WInit			   float64 `json:"weight-init"`
+	NumActions int     `json:"numberOfActions"`
+	WInit      float64 `json:"weight-init"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -54,7 +56,7 @@ type ESarsa struct {
 	weights                [][]float64 // weights is a slice of weights for each action
 	traces                 [][]float64
 	delta                  float64
-	oldState 			   rlglue.State
+	oldState               rlglue.State
 	oldStateActiveFeatures []int
 	oldAction              rlglue.Action
 	stepsize               float64
@@ -68,10 +70,9 @@ type ESarsa struct {
 	accumulatingbeta2      float64
 	esarsaSettings
 
-	bf  *buffer.Buffer
+	bf   *buffer.Buffer
 	lw   lockweight.LockWeight
 	lock bool
-
 }
 
 func init() {
@@ -112,7 +113,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		Alpha:              0.1,
 		AdaptiveAlpha:      0.001,
 		IsStepsizeAdaptive: false,
-		WInit: 				0.0,
+		WInit:              0.0,
 	}
 
 	err := json.Unmarshal(expAttr, &agent.esarsaSettings)
@@ -172,8 +173,8 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	agent.timesteps = 0
 
-	for i:=0; i<len(agent.weights); i++ {
-		for j:=0; j<len(agent.weights[0]); j++ {
+	for i := 0; i < len(agent.weights); i++ {
+		for j := 0; j < len(agent.weights[0]); j++ {
 			agent.weights[i][j] = agent.WInit
 		}
 	}
@@ -184,7 +185,6 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
-
 	var err error
 	agent.oldStateActiveFeatures, err = agent.tiler.Tile(state) // Indices of active features of the tile-coded state
 
@@ -226,6 +226,9 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	if agent.lw.UseLock {
 		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.Gamma)
 		agent.lock = agent.lw.CheckChange()
+		if agent.lock == true {
+			agent.Epsilon = agent.EpsilonAfterLock
+		}
 	}
 
 	if agent.lock == false {
@@ -296,7 +299,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	greedyAction := 0
 	if actionValue0 < actionValue1 {
 		greedyAction = 1
-	} else if actionValue0 == actionValue1{
+	} else if actionValue0 == actionValue1 {
 		greedyAction = agent.rng.Int() % 2 //agent.esarsaSettings.NumActions
 	}
 
@@ -417,7 +420,7 @@ func (agent *ESarsa) OnetimeEpLenLock() bool {
 			return false
 		}
 		zeros := 0
-		for i:=0;i<len(rewards);i++ {
+		for i := 0; i < len(rewards); i++ {
 			if rewards[i] == 0 {
 				zeros += 1
 			}
