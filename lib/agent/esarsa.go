@@ -19,10 +19,19 @@ import (
 )
 
 const (
+	// Cartpole constants
 	maxPosition        = 2.4
 	maxVelocity        = 4
 	maxAngle           = 12 * 2 * math.Pi / 360
 	maxAngularVelocity = 3.5
+
+	// Acrobot constants
+	maxFeature1 = 1.0
+	maxFeature2 = 1.0
+	maxFeature3 = 1.0
+	maxFeature4 = 1.0
+	maxFeature5 = 4.0 * math.Pi
+	maxFeature6 = 9.0 * math.Pi
 )
 
 type esarsaSettings struct {
@@ -37,6 +46,7 @@ type esarsaSettings struct {
 	Alpha              float64 `json:"alpha"`
 	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
+	EnvName            string  `json:"env-name"`
 
 	StateDim int    `json:"state-len"`
 	Bsize    int    `json:"buffer-size"`
@@ -144,33 +154,55 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 	agent.rng = rand.New(rand.NewSource(agent.esarsaSettings.Seed)) // Create a new rand source for reproducibility
 
 	// scales the input observations for tile-coding
-	scalers := []util.Scaler{
-		util.NewScaler(-maxPosition, maxPosition, agent.esarsaSettings.NumTiles),
-		util.NewScaler(-maxVelocity, maxVelocity, agent.esarsaSettings.NumTiles),
-		util.NewScaler(-maxAngle, maxAngle, agent.esarsaSettings.NumTiles),
-		util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.esarsaSettings.NumTiles),
+	if agent.EnvName == "cartpole" {
+		agent.NumActions = 2
+		scalers := []util.Scaler{
+			util.NewScaler(-maxPosition, maxPosition, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxVelocity, maxVelocity, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxAngle, maxAngle, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.esarsaSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(4, agent.esarsaSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
+	} else if agent.EnvName == "acrobot" {
+		agent.NumActions = 3
+		scalers := []util.Scaler{
+			util.NewScaler(-maxFeature1, maxFeature1, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature2, maxFeature2, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature3, maxFeature3, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature4, maxFeature4, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature5, maxFeature5, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature6, maxFeature6, agent.esarsaSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(6, agent.esarsaSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
 	}
 
-	agent.tiler, err = util.NewMultiTiler(4, agent.esarsaSettings.NumTilings, scalers)
-	if err != nil {
-		return err
+	agent.weights = make([][]float64, agent.NumActions) // one weight slice for each action
+	for i := 0; i < agent.NumActions; i++ {
+		agent.weights[i] = make([]float64, agent.tiler.NumberOfIndices())
 	}
 
-	agent.weights = make([][]float64, 2) // one weight slice for each action
-	agent.weights[0] = make([]float64, agent.tiler.NumberOfIndices())
-	agent.weights[1] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.traces = make([][]float64, agent.NumActions) // one trace slice for each action
+	for i := 0; i < agent.NumActions; i++ {
+		agent.traces[i] = make([]float64, agent.tiler.NumberOfIndices())
+	}
 
-	agent.traces = make([][]float64, 2) // one trace slice for each action
-	agent.traces[0] = make([]float64, agent.tiler.NumberOfIndices())
-	agent.traces[1] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.m = make([][]float64, agent.NumActions)
+	for i := 0; i < agent.NumActions; i++ {
+		agent.m[i] = make([]float64, agent.tiler.NumberOfIndices())
+	}
 
-	agent.m = make([][]float64, 2)
-	agent.m[0] = make([]float64, agent.tiler.NumberOfIndices())
-	agent.m[1] = make([]float64, agent.tiler.NumberOfIndices())
-
-	agent.v = make([][]float64, 2)
-	agent.v[0] = make([]float64, agent.tiler.NumberOfIndices())
-	agent.v[1] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.v = make([][]float64, agent.NumActions)
+	for i := 0; i < agent.NumActions; i++ {
+		agent.v[i] = make([]float64, agent.tiler.NumberOfIndices())
+	}
 
 	agent.timesteps = 0
 
@@ -280,10 +312,10 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 // End informs the agent that a terminal state has been reached, providing the final reward.
 func (agent *ESarsa) End(state rlglue.State, reward float64) {
 	agent.Step(state, reward)
-	agent.traces = make([][]float64, 3) // one trace slice for each action
-	agent.traces[0] = make([]float64, agent.tiler.NumberOfIndices())
-	agent.traces[1] = make([]float64, agent.tiler.NumberOfIndices())
-	agent.traces[2] = make([]float64, agent.tiler.NumberOfIndices())
+	agent.traces = make([][]float64, agent.NumActions) // one trace slice for each action
+	for i := 0; i < agent.NumActions; i++ {
+		agent.traces[i] = make([]float64, agent.tiler.NumberOfIndices())
+	}
 
 	if agent.EnableDebug {
 		agent.Message("msg", "end", "state", state, "reward", reward)
@@ -293,28 +325,49 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 // PolicyExpectedSarsaLambda returns action based on tile coded state
 func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []int) (rlglue.Action, []float64) {
 	// Calculates action values
-	actionValue0 := agent.ActionValue(tileCodedStateActiveFeatures, 0)
-	actionValue1 := agent.ActionValue(tileCodedStateActiveFeatures, 1)
+	actionValues := make([]float64, agent.NumActions)
+	for i := 0; i < agent.NumActions; i++ {
+		actionValues[i] = agent.ActionValue(tileCodedStateActiveFeatures, i)
+	}
 	//fmt.Println("action value", actionValue0, actionValue1)
 
-	greedyAction := 0
-	if actionValue0 < actionValue1 {
-		greedyAction = 1
-	} else if actionValue0 == actionValue1 {
-		greedyAction = agent.rng.Int() % 2 //agent.esarsaSettings.NumActions
+	greedyAction := agent.findArgmax(actionValues)
+	//if actionValues[0] < actionValues[1] {
+	//	greedyAction = 1
+	//} else if actionValues[0] == actionValues[1] {
+	//	greedyAction = agent.rng.Int() % 2 //agent.esarsaSettings.NumActions
+	//}
+	probs := make([]float64, agent.NumActions) // Probabilities of taking actions 0 and 1
+	for i := range probs {
+		probs[i] = (agent.Epsilon / float64(agent.NumActions))
 	}
+	probs[greedyAction] = 1 - agent.Epsilon + (agent.Epsilon / float64(agent.NumActions))
 
+	cummulativeProbs := make([]float64, agent.NumActions)
+	sum := 0.0
+	for i := range probs {
+		sum += probs[i]
+		cummulativeProbs[i] = sum
+	}
 	// Calculates Epsilon-greedy probabilities for both actions
-	probs := make([]float64, 2) // Probabilities of taking actions 0 and 1
-	probs[(greedyAction+1)%2] = agent.Epsilon / 2
-	probs[greedyAction] = 1 - probs[(greedyAction+1)%2]
+	//probs := make([]float64, agent.NumActions) // Probabilities of taking actions 0 and 1
+	//probs[(greedyAction+1)%2] = agent.Epsilon / 2
+	//probs[greedyAction] = 1 - probs[(greedyAction+1)%2]
 
 	// Random sampling action based on epsilon-greedy policy
 	var action rlglue.Action
-	if agent.rng.Float64() >= probs[0] {
-		action = 1
-	} else {
-		action = 0
+	flag := false
+	randomval := agent.rng.Float64()
+
+	for i := 0; i < agent.NumActions-1; i++ {
+		if randomval <= cummulativeProbs[i] {
+			action = i
+			flag = true
+			break
+		}
+	}
+	if flag == false {
+		action = agent.NumActions - 1
 	}
 
 	return action, probs
@@ -442,4 +495,16 @@ func (agent *ESarsa) KeepLock() bool {
 
 func (agent *ESarsa) GetLock() bool {
 	return agent.lock
+}
+
+func (agent *ESarsa) findArgmax(array []float64) int {
+	max := array[0]
+	argmax := 0
+	for i, value := range array {
+		if value > max {
+			max = value
+			argmax = i
+		}
+	}
+	return argmax
 }

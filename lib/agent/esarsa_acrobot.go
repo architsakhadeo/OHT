@@ -14,12 +14,12 @@ import (
 )
 
 const (
-	maxFeature1 = 1.0
-	maxFeature2 = 1.0
-	maxFeature3 = 1.0
-	maxFeature4 = 1.0
-	maxFeature5 = 4.0 * math.Pi
-	maxFeature6 = 9.0 * math.Pi
+	maxFeatureAcrobot1 = 1.0
+	maxFeatureAcrobot2 = 1.0
+	maxFeatureAcrobot3 = 1.0
+	maxFeatureAcrobot4 = 1.0
+	maxFeatureAcrobot5 = 4.0 * math.Pi
+	maxFeatureAcrobot6 = 9.0 * math.Pi
 )
 
 type esarsaAcrobotSettings struct {
@@ -102,12 +102,12 @@ func (agent *ESarsaAcrobot) Initialize(run uint, expAttr, envAttr rlglue.Attribu
 
 	// scales the input observations for tile-coding
 	scalers := []util.Scaler{
-		util.NewScaler(-maxFeature1, maxFeature1, agent.esarsaAcrobotSettings.NumTiles),
-		util.NewScaler(-maxFeature2, maxFeature2, agent.esarsaAcrobotSettings.NumTiles),
-		util.NewScaler(-maxFeature3, maxFeature3, agent.esarsaAcrobotSettings.NumTiles),
-		util.NewScaler(-maxFeature4, maxFeature4, agent.esarsaAcrobotSettings.NumTiles),
-		util.NewScaler(-maxFeature5, maxFeature5, agent.esarsaAcrobotSettings.NumTiles),
-		util.NewScaler(-maxFeature6, maxFeature6, agent.esarsaAcrobotSettings.NumTiles),
+		util.NewScaler(-maxFeatureAcrobot1, maxFeatureAcrobot1, agent.esarsaAcrobotSettings.NumTiles),
+		util.NewScaler(-maxFeatureAcrobot2, maxFeatureAcrobot2, agent.esarsaAcrobotSettings.NumTiles),
+		util.NewScaler(-maxFeatureAcrobot3, maxFeatureAcrobot3, agent.esarsaAcrobotSettings.NumTiles),
+		util.NewScaler(-maxFeatureAcrobot4, maxFeatureAcrobot4, agent.esarsaAcrobotSettings.NumTiles),
+		util.NewScaler(-maxFeatureAcrobot5, maxFeatureAcrobot5, agent.esarsaAcrobotSettings.NumTiles),
+		util.NewScaler(-maxFeatureAcrobot6, maxFeatureAcrobot6, agent.esarsaAcrobotSettings.NumTiles),
 	}
 
 	agent.tiler, err = util.NewMultiTiler(6, agent.esarsaAcrobotSettings.NumTilings, scalers)
