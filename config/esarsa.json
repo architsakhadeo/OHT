@@ -1,10 +1,10 @@
 {
 	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
 	"agent-name": "esarsa",
-	"environment-name": "acrobot",
+	"environment-name": "cartpole",
 	"agent-settings": {
 		"gamma": 0.9,
-		"env-name": "acrobot",
+		"env-name": "cartpole",
 		"sweep": {
 			"tilings": [32],
 			"tiles": [4],
