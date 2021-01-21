@@ -6,7 +6,8 @@ import (
 )
 
 // Action is a single integer representing the action taken by the agent.
-type Action int
+//type Action int
+type Action interface{}
 
 // State is a slice of state observations.
 type State []float64

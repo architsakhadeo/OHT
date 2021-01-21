@@ -8,3 +8,4 @@ img
 .vscode/
 plot/.ipynb_checkpoints
 *.exe
+main*

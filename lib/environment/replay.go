@@ -3,7 +3,7 @@ package environment
 import (
 	"encoding/json"
 	"fmt"
-
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
@@ -93,5 +93,7 @@ func (env *Replay) GetAttributes() rlglue.Attributes {
 }
 
 func stateWithAction(st rlglue.State, act rlglue.Action) rlglue.State {
-	return append(st, float64(act))
+	//return append(st, float64(act))
+	actFloat, _ := tpo.GetFloat(act)
+	return append(st, actFloat)
 }

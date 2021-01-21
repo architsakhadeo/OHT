@@ -26,6 +26,7 @@ type Config struct {
 
 type Experiment struct {
 	MaxEpisodes             int    `json:"episodes"`
+	MaxStepsInEpisode       int    `json:"steps-in-episode"`
 	MaxSteps                int    `json:"steps"`
 	DebugInterval           int    `json:"debug-interval"`
 	DataPath                string `json:"data-path"`
