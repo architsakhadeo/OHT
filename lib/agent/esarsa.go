@@ -176,7 +176,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	for i := 0; i < len(agent.weights); i++ {
 		for j := 0; j < len(agent.weights[0]); j++ {
-			agent.weights[i][j] = agent.WInit
+			agent.weights[i][j] = agent.WInit / float64(agent.NumTilings)
 		}
 	}
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
