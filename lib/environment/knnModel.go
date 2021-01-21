@@ -29,7 +29,7 @@ type knnSettings struct {
 	Neighbor_num int     `json:"neighbor-num"`
 	EnsembleSeed int     `json:"ensemble-seed"`
 	DropPerc     float64 `json:"drop-percent"`
-	Timeout      int 	 `json:"timeout"`
+	//Timeout      int 	 `json:"timeout"`
 }
 
 type KnnModelEnv struct {
@@ -45,7 +45,7 @@ type KnnModelEnv struct {
 	stateRange      []float64
 	neighbor_prob   []float64
 	rewardBound 	[]float64
-	Count			int
+	//Count			int
 
 	DebugArr   [][]float64
 }
@@ -101,7 +101,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.Seed += int64(run)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 	env.state = make(rlglue.State, 4)
-	env.Count = 0
+	//env.Count = 0
 
 	env.Message("environment.knnModel settings", fmt.Sprintf("%+v", env.knnSettings))
 
@@ -137,16 +137,17 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 			} else if j == 3 { //reward
 				row[env.stateDim*2+1], _ = strconv.ParseFloat(num, 64)
 				rewards[i-1] = row[env.stateDim*2+1]
-				if row[env.stateDim*2+1] == -1 { // termination
-					row[env.stateDim*2+2] = 1
-				} else {
-					row[env.stateDim*2+2] = 0
-				}
+				//if row[env.stateDim*2+1] == -1 { // termination
+				//	row[env.stateDim*2+2] = 1
+				//} else {
+				//	row[env.stateDim*2+2] = 0
+				//}
+			} else if j == 4 { //termination
+				row[env.stateDim*2+2], _ = strconv.ParseFloat(num, 64)
 			}
 		}
 		allTransTemp[i-1] = row
 	}
-
 	env.rewardBound = make([]float64, 2)
 	env.rewardBound[0], _ = ao.ArrayMin(rewards)
 	env.rewardBound[1], _ = ao.ArrayMax(rewards)
@@ -169,21 +170,21 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(allTrans)
 
-	pdf := make([]float64, env.Neighbor_num)
-	temp := 0.0
-	for i := 0; i < env.Neighbor_num; i++ {
-		pdf[i] = math.Pow(0.5, float64(i+1))
-		temp += pdf[i]
-	}
-	for i := 0; i < env.Neighbor_num; i++ {
-		pdf[i] = pdf[i] / temp
-	}
-	env.neighbor_prob = make([]float64, env.Neighbor_num)
-	temp1 := 0.0
-	for i := 0; i < env.Neighbor_num; i++ {
-		env.neighbor_prob[i] = temp1 + pdf[i]
-		temp1 = env.neighbor_prob[i]
-	}
+	//pdf := make([]float64, env.Neighbor_num)
+	//temp := 0.0
+	//for i := 0; i < env.Neighbor_num; i++ {
+	//	pdf[i] = math.Pow(0.5, float64(i+1))
+	//	temp += pdf[i]
+	//}
+	//for i := 0; i < env.Neighbor_num; i++ {
+	//	pdf[i] = pdf[i] / temp
+	//}
+	//env.neighbor_prob = make([]float64, env.Neighbor_num)
+	//temp1 := 0.0
+	//for i := 0; i < env.Neighbor_num; i++ {
+	//	env.neighbor_prob[i] = temp1 + pdf[i]
+	//	temp1 = env.neighbor_prob[i]
+	//}
 	return nil
 }
 
@@ -267,13 +268,14 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 
 // Start returns an initial observation.
 func (env *KnnModelEnv) Start() rlglue.State {
-	env.Count = 0
-	env.state = env.randomizeInitState()
-	//env.state = env.randomizeState()
+	//env.Count = 0
+	//env.state = env.randomizeInitState()
+	env.state = env.randomizeState()
 	//env.state = env.furthestState()
 	//env.state = env.cheatingChoice()
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
+	//fmt.Println("Start", env.state)
 	return state_copy
 }
 
@@ -281,7 +283,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	//fmt.Println("---------------------")
 	actInt, _ := tpo.GetInt(act)
 
-	env.Count += 1
+	//env.Count += 1
 
 	if env.offlineModel.TreeSize(actInt)==0 {
 		log.Print("Warning: There is no data for action %d, terminating the episode \n", act)
@@ -318,15 +320,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 		temp1 = env.neighbor_prob[i]
 	}
 
-	//fmt.Println("Distances: ", distances)
-	//fmt.Println("PDF: ", pdf)
-	//fmt.Println("Normalized PDF: ", normalizedPdf)
-	//fmt.Println("CDF: ", env.neighbor_prob)
-	//fmt.Println("Current State: ", env.state)
-	//fmt.Println("Neighbour states: ", neighbourStates)
-	//fmt.Println(nextStates)
 	chosen := random.FreqSample(env.neighbor_prob)
-	//fmt.Println(chosen)
 	env.state = nextStates[chosen]
 	reward := rewards[chosen]
 	//idx := ao.Search2D(env.state, env.DebugArr)
@@ -344,12 +338,12 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	} else {
 		done = true
 	}
-	if env.Timeout!=0 && env.Count>=env.Timeout {
-		done = true
-	}
-	if done {
-		env.state = env.Start()
-	}
+	//if env.Timeout!=0 && env.Count>=env.Timeout {
+	//	done = true
+	//}
+	//if done {
+	//	env.state = env.Start()
+	//}
 
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
