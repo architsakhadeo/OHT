@@ -11,7 +11,7 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=None):
     fig, ax = plt.subplots()
 
     all_models = list(filtered.keys())
@@ -31,9 +31,11 @@ def plot_boxs(filtered, thrd, xlabel):
 
     ax.set_xticklabels(xlabel)
     ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
-    ax.set_ylim([-0.02, 0])
+    if ylim is not None:
+        ax.set_ylim(ylim)
     plt.legend()
-    plt.show()
+    # plt.show()
+    plt.savefig("{}.png".format(title))
     return
 
 def set_box_color(bp, color):

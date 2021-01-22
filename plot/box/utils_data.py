@@ -41,23 +41,36 @@ input:
             ...
     }
 """
-def percentile(ranked, low, high):
+def percentile(ranked, low, high, mode="pessimistic"):
     filtered = []
     for rk in ranked.keys():
         l = int(len(ranked[rk]) * low)
         h = int(len(ranked[rk]) * high)
         filtered += [[rk, kv[0], kv[1]] for kv in ranked[rk][l: h]] # run number, parameter, performance
-    # return filtered
 
-    worst_per_run = []
-    for rk in ranked.keys():
-        temp = {}
-        for item in filtered:
-            if item[0] == rk:
-                temp[item[1]] = item[2]
-        sorted = sorting(temp)
-        worst_per_run.append([rk, sorted[-1][0], sorted[-1][1]])
-    return worst_per_run
+    if mode=="pessimistic":
+        worst_per_run = []
+        for rk in ranked.keys():
+            temp = {}
+            for item in filtered:
+                if item[0] == rk:
+                    temp[item[1]] = item[2]
+            sorted = sorting(temp)
+            worst_per_run.append([rk, sorted[-1][0], sorted[-1][1]])
+        return worst_per_run
+    elif mode=="optimistic":
+        best_per_run = []
+        for rk in ranked.keys():
+            temp = {}
+            for item in filtered:
+                if item[0] == rk:
+                    temp[item[1]] = item[2]
+            sorted = sorting(temp)
+            best_per_run.append([rk, sorted[0][0], sorted[0][1]])
+        return best_per_run
+    else:
+        return filtered
+
 """
 input:
     path: ensemble_paths of one ensemble model [path_ens1, path_ens2, ...]
