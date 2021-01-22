@@ -24,8 +24,8 @@
 		"lock-weight": false,
 		"enable-debug": false,
 		"seed": 1,
-		"datalog": "/home/xutong/Documents/cartpoles/data/hyperparam/cartpole/offline_data/esarsa/temp/param_0/",
-		"weightpath": "/home/xutong/Documents/cartpoles/weight/hyperparam/cartpole/fqi/",
+		"datalog": "data/hyperparam/cartpole/offline_data/esarsa/temp/param_0/",
+		"weightpath": "weight/hyperparam/cartpole/fqi/",
 		"offline-learn": true,
 		"online-learn": false
 	},
