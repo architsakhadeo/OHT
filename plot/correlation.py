@@ -16,25 +16,51 @@ modelKNN3Info = [('param_62', -0.5293864212943578), ('param_61', -0.529386421294
 
 # Real AUC, Models bottom 10th%
 
-realInfo = [('param_71', -1020.29464108163), ('param_62', -1075.1522590550128), ('param_70', -1082.3827016315643), ('param_61', -1120.5491096689525), ('param_80', -1147.4952825658631), ('param_31', -1155.8382406861404), ('param_43', -1159.429652872701), ('param_34', -1171.993548012208), ('param_60', -1207.4688935751203), ('param_79', -1218.428247712323), ('param_52', -1252.1491628976928), ('param_33', -1276.7073286305674), ('param_54', -1342.0098775130427), ('param_38', -1342.2048001602527), ('param_57', -1361.1218864865245), ('param_69', -1379.5443212491691), ('param_47', -1411.7457695217652), ('param_55', -1416.3471998354669), ('param_44', -1438.169712646495), ('param_53', -1441.358110603237), ('param_40', -1449.8322133408171), ('param_35', -1458.5377672960424), ('param_50', -1471.5957979083303), ('param_49', -1497.6583604160098), ('param_78', -1513.4167591102237), ('param_41', -1521.743989957769), ('param_56', -1548.1248957675746), ('param_42', -1630.1157178030844), ('param_32', -1787.2082519660808), ('param_51', -1800.4518280567547), ('param_65', -1984.5548105458045), ('param_64', -2017.182135526055), ('param_27', -2280.5242442080307), ('param_37', -2424.4241862102135), ('param_63', -2426.9072632382185), ('param_66', -2480.2797830719433), ('param_74', -2484.122930679087), ('param_73', -2584.680438531496), ('param_46', -2655.1511629985334), ('param_72', -2788.3093820654854), ('param_75', -2987.6968332501738), ('param_36', -3363.5162364328603), ('param_45', -3861.184727579764), ('param_30', -4989.902904128464), ('param_48', -6111.475941040648), ('param_58', -7569.381582381156), 
-('param_76', -9349.674695064296), ('param_67', -9396.300085335106), ('param_28', -11413.40023021222), ('param_59', -12254.6580094332), ('param_18', -12327.506155131627), ('param_9', -12603.287409816905), ('param_26', -12726.03376694054), ('param_25', -12805.910343007497), ('param_68', -12808.869554453902), ('param_24', -13096.039925822886), ('param_21', -13954.355368797698), ('param_15', -14501.962102076712), ('param_22', -14630.939997109164), ('param_23', -14658.299731077288), ('param_12', -14849.633811412177), ('param_77', -15500.850295470413), ('param_39', -15539.9210287606), ('param_16', -15788.434044485912), ('param_17', -16049.960889899547), ('param_19', -16365.621153211749), ('param_20', -16704.612697607397), ('param_13', -16976.317312470153), ('param_14', -17266.587720840307), ('param_10', -18579.715351111026), ('param_11', -19327.294781595232), ('param_29', -19931.023602810965), ('param_0', -24085.762687882747), ('param_3', -26525.93929799493), ('param_6', -26570.801029245966), ('param_7', -26651.095028972748), ('param_8', -26651.25424990317), ('param_5', -26666.219657577694), ('param_4', -26676.999793035848), ('param_2', -26677.33709209738), ('param_1', -26685.359956561708)]
+# Real online env, AUC
+realInfo = [('param_25', -285.8124695485127), ('param_16', -308.22540630357304), ('param_26', -313.6040946356895), ('param_13', -314.9741063953518), ('param_24', -331.5340815005979), ('param_23', -347.6194235783255), ('param_17', -360.106786245317), ('param_22', -374.7081285437368), ('param_14', -394.5975930386011), ('param_15', -395.34422109788943), ('param_11', -402.47112043780675), ('param_21', -498.91428957157666), ('param_10', -537.0473539391037), ('param_12', -621.8647194155847), ('param_18', -662.8414555071835), ('param_9', -788.6560894099841), ('param_19', -943.5648699237646), ('param_0', -2256.3771957815), ('param_3', -2551.6604838237713), ('param_6', -2570.1085502376236), ('param_20', -2774.2912733175585), ('param_7', -2909.53175425217), ('param_8', -2933.799559750072), ('param_4', -2997.4951209820333), ('param_5', -3107.8013434923473), ('param_1', -3303.218339723092), ('param_2', -3379.934509131741)]
 
-modelKNN1Info =
+# Random, 5K
+#modelKNN1Info = [('param_26', -12.764177522868314), ('param_25', -13.117898414084209), ('param_17', -14.269629629925085), ('param_23', -16.233607700933497), ('param_16', -16.38793850765555), ('param_14', -18.200305734683216), ('param_22', -18.282720883089066), ('param_13', -21.766668211028758), ('param_20', -24.542928746398132), ('param_15', -31.64927558262611), ('param_11', -32.84418935795326), ('param_24', -34.78774530792752), ('param_10', -46.67702929906538), ('param_19', -56.687794740292766), ('param_21', -59.94960442847311), ('param_12', -64.00543361373003), ('param_18', -76.95831262637489), ('param_9', -93.89674044505414), ('param_7', -340.722291338904), ('param_8',  -343.8097408409277), ('param_2', -368.8279121847484), ('param_5', -384.8351164609141), ('param_4', -442.5031281366773), ('param_6', -507.192349892928), ('param_1', -516.2735385635699), ('param_3', -598.4641806584592), ('param_0', -682.433239703506)]
 
-modelKNN3Info = 
+# Random, 50K
+#modelKNN1Info = [('param_23', -18.968495739682968), ('param_26', -21.271527965748035), ('param_25', -22.461427903585044), ('param_17', -23.2033353618412), ('param_22', -23.986963301668496), ('param_16', -27.793213610214462), ('param_14', -30.960707489981072), ('param_20', -31.896956552198365), ('param_24', -31.952849658242094), ('param_13', -34.95601614333101), ('param_11', -50.400959226385304), ('param_15', -51.67816413679977), ('param_10', -61.873314891715765), ('param_19', -69.20302738588991), ('param_21', -73.32073921932529), ('param_12', -75.8434592425906), ('param_18', -83.92403559843467), ('param_9', -100.21888443661415), ('param_5', -262.48402192341644), ('param_2', -283.47774464356417), ('param_8', -322.4723974864214), ('param_7', -324.72013462458347), ('param_4', -334.7878793614427), ('param_1', -399.0746596328589), ('param_6', -409.903778683294), ('param_0', -423.0688498929607), ('param_3', -478.602708803116)]
+
+# Suboptimalfixed, eps = 0.01, 5K
+#modelKNN1Info = [('param_9', 0.0), ('param_8', 0.0), ('param_7', 0.0), ('param_6', 0.0), ('param_5', 0.0), ('param_4', 0.0), ('param_3', 0.0), ('param_26', 0.0), ('param_25', 0.0), ('param_24', 0.0), ('param_23', 0.0), ('param_22', 0.0), ('param_21', 0.0), ('param_20', 0.0), ('param_2', 0.0), ('param_19', 0.0), ('param_18', 0.0), ('param_17', 0.0), ('param_16', 0.0), ('param_15', 0.0), ('param_14', 0.0), ('param_13', 0.0), ('param_12', 0.0), ('param_11', 0.0), ('param_10', 0.0), ('param_1', 0.0), ('param_0', 0.0)]
+
+# Suboptimalfixed, eps = 0.01, 50K
+#modelKNN1Info = [('param_9', 0.0), ('param_8', 0.0), ('param_7', 0.0), ('param_6', 0.0), ('param_5', 0.0), ('param_4', 0.0), ('param_3', 0.0), ('param_26', 0.0), ('param_25', 0.0), ('param_24', 0.0), ('param_23', 0.0), ('param_22', 0.0), ('param_21', 0.0), ('param_20', 0.0), ('param_2', 0.0), ('param_19', 0.0), ('param_18', 0.0), ('param_17', 0.0), ('param_16', 0.0), ('param_15', 0.0), ('param_14', 0.0), ('param_13', 0.0), ('param_12', 0.0), ('param_11', 0.0), ('param_10', 0.0), ('param_1', 0.0), ('param_0', 0.0)]
+
+# Suboptimalfixed, eps = 0.3, 5K
+#modelKNN1Info = [('param_23', -2.3492100095172663), ('param_25', -3.123335288614397), ('param_26', -3.3159908276197294), ('param_17', -4.708035486031476), ('param_16', -6.634427120117443), ('param_24', -10.166876780498267), ('param_13', -10.607478364571703), ('param_22', -11.121678680348465), ('param_14', -12.297748884471558), ('param_15', -12.68465786667758), ('param_21', -14.577093169993747), ('param_11', -16.106842484344675), ('param_18', -19.478913474498015), ('param_20', -19.979676098252515), ('param_19', -20.362946695281618), ('param_0', -20.3960145831672), ('param_9', -20.51441492505736), ('param_10', -20.79499723171724), ('param_12', -20.809906696376306), ('param_7', -24.46765834000807), ('param_2', -35.33803303562148), ('param_3', -39.203614972896034), ('param_6', -46.88218127676781), ('param_5', -48.23349425089031), ('param_4', -49.9598040354527), ('param_1', -52.1337930678797), ('param_8', -60.73316686515016)]
+
+# Suboptimalfixed, eps = 0.3, 50K
+#modelKNN1Info = [('param_9', 0.0), ('param_8', 0.0), ('param_7', 0.0), ('param_6', 0.0), ('param_5', 0.0), ('param_4', 0.0), ('param_3', 0.0), ('param_26', 0.0), ('param_25', 0.0), ('param_24', 0.0), ('param_23', 0.0), ('param_22', 0.0), ('param_21', 0.0), ('param_20', 0.0), ('param_2', 0.0), ('param_19', 0.0), ('param_18', 0.0), ('param_17', 0.0), ('param_16', 0.0), ('param_15', 0.0), ('param_14', 0.0), ('param_13', 0.0), ('param_12', 0.0), ('param_11', 0.0), ('param_10', 0.0), ('param_1', 0.0), ('param_0', 0.0)]
+
+# Learning, eps = 0.081, 5K
+#modelKNN1Info = [('param_17', -18.983078479749263), ('param_11', -20.43511456453593), ('param_13', -21.249861728193697), ('param_20', -21.385199305350863), ('param_14', -21.692799468056375), ('param_26', -22.2808636428551), ('param_16', -22.30617006185688), ('param_25', -22.39367115183548), ('param_23', -23.619806815583534), ('param_24', -23.85010516781004), ('param_10', -24.187055365533475), ('param_15', -24.559149263728305), ('param_22', -25.21514590817922), ('param_19', -26.3636657305936), ('param_21', -29.075142344188876), ('param_18', -29.68864911464537), ('param_12', -32.762321789575125), ('param_9', -33.70118877458078), ('param_0', -58.64537396540637), ('param_1', -77.7575006193548), ('param_2', -110.91127511593564), ('param_4', -121.0263824788873), ('param_3', -122.10003213042798), ('param_6', -128.7886275767614), ('param_5', -130.51199172877503), ('param_8', -152.37901192640794), ('param_7', -178.46467752363048)]
+
+# Learning, eps = 0.081, 50K
+#modelKNN1Info = [('param_26', -7.030951353873652), ('param_25', -8.121648903277269), ('param_23', -8.368872551725815), ('param_17', -9.23745065056816), ('param_24', -10.89167731632033), ('param_16', -16.00636043798336), ('param_14', -19.1399383737337), ('param_11', -23.938998981582728), ('param_20', -24.898146994531512), ('param_18', -25.947563691699973), ('param_15', -26.042222349958433), ('param_22', -27.115777708733642), ('param_13', -27.465498341193328), ('param_19', -29.40258658137639), ('param_10', -32.8483820720988), ('param_21', -39.79466237011869), ('param_9', -40.49385833155584), ('param_12', -44.194488287700565), ('param_0', -74.62492244294893), ('param_4', -143.7105800015034), ('param_1', -151.46451694606358), ('param_2', -156.07909901002483), ('param_6', -178.5757713321343), ('param_3', -194.77448622497158), ('param_5', -196.20764486293265), ('param_8', -205.8234049802723), ('param_7', -206.30650028514486)]
+
+# Learning, eps = 0.3, 5K
+#modelKNN1Info = [('param_25', -32.23615308913506), ('param_26', -35.89667910275274), ('param_17', -36.67286012192482), ('param_16', -43.74959390384386), ('param_14', -45.936522664751436), ('param_23', -49.56386601579181), ('param_13', -50.4825284896432), ('param_22', -53.415273478491535), ('param_24', -60.01024486863375), ('param_11', -61.45737369980077), ('param_15', -64.65688581604803), ('param_21', -71.44338070678359), ('param_10', -78.49594909182903), ('param_20', -80.47506083516234), ('param_9', -83.23908009748678), ('param_12', -83.44771786406537), ('param_18', -88.17945126527704), ('param_19', -89.0470097619032), ('param_0', -241.49803315680464), ('param_2', -293.9067675645362), ('param_3', -294.81378669727053), ('param_5', -354.3732474938825), ('param_1', -356.9820271404869), ('param_4', -368.380539881307), ('param_7', -372.2856720756736), ('param_8', -387.96524542981905), ('param_6', -402.83772183602053)]
+
+# Learning, eps = 0.3, 50K
+modelKNN1Info = [('param_23', -7.175310791525495), ('param_25', -7.8320042334248985), ('param_26', -9.392312030772196), ('param_17', -11.996750877722002), ('param_18', -13.19087570649321), ('param_21', -13.621739045961856), ('param_24', -13.84682340572606), ('param_14', -14.486031076799646), ('param_16', -15.204716813878713), ('param_13', -16.52759334711725), ('param_11', -17.229811321295035), ('param_15', -19.143009584048407), ('param_20', -23.642208317430015), ('param_9', -24.048035529212328), ('param_22', -24.111134391832262), ('param_12', -26.513751902257304), ('param_19', -28.007337014733224), ('param_10', -35.306458650245084), ('param_0', -121.33473241969152), ('param_3', -138.6853920562479), ('param_7', -148.2370908538695), ('param_2', -148.65543149334607), ('param_5', -150.9463592675911), ('param_6', -174.86137148307444), ('param_8', -177.13002139383292), ('param_1', -177.28674112545954), ('param_4', -184.57772193519702)]
 
 realkeys = [key for (key, value) in realInfo]
 realvalues = [value for (key, value) in realInfo]
 modelKNN1keys = [key for (key, value) in modelKNN1Info]
 modelKNN1values = [value for (key, value) in modelKNN1Info]
-modelKNN3keys = [key for (key, value) in modelKNN3Info]
-modelKNN3values = [value for (key, value) in modelKNN3Info]
+#modelKNN3keys = [key for (key, value) in modelKNN3Info]
+#modelKNN3values = [value for (key, value) in modelKNN3Info]
 
 rankingUnderReal = [i for i in range(len(realkeys))]
 rankingUnderModelKNN1 = [realkeys.index(modelKNN1keys[i]) for i in range(len(modelKNN1keys))]
-rankingUnderModelKNN3 = [realkeys.index(modelKNN3keys[i]) for i in range(len(modelKNN3keys))]
+#rankingUnderModelKNN3 = [realkeys.index(modelKNN3keys[i]) for i in range(len(modelKNN3keys))]
 
-correlation = np.corrcoef(rankingUnderReal, rankingUnderModelKNN3)
+correlation = np.corrcoef(rankingUnderReal, rankingUnderModelKNN1)
 print(correlation)
 
 
@@ -54,20 +80,21 @@ def plotCorrelationPlot(rankingUnderReal, rankingUnderModelKNN1, plt):
 
 def plotPerformances(realvalues, modelKNN1values, plt):
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    plt.scatter([i+1 for i in range(len(realvalues))], np.array(realvalues)/250000, label='Performance in\nthe real environment')
+    plt.scatter([i+1 for i in range(len(realvalues))], np.array(realvalues)/50000, label='Real environment', s=5)
     modelKNN1valuesRankedByRealRanking = [modelKNN1values[rankingUnderModelKNN1.index(rankingUnderReal[i])] for i in range(len(rankingUnderReal))]
-    plt.scatter([i+1 for i in range(len(modelKNN1values))], np.array(modelKNN1valuesRankedByRealRanking)/250000, label='Performance in\nthe offline modelKNN1')
+    plt.scatter([i+1 for i in range(len(modelKNN1values))], np.array(modelKNN1valuesRankedByRealRanking)/50000, label='Offline model', s=5, color=colors[1])
     #plt.scatter([12], np.array(modelKNN1valuesRankedByRealRanking[11]/250000), color=colors[2])
-    #lt.scatter([12], np.array(modelKNN1valuesRankedByRealRanking[11]/250000), facecolors='none', edgecolors=colors[2], s=160)
+    plt.scatter([realkeys.index(modelKNN1keys[0])+1], np.array(modelKNN1valuesRankedByRealRanking[realkeys.index(modelKNN1keys[0])]/50000), facecolors='none', edgecolors=colors[1], s=160)
     #plt.scatter([i for i in range(len(modelKNN1values))], np.array(modelKNN1values)/50000, label='Average reward in the offline modelKNN1')
+    plt.title("Learning policy, epsilon = 0.3,\n 50K timesteps of collected data, Correlation= 0.86", size=10)
     plt.xlabel('Hyperparameter ranking in the real environment', labelpad=35)
-    plt.ylabel('Average reward\nof each\nhyperparameter setting\n(AUC)', rotation=0, labelpad=55)
-    #plt.rcParams['figure.figsize'] = [12, 8]
-    plt.arrow(15, -0.04, -3, 0.035, color='black', width=0.00005, length_includes_head=True, head_length=0.002, head_width=0.002)
-    plt.text(5, -0.05, 'Hyperparameters chosen\nby the offline modelKNN1', fontsize=8)
+    plt.ylabel('Average reward\nof each\nhyperparameter setting\n(AUC)', rotation=0, labelpad=65)
+    plt.rcParams['figure.figsize'] = [16, 8]
+    #plt.arrow(15, -0.04, -3, 0.035, color='black', width=0.00005, length_includes_head=True, head_length=0.002, head_width=0.002)
+    #plt.text(5, -0.05, 'Hyperparameters chosen\nby the offline modelKNN1', fontsize=8)
     plt.legend(loc=(0.01, 0.1), prop={'size': 8})
-    #plt.tight_layout()
-    plt.savefig('../img/performances.png',dpi=300, bbox_inches='tight')
+    plt.tight_layout()
+    plt.savefig('../img/Final/Learning_Eps30_50K.png',dpi=300, bbox_inches='tight')
     #plt.show()
 
 
@@ -98,7 +125,8 @@ def plotPerformancesMultiple(realvalues, modelKNN1values, modelKNN3values, plt):
     #plt.show()
 
 
-#plotCorrelationPlot(rankingUnderReal, rankingUnderModelKNN3, plt)
+#plotCorrelationPlot(rankingUnderReal, rankingUnderModelKNN1, plt)
 
+plotPerformances(realvalues, modelKNN1values, plt)
 
-plotPerformancesMultiple(realvalues, modelKNN1values, modelKNN3values, plt)
+#plotPerformancesMultiple(realvalues, modelKNN1values, modelKNN3values, plt)

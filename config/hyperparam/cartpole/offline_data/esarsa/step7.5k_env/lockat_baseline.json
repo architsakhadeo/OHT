@@ -1,0 +1,44 @@
+{
+  "agent-name": "esarsa",
+  "environment-name": "cartpole",
+  "agent-settings": {
+    "gamma": 0.9,
+    "state-len": 4,
+    "buffer-type": "random",
+    "buffer-size": 100,
+    "epsilon": 0.2,
+    "decreasing-epsilon": "None",
+    "sweep": {
+      "epsilon": [0.05],
+      "tilings": [32],
+      "tiles": [4],
+      "lambda": [0.8],
+      "alpha": [0.001],
+      "is-stepsize-adaptive": [true],
+      "adaptive-alpha": [1e-03]
+    },
+
+    "lock-weight": true,
+    "lock-condition": "onetime-reward",
+    "lock-condition-reward": -0.005,
+
+    "enable-debug": false,
+    "seed": 100
+  },
+  "environment-settings": {
+    "seed": 100,
+    "sweep": {
+      "delays":[[0]]
+    }
+  },
+  "experiment-settings": {
+    "steps": 0,
+    "episodes": 10000000,
+    "total-step-after-lock": 7500,
+    "count-step-after-lock": true,
+    "data-path": "data/hyperparam/cartpole/offline_data/esarsa/step7.5k_env/lockat_baseline/",
+    "should-log-traces": true,
+    "should-log-episode-lengths": false,
+    "debug-interval": 1000
+  }
+}

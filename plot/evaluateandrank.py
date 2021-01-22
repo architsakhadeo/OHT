@@ -6,15 +6,15 @@ from loadFromEpisodeLengths import transform_data
 
 
 #dirpath = '../data/hyperparam/cartpole/offline_learning/knn/k3/esarsa-adam/step20k_env/lockat_baseline/'
-dirpath = '../data/hyperparam/cartpole/online_learning/esarsa-adam/step250k/sweep_hyperparams/'
+dirpath = '../data/hyperparam/cartpole/offline_learning/knn/k1/esarsa-adam/step50k_env/learning_eps8_5ktimesteps/'
 subdirs = os.listdir(dirpath)
 
 def AUC(data):
     averageAcrossRuns = np.mean(data, axis=0)
-    return np.sum(averageAcrossRuns[-100000:])
+    return np.sum(averageAcrossRuns[:])
 
-def bottom50percentile(data):
-    return np.sort(np.concatenate(data).ravel())[int(len(data)/2.0)]
+def bottom10percentile(data):
+    return np.sort(np.concatenate(data).ravel())[int(len(data)/10.0)]
 
 performance = {}
 
@@ -29,8 +29,8 @@ for s in range(len(subdirs)):
     averaging_type='exponential-averaging'
 
     transformedData = transform_data('', convertedData, totalTimesteps, transformation, window, type=averaging_type, alpha=alpha)
-    performance[subdirs[s]] = AUC(transformedData)
-    #performance[subdirs[s]] = bottom50percentile(transformedData)
+    #performance[subdirs[s]] = AUC(transformedData)
+    performance[subdirs[s]] = bottom10percentile(transformedData)
     print('-------------------------------------------------------')
 
 print((sorted(performance.items(), key=lambda item:item[1]))[::-1])

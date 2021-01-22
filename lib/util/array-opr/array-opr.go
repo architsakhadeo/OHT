@@ -9,13 +9,34 @@ import (
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
-func InArrayInt(a int, list []int) bool {
-	for _, b := range list {
-		if b == a {
-			return true
+func Search2D(target []float64, list [][]float64) int {
+	for idx, l := range list {
+		if EqualArrys(l, target) {
+			return idx
 		}
 	}
-	return false
+	return -1
+}
+
+func SearchInt(a int, list []int) int {
+	for idx, b := range list {
+		if b == a {
+			return idx
+		}
+	}
+	return -1
+}
+
+func EqualArrys(a, b []float64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func AllEqualInt(arr []int) bool {
@@ -112,6 +133,17 @@ func ArrayMax(array []float64) (float64, int) {
 		}
 	}
 	return max, idx
+}
+func ArrayMin(array []float64) (float64, int) {
+	min := math.Inf(1)
+	var idx int
+	for j := 0; j < len(array); j++ {
+		if array[j] < min {
+			min = array[j]
+			idx = j
+		}
+	}
+	return min, idx
 }
 
 func StateTo32(state rlglue.State) []float32 {

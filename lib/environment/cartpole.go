@@ -29,7 +29,8 @@ const (
 type cartpoleSettings struct {
 	Seed         int64     `json:"seed"`
 	Delays       []int     `json:"delays"`
-	PercentNoise []float64 `json:"percent_noise"`
+	PercentNoiseState []float64 `json:"percent_noise"`
+	PercentNoiseAction float64 `json:"percent_noise_action"`
 }
 
 type Cartpole struct {
@@ -60,12 +61,12 @@ func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
 	env.Seed += int64(run)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
-	if len(env.PercentNoise) == 1 {
+	if len(env.PercentNoiseState) == 1 {
 		// Copy it for all dimensions
-		noise := env.PercentNoise[0]
-		env.PercentNoise = []float64{noise, noise, noise, noise}
-	} else if len(env.PercentNoise) != 4 && len(env.PercentNoise) != 0 {
-		err := fmt.Errorf("environment.Cartpole requires percent_noise to be length 4, 1, or 0, not length %d", len(env.PercentNoise))
+		noise := env.PercentNoiseState[0]
+		env.PercentNoiseState = []float64{noise, noise, noise, noise}
+	} else if len(env.PercentNoiseState) != 4 && len(env.PercentNoiseState) != 0 {
+		err := fmt.Errorf("environment.Cartpole requires percent_noise to be length 4, 1, or 0, not length %d", len(env.PercentNoiseState))
 		env.Message("err", err)
 		return err
 	}
@@ -82,11 +83,11 @@ func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
 
 	// If noise is off, set array to nil
 	totalNoise := 0.0
-	for _, noise := range env.PercentNoise {
+	for _, noise := range env.PercentNoiseState {
 		totalNoise += noise
 	}
 	if totalNoise == 0.0 {
-		env.PercentNoise = nil
+		env.PercentNoiseState = nil
 	}
 
 	// If delays are off, set array to nil
@@ -120,10 +121,10 @@ func (env *Cartpole) noisyState() rlglue.State {
 	state := make(rlglue.State, 4)
 	copy(state, env.state)
 
-	if len(env.PercentNoise) != 0 {
+	if len(env.PercentNoiseState) != 0 {
 		// Only add noise if it's configured
 		for i := range state {
-			state[i] += env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
+			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i])
 			state[i] = env.clamp(state[i], stateLowerBound[i], stateUpperBound[i])
 		}
 	}
@@ -156,6 +157,14 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	x, xDot, theta, thetaDot := env.state[0], env.state[1], env.state[2], env.state[3]
 
 	force := forceMag
+	if env.PercentNoiseAction != 0 {
+		// Only add noise if it's configured
+		//force += env.randFloat(0, force*env.PercentNoiseAction)
+		force += env.rng.NormFloat64() * (env.PercentNoiseAction * forceMag)
+	}
+	//fmt.Println(force, env.rng.NormFloat64() * (env.PercentNoiseAction * forceMag))
+	//fmt.Println("")
+
 	// If the action is anything other than exactly 0, consider the action to have been the "move right" action.
 	if act == 0 {
 		force *= -1
