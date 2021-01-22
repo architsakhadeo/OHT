@@ -1,9 +1,11 @@
 import os
 import sys
+import numpy
 cwd = os.getcwd()
 sys.path.insert(0, cwd+'/../..')
-from plot.box.plotutils import *
-from plot.box.cartpole_paths import *
+from plot.box.utils_data import *
+from plot.box.utils_plot import *
+from plot.box.paths_cartpole import *
 
 def sweep_model():
     cms = {

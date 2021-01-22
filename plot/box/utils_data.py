@@ -3,11 +3,6 @@ import math
 import numpy as np
 import pandas as pd
 
-import matplotlib
-import matplotlib.pyplot as plt
-cmap = matplotlib.cm.get_cmap('cool')
-
-
 """
 input: 
     models_data: {
@@ -126,61 +121,3 @@ def loading_pessimistic(models_paths):
                 data[rk][pk] = np.array(data[rk][pk]).min()
         models_data[model] = data
     return models_data
-
-
-"""
-input:
-    filtered: {
-        modelname: [10 percentile data list, 20 percentile data list, 30 percentile data list],
-        ...
-        }
-    thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
-"""
-def plot_boxs(filtered, thrd, xlabel):
-    # percts = [] #[[10perc in model1, 10perc in model2, ...], [20perc in model1, 20perc in model2, ...]]
-    # all_models = list(filtered.keys())
-    # for _ in filtered[all_models[0]]:
-    #     percts.append([])
-    # for model in all_models:
-    #     for didx in range(len(filtered[model])):
-    #         percts[didx].append(filtered[model][didx])
-    # count_pos = 1
-    # width = 0.2
-    # for perct in percts:
-    #     xlocations  = range(len(perct))
-    #     positions_group = [x-(width+0.01) for x in xlocations]
-    #     bp = ax.boxplot(perct, sym='r+', positions=positions_group, widths = width)
-    #     print(perct)
-    #     count_pos += len(perct) + 1
-    # ax.set_xticklabels(all_models)
-    # ax.set_xlim(count_pos+1)
-
-    fig, ax = plt.subplots()
-
-    all_models = list(filtered.keys())
-    xlocations  = range(len(filtered[all_models[0]]))
-    width = 0.2
-    for idx in range(len(all_models)):
-        perct = filtered[all_models[idx]]
-        positions_group = [x-(width+0.01)*idx for x in xlocations]
-
-        bp = ax.boxplot(perct, positions=positions_group, widths = width)
-        set_box_color(bp, cmap(idx/len(all_models)))
-
-        plt.plot([], c=cmap(idx/len(all_models)), label=all_models[idx])
-
-    for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width*3], [thrd[i]]*2, "--", color="red")
-
-    ax.set_xticklabels(xlabel)
-    ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
-    ax.set_ylim([-0.02, 0])
-    plt.legend()
-    plt.show()
-    return
-
-def set_box_color(bp, color):
-    plt.setp(bp['boxes'], color=color)
-    plt.setp(bp['whiskers'], color=color)
-    plt.setp(bp['caps'], color=color)
-    plt.setp(bp['medians'], color=color)
