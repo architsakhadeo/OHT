@@ -1,23 +1,28 @@
 package agent
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
+	"path"
+	"strconv"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/buffer"
+	"github.com/stellentus/cartpoles/lib/util/convformat"
 	"github.com/stellentus/cartpoles/lib/util/lockweight"
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/normalizer"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
 )
 
-type dqnSettings struct {
+type fqiSettings struct {
 	Seed        int64
 	EnableDebug bool `json:"enable-debug"`
 
@@ -28,34 +33,39 @@ type dqnSettings struct {
 	MinEpsilon          float64 `json:"min-epsilon"`
 	DecreasingEpsilon   string  `json:"decreasing-epsilon"`
 
-	Hidden    []int   `json:"dqn-hidden"`
+	Hidden    []int   `json:"fqi-hidden"`
 	Alpha     float64 `json:"alpha"`
-	Sync      int     `json:"dqn-sync"`
-	Decay     float64 `json:"dqn-decay"`
-	Momentum  float64 `json:"dqn-momentum"`
-	AdamBeta1 float64 `json:"dqn-adamBeta1"`
-	AdamBeta2 float64 `json:"dqn-adamBeta2"`
-	AdamEps   float64 `json:"dqn-adamEps"`
+	Sync      int     `json:"fqi-sync"`
+	Decay     float64 `json:"fqi-decay"`
+	Momentum  float64 `json:"fqi-momentum"`
+	AdamBeta1 float64 `json:"fqi-adamBeta1"`
+	AdamBeta2 float64 `json:"fqi-adamBeta2"`
+	AdamEps   float64 `json:"fqi-adamEps"`
 
 	Bsize int    `json:"buffer-size"`
 	Btype string `json:"buffer-type"`
 
 	StateDim   int  `json:"state-len"`
-	BatchSize  int  `json:"dqn-batch"`
+	BatchSize  int  `json:"fqi-batch"`
 	IncreaseBS bool `json:"increasing-batch"`
 
 	StateRange []float64 `json:"StateRange"`
 
 	OptName string `json:"optimizer"`
+
+	DataLog         string `json:"datalog"`
+	WeightPath      string `json:"weightpath"`
+	OfflineLearning bool   `json:"offline-learn"` // during offline learning, output unused action to env
+	OnlineLearning  bool   `json:"online-learn"`  // Set to false for offline learning, either true/false for running online.
 }
 
-type Dqn struct {
+type Fqi struct {
 	logger.Debug
 	rng        *rand.Rand
 	lastAction int
 	lastState  rlglue.State
 
-	dqnSettings
+	fqiSettings
 
 	updateNum int
 	learning  bool
@@ -70,17 +80,19 @@ type Dqn struct {
 
 	lw   lockweight.LockWeight
 	lock bool
+
+	// offlineData [][]float64
 }
 
 func init() {
-	Add("dqn", NewDqn)
+	Add("fqi", NewFqi)
 }
 
-func NewDqn(logger logger.Debug) (rlglue.Agent, error) {
-	return &Dqn{Debug: logger}, nil
+func NewFqi(logger logger.Debug) (rlglue.Agent, error) {
+	return &Fqi{Debug: logger}, nil
 }
 
-func (agent *Dqn) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight {
+func (agent *Fqi) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight {
 	lw.DecCount = 0
 	lw.BestAvg = math.Inf(-1)
 
@@ -96,15 +108,15 @@ func (agent *Dqn) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight
 	return lw
 }
 
-func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	err := json.Unmarshal(expAttr, &agent.dqnSettings)
+func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+	err := json.Unmarshal(expAttr, &agent.fqiSettings)
 	if err != nil {
-		return errors.New("DQN agent attributes were not valid: " + err.Error())
+		return errors.New("FQI agent attributes were not valid: " + err.Error())
 	}
 
 	err = json.Unmarshal(expAttr, &agent.lw)
 	if err != nil {
-		return errors.New("DQN agent LockWeight attributes were not valid: " + err.Error())
+		return errors.New("FQI agent LockWeight attributes were not valid: " + err.Error())
 	}
 	agent.lw = agent.InitLockWeight(agent.lw)
 
@@ -120,15 +132,21 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	err = json.Unmarshal(envAttr, &agent)
 
 	if err != nil {
-		agent.Message("err", "agent.Example number of Actions wasn't available: "+err.Error())
+		agent.Message("err", "agent.Fqi number of Actions wasn't available: "+err.Error())
 	}
 	agent.rng = rand.New(rand.NewSource(agent.Seed + int64(run))) // Create a new rand source for reproducibility
 
 	if agent.EnableDebug {
-		agent.Message("msg", "agent.Example Initialize", "seed", agent.Seed, "numberOfActions", agent.NumberOfActions)
+		agent.Message("msg", "agent.Fqi Initialize", "seed", agent.Seed, "numberOfActions", agent.NumberOfActions)
 	}
 	agent.bf = buffer.NewBuffer()
 	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
+
+	// Load datalog for offline trainning.
+	err = agent.loadDataLog(int(run))
+	if err != nil {
+		agent.Message("err", "agent.Fqi failed to load datalog: "+err.Error())
+	}
 
 	agent.nml = normalizer.Normalizer{agent.StateDim, agent.StateRange}
 
@@ -140,6 +158,12 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
 	agent.updateNum = 0
 
+	// Load neural net for online evaluation/learning.
+	err = agent.loadWeights()
+	if err != nil {
+		agent.Message("err", "agent.Fqi failed to load NN weights: "+err.Error())
+	}
+
 	if agent.OptName == "Adam" {
 		agent.opt = new(optimizer.Adam)
 		agent.opt.Init(agent.Alpha, []float64{agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
@@ -147,15 +171,18 @@ func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 		agent.opt = new(optimizer.Sgd)
 		agent.opt.Init(agent.Alpha, []float64{agent.Momentum}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
 	} else {
-		errors.New("Optimizer NotImplemented")
+		return errors.New("Optimizer NotImplemented")
 	}
 
 	return nil
 }
 
 // Start provides an initial observation to the agent and returns the agent's action.
-//func (agent *Dqn) Start(state rlglue.State) rlglue.Action {
-func (agent *Dqn) Start(oristate rlglue.State) rlglue.Action {
+//func (agent *Fqi) Start(state rlglue.State) rlglue.Action {
+func (agent *Fqi) Start(oristate rlglue.State) rlglue.Action {
+	if agent.fqiSettings.OfflineLearning {
+		return rlglue.Action(0)
+	}
 	state := make([]float64, agent.StateDim)
 	copy(state, oristate)
 
@@ -171,8 +198,13 @@ func (agent *Dqn) Start(oristate rlglue.State) rlglue.Action {
 }
 
 // Step provides a new observation and a reward to the agent and returns the agent's next action.
-//func (agent *Dqn) Step(state rlglue.State, reward float64) rlglue.Action {
-func (agent *Dqn) Step(oristate rlglue.State, reward float64) rlglue.Action {
+//func (agent *Fqi) Step(state rlglue.State, reward float64) rlglue.Action {
+func (agent *Fqi) Step(oristate rlglue.State, reward float64) rlglue.Action {
+	if agent.fqiSettings.OfflineLearning {
+		agent.Update()
+		return rlglue.Action(0)
+	}
+
 	if reward != 0 {
 		agent.learning = true
 	}
@@ -201,7 +233,10 @@ func (agent *Dqn) Step(oristate rlglue.State, reward float64) rlglue.Action {
 }
 
 // End informs the agent that a terminal state has been reached, providing the final reward.
-func (agent *Dqn) End(state rlglue.State, reward float64) {
+func (agent *Fqi) End(state rlglue.State, reward float64) {
+	if agent.fqiSettings.OfflineLearning {
+		agent.Update()
+	}
 	agent.bf.Feed(agent.lastState, agent.lastAction, state, reward, float64(0)) // gamma=0
 	agent.Update()
 	if agent.EnableDebug {
@@ -209,8 +244,13 @@ func (agent *Dqn) End(state rlglue.State, reward float64) {
 	}
 }
 
-func (agent *Dqn) Update() {
-	if agent.lw.UseLock {
+func (agent *Fqi) Update() {
+	// Deployed online without updating weights.
+	if !agent.fqiSettings.OfflineLearning && !agent.fqiSettings.OnlineLearning {
+		return
+	}
+
+	if !agent.fqiSettings.OfflineLearning && agent.lw.UseLock {
 		//if agent.updateNum%agent.Bsize == 0 {
 		//	agent.lock = agent.lw.CheckChange()
 		//}
@@ -276,7 +316,7 @@ func (agent *Dqn) Update() {
 }
 
 // Choose action
-func (agent *Dqn) Policy(state rlglue.State) int {
+func (agent *Fqi) Policy(state rlglue.State) int {
 	var idx int
 	if (agent.rng.Float64() < agent.Epsilon) || (!agent.learning) {
 		idx = agent.rng.Intn(agent.NumberOfActions)
@@ -293,7 +333,7 @@ func (agent *Dqn) Policy(state rlglue.State) int {
 	return idx
 }
 
-func (agent *Dqn) CheckAvgRwdLock(avg float64) bool {
+func (agent *Fqi) CheckAvgRwdLock(avg float64) bool {
 	if agent.lw.BestAvg > avg {
 		agent.lw.DecCount += 1
 		fmt.Println("Count to lock", agent.lw.DecCount)
@@ -311,7 +351,7 @@ func (agent *Dqn) CheckAvgRwdLock(avg float64) bool {
 	return lock
 }
 
-func (agent *Dqn) CheckAvgRwdUnlock(avg float64) bool {
+func (agent *Fqi) CheckAvgRwdUnlock(avg float64) bool {
 	if agent.lw.LockAvgRwd > avg {
 		agent.lw.DecCount += 1
 		fmt.Println("Count to unlock", agent.lw.DecCount)
@@ -328,8 +368,8 @@ func (agent *Dqn) CheckAvgRwdUnlock(avg float64) bool {
 	return lock
 }
 
-//func (agent *Dqn) CheckChange() bool {
-func (agent *Dqn) DynamicLock() bool {
+//func (agent *Fqi) CheckChange() bool {
+func (agent *Fqi) DynamicLock() bool {
 	_, _, _, rewards2D, _ := agent.bf.Content()
 	rewards := ao.Flatten2DFloat(rewards2D)
 	avg := ao.Average(rewards)
@@ -355,7 +395,7 @@ func (agent *Dqn) DynamicLock() bool {
 	}
 }
 
-func (agent *Dqn) OnetimeRwdLock() bool {
+func (agent *Fqi) OnetimeRwdLock() bool {
 	if agent.lock {
 		return true
 	} else {
@@ -372,7 +412,7 @@ func (agent *Dqn) OnetimeRwdLock() bool {
 	}
 }
 
-func (agent *Dqn) OnetimeEpLenLock() bool {
+func (agent *Fqi) OnetimeEpLenLock() bool {
 	if agent.lock {
 		return true
 	} else {
@@ -397,14 +437,118 @@ func (agent *Dqn) OnetimeEpLenLock() bool {
 	}
 }
 
-func (agent *Dqn) KeepLock() bool {
+func (agent *Fqi) KeepLock() bool {
 	return true
 }
 
-func (agent *Dqn) GetLock() bool {
+func (agent *Fqi) GetLock() bool {
 	return agent.lock
 }
 
-func (agent *Dqn) SaveWeights(basePath string) error {
+// Load datalog, copy dataset to replay buffer.
+func (agent *Fqi) loadDataLog(run int) error {
+	if !agent.fqiSettings.OfflineLearning {
+		return nil
+	}
+
+	folder := agent.fqiSettings.DataLog
+	traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
+
+	// Get offline data
+	csvFile, err := os.Open(traceLog)
+	if err != nil {
+		return errors.New("Cannot find trace log file: " + err.Error())
+	}
+	allTransStr, err := csv.NewReader(csvFile).ReadAll()
+	csvFile.Close()
+	if err != nil {
+		return errors.New("Cannot read trace log file: " + err.Error())
+	}
+	allTransTemp := make([][]float64, len(allTransStr)-1)
+	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
+		trans := allTransStr[i]
+		row := make([]float64, agent.fqiSettings.StateDim*2+3)
+		for j, num := range trans {
+			if j == 0 { // next state
+				num = num[1 : len(num)-1] // remove square brackets
+				copy(row[agent.fqiSettings.StateDim+1:agent.fqiSettings.StateDim*2+1], convformat.ListStr2Float(num, " "))
+			} else if j == 1 { // current state
+				num = num[1 : len(num)-1]
+				copy(row[:agent.fqiSettings.StateDim], convformat.ListStr2Float(num, " "))
+			} else if j == 2 { // action
+				row[agent.fqiSettings.StateDim], _ = strconv.ParseFloat(num, 64)
+			} else if j == 3 { //reward
+				row[agent.fqiSettings.StateDim*2+1], _ = strconv.ParseFloat(num, 64)
+				if row[agent.fqiSettings.StateDim*2+1] == -1 { // termination
+					row[agent.fqiSettings.StateDim*2+2] = 1
+				} else {
+					row[agent.fqiSettings.StateDim*2+2] = 0
+				}
+			}
+		}
+		allTransTemp[i-1] = row
+	}
+
+	// TODO check whether need to randomly drop 10% data
+	var allTrans [][]float64 = allTransTemp
+
+	for i := 0; i < len(allTrans); i++ {
+		trans := allTrans[i]
+		gamma := float64(0)
+		if trans[agent.fqiSettings.StateDim*2+2] == 0 {
+			gamma = agent.Gamma
+		}
+		agent.bf.Feed(
+			trans[:agent.fqiSettings.StateDim],                                 // state
+			trans[agent.fqiSettings.StateDim],                                  // action
+			trans[agent.fqiSettings.StateDim+1:agent.fqiSettings.StateDim*2+1], // next state
+			trans[agent.fqiSettings.StateDim*2+1],                              // reward
+			gamma,                                                              // gamma
+		)
+	}
+
+	return nil
+}
+
+// Load neural net for online evaluation/learning.
+func (agent *Fqi) loadWeights() error {
+	if agent.fqiSettings.OfflineLearning {
+		return nil
+	}
+
+	// load weights here, save weights after training (called somewhere in experiment.go)
+	err := agent.learningNet.LoadNetwork(
+		fmt.Sprintf("%slearning/", agent.fqiSettings.WeightPath),
+		agent.StateDim, agent.Hidden, agent.NumberOfActions)
+	if err != nil {
+		return errors.New("FQI agent unable to load networks: " + err.Error())
+	}
+
+	err = agent.targetNet.LoadNetwork(
+		fmt.Sprintf("%starget/", agent.fqiSettings.WeightPath),
+		agent.StateDim, agent.Hidden, agent.NumberOfActions)
+	if err != nil {
+		return errors.New("FQI agent unable to load networks: " + err.Error())
+	}
+
+	return nil
+}
+
+// SaveWeights save neural net weights to speficied path.
+func (agent *Fqi) SaveWeights(basePath string) error {
+	if !agent.fqiSettings.OfflineLearning {
+		return nil
+	}
+
+	err := agent.learningNet.SaveNetwork(path.Join(agent.fqiSettings.WeightPath, basePath, "learning"))
+	if err != nil {
+		return errors.New("FQI agent unable to save networks: " + err.Error())
+	}
+
+	err = agent.targetNet.SaveNetwork(path.Join(agent.fqiSettings.WeightPath, basePath, "target"))
+	if err != nil {
+		return errors.New("FQI agent unable to save networks: " + err.Error())
+	}
+
 	return nil
 }

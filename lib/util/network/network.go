@@ -3,10 +3,18 @@ package network
 // This file is based on https://github.com/sausheong/gonn
 
 import (
+	"bytes"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"os"
+	"path"
+
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
 	"gonum.org/v1/gonum/mat"
-	"math"
 )
 
 // Network is a neural network with 3 layers
@@ -15,17 +23,17 @@ type Network struct {
 	hiddens []int
 	outputs int
 
-	HiddenWeights  []mat.Matrix
-	OutputWeights  mat.Matrix
-	HiddenUpdate   []mat.Matrix
-	OutputUpdate   mat.Matrix
+	HiddenWeights []mat.Matrix
+	OutputWeights mat.Matrix
+	HiddenUpdate  []mat.Matrix
+	OutputUpdate  mat.Matrix
 
 	//HiddenV        []mat.Matrix
 	//OutputV        mat.Matrix
 	//HiddenMomentum []mat.Matrix
 	//OutputMomentum mat.Matrix
 
-	tanhLast 		bool
+	tanhLast bool
 	//learningRate   float64
 	//decay          float64
 	//SgdMomentum    float64
@@ -33,16 +41,16 @@ type Network struct {
 	//beta2          float64
 	//eps            float64
 
-	LayerOut  []mat.Matrix
+	LayerOut []mat.Matrix
 	//iteration int
 }
 
 // CreateNetwork creates a neural network with random weights
 func CreateNetwork(input int, hidden []int, output int, rate float64, decay float64, SgdMomentum float64, beta1 float64, beta2 float64, eps float64) (net Network) {
 	net = Network{
-		inputs:       input,
-		hiddens:      hidden,
-		outputs:      output,
+		inputs:  input,
+		hiddens: hidden,
+		outputs: output,
 		//learningRate: rate,
 		//decay:        decay,
 		//SgdMomentum:  SgdMomentum,
@@ -183,3 +191,195 @@ func Synchronization(from, to Network) Network {
 	return to
 }
 
+func (net *Network) SaveNetwork(weightpath string) error {
+	_ = os.MkdirAll(weightpath, os.ModePerm)
+	var err error
+	var name string
+
+	for i := 0; i < len(net.HiddenWeights); i++ {
+		name = fmt.Sprintf("weight-hidden-%d.txt", i)
+		err = SaveMatrix(net.HiddenWeights[i], weightpath, name)
+		if err != nil {
+			return err
+		}
+	}
+
+	name = "weight-output.txt"
+	err = SaveMatrix(net.OutputWeights, weightpath, name)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(net.HiddenUpdate); i++ {
+		name = fmt.Sprintf("weight-hidden-update-%d.txt", i)
+		err = SaveMatrix(net.HiddenUpdate[i], weightpath, name)
+		if err != nil {
+			return err
+		}
+	}
+
+	name = "weight-output-update.txt"
+	err = SaveMatrix(net.OutputUpdate, weightpath, name)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(net.LayerOut); i++ {
+		name = fmt.Sprintf("weight-layer-out-%d.txt", i)
+		err = SaveMatrix(net.LayerOut[i], weightpath, name)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (net *Network) LoadNetwork(
+	weightpath string, input int, hidden []int, output int) error {
+	var name string
+	var err error
+	var newDense *mat.Dense
+
+	ipt := net.inputs
+	newDense = mat.NewDense(net.hiddens[0], ipt,
+		ao.RandomArray(ipt*net.hiddens[0], float64(ipt)))
+	newDense.Reset()
+
+	net.HiddenWeights = []mat.Matrix{}
+	for i := 0; i < len(net.hiddens); i++ {
+		name = fmt.Sprintf("weight-hidden-%d.txt", i)
+		err = LoadMatrix(newDense, weightpath, name)
+		if err != nil {
+			return err
+		}
+		net.HiddenWeights = append(net.HiddenWeights, mat.DenseCopyOf(newDense))
+		newDense.Reset()
+		ipt = net.hiddens[i] + 1
+	}
+
+	name = "weight-output.txt"
+	err = LoadMatrix(newDense, weightpath, name)
+	if err != nil {
+		return err
+	}
+	net.OutputWeights = mat.DenseCopyOf(newDense)
+	newDense.Reset()
+
+	net.HiddenUpdate = []mat.Matrix{}
+	for i := 0; i < len(hidden); i++ {
+		name = fmt.Sprintf("weight-hidden-update-%d.txt", i)
+		err = LoadMatrix(newDense, weightpath, name)
+		if err != nil {
+			return err
+		}
+		net.HiddenUpdate = append(net.HiddenUpdate, mat.DenseCopyOf(newDense))
+		newDense.Reset()
+	}
+
+	name = "weight-output-update.txt"
+	err = LoadMatrix(newDense, weightpath, name)
+	if err != nil {
+		return err
+	}
+	net.OutputUpdate = mat.DenseCopyOf(newDense)
+	newDense.Reset()
+
+	return nil
+}
+
+func SaveMatrix(m mat.Matrix, weightpath, name string) error {
+	// Create data file
+	weightfile := path.Join(weightpath, name)
+	file, err := os.Create(weightfile)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to create file %s: %s", weightfile, err.Error()))
+	}
+	defer file.Close()
+
+	// Encodes matrix into bytes.
+	_, err = MarshalBinaryTo(m, file)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func LoadMatrix(m *mat.Dense, weightpath, name string) error {
+	// Create data file
+	weightfile := path.Join(weightpath, name)
+	file, err := os.Open(weightfile)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to create file %s: %s", weightfile, err.Error()))
+	}
+	defer file.Close()
+
+	// Decode bytes into matrix.
+	_, err = m.UnmarshalBinaryFrom(file)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// The following are based on https://github.com/gonum/gonum/blob/master/mat/io.go
+// version is the current on-disk codec version.
+const version uint32 = 0x1
+
+var headerSize = binary.Size(storage{})
+
+// storage is the internal representation of the storage format of a
+// serialised matrix.
+type storage struct {
+	Version uint32 // Keep this first.
+	Form    byte   // [GST]
+	Packing byte   // [BPF]
+	Uplo    byte   // [AUL]
+	Unit    bool
+	Rows    int64
+	Cols    int64
+	KU      int64
+	KL      int64
+}
+
+func (s storage) marshalBinaryTo(w io.Writer) (int, error) {
+	buf := bytes.NewBuffer(make([]byte, 0, headerSize))
+	err := binary.Write(buf, binary.LittleEndian, s)
+	if err != nil {
+		return 0, err
+	}
+	return w.Write(buf.Bytes())
+}
+
+// MarshalBinaryTo encodes the receiver into a binary form and writes it into w.
+// MarshalBinaryTo returns the number of bytes written into w and an error, if any.
+//
+// See MarshalBinary for the on-disk layout.
+func MarshalBinaryTo(m mat.Matrix, w io.Writer) (int, error) {
+	r, c := m.Dims()
+	header := storage{
+		Form: 'G', Packing: 'F', Uplo: 'A',
+		Rows: int64(r), Cols: int64(c),
+		Version: version,
+	}
+	n, err := header.marshalBinaryTo(w)
+	if err != nil {
+		return n, err
+	}
+
+	var b [8]byte
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			binary.LittleEndian.PutUint64(b[:], math.Float64bits(m.At(i, j)))
+			nn, err := w.Write(b[:])
+			n += nn
+			if err != nil {
+				return n, err
+			}
+		}
+	}
+
+	return n, nil
+}

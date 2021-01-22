@@ -16,4 +16,7 @@ type Agent interface {
 	End(state State, reward float64)
 
 	GetLock() bool
+
+	// Save function approximator weights at the end of learning phase.
+	SaveWeights(basePath string) error
 }

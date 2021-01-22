@@ -26,7 +26,7 @@ type Experiment struct {
 	numEpisodesDone int
 
 	stepBeforeCount int
-	timeOut   bool
+	timeOut         bool
 }
 
 func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experiment, debug logger.Debug, log logger.Data) (*Experiment, error) {
@@ -76,7 +76,7 @@ func (exp *Experiment) runEpisodic() {
 	exp.Message("msg", "Starting episodic experiment")
 	exp.stepBeforeCount = 0
 	exp.timeOut = false
-	for exp.numEpisodesDone < exp.Settings.MaxEpisodes{
+	for exp.numEpisodesDone < exp.Settings.MaxEpisodes {
 		exp.runSingleEpisode()
 		if exp.timeOut {
 			break
@@ -179,6 +179,9 @@ func (exp *Experiment) runSingleEpisode() {
 		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
 	}
+
+	// Save FA weights.
+	exp.saveAgentWeights()
 }
 
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
@@ -186,5 +189,12 @@ func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
 	if exp.Settings.DebugInterval != 0 {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	}
+}
+
+func (exp *Experiment) saveAgentWeights() {
+	err := exp.agent.SaveWeights(exp.GetBasePath())
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 }

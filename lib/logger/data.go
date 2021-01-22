@@ -245,6 +245,10 @@ func (lg *dataLogger) SaveLog() error {
 	return nil
 }
 
+func (lg *dataLogger) GetBasePath() string {
+	return path.Base(lg.BasePath)
+}
+
 func (lg *dataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisodes, loadTraces bool) error {
 	lg.DataConfig = DataConfig{
 		ShouldLogTraces:         loadTraces,

@@ -92,3 +92,7 @@ func (agent *Example) End(state rlglue.State, reward float64) {
 func (agent *Example) GetLock() bool {
 	return false
 }
+
+func (agent *Example) SaveWeights(basePath string) error {
+	return nil
+}

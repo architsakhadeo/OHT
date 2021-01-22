@@ -81,3 +81,7 @@ func (agent *Random) End(state rlglue.State, reward float64) {
 func (agent *Random) GetLock() bool {
 	return false
 }
+
+func (agent *Random) SaveWeights(basePath string) error {
+	return nil
+}

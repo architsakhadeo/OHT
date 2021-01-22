@@ -3,6 +3,8 @@ package agent
 import (
 	"encoding/json"
 	"errors"
+	"math/rand"
+
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
@@ -10,7 +12,6 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/normalizer"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
-	"math/rand"
 )
 
 type ddpgSettings struct {
@@ -228,4 +229,8 @@ func MseLoss(target, predict [][]float64) [][]float64 {
 		avgLoss[0][j] = sum / float64(len(loss))
 	}
 	return avgLoss
+}
+
+func (agent *Ddpg) SaveWeights(basePath string) error {
+	return nil
 }

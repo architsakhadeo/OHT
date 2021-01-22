@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
+
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/buffer"
 	"github.com/stellentus/cartpoles/lib/util/lockweight"
-	"math"
-	"math/rand"
 
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
@@ -36,9 +37,9 @@ type esarsaSettings struct {
 	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
 
-	StateDim   int  `json:"state-len"`
-	Bsize int    `json:"buffer-size"`
-	Btype string `json:"buffer-type"`
+	StateDim int    `json:"state-len"`
+	Bsize    int    `json:"buffer-size"`
+	Btype    string `json:"buffer-type"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -51,7 +52,7 @@ type ESarsa struct {
 	weights                [][]float64 // weights is a slice of weights for each action
 	traces                 [][]float64
 	delta                  float64
-	oldState 			   rlglue.State
+	oldState               rlglue.State
 	oldStateActiveFeatures []int
 	oldAction              rlglue.Action
 	stepsize               float64
@@ -65,7 +66,7 @@ type ESarsa struct {
 	accumulatingbeta2      float64
 	esarsaSettings
 
-	bf  *buffer.Buffer
+	bf   *buffer.Buffer
 	lw   lockweight.LockWeight
 	lock bool
 }
@@ -403,7 +404,7 @@ func (agent *ESarsa) OnetimeEpLenLock() bool {
 			return false
 		}
 		zeros := 0
-		for i:=0;i<len(rewards);i++ {
+		for i := 0; i < len(rewards); i++ {
 			if rewards[i] == 0 {
 				zeros += 1
 			}
@@ -424,4 +425,8 @@ func (agent *ESarsa) KeepLock() bool {
 
 func (agent *ESarsa) GetLock() bool {
 	return agent.lock
+}
+
+func (agent *ESarsa) SaveWeights(basePath string) error {
+	return nil
 }
