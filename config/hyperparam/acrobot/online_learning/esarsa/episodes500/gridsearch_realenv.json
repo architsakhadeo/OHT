@@ -27,7 +27,7 @@
 	"experiment-settings": {
 		"episodes": 500,
 		"steps-in-episode": 200,
-		"data-path": "data/hyperparam/acrobot/online_learning/esarsa/episodes500/gridsearch_realenv",
+		"data-path": "data/hyperparam/acrobot/online_learning/esarsa/step10k/gridsearch_realenv",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
