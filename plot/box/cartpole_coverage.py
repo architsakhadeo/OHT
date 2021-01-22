@@ -10,12 +10,15 @@ from plot.box.paths_cartpole import *
 def plot_generation(te, cms, title, ylim=None):
 
     te_data = loading_pessimistic(te)
-    te_rank = ranking_allruns(te_data)["true"]
+    # te_rank = ranking_allruns(te_data)["true"]
     te_data = te_data["true"]
 
-    thrd10 = np.array([item[2] for item in percentile(te_rank, ranges[0][0], ranges[0][1], mode="optimistic")]).max()
-    thrd20 = np.array([item[2] for item in percentile(te_rank, ranges[1][0], ranges[1][1], mode="optimistic")]).max()
-    thrd30 = np.array([item[2] for item in percentile(te_rank, ranges[2][0], ranges[2][1], mode="optimistic")]).max()
+    # thrd10 = np.array([item[2] for item in percentile(te_rank, ranges[0][0], ranges[0][1])]).min()
+    # thrd20 = np.array([item[2] for item in percentile(te_rank, ranges[1][0], ranges[1][1])]).min()
+    # thrd30 = np.array([item[2] for item in percentile(te_rank, ranges[2][0], ranges[2][1])]).min()
+    thrd10 = percentile_avgeraged_run(te_data, ranges[0][1])
+    thrd20 = percentile_avgeraged_run(te_data, ranges[1][1])
+    thrd30 = percentile_avgeraged_run(te_data, ranges[2][1])
     te_thrd = [thrd10, thrd20, thrd30]
 
     cms_data = loading_pessimistic(cms)
@@ -55,7 +58,7 @@ def sweep_coverage():
             "eps1": data10k_eps1_k5_p02_t0,
     }
     te = {"true": trueenv}
-    plot_generation(te, cms, "../img/sweep_coverage")
+    plot_generation(te, cms, "../img/coverage_data10k")
 
 def sweep_datasize():
     eps0_cms = {
@@ -84,13 +87,14 @@ def sweep_datasize():
     }
     te = {"true": trueenv}
 
-    plot_generation(te, eps0_cms, "../img/datasize_eps0")
-    plot_generation(te, eps01_cms, "../img/datasize_eps0.1")
-    plot_generation(te, eps03_cms, "../img/datasize_eps0.3")
+    # plot_generation(te, eps0_cms, "../img/datasize_eps0")
+    # plot_generation(te, eps01_cms, "../img/datasize_eps0.1")
+    # plot_generation(te, eps03_cms, "../img/datasize_eps0.3")
     plot_generation(te, eps1_cms, "../img/datasize_eps1")
 
 # ranges = [[0, 0.1], [0.1, 0.2], [0.2, 0.3]]
 ranges = [[0, 0.3], [0.3, 0.7], [0.7, 1.0]]
 
 # sweep_model()
-sweep_coverage()
+# sweep_coverage()
+sweep_datasize()

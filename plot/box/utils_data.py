@@ -71,6 +71,20 @@ def percentile(ranked, low, high, mode="pessimistic"):
     else:
         return filtered
 
+def percentile_avgeraged_run(data, perc):
+    group_by_param = {}
+    all_runs = list(data.keys())
+    all_params = list(data[all_runs[0]].keys())
+    for pk in all_params:
+        group_by_param[pk] = []
+        for rk in all_runs:
+            group_by_param[pk].append(data[rk][pk])
+    for pk in all_params:
+        group_by_param[pk] = np.array(group_by_param[pk]).mean()
+    sorted_group = sorting(group_by_param)
+    h = min(int(len(sorted_group) * perc), len(sorted_group)-1)
+    return sorted_group[h][1]
+
 """
 input:
     path: ensemble_paths of one ensemble model [path_ens1, path_ens2, ...]
