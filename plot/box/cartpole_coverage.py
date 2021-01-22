@@ -11,7 +11,7 @@ def plot_generation(te, cms, title, ylim=None):
 
     te_data = loading_pessimistic(te)
     # te_rank = ranking_allruns(te_data)["true"]
-    te_data = te_data["true"]
+    te_data = average_run(te_data["true"])
 
     te_thrd = []
     for perc in ranges:
@@ -26,7 +26,7 @@ def plot_generation(te, cms, title, ylim=None):
         filtered[model] = []
         for perc in ranges:
             target = percentile(ranks, perc)
-            data = [te_data[item[0]][item[1]] for item in target]
+            data = [te_data[item[1]] for item in target]
             filtered[model].append(data)
 
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
@@ -84,10 +84,8 @@ def sweep_datasize():
     # plot_generation(te, eps03_cms, "../img/datasize_eps0.3")
     plot_generation(te, eps1_cms, "../img/datasize_eps1")
 
-# ranges = [[0, 0.1], [0.1, 0.2], [0.2, 0.3]]
-# ranges = [[0, 0.3], [0.3, 0.7], [0.7, 1.0]]
-ranges = [0.3, 0.7, 1.0]
+ranges = [0, 0.3, 0.6, 0.9]
 
 sweep_model()
-# sweep_coverage()
-# sweep_datasize()
+sweep_coverage()
+sweep_datasize()
