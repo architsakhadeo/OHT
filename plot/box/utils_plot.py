@@ -1,6 +1,37 @@
+import os
+import sys
+cwd = os.getcwd()
+sys.path.insert(0, cwd+'/../..')
+from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
 cmap = matplotlib.cm.get_cmap('cool')
+
+
+def plot_generation(te, cms, ranges, title, ylim=None):
+
+    te_data = loading_pessimistic(te)
+    te_data = average_run(te_data["true"])
+
+    te_thrd = []
+    for perc in ranges:
+        te_thrd.append(percentile_avgeraged_run(te_data, perc))
+
+    cms_data = loading_pessimistic(cms)
+    filtered = {}
+    models_rank = ranking_allruns(cms_data)
+    for model in cms_data.keys():
+        ranks = models_rank[model]
+
+        filtered[model] = []
+        for perc in ranges:
+            target = percentile_worst(ranks, perc, te_data)
+            # data = [te_data[item[1]] for item in target]
+            data = [item[2] for item in target]
+            filtered[model].append(data)
+
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
+
 
 
 """

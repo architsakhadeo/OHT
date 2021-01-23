@@ -35,19 +35,40 @@ def sorting(pvs):
 
 """
 input:
-    data: {
+    ranked: {
             run number 0: ((param_1st: auc), (param_2nd: auc), ...)
             run number 1: ((param_1st: auc), (param_2nd: auc), ...)
             ...
     }
+    perc: percentile
+    metric: {
+            param_1st: auc
+            param_end: auc
+            ...
+    }
+return:
+    worst_per_run: [
+        [run number, param, true perf of param]
+    ]
 """
-def percentile(ranked, perc):
+def percentile_worst(ranked, perc, metric):
     filtered = []
     for rk in ranked.keys():
-        idx = min(math.ceil(len(ranked[rk]) * perc), len(ranked[rk])-1)
-        target = ranked[rk][idx]
-        filtered.append([rk, target[0], target[1]])  # run number, parameter, performance
-    return filtered
+        idx = max(min(math.ceil(len(ranked[rk]) * perc), len(ranked[rk])-1), 1)
+        # target = ranked[rk][idx]
+        # filtered.append([rk, target[0], target[1]])  # run number, parameter, performance
+        filtered += [[rk, kv[0], kv[1]] for kv in ranked[rk][0: idx]] # run number, parameter, performance
+    worst_per_run = []
+    for rk in ranked.keys():
+        min_pk = None
+        min_true_auc = np.inf
+        for item in filtered:
+            if item[0] == rk:
+                if metric[item[1]] < min_true_auc:
+                    min_true_auc = metric[item[1]]
+                    min_pk = item[1]
+        worst_per_run.append([rk, min_pk, min_true_auc])
+    return worst_per_run
 # def percentile(ranked, low, high, mode="pessimistic"):
 #     filtered = []
 #     for rk in ranked.keys():
@@ -158,3 +179,4 @@ def loading_pessimistic(models_paths):
                 data[rk][pk] = np.array(data[rk][pk]).min()
         models_data[model] = data
     return models_data
+
