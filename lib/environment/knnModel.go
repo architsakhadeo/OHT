@@ -23,6 +23,8 @@ import (
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
+type EpStartFunc func() rlglue.State
+
 type knnSettings struct {
 	DataLog      string  `json:"datalog"`
 	Seed         int64   `json:"seed"`
@@ -30,6 +32,8 @@ type knnSettings struct {
 	EnsembleSeed int     `json:"ensemble-seed"`
 	DropPerc     float64 `json:"drop-percent"`
 	//Timeout      int 	 `json:"timeout"`
+	PickStartS 	 string  `json:"pick-start-state"`
+	NoisyS 		 float64  `json:"state-noise"`
 }
 
 type KnnModelEnv struct {
@@ -45,7 +49,9 @@ type KnnModelEnv struct {
 	stateRange      []float64
 	neighbor_prob   []float64
 	rewardBound 	[]float64
+	stateBound 		[][]float64
 	//Count			int
+	PickStartFunc EpStartFunc
 
 	DebugArr   [][]float64
 }
@@ -122,6 +128,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	}
 	allTransTemp := make([][]float64, len(allTransStr)-1)
 	rewards := make([]float64, len(allTransStr)-1)
+	states := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
 		row := make([]float64, env.stateDim*2+3)
@@ -129,6 +136,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 			if j == 0 { // next state
 				num = num[1 : len(num)-1] // remove square brackets
 				copy(row[env.stateDim+1:env.stateDim*2+1], convformat.ListStr2Float(num, " "))
+				states[i-1] = row[env.stateDim+1:env.stateDim*2+1]
 			} else if j == 1 { // current state
 				num = num[1 : len(num)-1]
 				copy(row[:env.stateDim], convformat.ListStr2Float(num, " "))
@@ -151,6 +159,22 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.rewardBound = make([]float64, 2)
 	env.rewardBound[0], _ = ao.ArrayMin(rewards)
 	env.rewardBound[1], _ = ao.ArrayMax(rewards)
+	env.stateBound = make([][]float64, 2)
+	for i:=0; i<len(states[0]); i++ {
+		mn, _ := ao.ColumnMin(states, i)
+		mx, _ := ao.ColumnMax(states, i)
+		env.stateBound[0] = append(env.stateBound[0], mn)
+		env.stateBound[1] = append(env.stateBound[1], mx)
+	}
+
+	if env.NoisyS != 0 {
+		for i:=0; i<len(allTransTemp); i++ {
+			temp := env.AddStateNoise(allTransTemp[i][:env.stateDim], env.stateBound)
+			copy(allTransTemp[i][:env.stateDim], temp)
+			temp = env.AddStateNoise(allTransTemp[i][env.stateDim+1:env.stateDim*2+1], env.stateBound)
+			copy(allTransTemp[i][env.stateDim+1:env.stateDim*2+1], temp)
+		}
+	}
 
 	var allTrans [][]float64
 	if env.EnsembleSeed != 0 {
@@ -170,21 +194,13 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(allTrans)
 
-	//pdf := make([]float64, env.Neighbor_num)
-	//temp := 0.0
-	//for i := 0; i < env.Neighbor_num; i++ {
-	//	pdf[i] = math.Pow(0.5, float64(i+1))
-	//	temp += pdf[i]
-	//}
-	//for i := 0; i < env.Neighbor_num; i++ {
-	//	pdf[i] = pdf[i] / temp
-	//}
-	//env.neighbor_prob = make([]float64, env.Neighbor_num)
-	//temp1 := 0.0
-	//for i := 0; i < env.Neighbor_num; i++ {
-	//	env.neighbor_prob[i] = temp1 + pdf[i]
-	//	temp1 = env.neighbor_prob[i]
-	//}
+	if env.knnSettings.PickStartS == "random-init"{
+		env.PickStartFunc = env.randomizeInitState
+	} else if env.knnSettings.PickStartS == "furthest" {
+		env.PickStartFunc = env.furthestState
+	}else { // default setting
+		env.PickStartFunc = env.randomizeState
+	}
 	return nil
 }
 
@@ -204,14 +220,14 @@ func (env *KnnModelEnv) randomizeInitState() rlglue.State {
 	return state
 }
 
-/* For debugging only */
-func (env *KnnModelEnv) cheatingChoice() rlglue.State {
-	randIdx := env.rng.Intn(len(env.offlineStarts))
-	state := env.offlineData[env.offlineStarts[randIdx]-1]
-	fmt.Println("terminal ", state)
-	state = state[:env.stateDim]
-	return state
-}
+///* For debugging only */
+//func (env *KnnModelEnv) cheatingChoice() rlglue.State {
+//	randIdx := env.rng.Intn(len(env.offlineStarts))
+//	state := env.offlineData[env.offlineStarts[randIdx]-1]
+//	fmt.Println("terminal ", state)
+//	state = state[:env.stateDim]
+//	return state
+//}
 
 func (env *KnnModelEnv) randomizeState() rlglue.State {
 	randIdx := env.rng.Intn(len(env.offlineData))
@@ -266,11 +282,13 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 	return state
 }
 
+
 // Start returns an initial observation.
 func (env *KnnModelEnv) Start() rlglue.State {
 	//env.Count = 0
+	env.state = env.PickStartFunc()
 	//env.state = env.randomizeInitState()
-	env.state = env.randomizeState()
+	//env.state = env.randomizeState()
 	//env.state = env.furthestState()
 	//env.state = env.cheatingChoice()
 	state_copy := make([]float64, env.stateDim)
@@ -378,4 +396,11 @@ func (env *KnnModelEnv) Distance(state1 rlglue.State, state2 rlglue.State) float
 	}
 	distance = math.Pow(squareddistance, 0.5)
 	return distance
+}
+
+func (env *KnnModelEnv) AddStateNoise(data []float64, bound [][]float64) []float64 {
+	for j:=0; j<len(data);j++ {
+		data[j] += env.rng.Float64()*env.NoisyS*(bound[1][j] - bound[0][j])
+	}
+	return data
 }

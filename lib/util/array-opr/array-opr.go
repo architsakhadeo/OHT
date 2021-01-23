@@ -145,6 +145,29 @@ func ArrayMin(array []float64) (float64, int) {
 	}
 	return min, idx
 }
+func ColumnMax(array [][]float64, col int) (float64, int) {
+	max := math.Inf(-1)
+	var idx int
+	for j := 0; j < len(array); j++ {
+		if array[j][col] > max {
+			max = array[j][col]
+			idx = j
+		}
+	}
+	return max, idx
+}
+func ColumnMin(array [][]float64, col int) (float64, int) {
+	min := math.Inf(1)
+	var idx int
+	for j := 0; j < len(array); j++ {
+		if array[j][col] < min {
+			min = array[j][col]
+			idx = j
+		}
+	}
+	return min, idx
+}
+
 
 func StateTo32(state rlglue.State) []float32 {
 	var a32 []float32
