@@ -174,11 +174,12 @@ func (env *Acrobot) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	done := (-math.Cos(env.state[0])-math.Cos(env.state[1]+env.state[0]) > 1.0)
 
 	var reward float64
-	if done {
-		reward = 0.0
-	} else {
-		reward = -1.0
-	}
+	//if done {
+	//	reward = 0.0
+	//} else {
+	//	reward = -1.0
+	//}
+	reward = -1.0 //always -1
 
 	return env.getObservations(), reward, done
 }

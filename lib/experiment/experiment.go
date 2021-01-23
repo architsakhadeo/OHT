@@ -26,7 +26,7 @@ type Experiment struct {
 	numEpisodesDone int
 
 	stepBeforeCount int
-	timeOut   bool
+	timeOut         bool
 }
 
 func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experiment, debug logger.Debug, log logger.Data) (*Experiment, error) {
@@ -76,7 +76,7 @@ func (exp *Experiment) runEpisodic() {
 	exp.Message("msg", "Starting episodic experiment")
 	exp.stepBeforeCount = 0
 	exp.timeOut = false
-	for exp.numEpisodesDone < exp.Settings.MaxEpisodes{
+	for exp.numEpisodesDone < exp.Settings.MaxEpisodes {
 		exp.runSingleEpisode()
 		if exp.timeOut {
 			break
@@ -119,6 +119,11 @@ func (exp *Experiment) runSingleEpisode() {
 		if countStep {
 			exp.numStepsTaken += 1
 			numStepsThisEpisode += 1
+			if exp.numStepsTaken == exp.Settings.MaxRunLengthEpisodic {
+				exp.timeOut = true
+				fmt.Println("Max run length in episodic achieved", exp.numStepsTaken)
+				break
+			}
 			if numStepsThisEpisode == exp.Settings.MaxStepsInEpisode {
 				episodeEnded = true
 			}
