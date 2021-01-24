@@ -5,7 +5,7 @@
     "gamma": 1.0,
     "env-name": "acrobot",
     "buffer-type": "random",
-    "buffer-size": 2500,
+    "buffer-size": 2000,
     "epsilon": 0.0,
     "decreasing-epsilon": "None",
     "sweep": {
@@ -15,14 +15,14 @@
       "tiles": [8],
       "lambda": [0.9339087212036908],
       "alpha": [0.011186646173660882],
-      "WInit": [2.957074052040059],
+      "WInit": [0.0],
       "is-stepsize-adaptive": [false],
       "adaptive-alpha": [0]
     },
 
     "lock-weight": true,
-    "lock-condition": "onetime-reward",
-    "lock-condition-reward": -0.98823529411,
+    "lock-condition": "onetime-epstep-lessthan",
+    "lock-condition-epstep-lessthan": 85,
     "enable-debug": false,
     "seed": 100
   },

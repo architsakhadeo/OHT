@@ -10,7 +10,7 @@
 			"tiles": [2, 4, 8],
 			"lambda": [0.9],
 			"epsilon": [0.0],
-			"WInit": [3.0],
+			"WInit": [0.0],
 			"alpha": [0.0],
 			"is-stepsize-adaptive": [true],
 			"adaptive-alpha": [0.1, 0.01, 0.001]
@@ -25,9 +25,9 @@
 		}
 	},
 	"experiment-settings": {
-		"episodes": 500,
-		"steps-in-episode": 200,
-		"data-path": "data/hyperparam/acrobot/online_learning/esarsa/step10k/gridsearch_realenv",
+		"episodes": 1000000,
+		"max-run-length-episodic": 50000,
+		"data-path": "data/hyperparam/acrobot/online_learning/esarsa/step50k/gridsearch_realenv",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000

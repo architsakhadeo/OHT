@@ -1,47 +1,46 @@
 {
-    "agent-name": "esarsa",
-    "environment-name": "acrobot",
-    "agent-settings": {
-      "gamma": 1.0,
-      "env-name": "acrobot",
-      "buffer-type": "random",
-      "buffer-size": 2500,
-      "epsilon": 0.0,
-      "decreasing-epsilon": "None",
-      "sweep": {
-        "epsilon": [0.0],
-        "epsilon-after-lock": [0.1],
-        "tilings": [16],
-        "tiles": [8],
-        "lambda": [0.9339087212036908],
-        "alpha": [0.011186646173660882],
-        "WInit": [2.957074052040059],
-        "is-stepsize-adaptive": [false],
-        "adaptive-alpha": [0]
-      },
-  
-      "lock-weight": true,
-      "lock-condition": "onetime-reward",
-      "lock-condition-reward": -0.98823529411,
-      "enable-debug": false,
-      "seed": 100
+  "agent-name": "esarsa",
+  "environment-name": "acrobot",
+  "agent-settings": {
+    "gamma": 1.0,
+    "env-name": "acrobot",
+    "buffer-type": "random",
+    "buffer-size": 2000,
+    "epsilon": 0.0,
+    "decreasing-epsilon": "None",
+    "sweep": {
+      "epsilon": [0.0],
+      "epsilon-after-lock": [0.1],
+      "tilings": [16],
+      "tiles": [8],
+      "lambda": [0.9339087212036908],
+      "alpha": [0.011186646173660882],
+      "WInit": [0.0],
+      "is-stepsize-adaptive": [false],
+      "adaptive-alpha": [0]
     },
-    "environment-settings": {
-      "seed": 100,
-      "sweep": {
-        "delays":[[0]]
-      }
-    },
-    "experiment-settings": {
-      "steps": 0,
-      "episodes": 10000000,
-      "total-step-after-lock": 10000,
-      "count-step-after-lock": true,
-      "data-path": "data/hyperparam/acrobot/offline_data/esarsa/step10k/optimalfixed_eps10",
-      "should-log-traces": true,
-      "should-log-episode-lengths": false,
-      "debug-interval": 1000
+
+    "lock-weight": true,
+    "lock-condition": "onetime-epstep-lessthan",
+    "lock-condition-epstep-lessthan": 85,
+    "enable-debug": false,
+    "seed": 100
+  },
+  "environment-settings": {
+    "seed": 100,
+    "sweep": {
+      "delays":[[0]]
     }
+  },
+  "experiment-settings": {
+    "steps": 0,
+    "episodes": 10000000,
+    "total-step-after-lock": 10000,
+    "count-step-after-lock": true,
+    "data-path": "data/hyperparam/acrobot/offline_data/esarsa/step10k/optimalfixed_eps10",
+    "should-log-traces": true,
+    "should-log-episode-lengths": false,
+    "debug-interval": 1000
   }
-  
-  
+}
+
