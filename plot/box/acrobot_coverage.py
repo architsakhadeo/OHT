@@ -33,59 +33,345 @@ from plot.box.paths_acrobot import *
 
 
 def sweep_model():
-    cms = {
-        "k1_p0": data10k_eps10_k1_p0,
-        "k5_p20": data10k_eps10_k5_p20_ens,
-    }
+    cms = [{
+        "k1": data2500_eps0_k1_p0,
+        "k3": data2500_eps0_k3_p0,
+        "k5": data2500_eps0_k5_p0,
+    }, {
+        "k1": data2500_eps10_k1_p0,
+        "k3": data2500_eps10_k3_p0,
+        "k5": data2500_eps10_k5_p0,
+    }, {
+        "k1": data2500_eps25_k1_p0,
+        "k3": data2500_eps25_k3_p0,
+        "k5": data2500_eps25_k5_p0,
+    }, {
+        "k1": data2500_eps50_k1_p0,
+        "k3": data2500_eps50_k3_p0,
+        "k5": data2500_eps50_k5_p0,
+    }, {
+        "k1": data2500_eps75_k1_p0,
+        "k3": data2500_eps75_k3_p0,
+        "k5": data2500_eps75_k5_p0,
+    }, {
+        "k1": data2500_eps100_k1_p0,
+        "k3": data2500_eps100_k3_p0,
+        "k5": data2500_eps100_k5_p0,
+    }, {
+        "k1": data5k_eps0_k1_p0,
+        "k3": data5k_eps0_k3_p0,
+        "k5": data5k_eps0_k5_p0,
+    }, {
+        "k1": data5k_eps10_k1_p0,
+        "k3": data5k_eps10_k3_p0,
+        "k5": data5k_eps10_k5_p0,
+    }, {
+        "k1": data5k_eps25_k1_p0,
+        "k3": data5k_eps25_k3_p0,
+        "k5": data5k_eps25_k5_p0,
+    }, {
+        "k1": data5k_eps50_k1_p0,
+        "k3": data5k_eps50_k3_p0,
+        "k5": data5k_eps50_k5_p0,
+    }, {
+        "k1": data5k_eps75_k1_p0,
+        "k3": data5k_eps75_k3_p0,
+        "k5": data5k_eps75_k5_p0,
+    }, {
+        "k1": data5k_eps100_k1_p0,
+        "k3": data5k_eps100_k3_p0,
+        "k5": data5k_eps100_k5_p0,
+    }, {
+        "k1": data10k_eps0_k1_p0,
+        "k3": data10k_eps0_k3_p0,
+        "k5": data10k_eps0_k5_p0,
+    }, {
+        "k1": data10k_eps10_k1_p0,
+        "k3": data10k_eps10_k3_p0,
+        "k5": data10k_eps10_k5_p0,
+    }, {
+        "k1": data10k_eps25_k1_p0,
+        "k3": data10k_eps25_k3_p0,
+        "k5": data10k_eps25_k5_p0,
+    }, {
+        "k1": data10k_eps50_k1_p0,
+        "k3": data10k_eps50_k3_p0,
+        "k5": data10k_eps50_k5_p0,
+    }, {
+        "k1": data10k_eps75_k1_p0,
+        "k3": data10k_eps75_k3_p0,
+        "k5": data10k_eps75_k5_p0,
+    }, {
+        "k1": data10k_eps100_k1_p0,
+        "k3": data10k_eps100_k3_p0,
+        "k5": data10k_eps100_k5_p0,
+    }]
     te = {"true": true_env}
-    plot_generation(te, cms, ranges, "../../img/sweep_model")
+    listOfPlots = ["../../img/sweep_model/step2500/epsilon0/sweepmodel_step2500_epsilon0",
+                   "../../img/sweep_model/step2500/epsilon10/sweepmodel_step2500_epsilon10",
+                   "../../img/sweep_model/step2500/epsilon25/sweepmodel_step2500_epsilon25",
+                   "../../img/sweep_model/step2500/epsilon50/sweepmodel_step2500_epsilon50",
+                   "../../img/sweep_model/step2500/epsilon75/sweepmodel_step2500_epsilon75",
+                   "../../img/sweep_model/step2500/epsilon100/sweepmodel_step2500_epsilon100",
+                   "../../img/sweep_model/step5k/epsilon0/sweepmodel_step5k_epsilon0",
+                   "../../img/sweep_model/step5k/epsilon10/sweepmodel_step5k_epsilon10",
+                   "../../img/sweep_model/step5k/epsilon25/sweepmodel_step5k_epsilon25",
+                   "../../img/sweep_model/step5k/epsilon50/sweepmodel_step5k_epsilon50",
+                   "../../img/sweep_model/step5k/epsilon75/sweepmodel_step5k_epsilon75",
+                   "../../img/sweep_model/step5k/epsilon100/sweepmodel_step5k_epsilon100",
+                   "../../img/sweep_model/step10k/epsilon0/sweepmodel_step10k_epsilon0",
+                   "../../img/sweep_model/step10k/epsilon10/sweepmodel_step10k_epsilon10",
+                   "../../img/sweep_model/step10k/epsilon25/sweepmodel_step10k_epsilon25",
+                   "../../img/sweep_model/step10k/epsilon50/sweepmodel_step10k_epsilon50",
+                   "../../img/sweep_model/step10k/epsilon75/sweepmodel_step10k_epsilon75",
+                   "../../img/sweep_model/step10k/epsilon100/sweepmodel_step10k_epsilon100",
+                   ]
+    for i in range(len(listOfPlots)):
+        print(i)
+        plot_generation(te, cms[i], ranges, listOfPlots[i])
+    
 
 def sweep_coverage():
-    cms = {
-            "eps0": data10k_eps0_k5_p02_t0,
-            "eps0.1": data10k_eps01_k5_p02_t0,
-            "eps0.3": data10k_eps03_k5_p02_t0,
-            "eps1": data10k_eps1_k5_p02_t0,
-    }
-    te = {"true": trueenv}
-    plot_generation(te, cms, ranges, "../img/coverage_data10k")
+    '''
+    cms = [{
+        "eps0": data2500_eps0_k1_p0,
+        "eps10": data2500_eps10_k1_p0,
+        "eps25": data2500_eps25_k1_p0,
+        "eps50": data2500_eps50_k1_p0,
+        "eps75": data2500_eps75_k1_p0,
+        "eps100": data2500_eps100_k1_p0,
+    }, {
+        "eps0": data2500_eps0_k3_p0,
+        "eps10": data2500_eps10_k3_p0,
+        "eps25": data2500_eps25_k3_p0,
+        "eps50": data2500_eps50_k3_p0,
+        "eps75": data2500_eps75_k3_p0,
+        "eps100": data2500_eps100_k3_p0,
+    }, {
+        "eps0": data2500_eps0_k5_p0,
+        "eps10": data2500_eps10_k5_p0,
+        "eps25": data2500_eps25_k5_p0,
+        "eps50": data2500_eps50_k5_p0,
+        "eps75": data2500_eps75_k5_p0,
+        "eps100": data2500_eps100_k5_p0,
+    }, {
+        "eps0": data5k_eps0_k1_p0,
+        "eps10": data5k_eps10_k1_p0,
+        "eps25": data5k_eps25_k1_p0,
+        "eps50": data5k_eps50_k1_p0,
+        "eps75": data5k_eps75_k1_p0,
+        "eps100": data5k_eps100_k1_p0,
+    }, {
+        "eps0": data5k_eps0_k3_p0,
+        "eps10": data5k_eps10_k3_p0,
+        "eps25": data5k_eps25_k3_p0,
+        "eps50": data5k_eps50_k3_p0,
+        "eps75": data5k_eps75_k3_p0,
+        "eps100": data5k_eps100_k3_p0,
+    }, {
+        "eps0": data5k_eps0_k5_p0,
+        "eps10": data5k_eps10_k5_p0,
+        "eps25": data5k_eps25_k5_p0,
+        "eps50": data5k_eps50_k5_p0,
+        "eps75": data5k_eps75_k5_p0,
+        "eps100": data5k_eps100_k5_p0,
+    }, {
+        "eps0": data10k_eps0_k1_p0,
+        "eps10": data10k_eps10_k1_p0,
+        "eps25": data10k_eps25_k1_p0,
+        "eps50": data10k_eps50_k1_p0,
+        "eps75": data10k_eps75_k1_p0,
+        "eps100": data10k_eps100_k1_p0,
+    }, {
+        "eps0": data10k_eps0_k3_p0,
+        "eps10": data10k_eps10_k3_p0,
+        "eps25": data10k_eps25_k3_p0,
+        "eps50": data10k_eps50_k3_p0,
+        "eps75": data10k_eps75_k3_p0,
+        "eps100": data10k_eps100_k3_p0,
+    }, {
+        "eps0": data10k_eps0_k5_p0,
+        "eps10": data10k_eps10_k5_p0,
+        "eps25": data10k_eps25_k5_p0,
+        "eps50": data10k_eps50_k5_p0,
+        "eps75": data10k_eps75_k5_p0,
+        "eps100": data10k_eps100_k5_p0,
+    }]
+    te = {"true": true_env}
+    listOfPlots = ["../../img/sweep_coverage/step2500/k1/sweepcoverage_step2500_k1",
+                   "../../img/sweep_coverage/step2500/k3/sweepcoverage_step2500_k3",
+                   "../../img/sweep_coverage/step2500/k5/sweepcoverage_step2500_k5",
+                   "../../img/sweep_coverage/step5k/k1/sweepcoverage_step5k_k1",
+                   "../../img/sweep_coverage/step5k/k3/sweepcoverage_step5k_k3",
+                   "../../img/sweep_coverage/step5k/k5/sweepcoverage_step5k_k5",
+                   "../../img/sweep_coverage/step10k/k1/sweepcoverage_step10k_k1",
+                   "../../img/sweep_coverage/step10k/k3/sweepcoverage_step10k_k3",
+                   "../../img/sweep_coverage/step10k/k5/sweepcoverage_step10k_k5"
+                   ]
+    '''
+    cms = [{
+        "eps0": data2500_eps0_k1_p0,
+        "eps10": data2500_eps10_k1_p0,
+        "eps25": data2500_eps25_k1_p0,
+        "eps100": data2500_eps100_k1_p0,
+    }, {
+        "eps0": data2500_eps0_k3_p0,
+        "eps10": data2500_eps10_k3_p0,
+        "eps25": data2500_eps25_k3_p0,
+        "eps100": data2500_eps100_k3_p0,
+    }, {
+        "eps0": data2500_eps0_k5_p0,
+        "eps10": data2500_eps10_k5_p0,
+        "eps25": data2500_eps25_k5_p0,
+        "eps100": data2500_eps100_k5_p0,
+    }, {
+        "eps0": data5k_eps0_k1_p0,
+        "eps10": data5k_eps10_k1_p0,
+        "eps25": data5k_eps25_k1_p0,
+        "eps100": data5k_eps100_k1_p0,
+    }, {
+        "eps0": data5k_eps0_k3_p0,
+        "eps10": data5k_eps10_k3_p0,
+        "eps25": data5k_eps25_k3_p0,
+        "eps100": data5k_eps100_k3_p0,
+    }, {
+        "eps0": data5k_eps0_k5_p0,
+        "eps10": data5k_eps10_k5_p0,
+        "eps25": data5k_eps25_k5_p0,
+        "eps100": data5k_eps100_k5_p0,
+    }, {
+        "eps0": data10k_eps0_k1_p0,
+        "eps10": data10k_eps10_k1_p0,
+        "eps25": data10k_eps25_k1_p0,
+        "eps100": data10k_eps100_k1_p0,
+    }, {
+        "eps0": data10k_eps0_k3_p0,
+        "eps10": data10k_eps10_k3_p0,
+        "eps25": data10k_eps25_k3_p0,
+        "eps100": data10k_eps100_k3_p0,
+    }, {
+        "eps0": data10k_eps0_k5_p0,
+        "eps10": data10k_eps10_k5_p0,
+        "eps25": data10k_eps25_k5_p0,
+        "eps100": data10k_eps100_k5_p0,
+    }]
+    te = {"true": true_env}
+    listOfPlots = ["../../img/sweep_coverage/step2500/k1/sweepcoverage_step2500_k1",
+                   "../../img/sweep_coverage/step2500/k3/sweepcoverage_step2500_k3",
+                   "../../img/sweep_coverage/step2500/k5/sweepcoverage_step2500_k5",
+                   "../../img/sweep_coverage/step5k/k1/sweepcoverage_step5k_k1",
+                   "../../img/sweep_coverage/step5k/k3/sweepcoverage_step5k_k3",
+                   "../../img/sweep_coverage/step5k/k5/sweepcoverage_step5k_k5",
+                   "../../img/sweep_coverage/step10k/k1/sweepcoverage_step10k_k1",
+                   "../../img/sweep_coverage/step10k/k3/sweepcoverage_step10k_k3",
+                   "../../img/sweep_coverage/step10k/k5/sweepcoverage_step10k_k5"
+                   ]
+    for i in range(len(listOfPlots)):
+        print(i)
+        plot_generation(te, cms[i], ranges, listOfPlots[i])
 
 def sweep_datasize():
-    eps0_cms = {
-        "2.5k": data2d5k_eps0_k5_p02_t0,
-        "5k": data5k_eps0_k5_p02_t0,
-        "10k": data10k_eps0_k5_p02_t0,
-        "20k": data20k_eps0_k5_p02_t0,
-    }
-    eps01_cms = {
-        "2.5k": data2d5k_eps01_k5_p02_t0,
-        "5k": data5k_eps01_k5_p02_t0,
-        "10k": data10k_eps01_k5_p02_t0,
-        "20k": data20k_eps01_k5_p02_t0,
-    }
-    eps03_cms = {
-        "2.5k": data2d5k_eps03_k5_p02_t0,
-        "5k": data5k_eps03_k5_p02_t0,
-        "10k": data10k_eps03_k5_p02_t0,
-        "20k": data20k_eps03_k5_p02_t0,
-    }
-    eps1_cms = {
-        "2.5k": data2d5k_eps1_k5_p02_t0,
-        "5k": data5k_eps1_k5_p02_t0,
-        "10k": data10k_eps1_k5_p02_t0,
-        "20k": data20k_eps1_k5_p02_t0,
-    }
-    te = {"true": trueenv}
-
-    # plot_generation(te, eps0_cms, "../img/datasize_eps0")
-    # plot_generation(te, eps01_cms, "../img/datasize_eps0.1")
-    # plot_generation(te, eps03_cms, "../img/datasize_eps0.3")
-    plot_generation(te, eps1_cms, ranges, "../img/datasize_eps1")
+    cms = [{
+        "2.5k": data2500_eps0_k1_p0,
+        "5k": data5k_eps0_k1_p0,
+        "10k": data10k_eps0_k1_p0,
+    }, {
+        "2.5k": data2500_eps0_k3_p0,
+        "5k": data5k_eps0_k3_p0,
+        "10k": data10k_eps0_k3_p0,
+    }, {
+        "2.5k": data2500_eps0_k5_p0,
+        "5k": data5k_eps0_k5_p0,
+        "10k": data10k_eps0_k5_p0,
+    },{
+        "2.5k": data2500_eps10_k1_p0,
+        "5k": data5k_eps10_k1_p0,
+        "10k": data10k_eps10_k1_p0,
+    }, {
+        "2.5k": data2500_eps10_k3_p0,
+        "5k": data5k_eps10_k3_p0,
+        "10k": data10k_eps10_k3_p0,
+    }, {
+        "2.5k": data2500_eps10_k5_p0,
+        "5k": data5k_eps10_k5_p0,
+        "10k": data10k_eps10_k5_p0,
+    }, {
+        "2.5k": data2500_eps25_k1_p0,
+        "5k": data5k_eps25_k1_p0,
+        "10k": data10k_eps25_k1_p0,
+    }, {
+        "2.5k": data2500_eps25_k3_p0,
+        "5k": data5k_eps25_k3_p0,
+        "10k": data10k_eps25_k3_p0,
+    }, {
+        "2.5k": data2500_eps25_k5_p0,
+        "5k": data5k_eps25_k5_p0,
+        "10k": data10k_eps25_k5_p0,
+    }, {
+        "2.5k": data2500_eps50_k1_p0,
+        "5k": data5k_eps50_k1_p0,
+        "10k": data10k_eps50_k1_p0,
+    }, {
+        "2.5k": data2500_eps50_k3_p0,
+        "5k": data5k_eps50_k3_p0,
+        "10k": data10k_eps50_k3_p0,
+    }, {
+        "2.5k": data2500_eps50_k5_p0,
+        "5k": data5k_eps50_k5_p0,
+        "10k": data10k_eps50_k5_p0,
+    }, {
+        "2.5k": data2500_eps75_k1_p0,
+        "5k": data5k_eps75_k1_p0,
+        "10k": data10k_eps75_k1_p0,
+    }, {
+        "2.5k": data2500_eps75_k3_p0,
+        "5k": data5k_eps75_k3_p0,
+        "10k": data10k_eps75_k3_p0,
+    }, {
+        "2.5k": data2500_eps75_k5_p0,
+        "5k": data5k_eps75_k5_p0,
+        "10k": data10k_eps75_k5_p0,
+    }, {
+        "2.5k": data2500_eps100_k1_p0,
+        "5k": data5k_eps100_k1_p0,
+        "10k": data10k_eps100_k1_p0,
+    }, {
+        "2.5k": data2500_eps100_k3_p0,
+        "5k": data5k_eps100_k3_p0,
+        "10k": data10k_eps100_k3_p0,
+    }, {
+        "2.5k": data2500_eps100_k5_p0,
+        "5k": data5k_eps100_k5_p0,
+        "10k": data10k_eps100_k5_p0,
+    }]
+    te = {"true": true_env}
+    listOfPlots = ["../../img/sweep_datasize/k1/epsilon0/sweepdatasize_k1_epsilon0",
+                   "../../img/sweep_datasize/k3/epsilon0/sweepdatasize_k3_epsilon0",
+                   "../../img/sweep_datasize/k5/epsilon0/sweepdatasize_k5_epsilon0",
+                   "../../img/sweep_datasize/k1/epsilon10/sweepdatasize_k1_epsilon10",
+                   "../../img/sweep_datasize/k3/epsilon10/sweepdatasize_k3_epsilon10",
+                   "../../img/sweep_datasize/k5/epsilon10/sweepdatasize_k5_epsilon10",
+                   "../../img/sweep_datasize/k1/epsilon25/sweepdatasize_k1_epsilon25",
+                   "../../img/sweep_datasize/k3/epsilon25/sweepdatasize_k3_epsilon25",
+                   "../../img/sweep_datasize/k5/epsilon25/sweepdatasize_k5_epsilon25",
+                   "../../img/sweep_datasize/k1/epsilon50/sweepdatasize_k1_epsilon50",
+                   "../../img/sweep_datasize/k3/epsilon50/sweepdatasize_k3_epsilon50",
+                   "../../img/sweep_datasize/k5/epsilon50/sweepdatasize_k5_epsilon50",
+                   "../../img/sweep_datasize/k1/epsilon75/sweepdatasize_k1_epsilon75",                   
+                   "../../img/sweep_datasize/k3/epsilon75/sweepdatasize_k3_epsilon75",
+                   "../../img/sweep_datasize/k5/epsilon75/sweepdatasize_k5_epsilon75",
+                   "../../img/sweep_datasize/k1/epsilon100/sweepdatasize_k1_epsilon100",
+                   "../../img/sweep_datasize/k3/epsilon100/sweepdatasize_k3_epsilon100",
+                    "../../img/sweep_datasize/k5/epsilon100/sweepdatasize_k5_epsilon100"
+                   ]
+    for i in range(len(listOfPlots)):
+        print(i)
+        plot_generation(te, cms[i], ranges, listOfPlots[i])
 
 ranges = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
 labels = ["0%\n(top param)", "10%", "20%", "30%", "40%", "50%"]
 #ranges = [[0, 0.3], [0.3, 0.7], [0.7, 1.0]]
 
-sweep_model()
-# sweep_coverage()
-#sweep_datasize()
+#sweep_model()
+#sweep_coverage()
+sweep_datasize()

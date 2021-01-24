@@ -153,6 +153,35 @@ def load_rewards(paths):
                 data[rk][p_key].append(all_runs[rk])
     return data
 
+def load_epSteps(paths):
+    data = {}
+    for path in paths: # each ensemble seed
+        params = os.listdir(path)
+        for param in params: # each param
+            pp = os.path.join(path, param)
+            p_key = param#int(param.split("_")[1])
+
+            temp = os.listdir(pp)
+            runs = []
+            for t in temp:
+                if "episodes" in t:
+                    runs.append(t)
+
+            all_runs = {}
+            for run in runs:
+                r_per_step = pd.read_csv(os.path.join(pp, run))['episode lengths']
+                negative_r_per_step = np.array(r_per_step)*-1.0
+                # all_runs[int(run.split("-")[1].split(".")[0])] = np.mean(np.array(r_per_step)) # {run number: auc / total step}
+                all_runs["run"+run.split("-")[1].split(".")[0]] = np.mean(negative_r_per_step) # {run number: auc / total step}
+
+            for rk in all_runs.keys():
+                if rk not in data.keys():
+                    data[rk] = {p_key: []}
+                if p_key not in data[rk].keys():
+                    data[rk][p_key] = []
+                data[rk][p_key].append(all_runs[rk])
+    return data
+
 """
 input:
     path: ensemble_paths of models
@@ -173,6 +202,9 @@ def loading_pessimistic(models_paths):
     for model in models_paths.keys():
         paths = models_paths[model]
         data = load_rewards(paths)
+
+        # Acrobot code (please do not delete)
+        #data = load_epSteps(paths)
         for rk in data.keys():
             for pk in data[rk].keys():
                 # print(rk, pk, data[rk][pk], np.array(data[rk][pk]).min())

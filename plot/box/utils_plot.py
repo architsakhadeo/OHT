@@ -29,7 +29,6 @@ def plot_generation(te, cms, ranges, title, ylim=None):
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
 
 
@@ -58,13 +57,22 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None):
         plt.plot([], c=cmap(idx/len(all_models)), label=all_models[idx])
 
     for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width*3], [thrd[i]]*2, "--", color="red")
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width*3], [thrd[i]]*2, "--", color="red", linewidth=0.75)
 
     ax.set_xticklabels(xlabel)
+    
+    # Acrobot plotting (Please do not delete)
+    #loc, labels = plt.yticks()
+    #labels = [str(-1.0 *loc[i]) for i in range(len(loc))]
+    #plt.yticks(loc[1:-1], labels[1:-1])
+    #plt.title('Acrobot: ' + title.split('/')[-1])
+    #plt.xlabel('Top percentile', labelpad=35)
+    #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
     ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
     if ylim is not None:
         ax.set_ylim(ylim)
     plt.legend()
+    plt.tight_layout()
     # plt.show()
     plt.savefig("{}.png".format(title))
     return
