@@ -5,7 +5,7 @@
     "gamma": 1.0,
     "env-name": "acrobot",
     "buffer-type": "random",
-    "buffer-size": 2000,
+    "buffer-size": 1000,
     "epsilon": 0.0,
     "decreasing-epsilon": "None",
     "sweep": {
