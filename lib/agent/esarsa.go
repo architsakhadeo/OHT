@@ -52,14 +52,11 @@ type esarsaSettings struct {
 	Bsize    int    `json:"buffer-size"`
 	Btype    string `json:"buffer-type"`
 
-<<<<<<< HEAD
 	StateDim int    `json:"state-len"`
 	Bsize    int    `json:"buffer-size"`
 	Btype    string `json:"buffer-type"`
-=======
 	NumActions int     `json:"numberOfActions"`
 	WInit      float64 `json:"weight-init"`
->>>>>>> knn_model
 }
 
 // Expected sarsa-lambda with tile coding
