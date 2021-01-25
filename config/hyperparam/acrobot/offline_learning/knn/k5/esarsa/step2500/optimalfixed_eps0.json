@@ -1,0 +1,35 @@
+
+{
+    "agent-name": "esarsa",
+    "environment-name": "knnModel",
+    "agent-settings": {
+            "env-name": "acrobot",
+            "gamma": 1.0,
+            "sweep": {
+                "tilings": [4, 8, 16],
+                "tiles": [2, 4, 8],
+                "lambda": [0.9],
+                "epsilon": [0.0],
+                "WInit": [0.0],
+                "alpha": [0.0],
+                "is-stepsize-adaptive": [true],
+                "adaptive-alpha": [0.1, 0.01, 0.001]
+        },
+            "lock-weight": false,
+            "enable-debug": false,
+            "seed": 1
+    },
+    "environment-settings": {
+            "seed": 1,
+            "neighbor-num": 5,
+            "datalog": "data/hyperparam/acrobot/offline_data/esarsa/step2500/optimalfixed_eps0/param_0/"
+    },
+    "experiment-settings": {
+        "episodes": 1000000,
+        "max-run-length-episodic": 50000,
+        "data-path": "data/hyperparam/acrobot/offline_learning/knn/k5/esarsa/step2500/optimalfixed_eps0/",
+        "should-log-traces": false,
+        "should-log-episode-lengths": true,
+        "debug-interval": 1000
+    }
+}

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"gonum.org/v1/gonum/mat"
+
 	"log"
 	"math"
 	"math/rand"
@@ -37,6 +38,7 @@ type knnSettings struct {
 	PickStartS 	 string  `json:"pick-start-state"`
 	PickNext 	 string  `json:"pick-next"`
 	NoisyS 		 float64  `json:"state-noise"`
+
 }
 
 type KnnModelEnv struct {
@@ -57,7 +59,7 @@ type KnnModelEnv struct {
 	PickStartFunc 	EpStartFunc
 	PickNextFunc 	ChooseNeighborFunc
 
-	DebugArr   [][]float64
+	DebugArr [][]float64
 }
 
 func init() {
@@ -140,7 +142,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 			if j == 0 { // next state
 				num = num[1 : len(num)-1] // remove square brackets
 				copy(row[env.stateDim+1:env.stateDim*2+1], convformat.ListStr2Float(num, " "))
-				states[i-1] = row[env.stateDim+1:env.stateDim*2+1]
+				states[i-1] = row[env.stateDim+1 : env.stateDim*2+1]
 			} else if j == 1 { // current state
 				num = num[1 : len(num)-1]
 				copy(row[:env.stateDim], convformat.ListStr2Float(num, " "))
@@ -164,7 +166,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.rewardBound[0], _ = ao.ArrayMin(rewards)
 	env.rewardBound[1], _ = ao.ArrayMax(rewards)
 	env.stateBound = make([][]float64, 2)
-	for i:=0; i<len(states[0]); i++ {
+	for i := 0; i < len(states[0]); i++ {
 		mn, _ := ao.ColumnMin(states, i)
 		mx, _ := ao.ColumnMax(states, i)
 		env.stateBound[0] = append(env.stateBound[0], mn)
@@ -172,7 +174,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	}
 
 	if env.NoisyS != 0 {
-		for i:=0; i<len(allTransTemp); i++ {
+		for i := 0; i < len(allTransTemp); i++ {
 			temp := env.AddStateNoise(allTransTemp[i][:env.stateDim], env.stateBound)
 			copy(allTransTemp[i][:env.stateDim], temp)
 			temp = env.AddStateNoise(allTransTemp[i][env.stateDim+1:env.stateDim*2+1], env.stateBound)
@@ -198,7 +200,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(allTrans)
 
-	if env.knnSettings.PickStartS == "random-init"{
+	if env.knnSettings.PickStartS == "random-init" {
 		env.PickStartFunc = env.randomizeInitState
 	} else if env.knnSettings.PickStartS == "furthest" {
 		env.PickStartFunc = env.furthestState
@@ -247,18 +249,18 @@ func (env *KnnModelEnv) randomizeState() rlglue.State {
 
 func (env *KnnModelEnv) furthestState() rlglue.State {
 	totalSize := 0
-	for act:=0; act<env.NumberOfActions; act++ {
+	for act := 0; act < env.NumberOfActions; act++ {
 		totalSize += env.offlineModel.TreeSize(act)
 	}
 	totalStates := make([][]float64, totalSize)
 	totalDistance := make([]float64, totalSize)
 	idx := 0
 	size := 0
-	for act:=0; act<env.NumberOfActions; act++ {
+	for act := 0; act < env.NumberOfActions; act++ {
 		size = env.offlineModel.TreeSize(act)
 		states, _, _, _, distances := env.offlineModel.SearchTree(env.state, act, size)
-		copy(totalStates[idx: idx+size], states)
-		copy(totalDistance[idx: idx+size], distances)
+		copy(totalStates[idx:idx+size], states)
+		copy(totalDistance[idx:idx+size], distances)
 		idx += size
 	}
 	//fmt.Printf("\n%.2f \n", env.state)
@@ -292,7 +294,6 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 	return state
 }
 
-
 // Start returns an initial observation.
 func (env *KnnModelEnv) Start() rlglue.State {
 	//env.Count = 0
@@ -313,7 +314,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 
 	//env.Count += 1
 
-	if env.offlineModel.TreeSize(actInt)==0 {
+	if env.offlineModel.TreeSize(actInt) == 0 {
 		log.Print("Warning: There is no data for action %d, terminating the episode \n", act)
 		return env.Start(), env.rewardBound[0], true
 	}
@@ -387,8 +388,8 @@ func (env *KnnModelEnv) Distance(state1 rlglue.State, state2 rlglue.State) float
 }
 
 func (env *KnnModelEnv) AddStateNoise(data []float64, bound [][]float64) []float64 {
-	for j:=0; j<len(data);j++ {
-		data[j] += env.rng.Float64()*env.NoisyS*(bound[1][j] - bound[0][j])
+	for j := 0; j < len(data); j++ {
+		data[j] += env.rng.Float64() * env.NoisyS * (bound[1][j] - bound[0][j])
 	}
 	return data
 }
