@@ -3,8 +3,9 @@ package environment
 import (
 	"encoding/json"
 	"fmt"
-	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 	"math/rand"
+
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
