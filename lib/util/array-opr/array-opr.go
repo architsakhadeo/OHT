@@ -121,7 +121,7 @@ func RowIndexMax(array [][]float64) ([]float64, []int) {
 }
 
 /*
-Max in each row of 1-d array
+Max of 1-d array
 */
 func ArrayMax(array []float64) (float64, int) {
 	max := math.Inf(-1)
@@ -134,6 +134,9 @@ func ArrayMax(array []float64) (float64, int) {
 	}
 	return max, idx
 }
+/*
+Min of 1-d array
+*/
 func ArrayMin(array []float64) (float64, int) {
 	min := math.Inf(1)
 	var idx int
@@ -145,6 +148,10 @@ func ArrayMin(array []float64) (float64, int) {
 	}
 	return min, idx
 }
+
+/*
+Max of a column in a 2-d array
+*/
 func ColumnMax(array [][]float64, col int) (float64, int) {
 	max := math.Inf(-1)
 	var idx int
@@ -156,6 +163,9 @@ func ColumnMax(array [][]float64, col int) (float64, int) {
 	}
 	return max, idx
 }
+/*
+Min of a column in a 2-d array
+*/
 func ColumnMin(array [][]float64, col int) (float64, int) {
 	min := math.Inf(1)
 	var idx int

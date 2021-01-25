@@ -21,23 +21,8 @@ type node struct {
 	value []float64
 }
 func (n node) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
-	//q := c.(node)
-	//vectorX := mat.NewDense(len(q.key), 1, q.key)
-	//vectorY := mat.NewDense(len(n.key), 1, n.key)
-	//var temp mat.Dense
-	//temp.Sub(vectorX, vectorY)
-	//dist := mat.Norm(&temp, 2)
 	q := c.(node)
 	return n.key[d] - q.key[d]
-	//switch d {
-	//case 0:
-	//	return p.lat - q.lat
-	//case 1:
-	//	return p.lon - q.lon
-	//default:
-	//	panic("illegal dimension")
-	//}
-	//return dist
 }
 func (n node) Dims() int { return len(n.key) }
 func (n node) Distance(c kdtree.Comparable) float64 {
