@@ -132,7 +132,7 @@ func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	err = json.Unmarshal(envAttr, &agent)
 
 	if err != nil {
-		agent.Message("err", "agent.Fqi number of Actions wasn't available: "+err.Error())
+		return errors.New("Number of Actions wasn't available: " + err.Error())
 	}
 	agent.rng = rand.New(rand.NewSource(agent.Seed + int64(run))) // Create a new rand source for reproducibility
 
@@ -145,7 +145,7 @@ func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	// Load datalog for offline trainning.
 	err = agent.loadDataLog(int(run))
 	if err != nil {
-		agent.Message("err", "agent.Fqi failed to load datalog: "+err.Error())
+		return errors.New("Agent failed to load datalog: " + err.Error())
 	}
 
 	agent.nml = normalizer.Normalizer{agent.StateDim, agent.StateRange}
@@ -161,7 +161,7 @@ func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	// Load neural net for online evaluation/learning.
 	err = agent.loadWeights()
 	if err != nil {
-		agent.Message("err", "agent.Fqi failed to load NN weights: "+err.Error())
+		return errors.New("Agent failed to load NN weights: " + err.Error())
 	}
 
 	if agent.OptName == "Adam" {
