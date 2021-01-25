@@ -464,6 +464,9 @@ func (agent *Fqi) loadDataLog(run int) error {
 	if err != nil {
 		return errors.New("Cannot read trace log file: " + err.Error())
 	}
+	if len(allTransStr) <= agent.fqiSettings.BatchSize {
+		return errors.New("Not enough data to sample from: " + err.Error())
+	}
 	allTransTemp := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
