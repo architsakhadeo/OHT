@@ -58,7 +58,8 @@ def sweep_datasize():
     # plot_generation(te, eps03_cms, "../img/datasize_eps0.3")
     plot_generation(te, eps1_cms, ranges, "../img/datasize_eps1")
 
-ranges = [0, 0.3, 0.6, 0.9]
+# ranges = [0, 0.1, 0.2, 0.3]
+ranges = [0, 0.2, 0.4, 0.6]
 
 sweep_model()
 sweep_coverage()
