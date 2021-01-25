@@ -163,3 +163,7 @@ func (agent *HandController) selectActions(state rlglue.State) {
 func (agent *HandController) GetLock() bool {
 	return false
 }
+
+func (agent *HandController) SaveWeights(basePath string) error {
+	return nil
+}

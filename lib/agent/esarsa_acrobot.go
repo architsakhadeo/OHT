@@ -295,3 +295,7 @@ func (agent *ESarsaAcrobot) findArgmax(array []float64) int {
 	}
 	return argmax
 }
+
+func (agent *ESarsaAcrobot) SaveWeights(basePath string) error {
+	return nil
+}

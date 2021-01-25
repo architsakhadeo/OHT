@@ -184,6 +184,9 @@ func (exp *Experiment) runSingleEpisode() {
 		// If there aren't leftover steps, but we're in the continuing setting, this adds a '0' to indicate the previous episode terminated on a failure.
 		exp.logEndOfEpisode(numStepsThisEpisode)
 	}
+
+	// Save FA weights.
+	exp.saveAgentWeights()
 }
 
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
@@ -191,5 +194,12 @@ func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
 	if exp.Settings.DebugInterval != 0 {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
+	}
+}
+
+func (exp *Experiment) saveAgentWeights() {
+	err := exp.agent.SaveWeights(exp.GetBasePath())
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 }

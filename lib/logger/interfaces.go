@@ -20,6 +20,9 @@ type Data interface {
 
 	// SaveLog persists the logged information to disk.
 	SaveLog() error
+
+	// GetBasePath returns the LAST element of the BasePath
+	GetBasePath() string
 }
 
 // Debug can be used to log debug.
