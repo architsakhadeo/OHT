@@ -33,6 +33,7 @@ from plot.box.paths_acrobot import *
 
 
 def sweep_model():
+    '''
     cms = [{
         "k1": data2500_eps0_k1_p0,
         "k3": data2500_eps0_k3_p0,
@@ -129,6 +130,54 @@ def sweep_model():
     for i in range(len(listOfPlots)):
         print(i)
         plot_generation(te, cms[i], ranges, listOfPlots[i])
+    '''
+    cms = [{
+        "k1": data2500_eps0_k1_p0,
+        "k3": data2500_eps0_k3_p0,
+        "k5": data2500_eps0_k5_p0,
+    }, {
+        "k1": data2500_eps10_k1_p0,
+        "k3": data2500_eps10_k3_p0,
+        "k5": data2500_eps10_k5_p0,
+    }, {
+        "k1": data10k_eps0_k1_p0,
+        "k3": data10k_eps0_k3_p0,
+        "k5": data10k_eps0_k5_p0,
+    }, {
+        "k1": data10k_eps10_k1_p0,
+        "k3": data10k_eps10_k3_p0,
+        "k5": data10k_eps10_k5_p0,
+    }]
+    te = {"true": true_env}
+    '''
+    listOfPlots = ["../../img/sweep_model/step2500/epsilon0/sweepmodel_step2500_epsilon0",
+                   "../../img/sweep_model/step2500/epsilon10/sweepmodel_step2500_epsilon10",
+                   "../../img/sweep_model/step2500/epsilon25/sweepmodel_step2500_epsilon25",
+                   "../../img/sweep_model/step2500/epsilon50/sweepmodel_step2500_epsilon50",
+                   "../../img/sweep_model/step2500/epsilon75/sweepmodel_step2500_epsilon75",
+                   "../../img/sweep_model/step2500/epsilon100/sweepmodel_step2500_epsilon100",
+                   "../../img/sweep_model/step5k/epsilon0/sweepmodel_step5k_epsilon0",
+                   "../../img/sweep_model/step5k/epsilon10/sweepmodel_step5k_epsilon10",
+                   "../../img/sweep_model/step5k/epsilon25/sweepmodel_step5k_epsilon25",
+                   "../../img/sweep_model/step5k/epsilon50/sweepmodel_step5k_epsilon50",
+                   "../../img/sweep_model/step5k/epsilon75/sweepmodel_step5k_epsilon75",
+                   "../../img/sweep_model/step5k/epsilon100/sweepmodel_step5k_epsilon100",
+                   "../../img/sweep_model/step10k/epsilon0/sweepmodel_step10k_epsilon0",
+                   "../../img/sweep_model/step10k/epsilon10/sweepmodel_step10k_epsilon10",
+                   "../../img/sweep_model/step10k/epsilon25/sweepmodel_step10k_epsilon25",
+                   "../../img/sweep_model/step10k/epsilon50/sweepmodel_step10k_epsilon50",
+                   "../../img/sweep_model/step10k/epsilon75/sweepmodel_step10k_epsilon75",
+                   "../../img/sweep_model/step10k/epsilon100/sweepmodel_step10k_epsilon100",
+                   ]
+    '''
+    listOfPlots = ["../../img/sweepmodel_step2500_epsilon0",
+                   "../../img/sweepmodel_step2500_epsilon10",
+                   "../../img/sweepmodel_step10k_epsilon0",
+                   "../../img/sweepmodel_step10k_epsilon10"
+                   ]
+    for i in range(len(listOfPlots)):
+        print(i)
+        plot_generation(te, cms[i], ranges, listOfPlots[i])    
     
 
 def sweep_coverage():
@@ -209,6 +258,7 @@ def sweep_coverage():
                    "../../img/sweep_coverage/step10k/k5/sweepcoverage_step10k_k5"
                    ]
     '''
+    '''
     cms = [{
         "eps0": data2500_eps0_k1_p0,
         "eps10": data2500_eps10_k1_p0,
@@ -265,6 +315,16 @@ def sweep_coverage():
                    "../../img/sweep_coverage/step10k/k1/sweepcoverage_step10k_k1",
                    "../../img/sweep_coverage/step10k/k3/sweepcoverage_step10k_k3",
                    "../../img/sweep_coverage/step10k/k5/sweepcoverage_step10k_k5"
+                   ]
+    '''
+    cms = [{
+        "eps0": data10k_eps0_k3_p0,
+        "eps10": data10k_eps10_k3_p0,
+        "eps25": data10k_eps25_k3_p0,
+        "eps100": data10k_eps100_k3_p0,
+    }]
+    te = {"true": true_env}
+    listOfPlots = ["../../img/sweepcoverage_step10k_k3",
                    ]
     for i in range(len(listOfPlots)):
         print(i)
@@ -368,10 +428,10 @@ def sweep_datasize():
         print(i)
         plot_generation(te, cms[i], ranges, listOfPlots[i])
 
-ranges = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+ranges = [0, 0.1, 0.5]
 labels = ["0%\n(top param)", "10%", "20%", "30%", "40%", "50%"]
 #ranges = [[0, 0.3], [0.3, 0.7], [0.7, 1.0]]
 
 #sweep_model()
-#sweep_coverage()
-sweep_datasize()
+sweep_coverage()
+#sweep_datasize()
