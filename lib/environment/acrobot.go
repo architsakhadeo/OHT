@@ -27,7 +27,7 @@ const (
 	stateMaxV      = 0.1
 )
 
-type acrobotSettings struct {
+type AcrobotSettings struct {
 	Seed         int64     `json:"seed"`
 	Delays       []int     `json:"delays"`
 	PercentNoise []float64 `json:"percent_noise"`
@@ -35,7 +35,7 @@ type acrobotSettings struct {
 
 type Acrobot struct {
 	logger.Debug
-	acrobotSettings
+	AcrobotSettings
 	state              rlglue.State
 	rng                *rand.Rand
 	buffer             [][]float64
@@ -53,13 +53,20 @@ func NewAcrobot(logger logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Acrobot) Initialize(run uint, attr rlglue.Attributes) error {
-	err := json.Unmarshal(attr, &env.acrobotSettings)
+	set := AcrobotSettings{}
+	err := json.Unmarshal(attr, &set)
 	if err != nil {
 		err = errors.New("environment.Acrobot settings error: " + err.Error())
 		env.Message("err", err)
 		return err
 	}
 	env.Seed += int64(run)
+
+	return env.InitializeWithSettings(set)
+}
+
+func (env *Acrobot) InitializeWithSettings(set AcrobotSettings) error {
+	env.AcrobotSettings = set
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 	env.availTorqueActions = []float64{+1.0, 0.0, -1.0}
 
@@ -111,7 +118,7 @@ func (env *Acrobot) Initialize(run uint, attr rlglue.Attributes) error {
 		env.bufferInsertIndex = make([]int, 6)
 	}
 
-	env.Message("acrobot settings", fmt.Sprintf("%+v", env.acrobotSettings))
+	env.Message("acrobot settings", fmt.Sprintf("%+v", env.AcrobotSettings))
 
 	return nil
 }
