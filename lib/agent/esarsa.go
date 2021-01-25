@@ -411,7 +411,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	// Calculates action values
 	actionValues := make([]float64, agent.NumActions)
 	for i := 0; i < agent.NumActions; i++ {
-		actionValues[i] = agent.ActionValue(tileCodedStateActiveFeatures, i)
+		actionValues[i] = agent.ActionValue(tileCodedStateActiveFeatures, rlglue.Action(i))
 	}
 	//fmt.Println("action value", actionValue0, actionValue1)
 
@@ -445,13 +445,13 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 
 	for i := 0; i < agent.NumActions-1; i++ {
 		if randomval <= cummulativeProbs[i] {
-			action = i
+			action = rlglue.Action(i)
 			flag = true
 			break
 		}
 	}
 	if flag == false {
-		action = agent.NumActions - 1
+		action = rlglue.Action(agent.NumActions - 1)
 	}
 
 	return action, probs

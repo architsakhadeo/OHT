@@ -66,38 +66,42 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experime
 //	return exp.SaveLog()
 //}
 
-func (exp *Experiment) Run() ([]float64, error) {
-	var listOfRewards []float64
+func (exp *Experiment) Run() ([][]float64, error) {
+	var listOfListOfRewards [][]float64
 	if exp.Settings.MaxSteps != 0 {
-		listOfRewards = exp.runContinuous()
+		listOfListOfRewards = exp.runContinuous()
 	} else {
-		listOfRewards = exp.runEpisodic()
+		listOfListOfRewards = exp.runEpisodic()
 	}
 
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
 
 	//return exp.SaveLog()
-	return listOfRewards, exp.SaveLog()
+	return listOfListOfRewards, exp.SaveLog()
 }
 
-func (exp *Experiment) runContinuous() []float64 {
+func (exp *Experiment) runContinuous() [][]float64 {
 	exp.Message("msg", "Starting continuous experiment")
 	exp.stepBeforeCount = 0
+	listOfListOfRewards := make([][]float64, 1)
 	listOfRewards := exp.runSingleEpisode()
-	return listOfRewards
+	listOfListOfRewards[0] = listOfRewards
+	return listOfListOfRewards
 }
 
-func (exp *Experiment) runEpisodic() []float64 {
+func (exp *Experiment) runEpisodic() [][]float64 {
 	exp.Message("msg", "Starting episodic experiment")
 	exp.stepBeforeCount = 0
 	exp.timeOut = false
+	listOfListOfRewards := make([][]float64, exp.Settings.MaxEpisodes)
 	for exp.numEpisodesDone < exp.Settings.MaxEpisodes {
-		exp.runSingleEpisode()
+		listOfRewards := exp.runSingleEpisode()
+		listOfListOfRewards[exp.numEpisodesDone-1] = listOfRewards
 		if exp.timeOut {
 			break
 		}
 	}
-	return nil
+	return listOfListOfRewards
 }
 
 // runSingleEpisode runs a single episode...unless you're aiming for a maximum number of steps, in which case it
@@ -162,6 +166,12 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 			delta = end.Sub(start)
 			fmt.Println("Running time", exp.numStepsTaken, delta)
 			start = time.Now()
+		}
+
+		exp.numStepsTaken += 1
+		numStepsThisEpisode += 1
+		if numStepsThisEpisode == exp.Settings.MaxStepsInEpisode {
+			episodeEnded = true
 		}
 
 		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 &&
