@@ -34,7 +34,7 @@ const (
 	maxFeature6 = 9.0 * math.Pi
 )
 
-type esarsaSettings struct {
+type EsarsaSettings struct {
 	EnableDebug        bool    `json:"enable-debug"`
 	Seed               int64   `json:"seed"`
 	NumTilings         int     `json:"tilings"`
@@ -78,7 +78,7 @@ type ESarsa struct {
 	timesteps              float64
 	accumulatingbeta1      float64
 	accumulatingbeta2      float64
-	esarsaSettings
+	EsarsaSettings
 
 	bf   *buffer.Buffer
 	lw   lockweight.LockWeight
@@ -114,9 +114,8 @@ func (agent *ESarsa) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWei
 	return lw
 }
 
-// Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
-	agent.esarsaSettings = esarsaSettings{
+func DefaultESarsaSettings() EsarsaSettings {
+	return EsarsaSettings{
 		// These default settings will be used if the config doesn't set these values
 		NumTilings:         32,
 		NumTiles:           4,
@@ -131,59 +130,74 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		WInit:              0.0,
 		EnvName:            "cartpole",
 	}
+}
 
-	err := json.Unmarshal(expAttr, &agent.esarsaSettings)
+// Initialize configures the agent with the provided parameters and resets any internal state.
+func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+	set := DefaultESarsaSettings()
+	err := json.Unmarshal(expAttr, &set)
 	if err != nil {
 		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
-		agent.esarsaSettings.Seed = 0
+		set.Seed = 0
 	}
-	err = json.Unmarshal(expAttr, &agent.lw)
+	set.Seed += int64(run)
+
+	lw := lockweight.LockWeight{}
+	err = json.Unmarshal(expAttr, &lw)
 	if err != nil {
 		return errors.New("ESarsa agent LockWeight attributes were not valid: " + err.Error())
 	}
+
+	return agent.InitializeWithSettings(set, lw)
+}
+
+func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.LockWeight) error {
+	agent.EsarsaSettings = set
+	agent.lw = lw
+
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed)
 	agent.lw = agent.InitLockWeight(agent.lw)
 
-	if agent.esarsaSettings.IsStepsizeAdaptive == false {
-		agent.stepsize = agent.esarsaSettings.Alpha / float64(agent.esarsaSettings.NumTilings) // Setting stepsize
+	if agent.EsarsaSettings.IsStepsizeAdaptive == false {
+		agent.stepsize = agent.EsarsaSettings.Alpha / float64(agent.EsarsaSettings.NumTilings) // Setting stepsize
 	} else {
-		agent.stepsize = agent.esarsaSettings.AdaptiveAlpha / float64(agent.esarsaSettings.NumTilings) // Setting adaptive stepsize
+		agent.stepsize = agent.EsarsaSettings.AdaptiveAlpha / float64(agent.EsarsaSettings.NumTilings) // Setting adaptive stepsize
 	}
 
 	agent.beta1 = 0.9
 	agent.beta2 = 0.999
 	agent.e = math.Pow(10, -8)
 
-	agent.esarsaSettings.Seed += int64(run)
-	agent.rng = rand.New(rand.NewSource(agent.esarsaSettings.Seed)) // Create a new rand source for reproducibility
+	agent.rng = rand.New(rand.NewSource(agent.EsarsaSettings.Seed)) // Create a new rand source for reproducibility
 
 	// scales the input observations for tile-coding
-	if agent.esarsaSettings.EnvName == "cartpole" {
+	var err error
+	if agent.EsarsaSettings.EnvName == "cartpole" {
 		agent.NumActions = 2
 		scalers := []util.Scaler{
-			util.NewScaler(-maxPosition, maxPosition, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxVelocity, maxVelocity, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxAngle, maxAngle, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxPosition, maxPosition, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxVelocity, maxVelocity, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxAngle, maxAngle, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.EsarsaSettings.NumTiles),
 		}
 
-		agent.tiler, err = util.NewMultiTiler(4, agent.esarsaSettings.NumTilings, scalers)
+		agent.tiler, err = util.NewMultiTiler(4, agent.EsarsaSettings.NumTilings, scalers)
 		if err != nil {
 			return err
 		}
-	} else if agent.esarsaSettings.EnvName == "acrobot" {
+	} else if agent.EsarsaSettings.EnvName == "acrobot" {
 		agent.NumActions = 3
 		scalers := []util.Scaler{
-			util.NewScaler(-maxFeature1, maxFeature1, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxFeature2, maxFeature2, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxFeature3, maxFeature3, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxFeature4, maxFeature4, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxFeature5, maxFeature5, agent.esarsaSettings.NumTiles),
-			util.NewScaler(-maxFeature6, maxFeature6, agent.esarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature3, maxFeature3, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature4, maxFeature4, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature5, maxFeature5, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature6, maxFeature6, agent.EsarsaSettings.NumTiles),
 		}
 
-		agent.tiler, err = util.NewMultiTiler(6, agent.esarsaSettings.NumTilings, scalers)
+		agent.tiler, err = util.NewMultiTiler(6, agent.EsarsaSettings.NumTilings, scalers)
 		if err != nil {
 			return err
 		}
@@ -213,10 +227,10 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 
 	for i := 0; i < len(agent.weights); i++ {
 		for j := 0; j < len(agent.weights[0]); j++ {
-			agent.weights[i][j] = agent.esarsaSettings.WInit / float64(agent.esarsaSettings.NumTilings)
+			agent.weights[i][j] = agent.EsarsaSettings.WInit / float64(agent.EsarsaSettings.NumTilings)
 		}
 	}
-	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.esarsaSettings))
+	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.EsarsaSettings))
 
 	return nil
 }
@@ -262,7 +276,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	newAction, epsilons := agent.PolicyExpectedSarsaLambda(newStateActiveFeatures) // Exp-Sarsa-L policy
 
 	if agent.lw.UseLock {
-		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.esarsaSettings.Gamma)
+		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.EsarsaSettings.Gamma)
 		agent.lock = agent.lw.CheckChange()
 		if agent.lock == true {
 			agent.Epsilon = agent.EpsilonAfterLock
@@ -272,7 +286,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	if agent.lock == false {
 		for j := range agent.weights {
 			for _, value := range newStateActiveFeatures {
-				agent.delta += agent.esarsaSettings.Gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
+				agent.delta += agent.EsarsaSettings.Gamma * epsilons[j] * agent.weights[j][value] // TD error target calculation
 			}
 		}
 
@@ -284,7 +298,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 		for j := range agent.weights {
 			for i := range agent.weights[j] {
 				if agent.traces[j][i] != 0 { // update only where traces are non-zero
-					if agent.esarsaSettings.IsStepsizeAdaptive == false {
+					if agent.EsarsaSettings.IsStepsizeAdaptive == false {
 						agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
 					} else {
 						g = -agent.delta * agent.traces[j][i]
@@ -295,7 +309,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 						vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
 						agent.weights[j][i] -= agent.stepsize * mhat / (math.Pow(vhat, 0.5) + agent.e)
 					}
-					agent.traces[j][i] = agent.esarsaSettings.Gamma * agent.esarsaSettings.Lambda * agent.traces[j][i] // update traces
+					agent.traces[j][i] = agent.EsarsaSettings.Gamma * agent.EsarsaSettings.Lambda * agent.traces[j][i] // update traces
 				}
 			}
 		}
@@ -354,7 +368,7 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 		for j := range agent.weights {
 			for i := range agent.weights[j] {
 				if agent.traces[j][i] != 0 { // update only where traces are non-zero
-					if agent.esarsaSettings.IsStepsizeAdaptive == false {
+					if agent.EsarsaSettings.IsStepsizeAdaptive == false {
 						agent.weights[j][i] += agent.stepsize * agent.delta * agent.traces[j][i] // Semi-gradient descent, update weights
 					} else {
 						g = -agent.delta * agent.traces[j][i]
@@ -365,7 +379,7 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 						vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
 						agent.weights[j][i] -= agent.stepsize * mhat / (math.Pow(vhat, 0.5) + agent.e)
 					}
-					agent.traces[j][i] = 0.0 * agent.esarsaSettings.Lambda * agent.traces[j][i] // update traces
+					agent.traces[j][i] = 0.0 * agent.EsarsaSettings.Lambda * agent.traces[j][i] // update traces
 				}
 			}
 		}
@@ -405,7 +419,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	//if actionValues[0] < actionValues[1] {
 	//	greedyAction = 1
 	//} else if actionValues[0] == actionValues[1] {
-	//	greedyAction = agent.rng.Int() % 2 //agent.esarsaSettings.NumActions
+	//	greedyAction = agent.rng.Int() % 2 //agent.EsarsaSettings.NumActions
 	//}
 	probs := make([]float64, agent.NumActions) // Probabilities of taking actions 0 and 1
 	for i := range probs {

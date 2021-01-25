@@ -26,7 +26,7 @@ const (
 	stateMax              = 0.05
 )
 
-type cartpoleSettings struct {
+type CartpoleSettings struct {
 	Seed         int64     `json:"seed"`
 	Delays       []int     `json:"delays"`
 	PercentNoiseState []float64 `json:"percent_noise"`
@@ -35,7 +35,7 @@ type cartpoleSettings struct {
 
 type Cartpole struct {
 	logger.Debug
-	cartpoleSettings
+	CartpoleSettings
 	state             rlglue.State
 	rng               *rand.Rand
 	buffer            [][]float64
@@ -52,13 +52,20 @@ func NewCartpole(logger logger.Debug) (rlglue.Environment, error) {
 
 // Initialize configures the environment with the provided parameters and resets any internal state.
 func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
-	err := json.Unmarshal(attr, &env.cartpoleSettings)
+	set := CartpoleSettings{}
+	err := json.Unmarshal(attr, &set)
 	if err != nil {
 		err = errors.New("environment.Cartpole settings error: " + err.Error())
 		env.Message("err", err)
 		return err
 	}
 	env.Seed += int64(run)
+
+	return env.InitializeWithSettings(set)
+}
+
+func (env *Cartpole) InitializeWithSettings(set CartpoleSettings) error {
+	env.CartpoleSettings = set
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
 	if len(env.PercentNoiseState) == 1 {
@@ -109,7 +116,7 @@ func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
 		env.bufferInsertIndex = make([]int, 4)
 	}
 
-	env.Message("cartpole settings", fmt.Sprintf("%+v", env.cartpoleSettings))
+	env.Message("cartpole settings", fmt.Sprintf("%+v", env.CartpoleSettings))
 
 	return nil
 }
