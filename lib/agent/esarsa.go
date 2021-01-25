@@ -52,9 +52,6 @@ type esarsaSettings struct {
 	Bsize    int    `json:"buffer-size"`
 	Btype    string `json:"buffer-type"`
 
-	StateDim int    `json:"state-len"`
-	Bsize    int    `json:"buffer-size"`
-	Btype    string `json:"buffer-type"`
 	NumActions int     `json:"numberOfActions"`
 	WInit      float64 `json:"weight-init"`
 }
