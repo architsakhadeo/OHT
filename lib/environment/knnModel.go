@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"gonum.org/v1/gonum/mat"
 	"log"
 	"math"
 	"math/rand"
@@ -24,6 +25,7 @@ import (
 )
 
 type EpStartFunc func() rlglue.State
+type ChooseNeighborFunc func([]float64, [][]float64, [][]float64, []float64, []float64, []float64) ([]float64, []float64, float64, float64, float64)
 
 type knnSettings struct {
 	DataLog      string  `json:"datalog"`
@@ -33,6 +35,7 @@ type knnSettings struct {
 	DropPerc     float64 `json:"drop-percent"`
 	//Timeout      int 	 `json:"timeout"`
 	PickStartS 	 string  `json:"pick-start-state"`
+	PickNext 	 string  `json:"pick-next"`
 	NoisyS 		 float64  `json:"state-noise"`
 }
 
@@ -47,11 +50,12 @@ type KnnModelEnv struct {
 	stateDim        int
 	NumberOfActions int
 	stateRange      []float64
-	neighbor_prob   []float64
+	//neighbor_prob   []float64
 	rewardBound 	[]float64
 	stateBound 		[][]float64
 	//Count			int
-	PickStartFunc EpStartFunc
+	PickStartFunc 	EpStartFunc
+	PickNextFunc 	ChooseNeighborFunc
 
 	DebugArr   [][]float64
 }
@@ -198,8 +202,14 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		env.PickStartFunc = env.randomizeInitState
 	} else if env.knnSettings.PickStartS == "furthest" {
 		env.PickStartFunc = env.furthestState
-	}else { // default setting
+	} else { // default setting
 		env.PickStartFunc = env.randomizeState
+	}
+
+	if env.knnSettings.PickNext == "furthest" {
+		env.PickNextFunc = env.FurtherNext
+	} else { // default setting
+		env.PickNextFunc = env.CloserNeighbor
 	}
 	return nil
 }
@@ -308,39 +318,17 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 		return env.Start(), env.rewardBound[0], true
 	}
 
-	_, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+	states, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
 
 	//fmt.Print("===, ", actInt)
 	//fmt.Println(env.offlineModel.SearchTree(env.state, 1, env.Neighbor_num))
 	//fmt.Println(env.offlineModel.SearchTree(env.state, 0, env.Neighbor_num))
 
-	sum := 0.0
-	for i := 0; i < len(distances); i++ {
-		sum += distances[i] + math.Pow(10, -6)
-	}
-	pdf := make([]float64, len(distances))
-	for i := 0; i < len(distances); i++ {
-		pdf[i] = 1.0 - ((distances[i] + math.Pow(10, -6)) / sum)
-	}
-	normalizedPdf := make([]float64, len(distances))
-	normalizedSum := 0.0
-	for i := 0; i < len(distances); i++ {
-		normalizedSum += pdf[i]
-	}
-	for i := 0; i < len(distances); i++ {
-		normalizedPdf[i] = (pdf[i] / normalizedSum)
-	}
 
-	env.neighbor_prob = make([]float64, len(distances))
-	temp1 := 0.0
-	for i := 0; i < len(distances); i++ {
-		env.neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = env.neighbor_prob[i]
-	}
+	_, nextState, reward, terminal, _ := env.PickNextFunc(env.state, states, nextStates, rewards, terminals, distances)
 
-	chosen := random.FreqSample(env.neighbor_prob)
-	env.state = nextStates[chosen]
-	reward := rewards[chosen]
+	env.state = nextState
+
 	//idx := ao.Search2D(env.state, env.DebugArr)
 	//if idx > -1 {
 	//	fmt.Printf("%d, %d, %.2f, %d, \n", act, idx, env.DebugArr[idx], terminals[chosen])
@@ -349,9 +337,9 @@ func (env *KnnModelEnv) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	//}
 	//env.DebugArr = append(env.DebugArr, env.state)
 
-
 	var done bool
-	if terminals[chosen] == 0 {
+	//if terminals[chosen] == 0 {
+	if terminal == 0 {
 		done = false
 	} else {
 		done = true
@@ -403,4 +391,83 @@ func (env *KnnModelEnv) AddStateNoise(data []float64, bound [][]float64) []float
 		data[j] += env.rng.Float64()*env.NoisyS*(bound[1][j] - bound[0][j])
 	}
 	return data
+}
+
+func (env *KnnModelEnv) CloserNeighbor(currentS []float64, states, nextStates [][]float64, rewards, terminals, distances []float64) ([]float64, []float64, float64, float64, float64) {
+	sum := 0.0
+	for i := 0; i < len(distances); i++ {
+		sum += distances[i] + math.Pow(10, -6)
+	}
+	pdf := make([]float64, len(distances))
+	for i := 0; i < len(distances); i++ {
+		pdf[i] = 1.0 - ((distances[i] + math.Pow(10, -6)) / sum)
+	}
+	normalizedPdf := make([]float64, len(distances))
+	normalizedSum := 0.0
+	for i := 0; i < len(distances); i++ {
+		normalizedSum += pdf[i]
+	}
+	for i := 0; i < len(distances); i++ {
+		normalizedPdf[i] = (pdf[i] / normalizedSum)
+	}
+	neighbor_prob := make([]float64, len(distances))
+	temp1 := 0.0
+	for i := 0; i < len(distances); i++ {
+		neighbor_prob[i] = temp1 + normalizedPdf[i]
+		temp1 = neighbor_prob[i]
+	}
+	chosen := random.FreqSample(neighbor_prob)
+
+	state := states[chosen]
+	nextState := nextStates[chosen]
+	reward := rewards[chosen]
+	terminal := terminals[chosen]
+	distance := distances[chosen]
+	return state, nextState, reward, terminal, distance
+}
+
+func (env *KnnModelEnv) FurtherNext(currentS []float64, states, nextStates [][]float64, rewards, terminals, distances []float64) ([]float64, []float64, float64, float64, float64) {
+	//fmt.Println(currentS, nextStates)
+	vectorX := mat.NewDense(len(currentS), 1, currentS)
+
+	dists := make([]float64, len(nextStates))
+	for i := 0; i < len(nextStates); i++ {
+		vectorY := mat.NewDense(len(nextStates[i]), 1, nextStates[i])
+		var temp mat.Dense
+		temp.Sub(vectorX, vectorY)
+		dists[i] = mat.Norm(&temp, 2)
+	}
+	//_, chosen := ao.ArrayMax(dists)
+
+	sum := 0.0
+	for i := 0; i < len(dists); i++ {
+		sum += dists[i] + math.Pow(10, -6)
+	}
+	pdf := make([]float64, len(dists))
+	for i := 0; i < len(dists); i++ {
+		//pdf[i] = 1.0 - ((dists[i] + math.Pow(10, -6)) / sum)
+		pdf[i] = (dists[i] + math.Pow(10, -6)) / sum
+	}
+	normalizedPdf := make([]float64, len(dists))
+	normalizedSum := 0.0
+	for i := 0; i < len(dists); i++ {
+		normalizedSum += pdf[i]
+	}
+	for i := 0; i < len(dists); i++ {
+		normalizedPdf[i] = (pdf[i] / normalizedSum)
+	}
+	neighbor_prob := make([]float64, len(dists))
+	temp1 := 0.0
+	for i := 0; i < len(dists); i++ {
+		neighbor_prob[i] = temp1 + normalizedPdf[i]
+		temp1 = neighbor_prob[i]
+	}
+	chosen := random.FreqSample(neighbor_prob)
+
+	state := states[chosen]
+	nextState := nextStates[chosen]
+	reward := rewards[chosen]
+	terminal := terminals[chosen]
+	distance := distances[chosen]
+	return state, nextState, reward, terminal, distance
 }
