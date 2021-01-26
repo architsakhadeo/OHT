@@ -83,9 +83,34 @@ def sweep_datasize():
     plot_generation(n50_te, n50_eps01_cms, ranges, "../img/noisy_sweepSize_noise50_eps0.1")
     plot_generation(n50_te, n50_eps1_cms, ranges, "../img/noisy_sweepSize_noise50_eps1")
 
-ranges = [0, 0.2, 0.4, 0.6, 0.8]
-# ranges = [0, 0.1, 0.2, 0.3]
+def discuss_plots():
+    eps0_10k = {
+        "cm": noise50_data10k_eps0
+    }
+    eps0_20k = {
+        "cm": noise50_data20k_eps0
+    }
+    eps01_10k = {
+        "cm": noise50_data10k_eps01
+    }
+    eps01_20k = {
+        "cm": noise50_data20k_eps01
+    }
+    te = {"true": noise50_true}
 
-sweep_noise()
-sweep_coverage()
-sweep_datasize()
+
+    plot_generation(te, eps01_10k, ranges, "../img/ns50_eps01_data10k")
+    plot_generation(te, eps0_10k, ranges, "../img/ns50_eps0_data10k")
+    plot_generation(te, eps01_20k, ranges, "../img/ns50_eps01_data20k")
+    plot_generation(te, eps0_20k, ranges, "../img/ns50_eps0_data20k")
+
+
+
+# ranges = [0, 0.2, 0.4, 0.6, 0.8]
+# ranges = [0, 0.1, 0.2, 0.3]
+ranges = [0, 0.1, 0.5]
+
+# sweep_noise()
+# sweep_coverage()
+# sweep_datasize()
+discuss_plots()

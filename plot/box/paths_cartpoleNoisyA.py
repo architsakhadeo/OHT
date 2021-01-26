@@ -71,6 +71,22 @@ noise10_data20k_eps1 = [
 
 
 
+noise50_data10k_eps0 = [
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed1",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed2",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed3",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed4",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed5",
+]
+
+noise50_data20k_eps0 = [
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step20k_env/data_eps0/drop0.2/ensembleseed1",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step20k_env/data_eps0/drop0.2/ensembleseed2",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step20k_env/data_eps0/drop0.2/ensembleseed3",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step20k_env/data_eps0/drop0.2/ensembleseed4",
+    "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step20k_env/data_eps0/drop0.2/ensembleseed5",
+]
+
 noise50_data10k_eps01 = [
     "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0.1/drop0.2/ensembleseed1",
     "../../data/hyperparam/cartpole-noisy-action/noise_0.5perc/offline_learning/knn-ens-ep/k5/timeout0/esarsa/step10k_env/data_eps0.1/drop0.2/ensembleseed2",
