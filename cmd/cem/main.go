@@ -23,13 +23,16 @@ import (
 )
 
 var (
-	seed          = flag.Uint64("seed", math.MaxUint64, "Seed to use; if 0xffffffffffffffff, use the time")
-	numWorkers    = flag.Int("workers", -1, "Maximum number of workers; defaults to the number of CPUs if -1")
-	numIterations = flag.Int("iterations", 3, "Total number of iterations")
-	numSamples    = flag.Int("samples", 10, "Number of samples per iteration")
-	numRuns       = flag.Int("runs", 2, "Number of runs per sample")
-	numTimesteps  = flag.Int("timesteps", 1000, "Number of timesteps per run")
-	percentElite  = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
+	seed                 = flag.Uint64("seed", math.MaxUint64, "Seed to use; if 0xffffffffffffffff, use the time")
+	numWorkers           = flag.Int("workers", -1, "Maximum number of workers; defaults to the number of CPUs if -1")
+	numIterations        = flag.Int("iterations", 3, "Total number of iterations")
+	numSamples           = flag.Int("samples", 10, "Number of samples per iteration")
+	numRuns              = flag.Int("runs", 2, "Number of runs per sample")
+	numTimesteps         = flag.Int("timesteps", 0, "Number of timesteps per run")
+	numEpisodes          = flag.Int("episodes", -1, "Number of episodes")
+	numStepsInEpisode    = flag.Int("stepsInEpisode", -1, "Number of steps in episode")
+	MaxRunLengthEpisodic = flag.Int("maxRunLengthEpisodic", 0, "Max number of steps in episode")
+	percentElite         = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
 )
 
 const e = 10.e-8
@@ -42,14 +45,25 @@ func main() {
 		*numWorkers = runtime.NumCPU()
 	}
 
-	hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
-	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
-	upper := [len(hyperparams)]float64{6.5, 3.5, 1.0, 1.0, 1}
+	// Cartpole
+	//hyperparams := [5]string{"tilings", "tiles", "lambda", "epsilon", "adaptiveAlpha"}
+	//lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, 0.0, 0.0}
+	//upper := [len(hyperparams)]float64{6.5, 3.5, 1.0, 1.0, 1}
+
+	// //typeOfHyperparams := [5]string{"discrete", "discrete", "continuous", "continuous", "continuous"}
+	//discreteHyperparamsIndices := [2]int64{0, 1}
+	//discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
+	//discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
+
+	// Acrobot
+	hyperparams := [5]string{"tilings", "tiles", "lambda", "wInit", "alpha"}
+	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, -2.0, 0.0}
+	upper := [len(hyperparams)]float64{4.5, 3.5, 1.0, 5.0, 1.0}
 
 	//typeOfHyperparams := [5]string{"discrete", "discrete", "continuous", "continuous", "continuous"}
 	discreteHyperparamsIndices := [2]int64{0, 1}
-	discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
-	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
+	discreteRanges := [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}}
+	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}}
 
 	numElite := int64(float64(*numSamples) * *percentElite)
 	numEliteElite := int(numElite / 2.0)
@@ -147,6 +161,7 @@ func main() {
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
 	for iteration := 0; iteration < *numIterations; iteration++ {
+		startIteration := time.Now()
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
 		samplesMetrics := make([]float64, *numSamples)
@@ -202,6 +217,7 @@ func main() {
 		fmt.Println("")
 		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:numElite])
 		fmt.Println("")
+		fmt.Println("Mean point: ", meanSampleHyperparams)
 
 		elitePointsMatrix := mat.NewDense(len(elitePoints), len(hyperparams), nil)
 		for rows := 0; rows < len(elitePoints); rows++ {
@@ -276,7 +292,9 @@ func main() {
 			}
 
 		}
-
+		fmt.Println("")
+		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
+		fmt.Println("")
 		fmt.Println("--------------------------------------------------")
 	}
 	fmt.Println("")
@@ -521,26 +539,36 @@ func indexOfInt(element int64, data []int64) int {
 }
 
 func runOneSample(sample []float64, numRuns, iteration int) float64 {
-	startTimeOfSample := time.Now()
+	//startTimeOfSample := time.Now()
 	tilings := sample[0]
 	tiles := sample[1]
 	lambda := sample[2]
-	epsilon := sample[3]
-	adaptiveAlpha := sample[4]
+	//epsilon := sample[3]
+	//adaptiveAlpha := sample[4]
+	wInit := sample[3]
+	alpha := sample[4]
 	var run_metrics []float64
+	var run_successes []float64
 	for run := 0; run < numRuns; run++ {
 		seed := int64((numRuns * iteration) + run)
 		agentSettings := agent.EsarsaSettings{
-			EnableDebug:        false,
-			Seed:               seed,
-			NumTilings:         int(tilings),
-			NumTiles:           int(tiles),
-			Gamma:              0.9,
-			Lambda:             float64(lambda),
-			Epsilon:            float64(epsilon),
-			Alpha:              0.0,
-			AdaptiveAlpha:      float64(adaptiveAlpha),
-			IsStepsizeAdaptive: true,
+			EnableDebug: false,
+			Seed:        seed,
+			NumTilings:  int(tilings),
+			NumTiles:    int(tiles),
+			//Gamma:              0.9,
+			Gamma:  1.0,
+			Lambda: float64(lambda),
+			//Epsilon:            float64(epsilon),
+			//Alpha:              0.0,
+			//AdaptiveAlpha:      float64(adaptiveAlpha),
+			//IsStepsizeAdaptive: true,
+			Epsilon:            0.0,
+			Alpha:              float64(alpha),
+			AdaptiveAlpha:      0.0,
+			IsStepsizeAdaptive: false,
+			WInit:              float64(wInit),
+			EnvName:            "acrobot",
 		}
 
 		debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
@@ -548,8 +576,11 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 		ag := &agent.ESarsa{Debug: debug}
 		ag.InitializeWithSettings(agentSettings, lockweight.LockWeight{})
 
-		env := &environment.Cartpole{Debug: debug}
-		env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed})
+		//env := &environment.Cartpole{Debug: debug}
+		//env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed}) //Continuing cartpole
+
+		env := &environment.Acrobot{Debug: debug}
+		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
 
 		// Does not log data yet
 		data, err := logger.NewData(debug, logger.DataConfig{
@@ -562,8 +593,10 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 		panicIfError(err, "Couldn't create logger.Data")
 
 		expConf := config.Experiment{
-			MaxEpisodes:             0,
-			MaxSteps:                *numTimesteps,
+			MaxEpisodes: 50000,
+			//MaxSteps:    *numTimesteps,
+			//MaxStepsInEpisode:       *numStepsInEpisode,
+			MaxRunLengthEpisodic:    *MaxRunLengthEpisodic,
 			DebugInterval:           0,
 			DataPath:                "",
 			ShouldLogTraces:         false,
@@ -574,23 +607,51 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 		exp, err := experiment.New(ag, env, expConf, debug, data)
 		panicIfError(err, "Couldn't create experiment")
 
-		listOfRewards, _ := exp.Run()
-		result := 0.0 // returns
-		for index := 0; index < len(listOfRewards); index++ {
-			result += listOfRewards[index]
+		listOfListOfRewards, _ := exp.Run()
+		var listOfRewards []float64
+
+		// Continuing cartpole, last half of the run
+		//
+		//for i:=0; i< len(listOfListOfRewards); i++{
+		//	for j:=0 ; j<len(listOfListOfRewards[i]); j++{
+		//		listOfRewards = append(listOfRewards, listOfListOfRewards[i][j])
+		//	}
+		//}
+		//fmt.Println("Length of run: ", len(listOfRewards))
+		//result := 0.0 // returns
+		//for index := int(len(listOfRewards)/2.0); index < len(listOfRewards); index++ {
+		//	result += listOfRewards[index]
+		//}
+
+		//Episodic Acrobot, last 1/10th of the episodes
+		for i := 0; i < len(listOfListOfRewards); i++ {
+			for j := 0; j < len(listOfListOfRewards[i]); j++ {
+				listOfRewards = append(listOfRewards, listOfListOfRewards[i][j])
+			}
 		}
 
-		run_metrics = append(run_metrics, result)
+		result := len(listOfRewards)
+		successes := len(listOfListOfRewards)
+
+		run_metrics = append(run_metrics, float64(result))
+		run_successes = append(run_successes, float64(successes))
 	}
 	average := 0.0 //returns averaged across runs
+	average_success := 0.0
 	for _, v := range run_metrics {
 		average += v
 	}
+	for _, v := range run_successes {
+		average_success += v
+	}
 	average /= float64(len(run_metrics))
-	fmt.Println("")
-	fmt.Println("Time for the sample: ", time.Since(startTimeOfSample))
-	fmt.Println("")
-	return average
+	average_success /= float64(len(run_successes))
+	//average_steps_to_failure := (-average + average_success) / (average_success)
+	average_steps_to_failure := (average) / (average_success)
+	//fmt.Println("Time for Sample: ", time.Since(startTimeOfSample))
+	//fmt.Println("Steps to failure: ", (-average + average_success)/(average_success))
+	//return average //Continuing cartpole
+	return -average_steps_to_failure //episodic  acrobot, returns negative of steps to failure
 }
 
 type averageAtIndex struct {
