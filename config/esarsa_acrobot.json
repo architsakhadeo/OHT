@@ -20,13 +20,14 @@
 	},
 	"environment-settings": {
 		"seed": 1,
+		"randomize_start_state": true,
 		"sweep":{
 			"delays": [[0]]
 		}
 	},
 	"experiment-settings": {
 		"episodes": 500000,
-		"max-run-length-episodic": 50000,
+		"max-run-length-episodic": 5000,
 		"data-path": "data/esarsa_acrobot",
 		"should-log-traces": false,
 		"should-log-episode-lengths": true,

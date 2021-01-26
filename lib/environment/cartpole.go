@@ -27,10 +27,11 @@ const (
 )
 
 type CartpoleSettings struct {
-	Seed         int64     `json:"seed"`
-	Delays       []int     `json:"delays"`
-	PercentNoiseState []float64 `json:"percent_noise"`
-	PercentNoiseAction float64 `json:"percent_noise_action"`
+	Seed                int64     `json:"seed"`
+	Delays              []int     `json:"delays"`
+	PercentNoiseState   []float64 `json:"percent_noise"`
+	PercentNoiseAction  float64   `json:"percent_noise_action"`
+	RandomizeStartState bool      `json:"randomize_start_state"`
 }
 
 type Cartpole struct {
@@ -145,6 +146,11 @@ func (env *Cartpole) clamp(x float64, min float64, max float64) float64 {
 func (env *Cartpole) randomizeState() {
 	for i := range env.state {
 		env.state[i] = env.randFloat(stateMin, stateMax)
+	}
+
+	if env.RandomizeStartState == true {
+		env.state[0] = env.randFloat(-xThreshold, xThreshold)
+		env.state[2] = env.randFloat(-thetaRhresholdRadians, thetaRhresholdRadians)
 	}
 }
 

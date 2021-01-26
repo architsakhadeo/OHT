@@ -28,9 +28,10 @@ const (
 )
 
 type AcrobotSettings struct {
-	Seed         int64     `json:"seed"`
-	Delays       []int     `json:"delays"`
-	PercentNoise []float64 `json:"percent_noise"`
+	Seed                int64     `json:"seed"`
+	Delays              []int     `json:"delays"`
+	PercentNoise        []float64 `json:"percent_noise"`
+	RandomizeStartState bool      `json:"randomize_start_state"`
 }
 
 type Acrobot struct {
@@ -146,6 +147,15 @@ func (env *Acrobot) clamp(x float64, min float64, max float64) float64 {
 func (env *Acrobot) randomizeState() {
 	for i := range env.state {
 		env.state[i] = env.randFloat(stateMinV, stateMaxV)
+	}
+	if env.RandomizeStartState == true {
+		for true {
+			env.state[0] = env.randFloat(-math.Pi, math.Pi)
+			env.state[1] = env.randFloat(-math.Pi, math.Pi)
+			if -math.Cos(env.state[0])-math.Cos(env.state[1]+env.state[0]) <= 1.0 {
+				break
+			}
+		}
 	}
 }
 
