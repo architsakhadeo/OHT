@@ -112,26 +112,38 @@ func (exp *Experiment) runEpisodic() [][]float64 {
 // strings together many episodes (if necessary) to make a single episode.
 func (exp *Experiment) runSingleEpisode() []float64 {
 	countStep := true
+	var prevState rlglue.State
+	if exp.Settings.CountAfterLock {
+		countStep = exp.agent.GetLock()
+	}
 
-	prevState := exp.environment.Start()
+	if countStep == false {
+		prevState = exp.environment.Start(exp.Settings.RandomizeStartStateBeforeLock)
+	} else if countStep == true {
+		prevState = exp.environment.Start(exp.Settings.RandomizeStartStateAfterLock)
+	}
 	tempPrev := make(rlglue.State, len(prevState))
 
 	copy(tempPrev, prevState)
 	action := exp.agent.Start(prevState)
 	copy(prevState, tempPrev)
-	if exp.Settings.CountAfterLock {
-		countStep = exp.agent.GetLock()
-	}
 	isEpisodic := exp.Settings.MaxSteps == 0
 
 	start := time.Now()
 	var end time.Time
 	var delta time.Duration
 	var listOfRewards []float64
+	var newState rlglue.State
+	var reward float64
+	var episodeEnded bool
 
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
-		newState, reward, episodeEnded := exp.environment.Step(action)
+		if countStep == false {
+			newState, reward, episodeEnded = exp.environment.Step(action, exp.Settings.RandomizeStartStateBeforeLock)
+		} else if countStep == true {
+			newState, reward, episodeEnded = exp.environment.Step(action, exp.Settings.RandomizeStartStateAfterLock)
+		}
 		listOfRewards = append(listOfRewards, reward)
 
 		if exp.Settings.CountAfterLock {

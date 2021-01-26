@@ -26,17 +26,19 @@ type Config struct {
 }
 
 type Experiment struct {
-	MaxEpisodes             int    `json:"episodes"`
-	MaxSteps                int    `json:"steps"`
-	MaxStepsInEpisode       int    `json:"steps-in-episode"`
-	MaxRunLengthEpisodic    int    `json:"max-run-length-episodic"`
-	DebugInterval           int    `json:"debug-interval"`
-	DataPath                string `json:"data-path"`
-	ShouldLogTraces         bool   `json:"should-log-traces"`
-	CacheTracesInRAM        bool   `json:"cache-traces-in-ram"`
-	ShouldLogEpisodeLengths bool   `json:"should-log-episode-lengths"`
-	CountAfterLock          bool   `json:"count-step-after-lock"`
-	TotalAfterCount         int    `json:"total-step-after-lock"`
+	MaxEpisodes                   int    `json:"episodes"`
+	MaxSteps                      int    `json:"steps"`
+	MaxStepsInEpisode             int    `json:"steps-in-episode"`
+	MaxRunLengthEpisodic          int    `json:"max-run-length-episodic"`
+	DebugInterval                 int    `json:"debug-interval"`
+	DataPath                      string `json:"data-path"`
+	ShouldLogTraces               bool   `json:"should-log-traces"`
+	CacheTracesInRAM              bool   `json:"cache-traces-in-ram"`
+	ShouldLogEpisodeLengths       bool   `json:"should-log-episode-lengths"`
+	CountAfterLock                bool   `json:"count-step-after-lock"`
+	TotalAfterCount               int    `json:"total-step-after-lock"`
+	RandomizeStartStateBeforeLock bool   `json:"randomize_start_state_beforeLock"`
+	RandomizeStartStateAfterLock  bool   `json:"randomize_start_state_afterLock"`
 	// MaxCPUs, if set, specifies the maximum number of CPUs this experiment is allowed to use
 	MaxCPUs int `json:"max-cpus"`
 }

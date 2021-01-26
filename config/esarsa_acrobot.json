@@ -20,7 +20,6 @@
 	},
 	"environment-settings": {
 		"seed": 1,
-		"randomize_start_state": true,
 		"sweep":{
 			"delays": [[0]]
 		}

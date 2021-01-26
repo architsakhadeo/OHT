@@ -33,9 +33,11 @@
     }
   },
   "experiment-settings": {
+    "randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": true,
     "steps": 0,
     "episodes": 10000000,
-    "total-step-after-lock": 5000,
+    "total-step-after-lock": 50000,
     "count-step-after-lock": true,
     "data-path": "data/hyperparam/acrobot/offline_data/esarsa/step5k/optimalfixed_eps0",
     "should-log-traces": true,

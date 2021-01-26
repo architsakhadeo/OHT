@@ -27,11 +27,11 @@ const (
 )
 
 type CartpoleSettings struct {
-	Seed                int64     `json:"seed"`
-	Delays              []int     `json:"delays"`
-	PercentNoiseState   []float64 `json:"percent_noise"`
-	PercentNoiseAction  float64   `json:"percent_noise_action"`
-	RandomizeStartState bool      `json:"randomize_start_state"`
+	Seed               int64     `json:"seed"`
+	Delays             []int     `json:"delays"`
+	PercentNoiseState  []float64 `json:"percent_noise"`
+	PercentNoiseAction float64   `json:"percent_noise_action"`
+	//RandomizeStartState bool      `json:"randomize_start_state"`
 }
 
 type Cartpole struct {
@@ -143,12 +143,12 @@ func (env *Cartpole) clamp(x float64, min float64, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
 
-func (env *Cartpole) randomizeState() {
+func (env *Cartpole) randomizeState(randomizeStartStateCondition bool) {
 	for i := range env.state {
 		env.state[i] = env.randFloat(stateMin, stateMax)
 	}
 
-	if env.RandomizeStartState == true {
+	if randomizeStartStateCondition == true {
 		env.state[0] = env.randFloat(-xThreshold, xThreshold)
 		env.state[2] = env.randFloat(-thetaRhresholdRadians, thetaRhresholdRadians)
 	}
@@ -159,14 +159,14 @@ func (env *Cartpole) randFloat(min, max float64) float64 {
 }
 
 // Start returns an initial observation.
-func (env *Cartpole) Start() rlglue.State {
-	env.randomizeState()
+func (env *Cartpole) Start(randomizeStartStateCondition bool) rlglue.State {
+	env.randomizeState(randomizeStartStateCondition)
 	return env.getObservations()
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
+func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
 	x, xDot, theta, thetaDot := env.state[0], env.state[1], env.state[2], env.state[3]
 
 	force := forceMag
@@ -203,7 +203,7 @@ func (env *Cartpole) Step(act rlglue.Action) (rlglue.State, float64, bool) {
 	var reward float64
 	if done {
 		reward = -1.0
-		env.randomizeState()
+		env.randomizeState(randomizeStartStateCondition)
 	}
 
 	return env.getObservations(), reward, done

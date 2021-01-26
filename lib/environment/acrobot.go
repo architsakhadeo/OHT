@@ -28,10 +28,10 @@ const (
 )
 
 type AcrobotSettings struct {
-	Seed                int64     `json:"seed"`
-	Delays              []int     `json:"delays"`
-	PercentNoise        []float64 `json:"percent_noise"`
-	RandomizeStartState bool      `json:"randomize_start_state"`
+	Seed         int64     `json:"seed"`
+	Delays       []int     `json:"delays"`
+	PercentNoise []float64 `json:"percent_noise"`
+	//RandomizeStartState bool      `json:"randomize_start_state"`
 }
 
 type Acrobot struct {
@@ -145,11 +145,11 @@ func (env *Acrobot) clamp(x float64, min float64, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
 
-func (env *Acrobot) randomizeState() {
+func (env *Acrobot) randomizeState(randomizeStartStateCondition bool) {
 	for i := range env.state {
 		env.state[i] = env.randFloat(stateMinV, stateMaxV)
 	}
-	if env.RandomizeStartState == true {
+	if randomizeStartStateCondition == true {
 		for true {
 			env.state[0] = env.randFloat(-math.Pi, math.Pi)
 			env.state[1] = env.randFloat(-math.Pi, math.Pi)
@@ -165,14 +165,14 @@ func (env *Acrobot) randFloat(min, max float64) float64 {
 }
 
 // Start returns an initial observation.
-func (env *Acrobot) Start() rlglue.State {
-	env.randomizeState()
+func (env *Acrobot) Start(randomizeStartStateCondition bool) rlglue.State {
+	env.randomizeState(randomizeStartStateCondition)
 	return env.getObservations()
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Acrobot) Step(act rlglue.Action) (rlglue.State, float64, bool) {
+func (env *Acrobot) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
 	s := make(rlglue.State, len(env.state))
 
 	copy(s, env.state)

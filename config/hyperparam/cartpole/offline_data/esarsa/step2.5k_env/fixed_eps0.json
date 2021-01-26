@@ -22,7 +22,7 @@
 
     "lock-weight": true,
     "lock-condition": "onetime-reward",
-    "lock-condition-reward": -0.005,
+    "lock-condition-reward": -0.5,
 
     "enable-debug": false,
     "seed": 100
@@ -34,9 +34,11 @@
     }
   },
   "experiment-settings": {
+    "randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": true,
     "steps": 0,
     "episodes": 10000000,
-    "total-step-after-lock": 2500,
+    "total-step-after-lock": 5000,
     "count-step-after-lock": true,
     "data-path": "data/hyperparam/cartpole/offline_data/esarsa/step2.5k_env/fixed_eps0/",
     "should-log-traces": true,

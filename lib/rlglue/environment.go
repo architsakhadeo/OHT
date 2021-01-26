@@ -6,10 +6,10 @@ type Environment interface {
 	Initialize(run uint, attr Attributes) error
 
 	// Start returns an initial observation.
-	Start() State
+	Start(randomizeStartStateCondition bool) State
 
 	// Step takes an action and provides the new observation, the resulting reward, and whether the state is terminal.
-	Step(Action) (State, float64, bool)
+	Step(action Action, randomizeStartStateCondition bool) (State, float64, bool)
 
 	// GetAttributes returns attributes for this environment.
 	GetAttributes() Attributes
