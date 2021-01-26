@@ -27,10 +27,10 @@
 	},
 	"experiment-settings": {
 		"episodes": 500000,
-		"max-run-length-episodic": 5000,
+		"max-run-length-episodic": 50000,
 		"data-path": "data/esarsa_acrobot",
 		"should-log-traces": false,
-		"should-log-episode-lengths": true,
+		"should-log-episode-lengths": false,
 		"debug-interval": 1000
 	}
 }

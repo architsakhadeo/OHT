@@ -69,7 +69,8 @@ func (env *Acrobot) Initialize(run uint, attr rlglue.Attributes) error {
 func (env *Acrobot) InitializeWithSettings(set AcrobotSettings) error {
 	env.AcrobotSettings = set
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
-	env.availTorqueActions = []float64{+1.0, 0.0, -1.0}
+	//env.availTorqueActions = []float64{+1.0, 0.0, -1.0}
+	env.availTorqueActions = []float64{+1.0, -1.0}
 
 	if len(env.PercentNoise) == 1 {
 		// Copy it for all dimensions
@@ -225,7 +226,7 @@ func (env *Acrobot) GetAttributes() rlglue.Attributes {
 		StateDim   int       `json:"stateDimension"`
 		StateRange []float64 `json:"stateRange"`
 	}{
-		3,
+		2, //3,
 		6,
 		[]float64{2.0, 2.0, 2.0, 2.0, 2.0 * maxVel1, 2.0 * maxVel2},
 	}

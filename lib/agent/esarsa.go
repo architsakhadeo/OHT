@@ -187,7 +187,7 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 			return err
 		}
 	} else if agent.EsarsaSettings.EnvName == "acrobot" {
-		agent.NumActions = 3
+		agent.NumActions = 2 //3
 		scalers := []util.Scaler{
 			util.NewScaler(-maxFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
 			util.NewScaler(-maxFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
