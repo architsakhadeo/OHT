@@ -22,14 +22,14 @@
 
     "lock-weight": true,
     "lock-condition": "onetime-reward",
-    "lock-condition-reward": -0.005,
+    "lock-condition-reward": -0.002,
 
     "enable-debug": false,
     "seed": 100
   },
   "environment-settings": {
     "seed": 100,
-    "percent_noise_action": 0.1,
+    "percent_noise_action": 0.01,
     "sweep": {
       "delays":[[0]]
     }
@@ -41,7 +41,7 @@
     "episodes": 10000000,
     "total-step-after-lock": 10000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam_randomStart/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/fixed_eps0/",
+    "data-path": "data/hyperparam_randomStart/cartpole-noisy-action/noise_1perc/offline_data/esarsa/step10k_env/fixed_eps0/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "debug-interval": 1000

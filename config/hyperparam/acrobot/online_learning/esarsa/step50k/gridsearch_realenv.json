@@ -6,14 +6,14 @@
 		"gamma": 1.0,
 		"env-name": "acrobot",
 		"sweep": {
-			"tilings": [4, 8, 16],
-			"tiles": [2, 4, 8],
+			"tilings": [8, 16],
+			"tiles": [4, 8],
 			"lambda": [0.9],
 			"epsilon": [0.0],
 			"WInit": [0.0],
 			"alpha": [0.0],
 			"is-stepsize-adaptive": [true],
-			"adaptive-alpha": [0.1, 0.01, 0.001]
+			"adaptive-alpha": [0.1, 0.06, 0.03, 0.01, 0.006, 0.003, 0.001, 0.0006, 0.0003]
 		},
 		"enable-debug": false,
 		"seed": 1
@@ -25,6 +25,8 @@
 		}
 	},
 	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+    	"randomize_start_state_afterLock": false,
 		"episodes": 1000000,
 		"max-run-length-episodic": 50000,
 		"data-path": "data/hyperparam/acrobot/online_learning/esarsa/step50k/gridsearch_realenv",
