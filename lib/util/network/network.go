@@ -197,35 +197,35 @@ func (net *Network) SaveNetwork(weightpath string) error {
 	var name string
 
 	for i := 0; i < len(net.HiddenWeights); i++ {
-		name = fmt.Sprintf("weight-hidden-%d.txt", i)
+		name = fmt.Sprintf("weight-hidden-%d.bin", i)
 		err = SaveMatrix(net.HiddenWeights[i], weightpath, name)
 		if err != nil {
 			return err
 		}
 	}
 
-	name = "weight-output.txt"
+	name = "weight-output.bin"
 	err = SaveMatrix(net.OutputWeights, weightpath, name)
 	if err != nil {
 		return err
 	}
 
 	for i := 0; i < len(net.HiddenUpdate); i++ {
-		name = fmt.Sprintf("weight-hidden-update-%d.txt", i)
+		name = fmt.Sprintf("weight-hidden-update-%d.bin", i)
 		err = SaveMatrix(net.HiddenUpdate[i], weightpath, name)
 		if err != nil {
 			return err
 		}
 	}
 
-	name = "weight-output-update.txt"
+	name = "weight-output-update.bin"
 	err = SaveMatrix(net.OutputUpdate, weightpath, name)
 	if err != nil {
 		return err
 	}
 
 	for i := 0; i < len(net.LayerOut); i++ {
-		name = fmt.Sprintf("weight-layer-out-%d.txt", i)
+		name = fmt.Sprintf("weight-layer-out-%d.bin", i)
 		err = SaveMatrix(net.LayerOut[i], weightpath, name)
 		if err != nil {
 			return err
@@ -248,7 +248,7 @@ func (net *Network) LoadNetwork(
 
 	net.HiddenWeights = []mat.Matrix{}
 	for i := 0; i < len(net.hiddens); i++ {
-		name = fmt.Sprintf("weight-hidden-%d.txt", i)
+		name = fmt.Sprintf("weight-hidden-%d.bin", i)
 		err = LoadMatrix(newDense, weightpath, name)
 		if err != nil {
 			return err
@@ -258,7 +258,7 @@ func (net *Network) LoadNetwork(
 		ipt = net.hiddens[i] + 1
 	}
 
-	name = "weight-output.txt"
+	name = "weight-output.bin"
 	err = LoadMatrix(newDense, weightpath, name)
 	if err != nil {
 		return err
@@ -268,7 +268,7 @@ func (net *Network) LoadNetwork(
 
 	net.HiddenUpdate = []mat.Matrix{}
 	for i := 0; i < len(hidden); i++ {
-		name = fmt.Sprintf("weight-hidden-update-%d.txt", i)
+		name = fmt.Sprintf("weight-hidden-update-%d.bin", i)
 		err = LoadMatrix(newDense, weightpath, name)
 		if err != nil {
 			return err
@@ -277,7 +277,7 @@ func (net *Network) LoadNetwork(
 		newDense.Reset()
 	}
 
-	name = "weight-output-update.txt"
+	name = "weight-output-update.bin"
 	err = LoadMatrix(newDense, weightpath, name)
 	if err != nil {
 		return err
