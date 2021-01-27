@@ -69,7 +69,7 @@ func (env *Futile) GetAttributes() rlglue.Attributes {
 		attributes.StateDim = 4
 		attributes.StateRange = []float64{4.8, 8.0, (2 * 12 * 2 * math.Pi / 360), 7.0}
 	case "acrobot":
-		attributes.NumAction = 3
+		attributes.NumAction = 2 //3
 		attributes.StateDim = 6
 		attributes.StateRange = []float64{2.0, 2.0, 2.0, 2.0, 2.0 * maxVel1, 2.0 * maxVel2}
 	}
