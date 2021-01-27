@@ -25,6 +25,8 @@
             "datalog": "data/hyperparam/acrobot/offline_data/esarsa/step5k/optimalfixed_eps0/param_0/"
     },
     "experiment-settings": {
+        "steps-in-episode": 1000,
+        "steps": 0,
         "episodes": 1000000,
         "max-run-length-episodic": 50000,
         "data-path": "data/hyperparam/acrobot/offline_learning/knn/k1/esarsa/step5k/optimalfixed_eps0/",
