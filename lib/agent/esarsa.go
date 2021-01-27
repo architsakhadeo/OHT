@@ -169,6 +169,10 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 	agent.beta2 = 0.999
 	agent.e = math.Pow(10, -8)
 
+	//fmt.Println("Agent Seed: ", agent.Seed)
+	//fmt.Println("Agent EsarsaSettings Seed: ", agent.EsarsaSettings.Seed)
+	//fmt.Println("Set Seed:", set.Seed)
+	//fmt.Println("Seed actually used by the agent:", agent.EsarsaSettings.Seed)
 	agent.rng = rand.New(rand.NewSource(agent.EsarsaSettings.Seed)) // Create a new rand source for reproducibility
 
 	// scales the input observations for tile-coding

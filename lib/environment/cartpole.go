@@ -60,13 +60,17 @@ func (env *Cartpole) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	env.Seed += int64(run)
+	set.Seed += int64(run)
 
 	return env.InitializeWithSettings(set)
 }
 
 func (env *Cartpole) InitializeWithSettings(set CartpoleSettings) error {
 	env.CartpoleSettings = set
+	//fmt.Println("Env Seed: ", env.Seed)
+	//fmt.Println("Env CartpoleSettings Seed: ", env.CartpoleSettings.Seed)
+	//fmt.Println("Set Seed:", set.Seed)
+	//fmt.Println("Seed actually used by the environment: ", env.Seed)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
 
 	if len(env.PercentNoiseState) == 1 {
