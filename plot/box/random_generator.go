@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 func main() {
-	seed := int64(0)
+	seed := int64(time.Now().UnixNano())
 	num_samples := 36
 	var listOfValues []int64
 	for i := 0; i < num_samples; i++ {
