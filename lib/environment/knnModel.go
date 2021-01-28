@@ -200,12 +200,14 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(allTrans)
 
-	if env.knnSettings.PickStartS == "random-init" {
+	if env.knnSettings.PickStartS == "random-init" { // default setting
 		env.PickStartFunc = env.randomizeInitState
 	} else if env.knnSettings.PickStartS == "furthest" {
 		env.PickStartFunc = env.furthestState
-	} else { // default setting
+	} else if env.knnSettings.PickStartS == "random-all" {
 		env.PickStartFunc = env.randomizeState
+	} else {
+		env.PickStartFunc = env.randomizeInitState
 	}
 
 	if env.knnSettings.PickNext == "furthest" {
