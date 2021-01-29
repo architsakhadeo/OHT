@@ -57,8 +57,8 @@ type Cem struct {
 
 	rng *rand.Rand
 
+	numHyperparams             int
 	discreteHyperparamsIndices []int64
-	hyperparams                []string
 	discreteRanges             [][]float64
 	discreteMidRanges          [][]float64
 	numElite                   int64
@@ -88,7 +88,7 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 		percentElite:               0.5,
 		debug:                      logger.NewDebug(logger.DebugConfig{}),
 		discreteHyperparamsIndices: []int64{0, 1},
-		hyperparams:                []string{"tilings", "tiles", "lambda", "wInit", "alpha"},
+		numHyperparams:             5,
 		discreteRanges:             [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}},
 		discreteMidRanges:          [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}},
 		lower:                      []float64{0.5, 0.5, 0.0, -2.0, 0.0},
@@ -117,7 +117,7 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 
 	cem.numElite = int64(float64(cem.numSamples) * cem.percentElite)
 
-	cem.meanHyperparams = make([]float64, len(cem.hyperparams))
+	cem.meanHyperparams = make([]float64, cem.numHyperparams)
 	for i := range cem.meanHyperparams {
 		cem.meanHyperparams[i] = (cem.lower[i] + cem.upper[i]) / 2.0
 	}
@@ -129,7 +129,7 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 }
 
 func (cem Cem) initialCovariance() *mat.Dense {
-	covariance := mat.NewDense(len(cem.hyperparams), len(cem.hyperparams), nil)
+	covariance := mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
 	covarianceRows, covarianceColumns := covariance.Dims()
 
 	minLower := cem.lower[0]
@@ -162,9 +162,9 @@ func (cem Cem) initialCovariance() *mat.Dense {
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
 func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64) {
-	symCov := mat.NewSymDense(len(cem.hyperparams), nil)
-	for i := 0; i < len(cem.hyperparams); i++ {
-		for j := 0; j < len(cem.hyperparams); j++ {
+	symCov := mat.NewSymDense(cem.numHyperparams, nil)
+	for i := 0; i < cem.numHyperparams; i++ {
+		for j := 0; j < cem.numHyperparams; j++ {
 			symCov.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
 		}
 	}
@@ -189,7 +189,7 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 	for i < cem.numSamples {
 		sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
-		for j := 0; j < len(cem.hyperparams); j++ {
+		for j := 0; j < cem.numHyperparams; j++ {
 			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
 				flag = 1
 				break
@@ -198,7 +198,7 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 		if flag == 0 {
 			realvaluedSamples[i] = sample
 			var temp []float64
-			for j := 0; j < len(cem.hyperparams); j++ {
+			for j := 0; j < cem.numHyperparams; j++ {
 				if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
 					temp = append(temp, sample[j])
 				} else {
@@ -287,7 +287,7 @@ func (cem Cem) Run() error {
 		eliteSamplePoints := make([][]float64, cem.numElite)
 		elitePoints = descendingRealValuedSamples[:cem.numElite]
 		eliteSamplePoints = descendingSamples[:cem.numElite]
-		meanSampleHyperparams := make([]float64, len(cem.hyperparams))
+		meanSampleHyperparams := make([]float64, cem.numHyperparams)
 		copy(cem.meanHyperparams, elitePoints[0])
 		copy(meanSampleHyperparams, eliteSamplePoints[0])
 		fmt.Println("Elite points: ", eliteSamplePoints)
@@ -296,19 +296,19 @@ func (cem Cem) Run() error {
 		fmt.Println("")
 		fmt.Println("Mean point: ", meanSampleHyperparams)
 
-		elitePointsMatrix := mat.NewDense(len(elitePoints), len(cem.hyperparams), nil)
+		elitePointsMatrix := mat.NewDense(len(elitePoints), cem.numHyperparams, nil)
 		for rows := 0; rows < len(elitePoints); rows++ {
-			for cols := 0; cols < len(cem.hyperparams); cols++ {
+			for cols := 0; cols < cem.numHyperparams; cols++ {
 				elitePointsMatrix.Set(rows, cols, elitePoints[rows][cols])
 			}
 		}
 
-		cov := mat.NewSymDense(len(cem.hyperparams), nil)
+		cov := mat.NewSymDense(cem.numHyperparams, nil)
 		stat.CovarianceMatrix(cov, elitePointsMatrix, nil)
 
-		covWithE := mat.NewDense(len(cem.hyperparams), len(cem.hyperparams), nil)
-		for rows := 0; rows < len(cem.hyperparams); rows++ {
-			for cols := 0; cols < len(cem.hyperparams); cols++ {
+		covWithE := mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
+		for rows := 0; rows < cem.numHyperparams; rows++ {
+			for cols := 0; cols < cem.numHyperparams; cols++ {
 				if rows == cols {
 					covWithE.Set(rows, cols, cov.At(rows, cols)+e)
 				} else {
