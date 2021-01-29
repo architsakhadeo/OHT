@@ -61,7 +61,7 @@ type Cem struct {
 	discreteHyperparamsIndices []int64
 	discreteRanges             [][]float64
 	discreteMidRanges          [][]float64
-	numElite                   int64
+	numElite                   int
 	meanHyperparams            []float64
 	lower                      []float64
 	upper                      []float64
@@ -115,7 +115,7 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 		}
 	}
 
-	cem.numElite = int64(float64(cem.numSamples) * cem.percentElite)
+	cem.numElite = int(float64(cem.numSamples) * cem.percentElite)
 
 	cem.meanHyperparams = make([]float64, cem.numHyperparams)
 	for i := range cem.meanHyperparams {
@@ -192,12 +192,12 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 	i := 0
 
 	if elitePoints != nil {
-		numEliteElite := int(cem.numElite / 2)
-		for m := 0; m < int(numEliteElite); m++ {
+		numEliteElite := cem.numElite / 2
+		for m := 0; m < numEliteElite; m++ {
 			realvaluedSamples[m] = elitePoints[m]
 			samples[m] = eliteSamplePoints[m]
 		}
-		i += int(numEliteElite)
+		i += numEliteElite
 	}
 
 	for ; i < cem.numSamples; i++ {
@@ -229,9 +229,9 @@ func (cem Cem) Run() error {
 	}
 
 	// Allocate memory outside of loop
-	descendingSamplesMetrics := make([]float64, len(samples))
-	descendingSamples := make([][]float64, len(samples))
-	descendingRealValuedSamples := make([][]float64, len(samples))
+	descendingSamplesMetrics := make([]float64, cem.numSamples)
+	descendingSamples := make([][]float64, cem.numSamples)
+	descendingRealValuedSamples := make([][]float64, cem.numSamples)
 	elitePoints := make([][]float64, cem.numElite)
 	eliteSamplePoints := make([][]float64, cem.numElite)
 	meanSampleHyperparams := make([]float64, cem.numHyperparams)
@@ -258,7 +258,7 @@ func (cem Cem) Run() error {
 
 		count := 0
 		var err error
-		for count < len(samples) {
+		for count < cem.numSamples {
 			select {
 			case avg := <-results:
 				if avg.err != nil {
@@ -276,10 +276,10 @@ func (cem Cem) Run() error {
 		fmt.Println("Sample Metric: ", samplesMetrics)
 		fmt.Println("")
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
-		for ind := 0; ind < len(samples); ind++ {
-			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[len(samples)-1-ind]]
-			descendingSamples[ind] = samples[ascendingIndices[len(samples)-1-ind]]
-			descendingRealValuedSamples[ind] = realvaluedSamples[ascendingIndices[len(samples)-1-ind]]
+		for ind := 0; ind < cem.numSamples; ind++ {
+			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
+			descendingSamples[ind] = samples[ascendingIndices[cem.numSamples-1-ind]]
+			descendingRealValuedSamples[ind] = realvaluedSamples[ascendingIndices[cem.numSamples-1-ind]]
 		}
 
 		elitePoints = descendingRealValuedSamples[:cem.numElite]
@@ -292,8 +292,8 @@ func (cem Cem) Run() error {
 		fmt.Println("")
 		fmt.Println("Mean point: ", meanSampleHyperparams)
 
-		elitePointsMatrix := mat.NewDense(len(elitePoints), cem.numHyperparams, nil)
-		for rows := 0; rows < len(elitePoints); rows++ {
+		elitePointsMatrix := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
+		for rows := 0; rows < cem.numElite; rows++ {
 			for cols := 0; cols < cem.numHyperparams; cols++ {
 				elitePointsMatrix.Set(rows, cols, elitePoints[rows][cols])
 			}
