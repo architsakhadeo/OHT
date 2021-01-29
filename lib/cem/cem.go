@@ -161,7 +161,12 @@ func (cem Cem) initialCovariance() *mat.Dense {
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64, error) {
+	covariance, err := nearestPD(covariance)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	symCov := mat.NewSymDense(cem.numHyperparams, nil)
 	for i := 0; i < cem.numHyperparams; i++ {
 		for j := 0; j < cem.numHyperparams; j++ {
@@ -215,18 +220,19 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 		}
 	}
 
-	return samples, realvaluedSamples
+	return samples, realvaluedSamples, nil
 }
 
 func (cem Cem) Run() error {
 	covariance := cem.initialCovariance()
 
-	var err error
-	if covariance, err = nearestPD(covariance); err != nil {
+	samples, realvaluedSamples, err := cem.newSampleSlices(covariance, nil, nil)
+	if err != nil {
 		return err
 	}
-
-	samples, realvaluedSamples := cem.newSampleSlices(covariance, nil, nil)
+	if err != nil {
+		return err
+	}
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
@@ -317,12 +323,10 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		covariance, err := nearestPD(covWithE)
+		samples, realvaluedSamples, err = cem.newSampleSlices(covWithE, elitePoints, eliteSamplePoints)
 		if err != nil {
 			return err
 		}
-
-		samples, realvaluedSamples = cem.newSampleSlices(covariance, elitePoints, eliteSamplePoints)
 
 		fmt.Println("")
 		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
