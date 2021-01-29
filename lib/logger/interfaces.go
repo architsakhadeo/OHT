@@ -23,6 +23,9 @@ type Data interface {
 
 	// GetBasePath returns the LAST element of the BasePath
 	GetBasePath() string
+
+	// LogLearnProg add information about learning progress. The information could be MSTDE for batch RL.
+	LogLearnProg(progress float64)
 }
 
 // Debug can be used to log debug.

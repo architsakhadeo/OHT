@@ -38,6 +38,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
 		CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
+		ShouldLogLearnProg:      conf.Experiment.ShouldLogLearnProg,
 		BasePath:                fmt.Sprint(conf.Experiment.DataPath, "/", savePath),
 		FileSuffix:              strconv.Itoa(int(run)),
 	})
@@ -160,7 +161,7 @@ func parameterStringify(run uint, sweepIdx int) (string, error) {
 	return save, nil
 }
 func logParameters(agentAttr, envAttr, extraAttr rlglue.Attributes, logPath string) error {
-	fullPath := logPath+"/log_json.txt"
+	fullPath := logPath + "/log_json.txt"
 	if _, err := os.Stat(fullPath); err == nil {
 		//e := os.Remove(fullPath)
 		//if e != nil {

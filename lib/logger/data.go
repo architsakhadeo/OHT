@@ -17,6 +17,10 @@ type DataConfig struct {
 	// other provided values). Rewards are always recorded.
 	ShouldLogTraces bool
 
+	// ShouldLogLearnProg determines whether learning progress are saved. The learning progress can be
+	// mean squared TD error.
+	ShouldLogLearnProg bool
+
 	// CacheTracesInRAM determines whether traces are kept in RAM.
 	CacheTracesInRAM bool
 
@@ -45,6 +49,7 @@ type DataLogger struct {
 	actions   []rlglue.Action
 	terminals []int
 	others    [][]float64
+	learnProg []float64
 
 	// file is used for writing out the trace.
 	file *os.File
@@ -71,6 +76,10 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 
 	if lg.ShouldLogEpisodeLengths {
 		lg.episodeLengths = []int{}
+	}
+
+	if lg.ShouldLogLearnProg {
+		lg.learnProg = []float64{}
 	}
 
 	if lg.BasePath == "" {
@@ -173,6 +182,14 @@ func (lg *DataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 	}
 }
 
+// LogLearnProg add information about learning progress. The information could be MSTDE for batch RL.
+func (lg *DataLogger) LogLearnProg(progress float64) {
+	if !lg.ShouldLogLearnProg {
+		return
+	}
+	lg.learnProg = append(lg.learnProg, progress)
+}
+
 func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) string {
 	lg.rewards = append(lg.rewards, reward)
 
@@ -235,6 +252,28 @@ func (lg *DataLogger) SaveLog() error {
 		// Write remaining rows
 		for _, ep := range lg.episodeLengths {
 			_, err = file.WriteString(fmt.Sprintf("%d\n", ep))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if lg.ShouldLogLearnProg {
+		file, err := os.Create(path.Join(lg.BasePath, "progs-"+lg.FileSuffix+".csv"))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// Write header row
+		_, err = file.WriteString("learning progress\n")
+		if err != nil {
+			return err
+		}
+
+		// Write remaining rows
+		for _, prg := range lg.learnProg {
+			_, err = file.WriteString(fmt.Sprintf("%v\n", strconv.FormatFloat(prg, 'f', -1, 64)))
 			if err != nil {
 				return err
 			}
