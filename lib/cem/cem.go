@@ -309,40 +309,8 @@ func (cem Cem) Run() error {
 		var choleskySymmetricCovariance mat.Cholesky
 		choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
 
-		for m := 0; m < int(cem.numEliteElite); m++ {
-			realvaluedSamples[m] = elitePoints[m]
-			samples[m] = eliteSamplePoints[m]
-		}
-		i := int(cem.numEliteElite)
+		samples, realvaluedSamples = cem.newSampleSlices(choleskySymmetricCovariance, elitePoints, eliteSamplePoints)
 
-		for i < cem.numSamples {
-			sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
-			flag := 0
-			for j := 0; j < len(cem.hyperparams); j++ {
-				if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
-					flag = 1
-					break
-				}
-			}
-			if flag == 0 {
-				realvaluedSamples[i] = sample
-				var temp []float64
-				for j := 0; j < len(cem.hyperparams); j++ {
-					if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-						temp = append(temp, sample[j])
-					} else {
-						for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-							if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
-								temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
-								break
-							}
-						}
-					}
-				}
-				samples[i] = temp
-				i++
-			}
-		}
 		fmt.Println("")
 		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
 		fmt.Println("")
