@@ -143,8 +143,6 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 	for _, v := range run_successes {
 		average_success += v
 	}
-	average /= float64(len(run_metrics))
-	average_success /= float64(len(run_successes))
 	average_steps_to_failure := (average) / (average_success)
 	return -average_steps_to_failure, nil //episodic  acrobot, returns negative of steps to failure
 }
