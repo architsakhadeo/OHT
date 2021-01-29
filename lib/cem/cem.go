@@ -189,7 +189,7 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 	}
 }
 
-func (cem Cem) Run() error {
+func (cem Cem) Run() ([]float64, error) {
 	// Allocate memory outside of loop
 	samples := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
 	samplesRealVals := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
@@ -219,7 +219,7 @@ func (cem Cem) Run() error {
 
 		err := cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if cem.debugWriter != noopWriter {
@@ -251,7 +251,7 @@ func (cem Cem) Run() error {
 		}
 		close(results)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// TODO all of this could be done with far less copying. Each row's backing data could be put into the new matrix.
@@ -298,7 +298,7 @@ func (cem Cem) Run() error {
 		}
 	}
 
-	return nil
+	return elites.RawRowView(0), nil
 }
 
 func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, NumRuns, iteration int) {

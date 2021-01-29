@@ -63,10 +63,11 @@ func main() {
 
 	cem, err := cem.New(rn.runOneSample, hypers, settings, options...)
 	panicIfError(err, "Failed to create CEM")
-	err = cem.Run()
+
+	result, err := cem.Run()
 	panicIfError(err, "Failed to run CEM")
 
-	fmt.Println("")
+	fmt.Println("\nFinal optional point: ", result)
 	fmt.Println("Execution time: ", time.Since(startTime))
 }
 
