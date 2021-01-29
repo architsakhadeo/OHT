@@ -233,7 +233,6 @@ func (cem Cem) Run() error {
 	descendingSamplesMetrics := make([]float64, cem.numElite)
 	elitesRealVals := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
 	elites := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
-	meanSampleHyperparams := make([]float64, cem.numHyperparams)
 	samplesMetrics := make([]float64, cem.numSamples)
 
 	for iteration := 0; iteration < cem.numIterations; iteration++ {
@@ -282,12 +281,11 @@ func (cem Cem) Run() error {
 		}
 
 		copy(cem.meanHyperparams, elitesRealVals.RawRowView(0))
-		copy(meanSampleHyperparams, elites.RawRowView(0))
 		fmt.Println("Elite points: ", elites)
 		fmt.Println("")
 		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:cem.numElite])
 		fmt.Println("")
-		fmt.Println("Mean point: ", meanSampleHyperparams)
+		fmt.Println("Mean point: ", elites.RawRowView(0))
 
 		cov := mat.NewSymDense(cem.numHyperparams, nil)
 		stat.CovarianceMatrix(cov, elitesRealVals, nil)
