@@ -172,14 +172,11 @@ func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int, means
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *mat.Dense, means []float64) (*mat.Dense, *mat.Dense, error) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, samples, samplesRealVals, elites, elitesRealVals *mat.Dense, means []float64) error {
 	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-
-	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
-	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
 
 	i := 0
 
@@ -209,7 +206,7 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *ma
 		}
 	}
 
-	return samples, samplesRealVals, nil
+	return nil
 }
 
 func (cem Cem) Run() error {
@@ -223,7 +220,10 @@ func (cem Cem) Run() error {
 	fmt.Println("Mean :", means)
 	fmt.Println("")
 
-	samples, samplesRealVals, err := cem.newSampleSlices(covariance, nil, nil, means)
+	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
+	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
+
+	err := cem.newSampleSlices(covariance, samples, samplesRealVals, nil, nil, means)
 	if err != nil {
 		return err
 	}
@@ -289,17 +289,17 @@ func (cem Cem) Run() error {
 		stat.CovarianceMatrix(cov, elitesRealVals, nil)
 
 		covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
-		for rows := 0; rows < cem.numHyperparams; rows++ {
-			for cols := 0; cols < cem.numHyperparams; cols++ {
-				if rows == cols {
-					covariance.Set(rows, cols, cov.At(rows, cols)+e)
+		for row := 0; row < cem.numHyperparams; row++ {
+			for col := 0; col < cem.numHyperparams; col++ {
+				if row == col {
+					covariance.Set(row, col, cov.At(row, col)+e)
 				} else {
-					covariance.Set(rows, cols, cov.At(rows, cols)-e)
+					covariance.Set(row, col, cov.At(row, col)-e)
 				}
 			}
 		}
 
-		samples, samplesRealVals, err = cem.newSampleSlices(covariance, elitesRealVals, elites, elitesRealVals.RawRowView(0))
+		err = cem.newSampleSlices(covariance, samples, samplesRealVals, elites, elitesRealVals, elitesRealVals.RawRowView(0))
 		if err != nil {
 			return err
 		}
