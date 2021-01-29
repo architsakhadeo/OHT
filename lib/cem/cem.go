@@ -201,6 +201,14 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 }
 
 func (cem Cem) Run() error {
+	// Allocate memory outside of loop
+	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
+	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
+	descendingSamplesMetrics := make([]float64, cem.numElite)
+	elitesRealVals := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
+	elites := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
+	samplesMetrics := make([]float64, cem.numSamples)
+
 	covariance := cem.initialCovariance()
 
 	means := make([]float64, cem.numHyperparams)
@@ -211,19 +219,10 @@ func (cem Cem) Run() error {
 	fmt.Println("Mean :", means)
 	fmt.Println("")
 
-	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
-	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
-
 	err := cem.newSampleSlices(covariance, samples, samplesRealVals, 0, means)
 	if err != nil {
 		return err
 	}
-
-	// Allocate memory outside of loop
-	descendingSamplesMetrics := make([]float64, cem.numElite)
-	elitesRealVals := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
-	elites := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
-	samplesMetrics := make([]float64, cem.numSamples)
 
 	for iteration := 0; iteration < cem.numIterations; iteration++ {
 		startIteration := time.Now()
