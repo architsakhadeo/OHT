@@ -381,14 +381,8 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
 
 		expConf := config.Experiment{
-			MaxEpisodes:             50000,
-			MaxRunLengthEpisodic:    cem.maxRunLengthEpisodic,
-			DebugInterval:           0,
-			DataPath:                "",
-			ShouldLogTraces:         false,
-			CacheTracesInRAM:        false,
-			ShouldLogEpisodeLengths: false,
-			MaxCPUs:                 1,
+			MaxEpisodes:          50000,
+			MaxRunLengthEpisodic: cem.maxRunLengthEpisodic,
 		}
 		exp, err := experiment.New(ag, env, expConf, cem.debug, cem.data)
 		if err != nil {
