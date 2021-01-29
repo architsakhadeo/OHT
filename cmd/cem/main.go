@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/stellentus/cartpoles/lib/agent"
 	"github.com/stellentus/cartpoles/lib/cem"
 )
 
@@ -46,7 +47,23 @@ func main() {
 		options = append(options, cem.NumWorkers(*numWorkers))
 	}
 
-	cem, err := cem.New(options...)
+	provideSettings := func(seed int64, hyperparameters []float64) agent.EsarsaSettings {
+		return agent.EsarsaSettings{
+			Seed:               seed,
+			NumTilings:         int(hyperparameters[0]),
+			NumTiles:           int(hyperparameters[1]),
+			Lambda:             float64(hyperparameters[2]),
+			WInit:              float64(hyperparameters[3]),
+			Alpha:              float64(hyperparameters[4]),
+			Gamma:              1.0,
+			Epsilon:            0.0,
+			AdaptiveAlpha:      0.0,
+			IsStepsizeAdaptive: false,
+			EnvName:            "acrobot",
+		}
+	}
+
+	cem, err := cem.New(provideSettings, options...)
 	panicIfError(err, "Failed to create CEM")
 	err = cem.Run()
 	panicIfError(err, "Failed to run CEM")

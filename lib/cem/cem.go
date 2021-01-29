@@ -1,6 +1,7 @@
 package cem
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"runtime"
@@ -21,6 +22,8 @@ import (
 )
 
 type Cem struct {
+	getSets AgentSettingsProvider
+
 	// numWorkers is the maximum number of workers
 	// Defaults is the number of CPUs if -1
 	numWorkers int
@@ -66,11 +69,18 @@ type Cem struct {
 	upper                      []float64
 }
 
+// AgentSettingsProvider is a function that returns agent settings corresponding to the provided seed and slice of hyperparameters.
+type AgentSettingsProvider func(seed int64, hyperparameters []float64) agent.EsarsaSettings
+
 const e = 10.e-8
 
-func New(opts ...Option) (*Cem, error) {
+func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
+	if getSets == nil {
+		return nil, errors.New("Cem requires a settings provider")
+	}
 	// Initialize with default values
 	cem := &Cem{
+		getSets:                    getSets,
 		numWorkers:                 runtime.NumCPU(),
 		numIterations:              3,
 		numSamples:                 10,
@@ -359,32 +369,15 @@ func indexOfInt(element int64, data []int64) int {
 }
 
 func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, error) {
-	tilings := sample[0]
-	tiles := sample[1]
-	lambda := sample[2]
-	wInit := sample[3]
-	alpha := sample[4]
 	var run_metrics []float64
 	var run_successes []float64
 	for run := 0; run < numRuns; run++ {
 		seed := int64((numRuns * iteration) + run)
-		agentSettings := agent.EsarsaSettings{
-			EnableDebug:        false,
-			Seed:               seed,
-			NumTilings:         int(tilings),
-			NumTiles:           int(tiles),
-			Gamma:              1.0,
-			Lambda:             float64(lambda),
-			Epsilon:            0.0,
-			Alpha:              float64(alpha),
-			AdaptiveAlpha:      0.0,
-			IsStepsizeAdaptive: false,
-			WInit:              float64(wInit),
-			EnvName:            "acrobot",
-		}
+
+		set := cem.getSets(seed, sample)
 
 		ag := &agent.ESarsa{Debug: cem.debug}
-		ag.InitializeWithSettings(agentSettings, lockweight.LockWeight{})
+		ag.InitializeWithSettings(set, lockweight.LockWeight{})
 
 		env := &environment.Acrobot{Debug: cem.debug}
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
