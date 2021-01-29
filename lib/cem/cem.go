@@ -64,7 +64,6 @@ type Cem struct {
 	numElite                   int64
 	numEliteElite              int
 	meanHyperparams            []float64
-	symmetricCovariance        *mat.SymDense
 	lower                      []float64
 	upper                      []float64
 }
@@ -125,6 +124,13 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 		cem.meanHyperparams[i] = (cem.lower[i] + cem.upper[i]) / 2.0
 	}
 
+	fmt.Println("Mean :", cem.meanHyperparams)
+	fmt.Println("")
+
+	return cem, nil
+}
+
+func (cem Cem) initialCovariance() *mat.Dense {
 	covariance := mat.NewDense(len(cem.hyperparams), len(cem.hyperparams), nil)
 	covarianceRows, covarianceColumns := covariance.Dims()
 
@@ -141,7 +147,6 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 			maxUpper = v
 		}
 	}
-
 	for i := 0; i < covarianceRows; i++ {
 		for j := 0; j < covarianceColumns; j++ {
 			if i == j {
@@ -152,27 +157,23 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 		}
 	}
 
-	if covariance, err = nearestPD(covariance); err != nil {
-		return nil, err
-	}
-
-	cem.symmetricCovariance = mat.NewSymDense(len(cem.hyperparams), nil)
-	for i := 0; i < len(cem.hyperparams); i++ {
-		for j := 0; j < len(cem.hyperparams); j++ {
-			cem.symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
-		}
-	}
-
-	fmt.Println("Mean :", cem.meanHyperparams)
-	fmt.Println("")
-
-	return cem, nil
+	return covariance
 }
 
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(cov mat.Cholesky, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64) {
+	symCov := mat.NewSymDense(len(cem.hyperparams), nil)
+	for i := 0; i < len(cem.hyperparams); i++ {
+		for j := 0; j < len(cem.hyperparams); j++ {
+			symCov.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
+		}
+	}
+
+	var choleskySymmetricCovariance mat.Cholesky
+	choleskySymmetricCovariance.Factorize(symCov)
+
 	samples := make([][]float64, cem.numSamples)
 	realvaluedSamples := make([][]float64, cem.numSamples)
 
@@ -187,7 +188,7 @@ func (cem Cem) newSampleSlices(cov mat.Cholesky, elitePoints, eliteSamplePoints 
 	}
 
 	for i < cem.numSamples {
-		sample := distmv.NormalRand(nil, cem.meanHyperparams, &cov, rand.NewSource(cem.rng.Uint64()))
+		sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
 		for j := 0; j < len(cem.hyperparams); j++ {
 			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
@@ -219,10 +220,14 @@ func (cem Cem) newSampleSlices(cov mat.Cholesky, elitePoints, eliteSamplePoints 
 }
 
 func (cem Cem) Run() error {
-	var choleskySymmetricCovariance mat.Cholesky
-	choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
+	covariance := cem.initialCovariance()
 
-	samples, realvaluedSamples := cem.newSampleSlices(choleskySymmetricCovariance, nil, nil)
+	var err error
+	if covariance, err = nearestPD(covariance); err != nil {
+		return err
+	}
+
+	samples, realvaluedSamples := cem.newSampleSlices(covariance, nil, nil)
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
@@ -318,17 +323,7 @@ func (cem Cem) Run() error {
 			return err
 		}
 
-		cem.symmetricCovariance = mat.NewSymDense(len(cem.hyperparams), nil)
-		for i := 0; i < len(cem.hyperparams); i++ {
-			for j := 0; j < len(cem.hyperparams); j++ {
-				cem.symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
-			}
-		}
-
-		var choleskySymmetricCovariance mat.Cholesky
-		choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
-
-		samples, realvaluedSamples = cem.newSampleSlices(choleskySymmetricCovariance, elitePoints, eliteSamplePoints)
+		samples, realvaluedSamples = cem.newSampleSlices(covariance, elitePoints, eliteSamplePoints)
 
 		fmt.Println("")
 		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
