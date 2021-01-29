@@ -268,6 +268,7 @@ func (cem Cem) Run() error {
 				samplesMetrics[avg.idx] = avg.average
 			}
 		}
+		close(results)
 		if err != nil {
 			return err
 		}
