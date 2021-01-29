@@ -289,15 +289,8 @@ func (cem Cem) Run() error {
 		fmt.Println("")
 		fmt.Println("Mean point: ", meanSampleHyperparams)
 
-		elitesRealValsMatrix := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
-		for rows := 0; rows < cem.numElite; rows++ {
-			for cols := 0; cols < cem.numHyperparams; cols++ {
-				elitesRealValsMatrix.Set(rows, cols, elitesRealVals.At(rows, cols))
-			}
-		}
-
 		cov := mat.NewSymDense(cem.numHyperparams, nil)
-		stat.CovarianceMatrix(cov, elitesRealValsMatrix, nil)
+		stat.CovarianceMatrix(cov, elitesRealVals, nil)
 
 		covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
 		for rows := 0; rows < cem.numHyperparams; rows++ {
