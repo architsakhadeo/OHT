@@ -221,15 +221,16 @@ func (cem Cem) Run() error {
 
 	numEliteElite := 0 // At first there are no elite samples
 
-	err := cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
-	if err != nil {
-		return err
-	}
-
 	for iteration := 0; iteration < cem.numIterations; iteration++ {
 		startIteration := time.Now()
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
+
+		err := cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
+		if err != nil {
+			return err
+		}
+
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 
@@ -246,7 +247,6 @@ func (cem Cem) Run() error {
 		close(jobs)
 
 		count := 0
-		var err error
 		for count < cem.numSamples {
 			select {
 			case avg := <-results:
@@ -299,16 +299,12 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		err = cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
-		if err != nil {
-			return err
-		}
-
 		fmt.Println("")
 		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
 		fmt.Println("")
 		fmt.Println("--------------------------------------------------")
 	}
+
 	return nil
 }
 
