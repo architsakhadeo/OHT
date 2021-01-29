@@ -187,28 +187,28 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 	}
 
 	samples := make([][]float64, cem.numSamples)
-	realvaluedSamples := make([][]float64, cem.numSamples)
+	sampesRealVals := make([][]float64, cem.numSamples)
 
 	i := 0
 
 	if elitePoints != nil {
 		numEliteElite := cem.numElite / 2
 		for m := 0; m < numEliteElite; m++ {
-			realvaluedSamples[m] = elitePoints[m]
+			sampesRealVals[m] = elitePoints[m]
 			samples[m] = eliteSamplePoints[m]
 		}
 		i += numEliteElite
 	}
 
 	for ; i < cem.numSamples; i++ {
-		realvaluedSamples[i] = cem.getSamples(chol)
+		sampesRealVals[i] = cem.getSamples(chol)
 		samples[i] = make([]float64, cem.numHyperparams)
 		for j := 0; j < cem.numHyperparams; j++ {
 			if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-				samples[i][j] = realvaluedSamples[i][j]
+				samples[i][j] = sampesRealVals[i][j]
 			} else {
 				for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-					if realvaluedSamples[i][j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
+					if sampesRealVals[i][j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
 						samples[i][j] = cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k]
 						break
 					}
@@ -217,13 +217,13 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 		}
 	}
 
-	return samples, realvaluedSamples, nil
+	return samples, sampesRealVals, nil
 }
 
 func (cem Cem) Run() error {
 	covariance := cem.initialCovariance()
 
-	samples, realvaluedSamples, err := cem.newSampleSlices(covariance, nil, nil)
+	samples, sampesRealVals, err := cem.newSampleSlices(covariance, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -279,7 +279,7 @@ func (cem Cem) Run() error {
 		for ind := 0; ind < cem.numElite; ind++ {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
 			descendingSamples[ind] = samples[ascendingIndices[cem.numSamples-1-ind]]
-			descendingRealValuedSamples[ind] = realvaluedSamples[ascendingIndices[cem.numSamples-1-ind]]
+			descendingRealValuedSamples[ind] = sampesRealVals[ascendingIndices[cem.numSamples-1-ind]]
 		}
 
 		elitePoints = descendingRealValuedSamples[:cem.numElite]
@@ -313,7 +313,7 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		samples, realvaluedSamples, err = cem.newSampleSlices(covariance, elitePoints, eliteSamplePoints)
+		samples, sampesRealVals, err = cem.newSampleSlices(covariance, elitePoints, eliteSamplePoints)
 		if err != nil {
 			return err
 		}
