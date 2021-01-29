@@ -101,3 +101,11 @@ func DebugLogger(opt logger.Debug) Option {
 		return nil
 	}
 }
+
+// DataLogger configures the agent settings.
+func DataLogger(opt logger.Data) Option {
+	return func(cem *Cem) error {
+		cem.data = opt
+		return nil
+	}
+}

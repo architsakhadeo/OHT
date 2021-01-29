@@ -50,6 +50,7 @@ type Cem struct {
 	percentElite float64
 
 	debug logger.Debug
+	data  logger.Data
 
 	rng *rand.Rand
 
@@ -84,6 +85,13 @@ func New(opts ...Option) (*Cem, error) {
 		discreteMidRanges:          [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}},
 		lower:                      []float64{0.5, 0.5, 0.0, -2.0, 0.0},
 		upper:                      []float64{4.5, 3.5, 1.0, 5.0, 1.0},
+	}
+
+	// Default no-data logger
+	var err error
+	cem.data, err = logger.NewData(cem.debug, logger.DataConfig{})
+	if err != nil {
+		return nil, err
 	}
 
 	for _, opt := range opts {
@@ -134,7 +142,6 @@ func New(opts ...Option) (*Cem, error) {
 		}
 	}
 
-	var err error
 	if covariance, err = nearestPD(covariance); err != nil {
 		return nil, err
 	}
@@ -382,18 +389,6 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 		env := &environment.Acrobot{Debug: cem.debug}
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
 
-		// Does not log data yet
-		data, err := logger.NewData(cem.debug, logger.DataConfig{
-			ShouldLogTraces:         false,
-			CacheTracesInRAM:        false,
-			ShouldLogEpisodeLengths: false,
-			BasePath:                "", //"data/CEM"
-			FileSuffix:              "", //strconv.Itoa(int(run))
-		})
-		if err != nil {
-			return 0, err
-		}
-
 		expConf := config.Experiment{
 			MaxEpisodes:             50000,
 			MaxRunLengthEpisodic:    cem.maxRunLengthEpisodic,
@@ -404,7 +399,7 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 			ShouldLogEpisodeLengths: false,
 			MaxCPUs:                 1,
 		}
-		exp, err := experiment.New(ag, env, expConf, cem.debug, data)
+		exp, err := experiment.New(ag, env, expConf, cem.debug, cem.data)
 		if err != nil {
 			return 0, err
 		}
