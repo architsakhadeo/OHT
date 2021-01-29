@@ -28,18 +28,27 @@ func main() {
 	startTime := time.Now()
 	flag.Parse()
 
-	err := cem.Cem{
-		Seed:                 *seed,
-		NumWorkers:           *numWorkers,
-		NumIterations:        *numIterations,
-		NumSamples:           *numSamples,
-		NumRuns:              *numRuns,
-		NumTimesteps:         *numTimesteps,
-		NumEpisodes:          *numEpisodes,
-		NumStepsInEpisode:    *numStepsInEpisode,
-		MaxRunLengthEpisodic: *MaxRunLengthEpisodic,
-		PercentElite:         *percentElite,
-	}.Run()
+	options := []cem.Option{
+		cem.NumIterations(*numIterations),
+		cem.NumSamples(*numSamples),
+		cem.NumRuns(*numRuns),
+		cem.NumTimesteps(*numTimesteps),
+		cem.NumEpisodes(*numEpisodes),
+		cem.NumStepsInEpisode(*numStepsInEpisode),
+		cem.MaxRunLengthEpisodic(*MaxRunLengthEpisodic),
+		cem.PercentElite(*percentElite),
+	}
+
+	if *seed != math.MaxUint64 {
+		options = append(options, cem.Seed(*seed))
+	}
+	if *numWorkers != -1 {
+		options = append(options, cem.NumWorkers(*numWorkers))
+	}
+
+	cem, err := cem.New(options...)
+	panicIfError(err, "Failed to create CEM")
+	err = cem.Run()
 	panicIfError(err, "Failed to run CEM")
 
 	fmt.Println("")

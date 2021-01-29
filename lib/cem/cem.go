@@ -22,44 +22,68 @@ import (
 )
 
 type Cem struct {
-	// Seed is the random seed; if 0xffffffffffffffff, use the time
-	Seed uint64
-
-	// NumWorkers is the maximum number of workers
+	// numWorkers is the maximum number of workers
 	// Defaults is the number of CPUs if -1
-	NumWorkers int
+	numWorkers int
 
-	// NumIterations is the total number of iterations
-	NumIterations int
+	// numIterations is the total number of iterations
+	numIterations int
 
-	// NumSamples is the number of samples per iteration
-	NumSamples int
+	// numSamples is the number of samples per iteration
+	numSamples int
 
-	// NumRuns is the number of runs per sample
-	NumRuns int
+	// numRuns is the number of runs per sample
+	numRuns int
 
-	// NumTimesteps is the number of timesteps per run
-	NumTimesteps int
+	// numTimesteps is the number of timesteps per run
+	numTimesteps int
 
-	// NumEpisodes is the number of episodes
-	NumEpisodes int
+	// numEpisodes is the number of episodes
+	numEpisodes int
 
-	// NumStepsInEpisode is the number of steps in episode
-	NumStepsInEpisode int
+	// numStepsInEpisode is the number of steps in episode
+	numStepsInEpisode int
 
-	// MaxRunLengthEpisodic is the max number of steps in episode
-	MaxRunLengthEpisodic int
+	// maxRunLengthEpisodic is the max number of steps in episode
+	maxRunLengthEpisodic int
 
-	// PercentElite is the percent of samples that should be drawn from the elite group
-	PercentElite float64
+	// percentElite is the percent of samples that should be drawn from the elite group
+	percentElite float64
+
+	rng *rand.Rand
 }
 
 const e = 10.e-8
 
-func (cem Cem) Run() error {
-	if cem.NumWorkers <= 0 {
-		cem.NumWorkers = runtime.NumCPU()
+func New(opts ...Option) (*Cem, error) {
+	// Initialize with default values
+	cem := &Cem{
+		numWorkers:        runtime.NumCPU(),
+		numIterations:     3,
+		numSamples:        10,
+		numRuns:           2,
+		numEpisodes:       -1,
+		numStepsInEpisode: -1,
+		percentElite:      0.5,
 	}
+
+	for _, opt := range opts {
+		if err := opt(cem); err != nil {
+			return nil, err
+		}
+	}
+
+	if cem.rng == nil {
+		opt := Seed(uint64(time.Now().UnixNano()))
+		if err := opt(cem); err != nil {
+			return nil, err
+		}
+	}
+
+	return cem, nil
+}
+
+func (cem Cem) Run() error {
 
 	// Acrobot
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "wInit", "alpha"}
@@ -70,7 +94,7 @@ func (cem Cem) Run() error {
 	discreteRanges := [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}}
 	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}}
 
-	numElite := int64(float64(cem.NumSamples) * cem.PercentElite)
+	numElite := int64(float64(cem.numSamples) * cem.percentElite)
 	numEliteElite := int(numElite / 2.0)
 
 	var meanHyperparams [len(hyperparams)]float64
@@ -123,17 +147,13 @@ func (cem Cem) Run() error {
 	fmt.Println("Mean :", meanHyperparams)
 	fmt.Println("")
 
-	samples := make([][]float64, cem.NumSamples)           //samples contain the original values of hyperparams (discrete, continuous)
-	realvaluedSamples := make([][]float64, cem.NumSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
+	samples := make([][]float64, cem.numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
+	realvaluedSamples := make([][]float64, cem.numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
 
-	if cem.Seed == math.MaxUint64 {
-		cem.Seed = uint64(time.Now().UnixNano())
-	}
-	rng := rand.New(rand.NewSource(cem.Seed))
 	i := 0
 
-	for i < cem.NumSamples {
-		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(rng.Uint64()))
+	for i < cem.numSamples {
+		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
 		for j := 0; j < len(hyperparams); j++ {
 			if sample[j] < lower[j] || sample[j] > upper[j] {
@@ -163,22 +183,22 @@ func (cem Cem) Run() error {
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
-	for iteration := 0; iteration < cem.NumIterations; iteration++ {
+	for iteration := 0; iteration < cem.numIterations; iteration++ {
 		startIteration := time.Now()
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
-		samplesMetrics := make([]float64, cem.NumSamples)
+		samplesMetrics := make([]float64, cem.numSamples)
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 
-		jobs := make(chan int, cem.NumSamples)
-		results := make(chan averageAtIndex, cem.NumSamples)
+		jobs := make(chan int, cem.numSamples)
+		results := make(chan averageAtIndex, cem.numSamples)
 
-		for w := 0; w < cem.NumWorkers; w++ {
-			go cem.worker(jobs, results, samples, cem.NumRuns, iteration)
+		for w := 0; w < cem.numWorkers; w++ {
+			go cem.worker(jobs, results, samples, cem.numRuns, iteration)
 		}
 
-		for s := 0; s < cem.NumSamples; s++ {
+		for s := 0; s < cem.numSamples; s++ {
 			jobs <- s
 		}
 		close(jobs)
@@ -269,8 +289,8 @@ func (cem Cem) Run() error {
 		}
 		i := int(numEliteElite)
 
-		for i < cem.NumSamples {
-			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(rng.Uint64()))
+		for i < cem.numSamples {
+			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 			flag := 0
 			for j := 0; j < len(hyperparams); j++ {
 				if sample[j] < lower[j] || sample[j] > upper[j] {
@@ -583,7 +603,7 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 
 		expConf := config.Experiment{
 			MaxEpisodes:             50000,
-			MaxRunLengthEpisodic:    cem.MaxRunLengthEpisodic,
+			MaxRunLengthEpisodic:    cem.maxRunLengthEpisodic,
 			DebugInterval:           0,
 			DataPath:                "",
 			ShouldLogTraces:         false,
