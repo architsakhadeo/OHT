@@ -193,15 +193,15 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 	for row := startRow; row < cem.numSamples; row++ {
 		for col := 0; col < cem.numHyperparams; col++ {
 			if !containsInt(cem.discreteHyperparamsIndices, col) {
-				samples.Set(row, col, samplesRealVals.At(row, col))
-			} else {
-				for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
-					if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
-						samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
-						break
-					}
+				continue // no need to handle this column
+			}
+			for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
+				if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
+					samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
+					break
 				}
 			}
+
 		}
 	}
 }
