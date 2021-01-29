@@ -162,20 +162,10 @@ func (cem Cem) initialCovariance() *mat.Dense {
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
 func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64, error) {
-	covariance, err := nearestPD(covariance)
+	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	symCov := mat.NewSymDense(cem.numHyperparams, nil)
-	for i := 0; i < cem.numHyperparams; i++ {
-		for j := 0; j < cem.numHyperparams; j++ {
-			symCov.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
-		}
-	}
-
-	var choleskySymmetricCovariance mat.Cholesky
-	choleskySymmetricCovariance.Factorize(symCov)
 
 	samples := make([][]float64, cem.numSamples)
 	realvaluedSamples := make([][]float64, cem.numSamples)
@@ -192,7 +182,7 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 	}
 
 	for i < cem.numSamples {
-		sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
+		sample := distmv.NormalRand(nil, cem.meanHyperparams, chol, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
 		for j := 0; j < cem.numHyperparams; j++ {
 			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {

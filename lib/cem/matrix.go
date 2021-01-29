@@ -10,6 +10,24 @@ import (
 
 // This file contains helper functions for matrix calculations.
 
+func choleskySymmetricFromCovariance(covariance *mat.Dense, num int) (*mat.Cholesky, error) {
+	covariance, err := nearestPD(covariance)
+	if err != nil {
+		return nil, err
+	}
+
+	symCov := mat.NewSymDense(num, nil)
+	for i := 0; i < num; i++ {
+		for j := 0; j < num; j++ {
+			symCov.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
+		}
+	}
+
+	var choleskySymmetricCovariance mat.Cholesky
+	choleskySymmetricCovariance.Factorize(symCov)
+	return &choleskySymmetricCovariance, nil
+}
+
 func nearestPD(A *mat.Dense) (*mat.Dense, error) {
 	ARows, AColumns := A.Dims()
 
