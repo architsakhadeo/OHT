@@ -276,15 +276,10 @@ func (cem Cem) Run() error {
 		fmt.Println("Sample Metric: ", samplesMetrics)
 		fmt.Println("")
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
-		descendingIndices := make([]int, len(samples))
 		for ind := 0; ind < len(samples); ind++ {
-			descendingIndices[len(samples)-1-ind] = ascendingIndices[ind]
-		}
-
-		for ds := 0; ds < len(samples); ds++ {
-			descendingSamplesMetrics[ds] = samplesMetrics[descendingIndices[ds]]
-			descendingSamples[ds] = samples[descendingIndices[ds]]
-			descendingRealValuedSamples[ds] = realvaluedSamples[descendingIndices[ds]]
+			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[len(samples)-1-ind]]
+			descendingSamples[ind] = samples[ascendingIndices[len(samples)-1-ind]]
+			descendingRealValuedSamples[ind] = realvaluedSamples[ascendingIndices[len(samples)-1-ind]]
 		}
 
 		elitePoints = descendingRealValuedSamples[:cem.numElite]
