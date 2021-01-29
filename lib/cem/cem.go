@@ -192,20 +192,19 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 		}
 		if flag == 0 {
 			realvaluedSamples[i] = sample
-			var temp []float64
+			samples[i] = make([]float64, cem.numHyperparams)
 			for j := 0; j < cem.numHyperparams; j++ {
 				if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-					temp = append(temp, sample[j])
+					samples[i][j] = sample[j]
 				} else {
 					for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
 						if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
-							temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
+							samples[i][j] = cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k]
 							break
 						}
 					}
 				}
 			}
-			samples[i] = temp
 			i++
 		}
 	}
