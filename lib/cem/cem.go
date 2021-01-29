@@ -190,18 +190,17 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 }
 
 func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense) {
-	for row := startRow; row < cem.numSamples; row++ {
-		for col := 0; col < cem.numHyperparams; col++ {
-			if !containsInt(cem.discreteHyperparamsIndices, col) {
-				continue // no need to handle this column
-			}
+	for col := 0; col < cem.numHyperparams; col++ {
+		if !containsInt(cem.discreteHyperparamsIndices, col) {
+			continue // no need to handle this column
+		}
+		for row := startRow; row < cem.numSamples; row++ {
 			for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
 				if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
 					samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
 					break
 				}
 			}
-
 		}
 	}
 }
