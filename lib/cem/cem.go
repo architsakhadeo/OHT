@@ -58,7 +58,7 @@ type Cem struct {
 	rng *rand.Rand
 
 	numHyperparams             int
-	discreteHyperparamsIndices []int64
+	discreteHyperparamsIndices []int
 	discreteRanges             [][]float64
 	discreteMidRanges          [][]float64
 	numElite                   int
@@ -86,7 +86,7 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 		numStepsInEpisode:          -1,
 		percentElite:               0.5,
 		debug:                      logger.NewDebug(logger.DebugConfig{}),
-		discreteHyperparamsIndices: []int64{0, 1},
+		discreteHyperparamsIndices: []int{0, 1},
 		numHyperparams:             5,
 		discreteRanges:             [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}},
 		discreteMidRanges:          [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}},
@@ -194,13 +194,13 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 }
 
 func (cem Cem) updateDiscretes(row int, samples, samplesRealVals *mat.Dense) {
-	for j := 0; j < cem.numHyperparams; j++ {
-		if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-			samples.Set(row, j, samplesRealVals.At(row, j))
+	for col := 0; col < cem.numHyperparams; col++ {
+		if !containsInt(cem.discreteHyperparamsIndices, col) {
+			samples.Set(row, col, samplesRealVals.At(row, col))
 		} else {
-			for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-				if samplesRealVals.At(row, j) < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
-					samples.Set(row, j, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
+			for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
+				if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
+					samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
 					break
 				}
 			}
@@ -327,7 +327,7 @@ func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *m
 	}
 }
 
-func containsInt(s []int64, e int64) bool {
+func containsInt(s []int, e int) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -337,7 +337,7 @@ func containsInt(s []int64, e int64) bool {
 }
 
 // Works if data has unique elements without repetition
-func indexOfInt(element int64, data []int64) int {
+func indexOfInt(element int, data []int) int {
 	for k, v := range data {
 		if element == v {
 			return k
