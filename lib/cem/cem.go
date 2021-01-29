@@ -51,6 +51,17 @@ type Cem struct {
 	percentElite float64
 
 	rng *rand.Rand
+
+	discreteHyperparamsIndices []int64
+	hyperparams                []string
+	discreteRanges             [][]float64
+	discreteMidRanges          [][]float64
+	numElite                   int64
+	numEliteElite              int
+	meanHyperparams            []float64
+	symmetricCovariance        *mat.SymDense
+	lower                      []float64
+	upper                      []float64
 }
 
 const e = 10.e-8
@@ -58,13 +69,19 @@ const e = 10.e-8
 func New(opts ...Option) (*Cem, error) {
 	// Initialize with default values
 	cem := &Cem{
-		numWorkers:        runtime.NumCPU(),
-		numIterations:     3,
-		numSamples:        10,
-		numRuns:           2,
-		numEpisodes:       -1,
-		numStepsInEpisode: -1,
-		percentElite:      0.5,
+		numWorkers:                 runtime.NumCPU(),
+		numIterations:              3,
+		numSamples:                 10,
+		numRuns:                    2,
+		numEpisodes:                -1,
+		numStepsInEpisode:          -1,
+		percentElite:               0.5,
+		discreteHyperparamsIndices: []int64{0, 1},
+		hyperparams:                []string{"tilings", "tiles", "lambda", "wInit", "alpha"},
+		discreteRanges:             [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}},
+		discreteMidRanges:          [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}},
+		lower:                      []float64{0.5, 0.5, 0.0, -2.0, 0.0},
+		upper:                      []float64{4.5, 3.5, 1.0, 5.0, 1.0},
 	}
 
 	for _, opt := range opts {
@@ -80,39 +97,26 @@ func New(opts ...Option) (*Cem, error) {
 		}
 	}
 
-	return cem, nil
-}
+	cem.numElite = int64(float64(cem.numSamples) * cem.percentElite)
+	cem.numEliteElite = int(cem.numElite / 2.0)
 
-func (cem Cem) Run() error {
-	// Acrobot
-	hyperparams := [5]string{"tilings", "tiles", "lambda", "wInit", "alpha"}
-	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, -2.0, 0.0}
-	upper := [len(hyperparams)]float64{4.5, 3.5, 1.0, 5.0, 1.0}
-
-	discreteHyperparamsIndices := [2]int64{0, 1}
-	discreteRanges := [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}}
-	discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}}
-
-	numElite := int64(float64(cem.numSamples) * cem.percentElite)
-	numEliteElite := int(numElite / 2.0)
-
-	var meanHyperparams [len(hyperparams)]float64
-	for i := range meanHyperparams {
-		meanHyperparams[i] = (lower[i] + upper[i]) / 2.0
+	cem.meanHyperparams = make([]float64, len(cem.hyperparams))
+	for i := range cem.meanHyperparams {
+		cem.meanHyperparams[i] = (cem.lower[i] + cem.upper[i]) / 2.0
 	}
 
-	covariance := mat.NewDense(len(hyperparams), len(hyperparams), nil)
+	covariance := mat.NewDense(len(cem.hyperparams), len(cem.hyperparams), nil)
 	covarianceRows, covarianceColumns := covariance.Dims()
 
-	minLower := lower[0]
-	maxUpper := upper[0]
+	minLower := cem.lower[0]
+	maxUpper := cem.upper[0]
 
-	for _, v := range lower {
+	for _, v := range cem.lower {
 		if v < minLower {
 			minLower = v
 		}
 	}
-	for _, v := range upper {
+	for _, v := range cem.upper {
 		if v > maxUpper {
 			maxUpper = v
 		}
@@ -130,31 +134,35 @@ func (cem Cem) Run() error {
 
 	var err error
 	if covariance, err = nearestPD(covariance); err != nil {
-		return err
+		return nil, err
 	}
 
-	symmetricCovariance := mat.NewSymDense(len(hyperparams), nil)
-	for i := 0; i < len(hyperparams); i++ {
-		for j := 0; j < len(hyperparams); j++ {
-			symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
+	cem.symmetricCovariance = mat.NewSymDense(len(cem.hyperparams), nil)
+	for i := 0; i < len(cem.hyperparams); i++ {
+		for j := 0; j < len(cem.hyperparams); j++ {
+			cem.symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
 		}
 	}
 
-	var choleskySymmetricCovariance mat.Cholesky
-	choleskySymmetricCovariance.Factorize(symmetricCovariance)
-
-	fmt.Println("Mean :", meanHyperparams)
+	fmt.Println("Mean :", cem.meanHyperparams)
 	fmt.Println("")
+
+	return cem, nil
+}
+
+func (cem Cem) Run() error {
+	var choleskySymmetricCovariance mat.Cholesky
+	choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
 
 	samples := make([][]float64, cem.numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
 	realvaluedSamples := make([][]float64, cem.numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
 
 	i := 0
 	for i < cem.numSamples {
-		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
+		sample := distmv.NormalRand(nil, cem.meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
-		for j := 0; j < len(hyperparams); j++ {
-			if sample[j] < lower[j] || sample[j] > upper[j] {
+		for j := 0; j < len(cem.hyperparams); j++ {
+			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
 				flag = 1
 				break
 			}
@@ -162,13 +170,13 @@ func (cem Cem) Run() error {
 		if flag == 0 {
 			realvaluedSamples[i] = sample
 			var temp []float64
-			for j := 0; j < len(hyperparams); j++ {
-				if !containsInt(discreteHyperparamsIndices[:], int64(j)) {
+			for j := 0; j < len(cem.hyperparams); j++ {
+				if !containsInt(cem.discreteHyperparamsIndices[:], int64(j)) {
 					temp = append(temp, sample[j])
 				} else {
-					for k := 0; k < len(discreteMidRanges[j]); k++ {
-						if sample[j] < discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
-							temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
+					for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
+						if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k] {
+							temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k])
 							break
 						}
 					}
@@ -202,6 +210,7 @@ func (cem Cem) Run() error {
 		close(jobs)
 
 		count := 0
+		var err error
 		for count < len(samples) {
 			select {
 			case avg := <-results:
@@ -233,32 +242,32 @@ func (cem Cem) Run() error {
 			descendingRealValuedSamples[ds] = realvaluedSamples[descendingIndices[ds]]
 		}
 
-		elitePoints := make([][]float64, numElite)
-		eliteSamplePoints := make([][]float64, numElite)
-		elitePoints = descendingRealValuedSamples[:numElite]
-		eliteSamplePoints = descendingSamples[:numElite]
-		var meanSampleHyperparams [len(hyperparams)]float64
-		copy(meanHyperparams[:], elitePoints[0])
+		elitePoints := make([][]float64, cem.numElite)
+		eliteSamplePoints := make([][]float64, cem.numElite)
+		elitePoints = descendingRealValuedSamples[:cem.numElite]
+		eliteSamplePoints = descendingSamples[:cem.numElite]
+		meanSampleHyperparams := make([]float64, len(cem.hyperparams))
+		copy(cem.meanHyperparams[:], elitePoints[0])
 		copy(meanSampleHyperparams[:], eliteSamplePoints[0])
 		fmt.Println("Elite points: ", eliteSamplePoints)
 		fmt.Println("")
-		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:numElite])
+		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:cem.numElite])
 		fmt.Println("")
 		fmt.Println("Mean point: ", meanSampleHyperparams)
 
-		elitePointsMatrix := mat.NewDense(len(elitePoints), len(hyperparams), nil)
+		elitePointsMatrix := mat.NewDense(len(elitePoints), len(cem.hyperparams), nil)
 		for rows := 0; rows < len(elitePoints); rows++ {
-			for cols := 0; cols < len(hyperparams); cols++ {
+			for cols := 0; cols < len(cem.hyperparams); cols++ {
 				elitePointsMatrix.Set(rows, cols, elitePoints[rows][cols])
 			}
 		}
 
-		cov := mat.NewSymDense(len(hyperparams), nil)
+		cov := mat.NewSymDense(len(cem.hyperparams), nil)
 		stat.CovarianceMatrix(cov, elitePointsMatrix, nil)
 
-		covWithE := mat.NewDense(len(hyperparams), len(hyperparams), nil)
-		for rows := 0; rows < len(hyperparams); rows++ {
-			for cols := 0; cols < len(hyperparams); cols++ {
+		covWithE := mat.NewDense(len(cem.hyperparams), len(cem.hyperparams), nil)
+		for rows := 0; rows < len(cem.hyperparams); rows++ {
+			for cols := 0; cols < len(cem.hyperparams); cols++ {
 				if rows == cols {
 					covWithE.Set(rows, cols, cov.At(rows, cols)+e)
 				} else {
@@ -267,31 +276,32 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		if covariance, err = nearestPD(covWithE); err != nil {
+		covariance, err := nearestPD(covWithE)
+		if err != nil {
 			return err
 		}
 
-		symmetricCovariance := mat.NewSymDense(len(hyperparams), nil)
-		for i := 0; i < len(hyperparams); i++ {
-			for j := 0; j < len(hyperparams); j++ {
-				symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
+		cem.symmetricCovariance = mat.NewSymDense(len(cem.hyperparams), nil)
+		for i := 0; i < len(cem.hyperparams); i++ {
+			for j := 0; j < len(cem.hyperparams); j++ {
+				cem.symmetricCovariance.SetSym(i, j, (covariance.At(i, j)+covariance.At(j, i))/2.0)
 			}
 		}
 
 		var choleskySymmetricCovariance mat.Cholesky
-		choleskySymmetricCovariance.Factorize(symmetricCovariance)
+		choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
 
-		for m := 0; m < int(numEliteElite); m++ {
+		for m := 0; m < int(cem.numEliteElite); m++ {
 			realvaluedSamples[m] = elitePoints[m]
 			samples[m] = eliteSamplePoints[m]
 		}
-		i := int(numEliteElite)
+		i := int(cem.numEliteElite)
 
 		for i < cem.numSamples {
-			sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
+			sample := distmv.NormalRand(nil, cem.meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 			flag := 0
-			for j := 0; j < len(hyperparams); j++ {
-				if sample[j] < lower[j] || sample[j] > upper[j] {
+			for j := 0; j < len(cem.hyperparams); j++ {
+				if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
 					flag = 1
 					break
 				}
@@ -299,13 +309,13 @@ func (cem Cem) Run() error {
 			if flag == 0 {
 				realvaluedSamples[i] = sample
 				var temp []float64
-				for j := 0; j < len(hyperparams); j++ {
-					if !containsInt(discreteHyperparamsIndices[:], int64(j)) {
+				for j := 0; j < len(cem.hyperparams); j++ {
+					if !containsInt(cem.discreteHyperparamsIndices[:], int64(j)) {
 						temp = append(temp, sample[j])
 					} else {
-						for k := 0; k < len(discreteMidRanges[j]); k++ {
-							if sample[j] < discreteMidRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k] {
-								temp = append(temp, discreteRanges[indexOfInt(int64(j), discreteHyperparamsIndices[:])][k])
+						for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
+							if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k] {
+								temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k])
 								break
 							}
 						}
