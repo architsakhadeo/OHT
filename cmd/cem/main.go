@@ -64,8 +64,8 @@ func main() {
 	}
 
 	hypers := []cem.Hyperparameter{
-		cem.Hyperparameter{Lower: 0.5, Upper: 4.5, SampleValueConverter: cem.DiscreteConverter([]float64{8, 16, 32, 48})},
-		cem.Hyperparameter{Lower: 0.5, Upper: 3.5, SampleValueConverter: cem.DiscreteConverter([]float64{2, 4, 8})},
+		cem.NewDiscreteConverter([]float64{8, 16, 32, 48}),
+		cem.NewDiscreteConverter([]float64{2, 4, 8}),
 		cem.Hyperparameter{Lower: 0, Upper: 1},
 		cem.Hyperparameter{Lower: -2, Upper: 5},
 		cem.Hyperparameter{Lower: 0, Upper: 1},

@@ -398,9 +398,17 @@ type averageAtIndex struct {
 	err     error
 }
 
-type DiscreteConverter []float64
+func NewDiscreteConverter(vals []float64) Hyperparameter {
+	return Hyperparameter{
+		Lower:                0.5,
+		Upper:                float64(len(vals)) + .5,
+		SampleValueConverter: discreteConverter(vals),
+	}
+}
 
-func (dc DiscreteConverter) RealValue(val float64) float64 {
+type discreteConverter []float64
+
+func (dc discreteConverter) RealValue(val float64) float64 {
 	for k := 0; k < len(dc); k++ {
 		if val <= float64(k)+1.5 {
 			return dc[k]
