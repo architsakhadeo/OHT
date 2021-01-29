@@ -159,7 +159,7 @@ func (cem Cem) Run() error {
 
 	i := 0
 	for i < cem.numSamples {
-		sample := distmv.NormalRand(nil, cem.meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
+		sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
 		for j := 0; j < len(cem.hyperparams); j++ {
 			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
@@ -171,12 +171,12 @@ func (cem Cem) Run() error {
 			realvaluedSamples[i] = sample
 			var temp []float64
 			for j := 0; j < len(cem.hyperparams); j++ {
-				if !containsInt(cem.discreteHyperparamsIndices[:], int64(j)) {
+				if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
 					temp = append(temp, sample[j])
 				} else {
 					for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-						if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k] {
-							temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k])
+						if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
+							temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
 							break
 						}
 					}
@@ -247,8 +247,8 @@ func (cem Cem) Run() error {
 		elitePoints = descendingRealValuedSamples[:cem.numElite]
 		eliteSamplePoints = descendingSamples[:cem.numElite]
 		meanSampleHyperparams := make([]float64, len(cem.hyperparams))
-		copy(cem.meanHyperparams[:], elitePoints[0])
-		copy(meanSampleHyperparams[:], eliteSamplePoints[0])
+		copy(cem.meanHyperparams, elitePoints[0])
+		copy(meanSampleHyperparams, eliteSamplePoints[0])
 		fmt.Println("Elite points: ", eliteSamplePoints)
 		fmt.Println("")
 		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:cem.numElite])
@@ -298,7 +298,7 @@ func (cem Cem) Run() error {
 		i := int(cem.numEliteElite)
 
 		for i < cem.numSamples {
-			sample := distmv.NormalRand(nil, cem.meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
+			sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 			flag := 0
 			for j := 0; j < len(cem.hyperparams); j++ {
 				if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
@@ -310,12 +310,12 @@ func (cem Cem) Run() error {
 				realvaluedSamples[i] = sample
 				var temp []float64
 				for j := 0; j < len(cem.hyperparams); j++ {
-					if !containsInt(cem.discreteHyperparamsIndices[:], int64(j)) {
+					if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
 						temp = append(temp, sample[j])
 					} else {
 						for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-							if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k] {
-								temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices[:])][k])
+							if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
+								temp = append(temp, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
 								break
 							}
 						}
