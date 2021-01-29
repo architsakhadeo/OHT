@@ -112,7 +112,6 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	}
 	env.Seed += int64(run)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
-	env.state = make(rlglue.State, 4)
 	//env.Count = 0
 
 	env.Message("environment.knnModel settings", fmt.Sprintf("%+v", env.knnSettings))
@@ -121,6 +120,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
 	paramLog := folder + "/log_json.txt"
 	env.SettingFromLog(paramLog)
+	env.state = make(rlglue.State, env.stateDim)
 
 	// Get offline data
 	csvFile, err := os.Open(traceLog)
