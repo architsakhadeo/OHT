@@ -228,13 +228,19 @@ func (cem Cem) Run() error {
 		return err
 	}
 
-	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
+	// Allocate memory outside of loop
+	descendingSamplesMetrics := make([]float64, len(samples))
+	descendingSamples := make([][]float64, len(samples))
+	descendingRealValuedSamples := make([][]float64, len(samples))
+	elitePoints := make([][]float64, cem.numElite)
+	eliteSamplePoints := make([][]float64, cem.numElite)
+	meanSampleHyperparams := make([]float64, cem.numHyperparams)
+	samplesMetrics := make([]float64, cem.numSamples)
 
 	for iteration := 0; iteration < cem.numIterations; iteration++ {
 		startIteration := time.Now()
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
-		samplesMetrics := make([]float64, cem.numSamples)
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 
@@ -274,20 +280,14 @@ func (cem Cem) Run() error {
 			descendingIndices[len(samples)-1-ind] = ascendingIndices[ind]
 		}
 
-		descendingSamplesMetrics := make([]float64, len(samples))
-		descendingSamples := make([][]float64, len(samples))
-		descendingRealValuedSamples := make([][]float64, len(samples))
 		for ds := 0; ds < len(samples); ds++ {
 			descendingSamplesMetrics[ds] = samplesMetrics[descendingIndices[ds]]
 			descendingSamples[ds] = samples[descendingIndices[ds]]
 			descendingRealValuedSamples[ds] = realvaluedSamples[descendingIndices[ds]]
 		}
 
-		elitePoints := make([][]float64, cem.numElite)
-		eliteSamplePoints := make([][]float64, cem.numElite)
 		elitePoints = descendingRealValuedSamples[:cem.numElite]
 		eliteSamplePoints = descendingSamples[:cem.numElite]
-		meanSampleHyperparams := make([]float64, cem.numHyperparams)
 		copy(cem.meanHyperparams, elitePoints[0])
 		copy(meanSampleHyperparams, eliteSamplePoints[0])
 		fmt.Println("Elite points: ", eliteSamplePoints)
