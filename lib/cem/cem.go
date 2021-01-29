@@ -229,9 +229,9 @@ func (cem Cem) Run() error {
 	}
 
 	// Allocate memory outside of loop
-	descendingSamplesMetrics := make([]float64, cem.numSamples)
-	descendingSamples := make([][]float64, cem.numSamples)
-	descendingRealValuedSamples := make([][]float64, cem.numSamples)
+	descendingSamplesMetrics := make([]float64, cem.numElite)
+	descendingSamples := make([][]float64, cem.numElite)
+	descendingRealValuedSamples := make([][]float64, cem.numElite)
 	elitePoints := make([][]float64, cem.numElite)
 	eliteSamplePoints := make([][]float64, cem.numElite)
 	meanSampleHyperparams := make([]float64, cem.numHyperparams)
@@ -276,7 +276,7 @@ func (cem Cem) Run() error {
 		fmt.Println("Sample Metric: ", samplesMetrics)
 		fmt.Println("")
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
-		for ind := 0; ind < cem.numSamples; ind++ {
+		for ind := 0; ind < cem.numElite; ind++ {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
 			descendingSamples[ind] = samples[ascendingIndices[cem.numSamples-1-ind]]
 			descendingRealValuedSamples[ind] = realvaluedSamples[ascendingIndices[cem.numSamples-1-ind]]
