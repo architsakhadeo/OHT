@@ -180,13 +180,13 @@ func (cem Cem) getSamples(chol *mat.Cholesky) []float64 {
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][]float64) ([][]float64, [][]float64, error) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][]float64) (*mat.Dense, [][]float64, error) {
 	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	samples := make([][]float64, cem.numSamples)
+	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
 	samplesRealVals := make([][]float64, cem.numSamples)
 
 	i := 0
@@ -195,21 +195,21 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][
 		numEliteElite := cem.numElite / 2
 		for m := 0; m < numEliteElite; m++ {
 			samplesRealVals[m] = elitesRealVals[m]
-			samples[m] = elites[m]
+			samples.SetRow(m, elites[m])
 		}
 		i += numEliteElite
 	}
 
 	for ; i < cem.numSamples; i++ {
 		samplesRealVals[i] = cem.getSamples(chol)
-		samples[i] = make([]float64, cem.numHyperparams)
+
 		for j := 0; j < cem.numHyperparams; j++ {
 			if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-				samples[i][j] = samplesRealVals[i][j]
+				samples.Set(i, j, samplesRealVals[i][j])
 			} else {
 				for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
 					if samplesRealVals[i][j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
-						samples[i][j] = cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k]
+						samples.Set(i, j, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
 						break
 					}
 				}
@@ -276,7 +276,7 @@ func (cem Cem) Run() error {
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
 		for ind := 0; ind < cem.numElite; ind++ {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
-			elites[ind] = samples[ascendingIndices[cem.numSamples-1-ind]]
+			elites[ind] = samples.RawRowView(ascendingIndices[cem.numSamples-1-ind])
 			elitesRealVals[ind] = samplesRealVals[ascendingIndices[cem.numSamples-1-ind]]
 		}
 
@@ -322,9 +322,9 @@ func (cem Cem) Run() error {
 	return nil
 }
 
-func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples [][]float64, numRuns, iteration int) {
+func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, numRuns, iteration int) {
 	for idx := range jobs {
-		average, err := cem.runOneSample(samples[idx], numRuns, iteration)
+		average, err := cem.runOneSample(samples.RawRowView(idx), numRuns, iteration)
 		results <- averageAtIndex{
 			average: average,
 			idx:     idx,
