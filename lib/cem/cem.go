@@ -227,9 +227,6 @@ func (cem Cem) Run() error {
 	if err != nil {
 		return err
 	}
-	if err != nil {
-		return err
-	}
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
