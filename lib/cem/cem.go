@@ -158,6 +158,25 @@ func (cem Cem) initialCovariance() *mat.Dense {
 	return covariance
 }
 
+// getSamples returns a valid set of samples.
+// It loops until the hyperparameters meet the required lower/upper constraint.
+func (cem Cem) getSamples(chol *mat.Cholesky) []float64 {
+	for true {
+		ok := true
+		sample := distmv.NormalRand(nil, cem.meanHyperparams, chol, rand.NewSource(cem.rng.Uint64()))
+		for j := 0; j < cem.numHyperparams; j++ {
+			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			return sample
+		}
+	}
+	return nil // code cannot reach this point
+}
+
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
@@ -181,31 +200,20 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 		i += int(numEliteElite)
 	}
 
-	for i < cem.numSamples {
-		sample := distmv.NormalRand(nil, cem.meanHyperparams, chol, rand.NewSource(cem.rng.Uint64()))
-		flag := 0
+	for ; i < cem.numSamples; i++ {
+		realvaluedSamples[i] = cem.getSamples(chol)
+		samples[i] = make([]float64, cem.numHyperparams)
 		for j := 0; j < cem.numHyperparams; j++ {
-			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
-				flag = 1
-				break
-			}
-		}
-		if flag == 0 {
-			realvaluedSamples[i] = sample
-			samples[i] = make([]float64, cem.numHyperparams)
-			for j := 0; j < cem.numHyperparams; j++ {
-				if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-					samples[i][j] = sample[j]
-				} else {
-					for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-						if sample[j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
-							samples[i][j] = cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k]
-							break
-						}
+			if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
+				samples[i][j] = realvaluedSamples[i][j]
+			} else {
+				for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
+					if realvaluedSamples[i][j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
+						samples[i][j] = cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k]
+						break
 					}
 				}
 			}
-			i++
 		}
 	}
 
