@@ -3,6 +3,7 @@ package cem
 import (
 	"errors"
 
+	"github.com/stellentus/cartpoles/lib/logger"
 	"golang.org/x/exp/rand"
 )
 
@@ -89,6 +90,14 @@ func MaxRunLengthEpisodic(opt int) Option {
 func PercentElite(opt float64) Option {
 	return func(cem *Cem) error {
 		cem.percentElite = opt
+		return nil
+	}
+}
+
+// DebugLogger sets the debug logger.
+func DebugLogger(opt logger.Debug) Option {
+	return func(cem *Cem) error {
+		cem.debug = opt
 		return nil
 	}
 }

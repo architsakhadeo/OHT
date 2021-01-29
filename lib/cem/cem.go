@@ -49,6 +49,8 @@ type Cem struct {
 	// percentElite is the percent of samples that should be drawn from the elite group
 	percentElite float64
 
+	debug logger.Debug
+
 	rng *rand.Rand
 
 	discreteHyperparamsIndices []int64
@@ -75,6 +77,7 @@ func New(opts ...Option) (*Cem, error) {
 		numEpisodes:                -1,
 		numStepsInEpisode:          -1,
 		percentElite:               0.5,
+		debug:                      logger.NewDebug(logger.DebugConfig{}),
 		discreteHyperparamsIndices: []int64{0, 1},
 		hyperparams:                []string{"tilings", "tiles", "lambda", "wInit", "alpha"},
 		discreteRanges:             [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}},
@@ -373,16 +376,14 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 			EnvName:            "acrobot",
 		}
 
-		debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
-
-		ag := &agent.ESarsa{Debug: debug}
+		ag := &agent.ESarsa{Debug: cem.debug}
 		ag.InitializeWithSettings(agentSettings, lockweight.LockWeight{})
 
-		env := &environment.Acrobot{Debug: debug}
+		env := &environment.Acrobot{Debug: cem.debug}
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
 
 		// Does not log data yet
-		data, err := logger.NewData(debug, logger.DataConfig{
+		data, err := logger.NewData(cem.debug, logger.DataConfig{
 			ShouldLogTraces:         false,
 			CacheTracesInRAM:        false,
 			ShouldLogEpisodeLengths: false,
@@ -403,7 +404,7 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 			ShouldLogEpisodeLengths: false,
 			MaxCPUs:                 1,
 		}
-		exp, err := experiment.New(ag, env, expConf, debug, data)
+		exp, err := experiment.New(ag, env, expConf, cem.debug, data)
 		if err != nil {
 			return 0, err
 		}
