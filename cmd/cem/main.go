@@ -55,7 +55,7 @@ func main() {
 	//discreteRanges := [][]float64{[]float64{1, 2, 4, 8, 16, 32}, []float64{1, 2, 4}}
 	//discreteMidRanges := [][]float64{[]float64{1.5, 2.5, 3.5, 4.5, 5.5, 6.5}, []float64{1.5, 2.5, 3.5}}
 
-	// Acrobot
+	// Acrobot and Cartpole both
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "wInit", "alpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, -2.0, 0.0}
 	upper := [len(hyperparams)]float64{4.5, 3.5, 1.0, 5.0, 1.0}
@@ -548,7 +548,7 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 	wInit := sample[3]
 	alpha := sample[4]
 	var run_metrics []float64
-	var run_successes []float64
+	//var run_successes []float64
 	for run := 0; run < numRuns; run++ {
 		seed := int64((numRuns * iteration) + run)
 		agentSettings := agent.EsarsaSettings{
@@ -556,8 +556,8 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 			Seed:        seed,
 			NumTilings:  int(tilings),
 			NumTiles:    int(tiles),
-			//Gamma:              0.9,
-			Gamma:  1.0,
+			Gamma:              0.9,
+			//Gamma:  1.0,
 			Lambda: float64(lambda),
 			//Epsilon:            float64(epsilon),
 			//Alpha:              0.0,
@@ -568,7 +568,8 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 			AdaptiveAlpha:      0.0,
 			IsStepsizeAdaptive: false,
 			WInit:              float64(wInit),
-			EnvName:            "acrobot",
+			//EnvName:            "acrobot",
+			EnvName:                "cartpole",
 		}
 
 		debug := logger.NewDebug(logger.DebugConfig{}) // TODO create a debug
@@ -576,11 +577,11 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 		ag := &agent.ESarsa{Debug: debug}
 		ag.InitializeWithSettings(agentSettings, lockweight.LockWeight{})
 
-		//env := &environment.Cartpole{Debug: debug}
-		//env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed}) //Continuing cartpole
+		env := &environment.Cartpole{Debug: debug}
+		env.InitializeWithSettings(environment.CartpoleSettings{Seed: seed}) //Continuing cartpole
 
-		env := &environment.Acrobot{Debug: debug}
-		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
+		//env := &environment.Acrobot{Debug: debug}
+		//env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
 
 		// Does not log data yet
 		data, err := logger.NewData(debug, logger.DataConfig{
@@ -593,8 +594,8 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 		panicIfError(err, "Couldn't create logger.Data")
 
 		expConf := config.Experiment{
-			MaxEpisodes: 50000,
-			//MaxSteps:    *numTimesteps,
+			//MaxEpisodes: 50000,
+			MaxSteps:    *numTimesteps,
 			//MaxStepsInEpisode:       *numStepsInEpisode,
 			MaxRunLengthEpisodic:    *MaxRunLengthEpisodic,
 			DebugInterval:           0,
@@ -612,46 +613,46 @@ func runOneSample(sample []float64, numRuns, iteration int) float64 {
 
 		// Continuing cartpole, last half of the run
 		//
-		//for i:=0; i< len(listOfListOfRewards); i++{
-		//	for j:=0 ; j<len(listOfListOfRewards[i]); j++{
-		//		listOfRewards = append(listOfRewards, listOfListOfRewards[i][j])
-		//	}
-		//}
-		//fmt.Println("Length of run: ", len(listOfRewards))
-		//result := 0.0 // returns
-		//for index := int(len(listOfRewards)/2.0); index < len(listOfRewards); index++ {
-		//	result += listOfRewards[index]
-		//}
-
-		//Episodic Acrobot, last 1/10th of the episodes
-		for i := 0; i < len(listOfListOfRewards); i++ {
-			for j := 0; j < len(listOfListOfRewards[i]); j++ {
+		for i:=0; i< len(listOfListOfRewards); i++{
+			for j:=0 ; j<len(listOfListOfRewards[i]); j++{
 				listOfRewards = append(listOfRewards, listOfListOfRewards[i][j])
 			}
 		}
+		fmt.Println("Length of run: ", len(listOfRewards))
+		result := 0.0 // returns
+		for index := int(len(listOfRewards)/2.0); index < len(listOfRewards); index++ {
+			result += listOfRewards[index]
+		}
 
-		result := len(listOfRewards)
-		successes := len(listOfListOfRewards)
+		//Episodic Acrobot, last 1/10th of the episodes
+		//for i := 0; i < len(listOfListOfRewards); i++ {
+		//	for j := 0; j < len(listOfListOfRewards[i]); j++ {
+		//		listOfRewards = append(listOfRewards, listOfListOfRewards[i][j])
+		//	}
+		//}
+
+		//result := len(listOfRewards)
+		//successes := len(listOfListOfRewards)
 
 		run_metrics = append(run_metrics, float64(result))
-		run_successes = append(run_successes, float64(successes))
+		//run_successes = append(run_successes, float64(successes))
 	}
 	average := 0.0 //returns averaged across runs
-	average_success := 0.0
+	//average_success := 0.0
 	for _, v := range run_metrics {
 		average += v
 	}
-	for _, v := range run_successes {
-		average_success += v
-	}
+	//for _, v := range run_successes {
+	//	average_success += v
+	//}
 	average /= float64(len(run_metrics))
-	average_success /= float64(len(run_successes))
+	//average_success /= float64(len(run_successes))
 	//average_steps_to_failure := (-average + average_success) / (average_success)
-	average_steps_to_failure := (average) / (average_success)
+	//average_steps_to_failure := (average) / (average_success)
 	//fmt.Println("Time for Sample: ", time.Since(startTimeOfSample))
 	//fmt.Println("Steps to failure: ", (-average + average_success)/(average_success))
-	//return average //Continuing cartpole
-	return -average_steps_to_failure //episodic  acrobot, returns negative of steps to failure
+	return average //Continuing cartpole
+	//return -average_steps_to_failure //episodic  acrobot, returns negative of steps to failure
 }
 
 type averageAtIndex struct {
