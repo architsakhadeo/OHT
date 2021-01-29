@@ -22,12 +22,12 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward"):
     # for rk in fqi_rank.keys():
     #     fqi_data.append(fqi_rank[rk][0][1])
     # # all performance
-    fqi_data_all = loading_pessimistic(fqi, source)["fqi"] # 30 runs in total, but different parameters
-    # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
-    fqi_data = []
-    for rk in fqi_data_all.keys():
-        for pk in fqi_data_all[rk].keys():
-            fqi_data.append(fqi_data_all[rk][pk])
+    # fqi_data_all = loading_pessimistic(fqi, source)["fqi"] # 30 runs in total, but different parameters
+    # # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
+    # fqi_data = []
+    # for rk in fqi_data_all.keys():
+    #     for pk in fqi_data_all[rk].keys():
+    #         fqi_data.append(fqi_data_all[rk][pk])
 
 
     # random data list
@@ -38,7 +38,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward"):
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    filtered = {"random": [rand_data]}#, "fqi": [fqi_data]}
     cms_data = loading_pessimistic(cms, source)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -68,13 +68,13 @@ def arcrobot():
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot", source="episode")
+    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot", source="episode", ylim=[-300,0])
 
 def cartpole():
     calibration = {
-        # "distant start": ns1_timeout1000_farStart,
-        "distant start + early timeout": ns1_timeout200_farStart,
-        # "true start + early timeout": ns1_timeout200
+        "trueStart_adversariaTrans_t1000": trueStart_farTrans_time1000,
+        # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
+        "distStart_closeTrans_t200": distStart_closeTrans_time200,
     }
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
@@ -82,5 +82,5 @@ def cartpole():
     plot_compare_top(te, calibration, fqi, random, "../img/final_cartpole")
 
 
-arcrobot()
+# arcrobot()
 cartpole()
