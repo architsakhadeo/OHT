@@ -384,9 +384,7 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 
 		//Episodic Acrobot, last 1/10th of the episodes
 		for i := 0; i < len(listOfListOfRewards); i++ {
-			for j := 0; j < len(listOfListOfRewards[i]); j++ {
-				listOfRewards = append(listOfRewards, listOfListOfRewards[i][j])
-			}
+			listOfRewards = append(listOfRewards, listOfListOfRewards[i]...)
 		}
 
 		result := len(listOfRewards)
