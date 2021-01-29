@@ -306,18 +306,18 @@ func (cem Cem) Run() error {
 		cov := mat.NewSymDense(cem.numHyperparams, nil)
 		stat.CovarianceMatrix(cov, elitePointsMatrix, nil)
 
-		covWithE := mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
+		covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
 		for rows := 0; rows < cem.numHyperparams; rows++ {
 			for cols := 0; cols < cem.numHyperparams; cols++ {
 				if rows == cols {
-					covWithE.Set(rows, cols, cov.At(rows, cols)+e)
+					covariance.Set(rows, cols, cov.At(rows, cols)+e)
 				} else {
-					covWithE.Set(rows, cols, cov.At(rows, cols)-e)
+					covariance.Set(rows, cols, cov.At(rows, cols)-e)
 				}
 			}
 		}
 
-		samples, realvaluedSamples, err = cem.newSampleSlices(covWithE, elitePoints, eliteSamplePoints)
+		samples, realvaluedSamples, err = cem.newSampleSlices(covariance, elitePoints, eliteSamplePoints)
 		if err != nil {
 			return err
 		}
