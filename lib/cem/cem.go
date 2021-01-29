@@ -9,12 +9,6 @@ import (
 	"time"
 
 	"github.com/mkmik/argsort"
-	"github.com/stellentus/cartpoles/lib/agent"
-	"github.com/stellentus/cartpoles/lib/config"
-	"github.com/stellentus/cartpoles/lib/environment"
-	"github.com/stellentus/cartpoles/lib/experiment"
-	"github.com/stellentus/cartpoles/lib/logger"
-	"github.com/stellentus/cartpoles/lib/util/lockweight"
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat"
@@ -22,7 +16,7 @@ import (
 )
 
 type Cem struct {
-	getSets AgentSettingsProvider
+	run RunFunc
 
 	// numWorkers is the maximum number of workers
 	// Defaults is the number of CPUs if -1
@@ -37,26 +31,8 @@ type Cem struct {
 	// numRuns is the number of runs per sample
 	numRuns int
 
-	// numTimesteps is the number of timesteps per run
-	numTimesteps int
-
-	// numEpisodes is the number of episodes
-	numEpisodes int
-
-	// numStepsInEpisode is the number of steps in episode
-	numStepsInEpisode int
-
-	// maxRunLengthEpisodic is the max number of steps in episode
-	maxRunLengthEpisodic int
-
-	// maxEpisodes is the max number of episodes in an experiment
-	maxEpisodes int
-
 	// percentElite is the percent of samples that should be drawn from the elite group
 	percentElite float64
-
-	debug logger.Debug
-	data  logger.Data
 
 	rng *rand.Rand
 
@@ -77,35 +53,25 @@ type Hyperparameter struct {
 	SampleValueConverter // optional
 }
 
-// AgentSettingsProvider is a function that returns agent settings corresponding to the provided seed and slice of hyperparameters.
-type AgentSettingsProvider func(seed int64, hyperparameters []float64) agent.EsarsaSettings
+// RunFunc is a function that runs the code to be optimized, returning its score
+type RunFunc func(hyperparameters []float64, seeds []uint64, iteration int) (float64, error)
 
 const e = 10.e-8
 
-func New(getSets AgentSettingsProvider, hypers []Hyperparameter, opts ...Option) (*Cem, error) {
-	if getSets == nil {
+func New(run RunFunc, hypers []Hyperparameter, opts ...Option) (*Cem, error) {
+	if run == nil {
 		return nil, errors.New("Cem requires a settings provider")
 	}
 	// Initialize with default values
 	cem := &Cem{
-		getSets:           getSets,
-		numWorkers:        runtime.NumCPU(),
-		numIterations:     3,
-		numSamples:        10,
-		numRuns:           2,
-		numEpisodes:       -1,
-		numStepsInEpisode: -1,
-		percentElite:      0.5,
-		debug:             logger.NewDebug(logger.DebugConfig{}),
-		hypers:            hypers,
-		numHyperparams:    len(hypers),
-	}
-
-	// Default no-data logger
-	var err error
-	cem.data, err = logger.NewData(cem.debug, logger.DataConfig{})
-	if err != nil {
-		return nil, err
+		run:            run,
+		numWorkers:     runtime.NumCPU(),
+		numIterations:  3,
+		numSamples:     10,
+		numRuns:        2,
+		percentElite:   0.5,
+		hypers:         hypers,
+		numHyperparams: len(hypers),
 	}
 
 	for _, opt := range opts {
@@ -315,8 +281,13 @@ func (cem Cem) Run() error {
 }
 
 func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, numRuns, iteration int) {
+	seeds := make([]uint64, numRuns)
+	for i := range seeds {
+		seeds[i] = uint64((numRuns * iteration) + i)
+	}
+
 	for idx := range jobs {
-		average, err := cem.runOneSample(samples.RawRowView(idx), numRuns, iteration)
+		average, err := cem.run(samples.RawRowView(idx), seeds, iteration)
 		results <- averageAtIndex{
 			average: average,
 			idx:     idx,
@@ -342,57 +313,6 @@ func indexOfInt(element int, data []int) int {
 		}
 	}
 	return -1 //not found.
-}
-
-func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, error) {
-	var run_metrics []float64
-	var run_successes []float64
-	for run := 0; run < numRuns; run++ {
-		seed := int64((numRuns * iteration) + run)
-
-		set := cem.getSets(seed, sample)
-
-		ag := &agent.ESarsa{Debug: cem.debug}
-		ag.InitializeWithSettings(set, lockweight.LockWeight{})
-
-		env := &environment.Acrobot{Debug: cem.debug}
-		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
-
-		expConf := config.Experiment{
-			MaxEpisodes:          cem.maxEpisodes,
-			MaxRunLengthEpisodic: cem.maxRunLengthEpisodic,
-		}
-		exp, err := experiment.New(ag, env, expConf, cem.debug, cem.data)
-		if err != nil {
-			return 0, err
-		}
-
-		listOfListOfRewards, _ := exp.Run()
-		var listOfRewards []float64
-
-		//Episodic Acrobot, last 1/10th of the episodes
-		for i := 0; i < len(listOfListOfRewards); i++ {
-			listOfRewards = append(listOfRewards, listOfListOfRewards[i]...)
-		}
-
-		result := len(listOfRewards)
-		successes := len(listOfListOfRewards)
-
-		run_metrics = append(run_metrics, float64(result))
-		run_successes = append(run_successes, float64(successes))
-	}
-	average := 0.0 //returns averaged across runs
-	average_success := 0.0
-	for _, v := range run_metrics {
-		average += v
-	}
-	for _, v := range run_successes {
-		average_success += v
-	}
-	average /= float64(len(run_metrics))
-	average_success /= float64(len(run_successes))
-	average_steps_to_failure := (average) / (average_success)
-	return -average_steps_to_failure, nil //episodic  acrobot, returns negative of steps to failure
 }
 
 type averageAtIndex struct {

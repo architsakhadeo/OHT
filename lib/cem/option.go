@@ -3,7 +3,6 @@ package cem
 import (
 	"errors"
 
-	"github.com/stellentus/cartpoles/lib/logger"
 	"golang.org/x/exp/rand"
 )
 
@@ -59,58 +58,9 @@ func NumRuns(opt int) Option {
 	})
 }
 
-// NumTimesteps is the number of timesteps per run
-func NumTimesteps(opt int) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.numTimesteps = opt
-	})
-}
-
-// NumEpisodes is the number of episodes
-func NumEpisodes(opt int) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.numEpisodes = opt
-	})
-}
-
-// NumStepsInEpisode is the number of steps in episode
-func NumStepsInEpisode(opt int) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.numStepsInEpisode = opt
-	})
-}
-
-// MaxRunLengthEpisodic is the max number of steps in episode
-func MaxRunLengthEpisodic(opt int) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.maxRunLengthEpisodic = opt
-	})
-}
-
-// MaxEpisodes is the max number of episodes in an experiment
-func MaxEpisodes(opt int) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.maxEpisodes = opt
-	})
-}
-
 // PercentElite is the percent of samples that should be drawn from the elite group
 func PercentElite(opt float64) Option {
 	return optionFuncNil(func(cem *Cem) {
 		cem.percentElite = opt
-	})
-}
-
-// DebugLogger sets the debug logger.
-func DebugLogger(opt logger.Debug) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.debug = opt
-	})
-}
-
-// DataLogger configures the agent settings.
-func DataLogger(opt logger.Data) Option {
-	return optionFuncNil(func(cem *Cem) {
-		cem.data = opt
 	})
 }

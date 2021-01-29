@@ -8,6 +8,11 @@ import (
 
 	"github.com/stellentus/cartpoles/lib/agent"
 	"github.com/stellentus/cartpoles/lib/cem"
+	"github.com/stellentus/cartpoles/lib/config"
+	"github.com/stellentus/cartpoles/lib/environment"
+	"github.com/stellentus/cartpoles/lib/experiment"
+	"github.com/stellentus/cartpoles/lib/logger"
+	"github.com/stellentus/cartpoles/lib/util/lockweight"
 )
 
 var (
@@ -34,11 +39,6 @@ func main() {
 		cem.NumIterations(*numIterations),
 		cem.NumSamples(*numSamples),
 		cem.NumRuns(*numRuns),
-		cem.NumTimesteps(*numTimesteps),
-		cem.NumEpisodes(*numEpisodes),
-		cem.NumStepsInEpisode(*numStepsInEpisode),
-		cem.MaxRunLengthEpisodic(*MaxRunLengthEpisodic),
-		cem.MaxEpisodes(*MaxEpisodes),
 		cem.PercentElite(*percentElite),
 	}
 
@@ -49,9 +49,50 @@ func main() {
 		options = append(options, cem.NumWorkers(*numWorkers))
 	}
 
-	provideSettings := func(seed int64, hyperparameters []float64) agent.EsarsaSettings {
-		return agent.EsarsaSettings{
-			Seed:               seed,
+	hypers := []cem.Hyperparameter{
+		cem.NewDiscreteConverter([]float64{8, 16, 32, 48}),
+		cem.NewDiscreteConverter([]float64{2, 4, 8}),
+		cem.Hyperparameter{Lower: 0, Upper: 1},
+		cem.Hyperparameter{Lower: -2, Upper: 5},
+		cem.Hyperparameter{Lower: 0, Upper: 1},
+	}
+
+	rn, err := NewRunner()
+	panicIfError(err, "Failed to create Runner")
+
+	cem, err := cem.New(rn.runOneSample, hypers, options...)
+	panicIfError(err, "Failed to create CEM")
+	err = cem.Run()
+	panicIfError(err, "Failed to run CEM")
+
+	fmt.Println("")
+	fmt.Println("Execution time: ", time.Since(startTime))
+}
+
+type Runner struct {
+	logger.Debug
+	logger.Data
+}
+
+func NewRunner() (Runner, error) {
+	// Set up no-data logger and debug
+	debug := logger.NewDebug(logger.DebugConfig{})
+	data, err := logger.NewData(debug, logger.DataConfig{})
+	if err != nil {
+		return Runner{}, err
+	}
+	return Runner{
+		Debug: debug,
+		Data:  data,
+	}, nil
+}
+
+func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iteration int) (float64, error) {
+	var run_metrics []float64
+	var run_successes []float64
+	for run := 0; run < len(seeds); run++ {
+		set := agent.EsarsaSettings{
+			Seed:               int64(seeds[run]),
 			NumTilings:         int(hyperparameters[0]),
 			NumTiles:           int(hyperparameters[1]),
 			Lambda:             float64(hyperparameters[2]),
@@ -63,23 +104,48 @@ func main() {
 			IsStepsizeAdaptive: false,
 			EnvName:            "acrobot",
 		}
+
+		ag := &agent.ESarsa{Debug: rn.Debug}
+		ag.InitializeWithSettings(set, lockweight.LockWeight{})
+
+		env := &environment.Acrobot{Debug: rn.Debug}
+		env.InitializeWithSettings(environment.AcrobotSettings{Seed: int64(seeds[run])}) // Episodic acrobot
+
+		expConf := config.Experiment{
+			MaxEpisodes:          *MaxEpisodes,
+			MaxRunLengthEpisodic: *MaxRunLengthEpisodic,
+		}
+		exp, err := experiment.New(ag, env, expConf, rn.Debug, rn.Data)
+		if err != nil {
+			return 0, err
+		}
+
+		listOfListOfRewards, _ := exp.Run()
+		var listOfRewards []float64
+
+		//Episodic Acrobot, last 1/10th of the episodes
+		for i := 0; i < len(listOfListOfRewards); i++ {
+			listOfRewards = append(listOfRewards, listOfListOfRewards[i]...)
+		}
+
+		result := len(listOfRewards)
+		successes := len(listOfListOfRewards)
+
+		run_metrics = append(run_metrics, float64(result))
+		run_successes = append(run_successes, float64(successes))
 	}
-
-	hypers := []cem.Hyperparameter{
-		cem.NewDiscreteConverter([]float64{8, 16, 32, 48}),
-		cem.NewDiscreteConverter([]float64{2, 4, 8}),
-		cem.Hyperparameter{Lower: 0, Upper: 1},
-		cem.Hyperparameter{Lower: -2, Upper: 5},
-		cem.Hyperparameter{Lower: 0, Upper: 1},
+	average := 0.0 //returns averaged across runs
+	average_success := 0.0
+	for _, v := range run_metrics {
+		average += v
 	}
-
-	cem, err := cem.New(provideSettings, hypers, options...)
-	panicIfError(err, "Failed to create CEM")
-	err = cem.Run()
-	panicIfError(err, "Failed to run CEM")
-
-	fmt.Println("")
-	fmt.Println("Execution time: ", time.Since(startTime))
+	for _, v := range run_successes {
+		average_success += v
+	}
+	average /= float64(len(run_metrics))
+	average_success /= float64(len(run_successes))
+	average_steps_to_failure := (average) / (average_success)
+	return -average_steps_to_failure, nil //episodic  acrobot, returns negative of steps to failure
 }
 
 func panicIfError(err error, reason string) {
