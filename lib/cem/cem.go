@@ -153,11 +153,20 @@ func New(opts ...Option) (*Cem, error) {
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(cov mat.Cholesky) ([][]float64, [][]float64) {
+func (cem Cem) newSampleSlices(cov mat.Cholesky, elitePoints, eliteSamplePoints [][]float64) ([][]float64, [][]float64) {
 	samples := make([][]float64, cem.numSamples)
 	realvaluedSamples := make([][]float64, cem.numSamples)
 
 	i := 0
+
+	if elitePoints != nil {
+		for m := 0; m < int(cem.numEliteElite); m++ {
+			realvaluedSamples[m] = elitePoints[m]
+			samples[m] = eliteSamplePoints[m]
+		}
+		i += int(cem.numEliteElite)
+	}
+
 	for i < cem.numSamples {
 		sample := distmv.NormalRand(nil, cem.meanHyperparams, &cov, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
@@ -194,7 +203,7 @@ func (cem Cem) Run() error {
 	var choleskySymmetricCovariance mat.Cholesky
 	choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
 
-	samples, realvaluedSamples := cem.newSampleSlices(choleskySymmetricCovariance)
+	samples, realvaluedSamples := cem.newSampleSlices(choleskySymmetricCovariance, nil, nil)
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
