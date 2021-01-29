@@ -62,7 +62,6 @@ type Cem struct {
 	discreteRanges             [][]float64
 	discreteMidRanges          [][]float64
 	numElite                   int64
-	numEliteElite              int
 	meanHyperparams            []float64
 	lower                      []float64
 	upper                      []float64
@@ -117,7 +116,6 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 	}
 
 	cem.numElite = int64(float64(cem.numSamples) * cem.percentElite)
-	cem.numEliteElite = int(cem.numElite / 2.0)
 
 	cem.meanHyperparams = make([]float64, len(cem.hyperparams))
 	for i := range cem.meanHyperparams {
@@ -180,11 +178,12 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitePoints, eliteSamplePo
 	i := 0
 
 	if elitePoints != nil {
-		for m := 0; m < int(cem.numEliteElite); m++ {
+		numEliteElite := int(cem.numElite / 2)
+		for m := 0; m < int(numEliteElite); m++ {
 			realvaluedSamples[m] = elitePoints[m]
 			samples[m] = eliteSamplePoints[m]
 		}
-		i += int(cem.numEliteElite)
+		i += int(numEliteElite)
 	}
 
 	for i < cem.numSamples {
