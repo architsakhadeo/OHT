@@ -164,7 +164,7 @@ func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int, means
 		ok := true
 		sample := distmv.NormalRand(nil, means, chol, rand.NewSource(cem.rng.Uint64()))
 		for j := 0; j < cem.numHyperparams; j++ {
-			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
+			if sample[j] < cem.lower[j] || sample[j] >= cem.upper[j] {
 				ok = false
 				break
 			}
