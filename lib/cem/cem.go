@@ -181,7 +181,7 @@ func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int) []flo
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][]float64) (*mat.Dense, *mat.Dense, error) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *mat.Dense) (*mat.Dense, *mat.Dense, error) {
 	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
 		return nil, nil, err
@@ -195,8 +195,8 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][
 	if elitesRealVals != nil {
 		numEliteElite := cem.numElite / 2
 		for m := 0; m < numEliteElite; m++ {
-			samplesRealVals.SetRow(m, elitesRealVals[m])
-			samples.SetRow(m, elites[m])
+			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
+			samples.SetRow(m, elites.RawRowView(m))
 		}
 		i += numEliteElite
 	}
@@ -231,8 +231,8 @@ func (cem Cem) Run() error {
 
 	// Allocate memory outside of loop
 	descendingSamplesMetrics := make([]float64, cem.numElite)
-	elitesRealVals := make([][]float64, cem.numElite)
-	elites := make([][]float64, cem.numElite)
+	elitesRealVals := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
+	elites := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
 	meanSampleHyperparams := make([]float64, cem.numHyperparams)
 	samplesMetrics := make([]float64, cem.numSamples)
 
@@ -277,12 +277,12 @@ func (cem Cem) Run() error {
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
 		for ind := 0; ind < cem.numElite; ind++ {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
-			elites[ind] = samples.RawRowView(ascendingIndices[cem.numSamples-1-ind])
-			elitesRealVals[ind] = samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind])
+			elites.SetRow(ind, samples.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
+			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
 		}
 
-		copy(cem.meanHyperparams, elitesRealVals[0])
-		copy(meanSampleHyperparams, elites[0])
+		copy(cem.meanHyperparams, elitesRealVals.RawRowView(0))
+		copy(meanSampleHyperparams, elites.RawRowView(0))
 		fmt.Println("Elite points: ", elites)
 		fmt.Println("")
 		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:cem.numElite])
@@ -292,7 +292,7 @@ func (cem Cem) Run() error {
 		elitesRealValsMatrix := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
 		for rows := 0; rows < cem.numElite; rows++ {
 			for cols := 0; cols < cem.numHyperparams; cols++ {
-				elitesRealValsMatrix.Set(rows, cols, elitesRealVals[rows][cols])
+				elitesRealValsMatrix.Set(rows, cols, elitesRealVals.At(rows, cols))
 			}
 		}
 
