@@ -195,14 +195,19 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 			continue // no need to handle this column
 		}
 		for row := startRow; row < cem.numSamples; row++ {
-			for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
-				if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
-					samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
-					break
-				}
-			}
+			samples.Set(row, col, cem.discreteValueAt(samplesRealVals.At(row, col), col))
 		}
 	}
+}
+
+func (cem Cem) discreteValueAt(val float64, col int) float64 {
+	discreteCol := indexOfInt(col, cem.discreteHyperparamsIndices)
+	for k := 0; k < len(cem.discreteMidRanges[discreteCol]); k++ {
+		if val <= cem.discreteMidRanges[discreteCol][k] {
+			return cem.discreteRanges[discreteCol][k]
+		}
+	}
+	return cem.discreteRanges[discreteCol][len(cem.discreteMidRanges[discreteCol])-1] // Never happens, but just in case
 }
 
 func (cem Cem) Run() error {
