@@ -219,7 +219,9 @@ func (cem Cem) Run() error {
 	fmt.Println("Mean :", elitesRealVals.RawRowView(0))
 	fmt.Println("")
 
-	err := cem.newSampleSlices(covariance, samples, samplesRealVals, 0, elitesRealVals.RawRowView(0))
+	numEliteElite := 0 // At first there are no elite samples
+
+	err := cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
 	if err != nil {
 		return err
 	}
@@ -270,8 +272,8 @@ func (cem Cem) Run() error {
 			elites.SetRow(ind, samples.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
 			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
 		}
-		numEliteElite := cem.numElite / 2
 
+		numEliteElite = cem.numElite / 2 // For every iteration after the first, we have some elite
 		for m := 0; m < numEliteElite; m++ {
 			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
 			samples.SetRow(m, elites.RawRowView(m))
