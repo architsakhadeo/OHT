@@ -56,6 +56,7 @@ type fqiSettings struct {
 	DataLog         string `json:"datalog"`
 	WeightPath      string `json:"weightpath"`
 	OfflineLearning bool   `json:"offline-learn"` // during offline learning, output unused action to env
+	OnlineLearning  bool   `json:"online-learn"`  // Set to false for offline learning, either true/false for running online.
 }
 
 type Fqi struct {
@@ -243,6 +244,10 @@ func (agent *Fqi) End(state rlglue.State, reward float64) {
 }
 
 func (agent *Fqi) Update() {
+	// Deployed online without updating weights.
+	if !agent.fqiSettings.OfflineLearning && !agent.fqiSettings.OnlineLearning {
+		return
+	}
 
 	if !agent.fqiSettings.OfflineLearning && agent.lw.UseLock {
 		//if agent.updateNum%agent.Bsize == 0 {
