@@ -49,6 +49,9 @@ type Cem struct {
 	// maxRunLengthEpisodic is the max number of steps in episode
 	maxRunLengthEpisodic int
 
+	// maxEpisodes is the max number of episodes in an experiment
+	maxEpisodes int
+
 	// percentElite is the percent of samples that should be drawn from the elite group
 	percentElite float64
 
@@ -356,7 +359,7 @@ func (cem Cem) runOneSample(sample []float64, numRuns, iteration int) (float64, 
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: seed}) // Episodic acrobot
 
 		expConf := config.Experiment{
-			MaxEpisodes:          50000,
+			MaxEpisodes:          cem.maxEpisodes,
 			MaxRunLengthEpisodic: cem.maxRunLengthEpisodic,
 		}
 		exp, err := experiment.New(ag, env, expConf, cem.debug, cem.data)

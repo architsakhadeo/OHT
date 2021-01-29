@@ -87,6 +87,13 @@ func MaxRunLengthEpisodic(opt int) Option {
 	})
 }
 
+// MaxEpisodes is the max number of episodes in an experiment
+func MaxEpisodes(opt int) Option {
+	return optionFuncNil(func(cem *Cem) {
+		cem.maxEpisodes = opt
+	})
+}
+
 // PercentElite is the percent of samples that should be drawn from the elite group
 func PercentElite(opt float64) Option {
 	return optionFuncNil(func(cem *Cem) {

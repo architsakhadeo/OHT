@@ -20,6 +20,7 @@ var (
 	numEpisodes          = flag.Int("episodes", -1, "Number of episodes")
 	numStepsInEpisode    = flag.Int("stepsInEpisode", -1, "Number of steps in episode")
 	MaxRunLengthEpisodic = flag.Int("maxRunLengthEpisodic", 0, "Max number of steps in episode")
+	MaxEpisodes          = flag.Int("maxEpisodes", 50000, "Max number of episodes")
 	percentElite         = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
 )
 
@@ -37,6 +38,7 @@ func main() {
 		cem.NumEpisodes(*numEpisodes),
 		cem.NumStepsInEpisode(*numStepsInEpisode),
 		cem.MaxRunLengthEpisodic(*MaxRunLengthEpisodic),
+		cem.MaxEpisodes(*MaxEpisodes),
 		cem.PercentElite(*percentElite),
 	}
 
