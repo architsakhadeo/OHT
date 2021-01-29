@@ -211,15 +211,15 @@ func (cem Cem) Run() error {
 
 	covariance := cem.initialCovariance()
 
-	means := make([]float64, cem.numHyperparams)
-	for i := range means {
-		means[i] = (cem.lower[i] + cem.upper[i]) / 2.0
+	// Store mean values in elitesRealVals.RawRowView(0), since the starting distribution is centered around it
+	for col := 0; col < cem.numHyperparams; col++ {
+		elitesRealVals.Set(0, col, (cem.lower[col]+cem.upper[col])/2.0)
 	}
 
-	fmt.Println("Mean :", means)
+	fmt.Println("Mean :", elitesRealVals.RawRowView(0))
 	fmt.Println("")
 
-	err := cem.newSampleSlices(covariance, samples, samplesRealVals, 0, means)
+	err := cem.newSampleSlices(covariance, samples, samplesRealVals, 0, elitesRealVals.RawRowView(0))
 	if err != nil {
 		return err
 	}
