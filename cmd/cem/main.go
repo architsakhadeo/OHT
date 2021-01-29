@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"math"
+	"time"
 
 	"github.com/stellentus/cartpoles/lib/cem"
 )
@@ -23,7 +25,9 @@ var (
 const e = 10.e-8
 
 func main() {
+	startTime := time.Now()
 	flag.Parse()
+
 	err := cem.Cem{
 		Seed:                 *seed,
 		NumWorkers:           *numWorkers,
@@ -37,6 +41,9 @@ func main() {
 		PercentElite:         *percentElite,
 	}.Run()
 	panicIfError(err, "Failed to run CEM")
+
+	fmt.Println("")
+	fmt.Println("Execution time: ", time.Since(startTime))
 }
 
 func panicIfError(err error, reason string) {

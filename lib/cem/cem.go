@@ -57,8 +57,6 @@ type Cem struct {
 const e = 10.e-8
 
 func (cem Cem) Run() error {
-	startTime := time.Now()
-
 	if cem.NumWorkers <= 0 {
 		cem.NumWorkers = runtime.NumCPU()
 	}
@@ -305,8 +303,6 @@ func (cem Cem) Run() error {
 		fmt.Println("")
 		fmt.Println("--------------------------------------------------")
 	}
-	fmt.Println("")
-	fmt.Println("Execution time: ", time.Since(startTime))
 	return nil
 }
 
