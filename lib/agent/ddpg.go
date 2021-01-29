@@ -234,3 +234,7 @@ func MseLoss(target, predict [][]float64) [][]float64 {
 func (agent *Ddpg) SaveWeights(basePath string) error {
 	return nil
 }
+
+func (agent *Ddpg) GetLearnProg() float64 {
+	return float64(0)
+}

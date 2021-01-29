@@ -190,6 +190,13 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 			exp.MessageDelta("total steps", exp.numStepsTaken)
 		}
 
+		if exp.Settings.DebugInterval != 0 && exp.numStepsTaken%exp.Settings.DebugInterval == 0 &&
+			(!exp.Settings.CountAfterLock ||
+				(exp.Settings.CountAfterLock && countStep)) {
+			mstde := exp.agent.GetLearnProg()
+			exp.LogLearnProg(mstde)
+		}
+
 		if !episodeEnded {
 			action = exp.agent.Step(newState, reward)
 			copy(newState, prevState)

@@ -39,6 +39,7 @@ type Experiment struct {
 	TotalAfterCount               int    `json:"total-step-after-lock"`
 	RandomizeStartStateBeforeLock bool   `json:"randomize_start_state_beforeLock"`
 	RandomizeStartStateAfterLock  bool   `json:"randomize_start_state_afterLock"`
+	ShouldLogLearnProg            bool   `json:"should-log-learn-progress"`
 	// MaxCPUs, if set, specifies the maximum number of CPUs this experiment is allowed to use
 	MaxCPUs int `json:"max-cpus"`
 }
@@ -52,6 +53,7 @@ func (set *Experiment) SetToDefault() {
 	set.DataPath = ""
 	set.ShouldLogTraces = false
 	set.ShouldLogEpisodeLengths = false
+	set.ShouldLogLearnProg = false
 	set.CacheTracesInRAM = false
 	set.MaxCPUs = 0 // Does not change the default value
 	set.CountAfterLock = false

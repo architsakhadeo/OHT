@@ -19,4 +19,8 @@ type Agent interface {
 
 	// Save function approximator weights at the end of learning phase.
 	SaveWeights(basePath string) error
+
+	// GetLearnProg gets information about the agent's learning progress, eg MSTDE for batch RL,
+	// or the agent's estimation of some other quantity.
+	GetLearnProg() float64
 }

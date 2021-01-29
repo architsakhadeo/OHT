@@ -140,7 +140,8 @@ func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed+int64(run))
 
 	// Load datalog for offline trainning.
-	err = agent.loadDataLog(int(run))
+	// To get the trace path, Seed corresponds to run of offline data.
+	err = agent.loadDataLog(int(agent.Seed))
 	if err != nil {
 		return errors.New("Agent failed to load datalog: " + err.Error())
 	}
@@ -280,7 +281,7 @@ func (agent *Fqi) Update() {
 	// NN: Weight update
 	lastQ := agent.learningNet.Forward(lastStates)
 	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
-	targetQ := agent.learningNet.Predict(states)
+	targetQ := agent.targetNet.Predict(states)
 	targetActionValue, _ := ao.RowIndexMax(targetQ)
 
 	loss := make([][]float64, len(lastQ))
@@ -293,15 +294,15 @@ func (agent *Fqi) Update() {
 		}
 		loss[i][lastActions[i]] = rewards[i][0] + gammas[i][0]*targetActionValue[i] - lastActionValue[i]
 	}
-	avgLoss := make([][]float64, 1)
-	avgLoss[0] = make([]float64, agent.NumberOfActions)
-	for j := 0; j < agent.NumberOfActions; j++ {
-		sum := 0.0
-		for i := 0; i < len(loss); i++ {
-			sum += loss[i][j]
-		}
-		avgLoss[0][j] = sum / float64(len(loss))
-	}
+	// avgLoss := make([][]float64, 1)
+	// avgLoss[0] = make([]float64, agent.NumberOfActions)
+	// for j := 0; j < agent.NumberOfActions; j++ {
+	// 	sum := 0.0
+	// 	for i := 0; i < len(loss); i++ {
+	// 		sum += loss[i][j]
+	// 	}
+	// 	avgLoss[0][j] = sum / float64(len(loss))
+	// }
 
 	agent.learningNet.Backward(loss, agent.opt)
 	//agent.learningNet.Backward(avgLoss)
@@ -547,4 +548,22 @@ func (agent *Fqi) SaveWeights(basePath string) error {
 	}
 
 	return nil
+}
+
+// Mean squared TD error of a full pass over the whole dataset.
+func (agent *Fqi) GetLearnProg() float64 {
+	lastStates, lastActionsFloat, states, rewards, gammas := agent.bf.Content()
+	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(lastActionsFloat))
+
+	lastQ := agent.learningNet.Forward(lastStates)
+	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
+	targetQ := agent.targetNet.Predict(states)
+	targetActionValue, _ := ao.RowIndexMax(targetQ)
+
+	loss := 0.0
+	for i := 0; i < len(lastQ); i++ {
+		diff := rewards[i][0] + gammas[i][0]*targetActionValue[i] - lastActionValue[i]
+		loss += math.Pow(diff, 2)
+	}
+	return loss / float64(len(lastQ))
 }

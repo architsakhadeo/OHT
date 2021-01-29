@@ -647,3 +647,7 @@ func (agent *ESarsa) Count(array []float64, number float64) int {
 func (agent *ESarsa) SaveWeights(basePath string) error {
 	return nil
 }
+
+func (agent *ESarsa) GetLearnProg() float64 {
+	return float64(0)
+}

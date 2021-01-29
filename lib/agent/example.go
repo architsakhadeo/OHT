@@ -96,3 +96,7 @@ func (agent *Example) GetLock() bool {
 func (agent *Example) SaveWeights(basePath string) error {
 	return nil
 }
+
+func (agent *Example) GetLearnProg() float64 {
+	return float64(0)
+}
