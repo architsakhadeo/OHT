@@ -158,9 +158,9 @@ func (cem Cem) initialCovariance() *mat.Dense {
 	return covariance
 }
 
-// getSamples returns a valid set of samples.
+// setSamples returns a valid set of samples.
 // It loops until the hyperparameters meet the required lower/upper constraint.
-func (cem Cem) getSamples(chol *mat.Cholesky) []float64 {
+func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int) []float64 {
 	for true {
 		ok := true
 		sample := distmv.NormalRand(nil, cem.meanHyperparams, chol, rand.NewSource(cem.rng.Uint64()))
@@ -171,6 +171,7 @@ func (cem Cem) getSamples(chol *mat.Cholesky) []float64 {
 			}
 		}
 		if ok {
+			samples.SetRow(row, sample)
 			return sample
 		}
 	}
@@ -180,35 +181,35 @@ func (cem Cem) getSamples(chol *mat.Cholesky) []float64 {
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][]float64) (*mat.Dense, [][]float64, error) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites [][]float64) (*mat.Dense, *mat.Dense, error) {
 	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
-	samplesRealVals := make([][]float64, cem.numSamples)
+	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
 
 	i := 0
 
 	if elitesRealVals != nil {
 		numEliteElite := cem.numElite / 2
 		for m := 0; m < numEliteElite; m++ {
-			samplesRealVals[m] = elitesRealVals[m]
+			samplesRealVals.SetRow(m, elitesRealVals[m])
 			samples.SetRow(m, elites[m])
 		}
 		i += numEliteElite
 	}
 
 	for ; i < cem.numSamples; i++ {
-		samplesRealVals[i] = cem.getSamples(chol)
+		cem.setSamples(chol, samplesRealVals, i)
 
 		for j := 0; j < cem.numHyperparams; j++ {
 			if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-				samples.Set(i, j, samplesRealVals[i][j])
+				samples.Set(i, j, samplesRealVals.At(i, j))
 			} else {
 				for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-					if samplesRealVals[i][j] < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
+					if samplesRealVals.At(i, j) < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
 						samples.Set(i, j, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
 						break
 					}
@@ -277,7 +278,7 @@ func (cem Cem) Run() error {
 		for ind := 0; ind < cem.numElite; ind++ {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
 			elites[ind] = samples.RawRowView(ascendingIndices[cem.numSamples-1-ind])
-			elitesRealVals[ind] = samplesRealVals[ascendingIndices[cem.numSamples-1-ind]]
+			elitesRealVals[ind] = samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind])
 		}
 
 		copy(cem.meanHyperparams, elitesRealVals[0])
