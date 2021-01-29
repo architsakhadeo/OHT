@@ -15,31 +15,34 @@ import (
 	"gonum.org/v1/gonum/stat/distmv"
 )
 
+type Settings struct {
+	// NumWorkers is the maximum number of workers
+	// Default is the number of CPUs if -1
+	NumWorkers int
+
+	// NumIterations is the total number of iterations
+	NumIterations int
+
+	// NumSamples is the number of samples per iteration
+	NumSamples int
+
+	// NumRuns is the number of runs per sample
+	NumRuns int
+
+	// PercentElite is the percent of samples that should be drawn from the elite group
+	PercentElite float64
+}
+
 type Cem struct {
 	run RunFunc
-
-	// numWorkers is the maximum number of workers
-	// Defaults is the number of CPUs if -1
-	numWorkers int
-
-	// numIterations is the total number of iterations
-	numIterations int
-
-	// numSamples is the number of samples per iteration
-	numSamples int
-
-	// numRuns is the number of runs per sample
-	numRuns int
-
-	// percentElite is the percent of samples that should be drawn from the elite group
-	percentElite float64
-
 	rng *rand.Rand
 
 	numHyperparams int
 	numElite       int
 
 	hypers []Hyperparameter
+
+	Settings
 }
 
 // SampleValueConverter converts a sample to a value.
@@ -58,20 +61,33 @@ type RunFunc func(hyperparameters []float64, seeds []uint64, iteration int) (flo
 
 const e = 10.e-8
 
-func New(run RunFunc, hypers []Hyperparameter, opts ...Option) (*Cem, error) {
-	if run == nil {
-		return nil, errors.New("Cem requires a settings provider")
+func DefaultSettings() Settings {
+	return Settings{
+		NumWorkers:    runtime.NumCPU(),
+		NumIterations: 3,
+		NumSamples:    10,
+		NumRuns:       2,
+		PercentElite:  0.5,
 	}
-	// Initialize with default values
+}
+
+func New(run RunFunc, hypers []Hyperparameter, settings Settings, opts ...Option) (*Cem, error) {
+	if run == nil {
+		return nil, errors.New("Cem requires a run function")
+	}
+	if len(hypers) == 0 {
+		return nil, errors.New("Cem requires hyperparameters")
+	}
+	if settings.NumWorkers <= 0 {
+		settings.NumWorkers = runtime.NumCPU()
+	}
+
 	cem := &Cem{
 		run:            run,
-		numWorkers:     runtime.NumCPU(),
-		numIterations:  3,
-		numSamples:     10,
-		numRuns:        2,
-		percentElite:   0.5,
 		hypers:         hypers,
 		numHyperparams: len(hypers),
+		Settings:       settings,
+		numElite:       int(float64(settings.NumSamples) * settings.PercentElite),
 	}
 
 	for _, opt := range opts {
@@ -79,15 +95,12 @@ func New(run RunFunc, hypers []Hyperparameter, opts ...Option) (*Cem, error) {
 			return nil, err
 		}
 	}
-
 	if cem.rng == nil {
 		opt := Seed(uint64(time.Now().UnixNano()))
 		if err := opt.apply(cem); err != nil {
 			return nil, err
 		}
 	}
-
-	cem.numElite = int(float64(cem.numSamples) * cem.percentElite)
 
 	return cem, nil
 }
@@ -149,7 +162,7 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 		return err
 	}
 
-	for i := startIdx; i < cem.numSamples; i++ {
+	for i := startIdx; i < cem.NumSamples; i++ {
 		cem.setSamples(chol, samplesRealVals, i, means)
 		samples.SetRow(i, samplesRealVals.RawRowView(i))
 	}
@@ -166,7 +179,7 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 		if conv == nil {
 			continue // no need to handle this column
 		}
-		for row := startRow; row < cem.numSamples; row++ {
+		for row := startRow; row < cem.NumSamples; row++ {
 			samples.Set(row, col, conv.RealValue(samplesRealVals.At(row, col)))
 		}
 	}
@@ -174,12 +187,12 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 
 func (cem Cem) Run() error {
 	// Allocate memory outside of loop
-	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
-	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
+	samples := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
+	samplesRealVals := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
 	descendingSamplesMetrics := make([]float64, cem.numElite)
 	elitesRealVals := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
 	elites := mat.NewDense(cem.numElite, cem.numHyperparams, nil)
-	samplesMetrics := make([]float64, cem.numSamples)
+	samplesMetrics := make([]float64, cem.NumSamples)
 
 	covariance := cem.initialCovariance()
 
@@ -193,7 +206,7 @@ func (cem Cem) Run() error {
 
 	numEliteElite := 0 // At first there are no elite samples
 
-	for iteration := 0; iteration < cem.numIterations; iteration++ {
+	for iteration := 0; iteration < cem.NumIterations; iteration++ {
 		startIteration := time.Now()
 		fmt.Println("Iteration: ", iteration)
 		fmt.Println("")
@@ -206,20 +219,20 @@ func (cem Cem) Run() error {
 		fmt.Println("Samples before iteration: ", samples)
 		fmt.Println("")
 
-		jobs := make(chan int, cem.numSamples)
-		results := make(chan averageAtIndex, cem.numSamples)
+		jobs := make(chan int, cem.NumSamples)
+		results := make(chan averageAtIndex, cem.NumSamples)
 
-		for w := 0; w < cem.numWorkers; w++ {
-			go cem.worker(jobs, results, samples, cem.numRuns, iteration)
+		for w := 0; w < cem.NumWorkers; w++ {
+			go cem.worker(jobs, results, samples, cem.NumRuns, iteration)
 		}
 
-		for s := 0; s < cem.numSamples; s++ {
+		for s := 0; s < cem.NumSamples; s++ {
 			jobs <- s
 		}
 		close(jobs)
 
 		count := 0
-		for count < cem.numSamples {
+		for count < cem.NumSamples {
 			select {
 			case avg := <-results:
 				if avg.err != nil {
@@ -240,9 +253,9 @@ func (cem Cem) Run() error {
 		fmt.Println("")
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
 		for ind := 0; ind < cem.numElite; ind++ {
-			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
-			elites.SetRow(ind, samples.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
-			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
+			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.NumSamples-1-ind]]
+			elites.SetRow(ind, samples.RawRowView(ascendingIndices[cem.NumSamples-1-ind]))
+			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.NumSamples-1-ind]))
 		}
 
 		numEliteElite = cem.numElite / 2 // For every iteration after the first, we have some elite
@@ -280,10 +293,10 @@ func (cem Cem) Run() error {
 	return nil
 }
 
-func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, numRuns, iteration int) {
-	seeds := make([]uint64, numRuns)
+func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, NumRuns, iteration int) {
+	seeds := make([]uint64, NumRuns)
 	for i := range seeds {
-		seeds[i] = uint64((numRuns * iteration) + i)
+		seeds[i] = uint64((NumRuns * iteration) + i)
 	}
 
 	for idx := range jobs {

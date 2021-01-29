@@ -24,8 +24,8 @@ var (
 	numTimesteps         = flag.Int("timesteps", 0, "Number of timesteps per run")
 	numEpisodes          = flag.Int("episodes", -1, "Number of episodes")
 	numStepsInEpisode    = flag.Int("stepsInEpisode", -1, "Number of steps in episode")
-	MaxRunLengthEpisodic = flag.Int("maxRunLengthEpisodic", 0, "Max number of steps in episode")
-	MaxEpisodes          = flag.Int("maxEpisodes", 50000, "Max number of episodes")
+	maxRunLengthEpisodic = flag.Int("maxRunLengthEpisodic", 0, "Max number of steps in episode")
+	maxEpisodes          = flag.Int("maxEpisodes", 50000, "Max number of episodes")
 	percentElite         = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
 )
 
@@ -35,18 +35,18 @@ func main() {
 	startTime := time.Now()
 	flag.Parse()
 
-	options := []cem.Option{
-		cem.NumIterations(*numIterations),
-		cem.NumSamples(*numSamples),
-		cem.NumRuns(*numRuns),
-		cem.PercentElite(*percentElite),
-	}
+	options := []cem.Option{}
 
 	if *seed != math.MaxUint64 {
 		options = append(options, cem.Seed(*seed))
 	}
-	if *numWorkers != -1 {
-		options = append(options, cem.NumWorkers(*numWorkers))
+
+	settings := cem.Settings{
+		NumWorkers:    *numWorkers,
+		NumIterations: *numIterations,
+		NumSamples:    *numSamples,
+		NumRuns:       *numRuns,
+		PercentElite:  *percentElite,
 	}
 
 	hypers := []cem.Hyperparameter{
@@ -60,7 +60,7 @@ func main() {
 	rn, err := NewRunner()
 	panicIfError(err, "Failed to create Runner")
 
-	cem, err := cem.New(rn.runOneSample, hypers, options...)
+	cem, err := cem.New(rn.runOneSample, hypers, settings, options...)
 	panicIfError(err, "Failed to create CEM")
 	err = cem.Run()
 	panicIfError(err, "Failed to run CEM")
@@ -112,8 +112,8 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: int64(seeds[run])}) // Episodic acrobot
 
 		expConf := config.Experiment{
-			MaxEpisodes:          *MaxEpisodes,
-			MaxRunLengthEpisodic: *MaxRunLengthEpisodic,
+			MaxEpisodes:          *maxEpisodes,
+			MaxRunLengthEpisodic: *maxRunLengthEpisodic,
 		}
 		exp, err := experiment.New(ag, env, expConf, rn.Debug, rn.Data)
 		if err != nil {
