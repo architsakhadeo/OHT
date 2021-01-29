@@ -150,16 +150,16 @@ func New(opts ...Option) (*Cem, error) {
 	return cem, nil
 }
 
-func (cem Cem) Run() error {
-	var choleskySymmetricCovariance mat.Cholesky
-	choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
-
-	samples := make([][]float64, cem.numSamples)           //samples contain the original values of hyperparams (discrete, continuous)
-	realvaluedSamples := make([][]float64, cem.numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
+// newSampleSlice creates slices of sampled hyperparams.
+// The first returned value contains the original values of hyperparams (discrete, continuous).
+// The second returned value contain the continuous representation of hyperparams (continuous).
+func (cem Cem) newSampleSlices(cov mat.Cholesky) ([][]float64, [][]float64) {
+	samples := make([][]float64, cem.numSamples)
+	realvaluedSamples := make([][]float64, cem.numSamples)
 
 	i := 0
 	for i < cem.numSamples {
-		sample := distmv.NormalRand(nil, cem.meanHyperparams, &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
+		sample := distmv.NormalRand(nil, cem.meanHyperparams, &cov, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
 		for j := 0; j < len(cem.hyperparams); j++ {
 			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
@@ -186,6 +186,15 @@ func (cem Cem) Run() error {
 			i++
 		}
 	}
+
+	return samples, realvaluedSamples
+}
+
+func (cem Cem) Run() error {
+	var choleskySymmetricCovariance mat.Cholesky
+	choleskySymmetricCovariance.Factorize(cem.symmetricCovariance)
+
+	samples, realvaluedSamples := cem.newSampleSlices(choleskySymmetricCovariance)
 
 	// LOG THE MEAN OF THE DISTRIBUTION AFTER EVERY ITERATION
 
