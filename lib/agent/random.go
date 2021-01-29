@@ -85,3 +85,7 @@ func (agent *Random) GetLock() bool {
 func (agent *Random) SaveWeights(basePath string) error {
 	return nil
 }
+
+func (agent *Random) GetLearnProg() float64 {
+	return float64(0)
+}

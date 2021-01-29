@@ -247,7 +247,7 @@ func (agent *Dqn) Update() {
 	// NN: Weight update
 	lastQ := agent.learningNet.Forward(lastStates)
 	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
-	targetQ := agent.learningNet.Predict(states)
+	targetQ := agent.targetNet.Predict(states)
 	targetActionValue, _ := ao.RowIndexMax(targetQ)
 
 	loss := make([][]float64, len(lastQ))
@@ -407,4 +407,8 @@ func (agent *Dqn) GetLock() bool {
 
 func (agent *Dqn) SaveWeights(basePath string) error {
 	return nil
+}
+
+func (agent *Dqn) GetLearnProg() float64 {
+	return float64(0)
 }

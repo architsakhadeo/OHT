@@ -167,3 +167,7 @@ func (agent *HandController) GetLock() bool {
 func (agent *HandController) SaveWeights(basePath string) error {
 	return nil
 }
+
+func (agent *HandController) GetLearnProg() float64 {
+	return float64(0)
+}
