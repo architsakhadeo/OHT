@@ -103,14 +103,14 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 	}
 
 	for _, opt := range opts {
-		if err := opt(cem); err != nil {
+		if err := opt.apply(cem); err != nil {
 			return nil, err
 		}
 	}
 
 	if cem.rng == nil {
 		opt := Seed(uint64(time.Now().UnixNano()))
-		if err := opt(cem); err != nil {
+		if err := opt.apply(cem); err != nil {
 			return nil, err
 		}
 	}
