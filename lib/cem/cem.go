@@ -84,7 +84,6 @@ func New(opts ...Option) (*Cem, error) {
 }
 
 func (cem Cem) Run() error {
-
 	// Acrobot
 	hyperparams := [5]string{"tilings", "tiles", "lambda", "wInit", "alpha"}
 	lower := [len(hyperparams)]float64{0.5, 0.5, 0.0, -2.0, 0.0}
@@ -151,7 +150,6 @@ func (cem Cem) Run() error {
 	realvaluedSamples := make([][]float64, cem.numSamples) //realvaluedSamples contain the continuous representation of hyperparams (continuous)
 
 	i := 0
-
 	for i < cem.numSamples {
 		sample := distmv.NormalRand(nil, meanHyperparams[:], &choleskySymmetricCovariance, rand.NewSource(cem.rng.Uint64()))
 		flag := 0
@@ -316,7 +314,6 @@ func (cem Cem) Run() error {
 				samples[i] = temp
 				i++
 			}
-
 		}
 		fmt.Println("")
 		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
