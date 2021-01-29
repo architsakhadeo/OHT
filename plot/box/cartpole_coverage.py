@@ -8,12 +8,13 @@ from plot.box.paths_cartpole import *
 
 def sweep_model():
     cms = {
-        # "k5_p02_t1000": data10k_eps03_k5_p02_t1000,
+        # "timeout200": ns1_timeout200,
+        # "timeout1000": ns1_timeout1000,
     }
-    te = {"true": trueenv}
+    te = {"true": noise0_trueenv}
     plot_generation(te, cms, ranges, "../img/sweep_model")
 
 
-ranges = [0, 0.1, 0.5]
+ranges = [0, 0.1, 0.5, 0.9]
 
 # sweep_model()

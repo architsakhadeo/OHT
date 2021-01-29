@@ -30,7 +30,7 @@ def plot_generation(te, cms, ranges, title, ylim=None):
             data = [item[2] for item in target]
             filtered[model].append(data)
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
-
+    # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim)
 
 
 """
@@ -93,3 +93,53 @@ def set_box_color(bp, color):
 
     # for patch in bp['boxes']:
     #     patch.set_facecolor(color)
+
+def plot_violins(filtered, thrd, xlabel, title, ylim=None):
+    all_models = list(filtered.keys())
+    xlocations = range(len(filtered[all_models[0]]))
+    width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
+
+    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+
+    for idx in range(len(all_models)):
+        perct = filtered[all_models[idx]]
+        positions_group = [x-(width+0.01)*idx for x in xlocations]
+
+        vp = ax.violinplot(perct, positions=positions_group, widths=width)
+        set_voilin_color(vp, cmap(idx/len(all_models)))
+
+        plt.plot([], c=cmap(idx/len(all_models)), label=all_models[idx])
+
+    for i in range(len(thrd)):
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i]]*2, "--", color="red", linewidth=0.75)
+
+    xtcs = []
+    for loc in xlocations:
+        xtcs.append(loc - 0.35)
+    ax.set_xticks(xtcs)
+    ax.set_xticklabels(xlabel)
+
+    # Acrobot plotting (Please do not delete)
+    #loc, labels = plt.yticks()
+    #labels = [str(-1.0 *loc[i]) for i in range(len(loc))]
+    #plt.yticks(loc[1:-1], labels[1:-1])
+    #plt.title('Acrobot: ' + title.split('/')[-1])
+    #plt.xlabel('Top percentile', labelpad=35)
+    #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
+    ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    plt.legend()
+    plt.tight_layout()
+    # plt.show()
+    plt.savefig("{}.png".format(title))
+    return
+
+def set_voilin_color(violin_parts, color):
+    for pc in violin_parts['bodies']:
+        pc.set_facecolor(color)
+        pc.set_edgecolor(color)
+    for partname in ('cbars','cmins','cmaxes'):
+        vp = violin_parts[partname]
+        vp.set_edgecolor(color)
+        vp.set_linewidth(1)

@@ -112,10 +112,18 @@ def average_run(data):
     for pk in all_params:
         group_by_param[pk] = []
         for rk in all_runs:
+            # print(rk, len(list(data[rk].keys())))
             group_by_param[pk].append(data[rk][pk])
     for pk in all_params:
         group_by_param[pk] = np.array(group_by_param[pk]).mean()
     return group_by_param
+
+# def average_param(data):
+#     sum = 0
+#     for pk in data.keys():
+#         sum += data[pk]
+#     return float(sum) / len(list(data.keys()))
+
 """
 input:
     path: ensemble_paths of one ensemble model [path_ens1, path_ens2, ...]
@@ -142,8 +150,38 @@ def load_rewards(paths):
             all_runs = {}
             for run in runs:
                 r_per_step = pd.read_csv(os.path.join(pp, run))['rewards']
-                # all_runs[int(run.split("-")[1].split(".")[0])] = np.mean(np.array(r_per_step)) # {run number: auc / total step}
+                # r_per_step = r_per_step[:50000]
                 all_runs["run"+run.split("-")[1].split(".")[0]] = np.mean(np.array(r_per_step)) # {run number: auc / total step}
+
+            for rk in all_runs.keys():
+                if rk not in data.keys():
+                    data[rk] = {p_key: []}
+                if p_key not in data[rk].keys():
+                    data[rk][p_key] = []
+                data[rk][p_key].append(all_runs[rk])
+    return data
+
+# Load from episodes-x.csv
+def load_sparseRewards(paths, reward=-1):
+    data = {}
+    for path in paths: # each ensemble seed
+        params = os.listdir(path)
+        for param in params: # each param
+            pp = os.path.join(path, param)
+            p_key = param#int(param.split("_")[1])
+
+            temp = os.listdir(pp)
+            runs = []
+            for t in temp:
+                if "episodes" in t:
+                    runs.append(t)
+
+            all_runs = {}
+            for run in runs:
+                # print(os.path.join(pp, run))
+                ep_len = pd.read_csv(os.path.join(pp, run))['episode lengths']
+                ep_len = np.array(ep_len).reshape((-1))
+                all_runs["run"+run.split("-")[1].split(".")[0]] = len(ep_len)*reward / float(ep_len.sum()) # {run number: auc / total step}
 
             for rk in all_runs.keys():
                 if rk not in data.keys():
@@ -197,18 +235,26 @@ return:
         }
     }
 """
-def loading_pessimistic(models_paths):
+def loading_pessimistic(models_paths, source="reward"):
     models_data = {}
     for model in models_paths.keys():
         paths = models_paths[model]
-        data = load_rewards(paths)
-
-        # Acrobot code (please do not delete)
-        #data = load_epSteps(paths)
+        print("Loading data: {}: {}".format(model, paths[0]))
+        if source == "reward":
+            data = load_rewards(paths)
+            # data = load_sparseRewards(paths)
+        elif source == "episode":
+            # Acrobot code (please do not delete)
+            data = load_epSteps(paths)
         for rk in data.keys():
-            for pk in data[rk].keys():
-                # print(rk, pk, data[rk][pk], np.array(data[rk][pk]).min())
-                data[rk][pk] = np.array(data[rk][pk]).min()
+            if rk in data.keys():
+                for pk in data[rk].keys():
+                    if pk in data[rk].keys():
+                        data[rk][pk] = np.array(data[rk][pk]).min()
+                    else:
+                        print("param doesn't exist", rk, pk)
+            else:
+                print("run doesn't exist", rk)
+
         models_data[model] = data
     return models_data
-
