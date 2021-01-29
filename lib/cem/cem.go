@@ -183,21 +183,29 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 	for ; i < cem.numSamples; i++ {
 		cem.setSamples(chol, samplesRealVals, i, means)
 
-		for j := 0; j < cem.numHyperparams; j++ {
-			if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
-				samples.Set(i, j, samplesRealVals.At(i, j))
-			} else {
-				for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
-					if samplesRealVals.At(i, j) < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
-						samples.Set(i, j, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
-						break
-					}
+		// Now that sampesRealVals is set, set samples.
+		// They're equal for continuous values. For discrete fancy stuff is done.
+		samples.SetRow(i, samplesRealVals.RawRowView(i))
+		cem.updateDiscretes(i, samples, samplesRealVals)
+
+	}
+
+	return nil
+}
+
+func (cem Cem) updateDiscretes(row int, samples, samplesRealVals *mat.Dense) {
+	for j := 0; j < cem.numHyperparams; j++ {
+		if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
+			samples.Set(row, j, samplesRealVals.At(row, j))
+		} else {
+			for k := 0; k < len(cem.discreteMidRanges[j]); k++ {
+				if samplesRealVals.At(row, j) < cem.discreteMidRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k] {
+					samples.Set(row, j, cem.discreteRanges[indexOfInt(int64(j), cem.discreteHyperparamsIndices)][k])
+					break
 				}
 			}
 		}
 	}
-
-	return nil
 }
 
 func (cem Cem) Run() error {
