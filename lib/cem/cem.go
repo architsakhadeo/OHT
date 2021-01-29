@@ -62,7 +62,6 @@ type Cem struct {
 	discreteRanges             [][]float64
 	discreteMidRanges          [][]float64
 	numElite                   int
-	meanHyperparams            []float64
 	lower                      []float64
 	upper                      []float64
 }
@@ -117,14 +116,6 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 
 	cem.numElite = int(float64(cem.numSamples) * cem.percentElite)
 
-	cem.meanHyperparams = make([]float64, cem.numHyperparams)
-	for i := range cem.meanHyperparams {
-		cem.meanHyperparams[i] = (cem.lower[i] + cem.upper[i]) / 2.0
-	}
-
-	fmt.Println("Mean :", cem.meanHyperparams)
-	fmt.Println("")
-
 	return cem, nil
 }
 
@@ -160,10 +151,10 @@ func (cem Cem) initialCovariance() *mat.Dense {
 
 // setSamples returns a valid set of samples.
 // It loops until the hyperparameters meet the required lower/upper constraint.
-func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int) []float64 {
+func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int, means []float64) []float64 {
 	for true {
 		ok := true
-		sample := distmv.NormalRand(nil, cem.meanHyperparams, chol, rand.NewSource(cem.rng.Uint64()))
+		sample := distmv.NormalRand(nil, means, chol, rand.NewSource(cem.rng.Uint64()))
 		for j := 0; j < cem.numHyperparams; j++ {
 			if sample[j] < cem.lower[j] || sample[j] > cem.upper[j] {
 				ok = false
@@ -181,7 +172,7 @@ func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int) []flo
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *mat.Dense) (*mat.Dense, *mat.Dense, error) {
+func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *mat.Dense, means []float64) (*mat.Dense, *mat.Dense, error) {
 	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
 		return nil, nil, err
@@ -202,7 +193,7 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *ma
 	}
 
 	for ; i < cem.numSamples; i++ {
-		cem.setSamples(chol, samplesRealVals, i)
+		cem.setSamples(chol, samplesRealVals, i, means)
 
 		for j := 0; j < cem.numHyperparams; j++ {
 			if !containsInt(cem.discreteHyperparamsIndices, int64(j)) {
@@ -224,7 +215,15 @@ func (cem Cem) newSampleSlices(covariance *mat.Dense, elitesRealVals, elites *ma
 func (cem Cem) Run() error {
 	covariance := cem.initialCovariance()
 
-	samples, samplesRealVals, err := cem.newSampleSlices(covariance, nil, nil)
+	means := make([]float64, cem.numHyperparams)
+	for i := range means {
+		means[i] = (cem.lower[i] + cem.upper[i]) / 2.0
+	}
+
+	fmt.Println("Mean :", means)
+	fmt.Println("")
+
+	samples, samplesRealVals, err := cem.newSampleSlices(covariance, nil, nil, means)
 	if err != nil {
 		return err
 	}
@@ -280,7 +279,6 @@ func (cem Cem) Run() error {
 			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
 		}
 
-		copy(cem.meanHyperparams, elitesRealVals.RawRowView(0))
 		fmt.Println("Elite points: ", elites)
 		fmt.Println("")
 		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:cem.numElite])
@@ -301,7 +299,7 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		samples, samplesRealVals, err = cem.newSampleSlices(covariance, elitesRealVals, elites)
+		samples, samplesRealVals, err = cem.newSampleSlices(covariance, elitesRealVals, elites, elitesRealVals.RawRowView(0))
 		if err != nil {
 			return err
 		}
