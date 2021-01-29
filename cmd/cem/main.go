@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"os"
 	"time"
 
 	"github.com/stellentus/cartpoles/lib/agent"
@@ -35,7 +36,7 @@ func main() {
 	startTime := time.Now()
 	flag.Parse()
 
-	options := []cem.Option{}
+	options := []cem.Option{cem.Debug(os.Stdout)}
 
 	if *seed != math.MaxUint64 {
 		options = append(options, cem.Seed(*seed))

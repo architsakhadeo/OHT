@@ -1,6 +1,8 @@
 package cem
 
 import (
+	"io"
+
 	"golang.org/x/exp/rand"
 )
 
@@ -20,5 +22,12 @@ func (f optionFuncNil) apply(cem *Cem) error { f(cem); return nil }
 func Seed(opt uint64) Option {
 	return optionFuncNil(func(cem *Cem) {
 		cem.rng = rand.New(rand.NewSource(opt))
+	})
+}
+
+// Debug sets a debug writer.
+func Debug(opt io.Writer) Option {
+	return optionFuncNil(func(cem *Cem) {
+		cem.debugWriter = opt
 	})
 }

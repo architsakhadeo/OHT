@@ -3,6 +3,7 @@ package cem
 import (
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"runtime"
 	"sort"
@@ -43,6 +44,8 @@ type Cem struct {
 	hypers []Hyperparameter
 
 	Settings
+
+	debugWriter io.Writer
 }
 
 // SampleValueConverter converts a sample to a value.
@@ -88,6 +91,7 @@ func New(run RunFunc, hypers []Hyperparameter, settings Settings, opts ...Option
 		numHyperparams: len(hypers),
 		Settings:       settings,
 		numElite:       int(float64(settings.NumSamples) * settings.PercentElite),
+		debugWriter:    noopWriter,
 	}
 
 	for _, opt := range opts {
@@ -201,23 +205,26 @@ func (cem Cem) Run() error {
 		elitesRealVals.Set(0, col, (cem.hypers[col].Lower+cem.hypers[col].Upper)/2.0)
 	}
 
-	fmt.Println("Mean :", elitesRealVals.RawRowView(0))
-	fmt.Println("")
+	if cem.debugWriter != noopWriter {
+		fmt.Fprintf(cem.debugWriter, "Mean: %v\n\n", elitesRealVals.RawRowView(0))
+	}
 
 	numEliteElite := 0 // At first there are no elite samples
 
 	for iteration := 0; iteration < cem.NumIterations; iteration++ {
 		startIteration := time.Now()
-		fmt.Println("Iteration: ", iteration)
-		fmt.Println("")
+		if cem.debugWriter != noopWriter {
+			fmt.Fprintf(cem.debugWriter, "Iteration: %d\n\n", iteration)
+		}
 
 		err := cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
 		if err != nil {
 			return err
 		}
 
-		fmt.Println("Samples before iteration: ", samples)
-		fmt.Println("")
+		if cem.debugWriter != noopWriter {
+			fmt.Fprintf(cem.debugWriter, "Samples before iteration: %v\n\n", samples)
+		}
 
 		jobs := make(chan int, cem.NumSamples)
 		results := make(chan averageAtIndex, cem.NumSamples)
@@ -249,8 +256,9 @@ func (cem Cem) Run() error {
 
 		// TODO all of this could be done with far less copying. Each row's backing data could be put into the new matrix.
 
-		fmt.Println("Sample Metric: ", samplesMetrics)
-		fmt.Println("")
+		if cem.debugWriter != noopWriter {
+			fmt.Fprintf(cem.debugWriter, "Sample Metric: %v\n\n", samplesMetrics)
+		}
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
 		for ind := 0; ind < cem.numElite; ind++ {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.NumSamples-1-ind]]
@@ -264,11 +272,11 @@ func (cem Cem) Run() error {
 			samples.SetRow(m, elites.RawRowView(m))
 		}
 
-		fmt.Println("Elite points: ", elites)
-		fmt.Println("")
-		fmt.Println("Elite Points Metric: ", descendingSamplesMetrics[:cem.numElite])
-		fmt.Println("")
-		fmt.Println("Mean point: ", elites.RawRowView(0))
+		if cem.debugWriter != noopWriter {
+			fmt.Fprintf(cem.debugWriter, "Elite points: %v\n\n", elites)
+			fmt.Fprintf(cem.debugWriter, "Elite Points Metric: %v\n\n", descendingSamplesMetrics[:cem.numElite])
+			fmt.Fprintf(cem.debugWriter, "Mean point: %v\n\n", elites.RawRowView(0))
+		}
 
 		cov := mat.NewSymDense(cem.numHyperparams, nil)
 		stat.CovarianceMatrix(cov, elitesRealVals, nil)
@@ -284,10 +292,10 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		fmt.Println("")
-		fmt.Println("Execution time for iteration: ", time.Since(startIteration))
-		fmt.Println("")
-		fmt.Println("--------------------------------------------------")
+		if cem.debugWriter != noopWriter {
+			fmt.Fprintf(cem.debugWriter, "Execution time for iteration: %v\n\n", time.Since(startIteration))
+			fmt.Fprintf(cem.debugWriter, "--------------------------------------------------\n")
+		}
 	}
 
 	return nil
@@ -352,3 +360,9 @@ func (dc discreteConverter) RealValue(val float64) float64 {
 	}
 	return dc[len(dc)-1] // Never happens, but just in case
 }
+
+var noopWriter = nw{}
+
+type nw struct{}
+
+func (nw nw) Write(p []byte) (n int, err error) { return 0, nil }
