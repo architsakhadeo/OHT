@@ -59,10 +59,8 @@ type Cem struct {
 
 	numHyperparams int
 	numElite       int
-	lower          []float64
-	upper          []float64
 
-	converters []SampleValueConverter
+	hypers []Hyperparameter
 }
 
 // SampleValueConverter converts a sample to a value.
@@ -70,12 +68,18 @@ type SampleValueConverter interface {
 	RealValue(val float64) float64
 }
 
+type Hyperparameter struct {
+	Lower                float64
+	Upper                float64
+	SampleValueConverter // optional
+}
+
 // AgentSettingsProvider is a function that returns agent settings corresponding to the provided seed and slice of hyperparameters.
 type AgentSettingsProvider func(seed int64, hyperparameters []float64) agent.EsarsaSettings
 
 const e = 10.e-8
 
-func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
+func New(getSets AgentSettingsProvider, hypers []Hyperparameter, opts ...Option) (*Cem, error) {
 	if getSets == nil {
 		return nil, errors.New("Cem requires a settings provider")
 	}
@@ -90,16 +94,8 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 		numStepsInEpisode: -1,
 		percentElite:      0.5,
 		debug:             logger.NewDebug(logger.DebugConfig{}),
-		numHyperparams:    5,
-		lower:             []float64{0.5, 0.5, 0.0, -2.0, 0.0},
-		upper:             []float64{4.5, 3.5, 1.0, 5.0, 1.0},
-		converters: []SampleValueConverter{
-			DiscreteConverter([]float64{8, 16, 32, 48}),
-			DiscreteConverter([]float64{2, 4, 8}),
-			nil,
-			nil,
-			nil,
-		},
+		hypers:            hypers,
+		numHyperparams:    len(hypers),
 	}
 
 	// Default no-data logger
@@ -131,17 +127,15 @@ func (cem Cem) initialCovariance() *mat.Dense {
 	covariance := mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
 	covarianceRows, covarianceColumns := covariance.Dims()
 
-	minLower := cem.lower[0]
-	maxUpper := cem.upper[0]
+	minLower := cem.hypers[0].Lower
+	maxUpper := cem.hypers[0].Upper
 
-	for _, v := range cem.lower {
-		if v < minLower {
-			minLower = v
+	for _, hy := range cem.hypers {
+		if hy.Lower < minLower {
+			minLower = hy.Lower
 		}
-	}
-	for _, v := range cem.upper {
-		if v > maxUpper {
-			maxUpper = v
+		if hy.Upper > maxUpper {
+			maxUpper = hy.Upper
 		}
 	}
 	for i := 0; i < covarianceRows; i++ {
@@ -164,7 +158,7 @@ func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int, means
 		ok := true
 		sample := distmv.NormalRand(nil, means, chol, rand.NewSource(cem.rng.Uint64()))
 		for j := 0; j < cem.numHyperparams; j++ {
-			if sample[j] < cem.lower[j] || sample[j] >= cem.upper[j] {
+			if sample[j] < cem.hypers[j].Lower || sample[j] >= cem.hypers[j].Upper {
 				ok = false
 				break
 			}
@@ -199,7 +193,7 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 
 func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense) {
 	for col := 0; col < cem.numHyperparams; col++ {
-		conv := cem.converters[col]
+		conv := cem.hypers[col].SampleValueConverter
 		if conv == nil {
 			continue // no need to handle this column
 		}
@@ -222,7 +216,7 @@ func (cem Cem) Run() error {
 
 	// Store mean values in elitesRealVals.RawRowView(0), since the starting distribution is centered around it
 	for col := 0; col < cem.numHyperparams; col++ {
-		elitesRealVals.Set(0, col, (cem.lower[col]+cem.upper[col])/2.0)
+		elitesRealVals.Set(0, col, (cem.hypers[col].Lower+cem.hypers[col].Upper)/2.0)
 	}
 
 	fmt.Println("Mean :", elitesRealVals.RawRowView(0))
