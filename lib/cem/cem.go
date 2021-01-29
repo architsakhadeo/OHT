@@ -178,30 +178,28 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 		return err
 	}
 
-	i := startIdx
-
-	for ; i < cem.numSamples; i++ {
+	for i := startIdx; i < cem.numSamples; i++ {
 		cem.setSamples(chol, samplesRealVals, i, means)
-
-		// Now that sampesRealVals is set, set samples.
-		// They're equal for continuous values. For discrete fancy stuff is done.
 		samples.SetRow(i, samplesRealVals.RawRowView(i))
-		cem.updateDiscretes(i, samples, samplesRealVals)
-
 	}
+
+	// Ensure the discrete samples are handled, if necessary
+	cem.updateDiscretes(startIdx, samples, samplesRealVals)
 
 	return nil
 }
 
-func (cem Cem) updateDiscretes(row int, samples, samplesRealVals *mat.Dense) {
-	for col := 0; col < cem.numHyperparams; col++ {
-		if !containsInt(cem.discreteHyperparamsIndices, col) {
-			samples.Set(row, col, samplesRealVals.At(row, col))
-		} else {
-			for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
-				if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
-					samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
-					break
+func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense) {
+	for row := startRow; row < cem.numSamples; row++ {
+		for col := 0; col < cem.numHyperparams; col++ {
+			if !containsInt(cem.discreteHyperparamsIndices, col) {
+				samples.Set(row, col, samplesRealVals.At(row, col))
+			} else {
+				for k := 0; k < len(cem.discreteMidRanges[col]); k++ {
+					if samplesRealVals.At(row, col) < cem.discreteMidRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k] {
+						samples.Set(row, col, cem.discreteRanges[indexOfInt(col, cem.discreteHyperparamsIndices)][k])
+						break
+					}
 				}
 			}
 		}
