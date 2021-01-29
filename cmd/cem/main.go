@@ -89,8 +89,8 @@ func NewRunner() (Runner, error) {
 }
 
 func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iteration int) (float64, error) {
-	var run_metrics []float64
-	var run_successes []float64
+	average := 0
+	average_success := 0
 	for run := 0; run < len(seeds); run++ {
 		set := agent.EsarsaSettings{
 			Seed:               int64(seeds[run]),
@@ -122,28 +122,14 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 		}
 
 		listOfListOfRewards, _ := exp.Run()
-		var listOfRewards []float64
+		average_success += len(listOfListOfRewards)
 
 		//Episodic Acrobot, last 1/10th of the episodes
 		for i := 0; i < len(listOfListOfRewards); i++ {
-			listOfRewards = append(listOfRewards, listOfListOfRewards[i]...)
+			average += len(listOfListOfRewards[i])
 		}
-
-		result := len(listOfRewards)
-		successes := len(listOfListOfRewards)
-
-		run_metrics = append(run_metrics, float64(result))
-		run_successes = append(run_successes, float64(successes))
 	}
-	average := 0.0 //returns averaged across runs
-	average_success := 0.0
-	for _, v := range run_metrics {
-		average += v
-	}
-	for _, v := range run_successes {
-		average_success += v
-	}
-	average_steps_to_failure := (average) / (average_success)
+	average_steps_to_failure := float64(average) / float64(average_success)
 	return -average_steps_to_failure, nil //episodic  acrobot, returns negative of steps to failure
 }
 
