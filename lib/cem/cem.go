@@ -261,6 +261,8 @@ func (cem Cem) Run() error {
 			return err
 		}
 
+		// TODO all of this could be done with far less copying. Each row's backing data could be put into the new matrix.
+
 		fmt.Println("Sample Metric: ", samplesMetrics)
 		fmt.Println("")
 		ascendingIndices := argsort.Sort(sort.Float64Slice(samplesMetrics))
@@ -268,6 +270,12 @@ func (cem Cem) Run() error {
 			descendingSamplesMetrics[ind] = samplesMetrics[ascendingIndices[cem.numSamples-1-ind]]
 			elites.SetRow(ind, samples.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
 			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.numSamples-1-ind]))
+		}
+		numEliteElite := cem.numElite / 2
+
+		for m := 0; m < numEliteElite; m++ {
+			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
+			samples.SetRow(m, elites.RawRowView(m))
 		}
 
 		fmt.Println("Elite points: ", elites)
@@ -288,12 +296,6 @@ func (cem Cem) Run() error {
 					covariance.Set(row, col, cov.At(row, col)-e)
 				}
 			}
-		}
-
-		numEliteElite := cem.numElite / 2
-		for m := 0; m < numEliteElite; m++ {
-			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
-			samples.SetRow(m, elites.RawRowView(m))
 		}
 
 		err = cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
