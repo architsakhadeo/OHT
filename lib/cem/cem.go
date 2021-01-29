@@ -172,22 +172,13 @@ func (cem Cem) setSamples(chol *mat.Cholesky, samples *mat.Dense, row int, means
 // newSampleSlice creates slices of sampled hyperparams.
 // The first returned value contains the original values of hyperparams (discrete, continuous).
 // The second returned value contain the continuous representation of hyperparams (continuous).
-func (cem Cem) newSampleSlices(covariance *mat.Dense, samples, samplesRealVals, elites, elitesRealVals *mat.Dense, means []float64) error {
+func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, startIdx int, means []float64) error {
 	chol, err := choleskySymmetricFromCovariance(covariance, cem.numHyperparams)
 	if err != nil {
 		return err
 	}
 
-	i := 0
-
-	if elitesRealVals != nil {
-		numEliteElite := cem.numElite / 2
-		for m := 0; m < numEliteElite; m++ {
-			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
-			samples.SetRow(m, elites.RawRowView(m))
-		}
-		i += numEliteElite
-	}
+	i := startIdx
 
 	for ; i < cem.numSamples; i++ {
 		cem.setSamples(chol, samplesRealVals, i, means)
@@ -223,7 +214,7 @@ func (cem Cem) Run() error {
 	samples := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
 	samplesRealVals := mat.NewDense(cem.numSamples, cem.numHyperparams, nil)
 
-	err := cem.newSampleSlices(covariance, samples, samplesRealVals, nil, nil, means)
+	err := cem.newSampleSlices(covariance, samples, samplesRealVals, 0, means)
 	if err != nil {
 		return err
 	}
@@ -299,7 +290,13 @@ func (cem Cem) Run() error {
 			}
 		}
 
-		err = cem.newSampleSlices(covariance, samples, samplesRealVals, elites, elitesRealVals, elitesRealVals.RawRowView(0))
+		numEliteElite := cem.numElite / 2
+		for m := 0; m < numEliteElite; m++ {
+			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
+			samples.SetRow(m, elites.RawRowView(m))
+		}
+
+		err = cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
 		if err != nil {
 			return err
 		}
