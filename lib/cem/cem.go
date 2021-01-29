@@ -57,13 +57,17 @@ type Cem struct {
 
 	rng *rand.Rand
 
-	numHyperparams             int
-	discreteHyperparamsIndices []int
-	discreteRanges             [][]float64
-	discreteMidRanges          [][]float64
-	numElite                   int
-	lower                      []float64
-	upper                      []float64
+	numHyperparams int
+	numElite       int
+	lower          []float64
+	upper          []float64
+
+	converters []SampleValueConverter
+}
+
+// SampleValueConverter converts a sample to a value.
+type SampleValueConverter interface {
+	RealValue(val float64) float64
 }
 
 // AgentSettingsProvider is a function that returns agent settings corresponding to the provided seed and slice of hyperparameters.
@@ -77,21 +81,25 @@ func New(getSets AgentSettingsProvider, opts ...Option) (*Cem, error) {
 	}
 	// Initialize with default values
 	cem := &Cem{
-		getSets:                    getSets,
-		numWorkers:                 runtime.NumCPU(),
-		numIterations:              3,
-		numSamples:                 10,
-		numRuns:                    2,
-		numEpisodes:                -1,
-		numStepsInEpisode:          -1,
-		percentElite:               0.5,
-		debug:                      logger.NewDebug(logger.DebugConfig{}),
-		discreteHyperparamsIndices: []int{0, 1},
-		numHyperparams:             5,
-		discreteRanges:             [][]float64{[]float64{8, 16, 32, 48}, []float64{2, 4, 8}},
-		discreteMidRanges:          [][]float64{[]float64{1.5, 2.5, 3.5, 4.5}, []float64{1.5, 2.5, 3.5}},
-		lower:                      []float64{0.5, 0.5, 0.0, -2.0, 0.0},
-		upper:                      []float64{4.5, 3.5, 1.0, 5.0, 1.0},
+		getSets:           getSets,
+		numWorkers:        runtime.NumCPU(),
+		numIterations:     3,
+		numSamples:        10,
+		numRuns:           2,
+		numEpisodes:       -1,
+		numStepsInEpisode: -1,
+		percentElite:      0.5,
+		debug:             logger.NewDebug(logger.DebugConfig{}),
+		numHyperparams:    5,
+		lower:             []float64{0.5, 0.5, 0.0, -2.0, 0.0},
+		upper:             []float64{4.5, 3.5, 1.0, 5.0, 1.0},
+		converters: []SampleValueConverter{
+			DiscreteConverter([]float64{8, 16, 32, 48}),
+			DiscreteConverter([]float64{2, 4, 8}),
+			nil,
+			nil,
+			nil,
+		},
 	}
 
 	// Default no-data logger
@@ -191,23 +199,14 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 
 func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense) {
 	for col := 0; col < cem.numHyperparams; col++ {
-		if !containsInt(cem.discreteHyperparamsIndices, col) {
+		conv := cem.converters[col]
+		if conv == nil {
 			continue // no need to handle this column
 		}
 		for row := startRow; row < cem.numSamples; row++ {
-			samples.Set(row, col, cem.discreteValueAt(samplesRealVals.At(row, col), col))
+			samples.Set(row, col, conv.RealValue(samplesRealVals.At(row, col)))
 		}
 	}
-}
-
-func (cem Cem) discreteValueAt(val float64, col int) float64 {
-	discreteCol := indexOfInt(col, cem.discreteHyperparamsIndices)
-	for k := 0; k < len(cem.discreteMidRanges[discreteCol]); k++ {
-		if val <= cem.discreteMidRanges[discreteCol][k] {
-			return cem.discreteRanges[discreteCol][k]
-		}
-	}
-	return cem.discreteRanges[discreteCol][len(cem.discreteMidRanges[discreteCol])-1] // Never happens, but just in case
 }
 
 func (cem Cem) Run() error {
@@ -403,4 +402,15 @@ type averageAtIndex struct {
 	average float64
 	idx     int
 	err     error
+}
+
+type DiscreteConverter []float64
+
+func (dc DiscreteConverter) RealValue(val float64) float64 {
+	for k := 0; k < len(dc); k++ {
+		if val <= float64(k)+1.5 {
+			return dc[k]
+		}
+	}
+	return dc[len(dc)-1] // Never happens, but just in case
 }
