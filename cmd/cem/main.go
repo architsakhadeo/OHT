@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/stellentus/cartpoles/lib/agent"
@@ -15,18 +16,32 @@ import (
 	"github.com/stellentus/cartpoles/lib/environment"
 	"github.com/stellentus/cartpoles/lib/experiment"
 	"github.com/stellentus/cartpoles/lib/logger"
-	"github.com/stellentus/cartpoles/lib/util/lockweight"
+	"github.com/stellentus/cartpoles/lib/rlglue"
 )
 
 var (
 	configPath = flag.String("cem", "config/cem/cem.json", "CEM settings file path")
 	expPath    = flag.String("exp", "config/cem/experiment.json", "Experiment settings file path")
+	agentPath  = flag.String("agent", "config/cem/agent.json", "Default agent settings file path")
 )
 
 type cemSettings struct {
 	cem.Settings
-	Seed       uint64
-	experiment config.Experiment
+	Seed          uint64
+	experiment    config.Experiment
+	agentSettings struct {
+		Name       string
+		Default    map[string]json.RawMessage
+		CemOptions []hyper
+	}
+}
+
+type hyper struct {
+	Name         string
+	Lower, Upper float64
+	Discretes    []float64
+	IsDiscrete   bool
+	IsInt        bool
 }
 
 const e = 10.e-8
@@ -44,16 +59,17 @@ func main() {
 		options = append(options, cem.Seed(settings.Seed))
 	}
 
-	hypers := []cem.Hyperparameter{
-		cem.NewDiscreteConverter([]float64{8, 16, 32, 48}),
-		cem.NewDiscreteConverter([]float64{2, 4, 8}),
-		cem.Hyperparameter{Lower: 0, Upper: 1},
-		cem.Hyperparameter{Lower: -2, Upper: 5},
-		cem.Hyperparameter{Lower: 0, Upper: 1},
-	}
-
-	rn, err := NewRunner(settings.experiment)
+	rn, err := NewRunner(settings.experiment, settings.agentSettings.Default, settings.agentSettings.CemOptions)
 	panicIfError(err, "Failed to create Runner")
+
+	hypers := []cem.Hyperparameter{}
+	for _, hyper := range settings.agentSettings.CemOptions {
+		if hyper.IsDiscrete {
+			hypers = append(hypers, cem.NewDiscreteConverter(hyper.Discretes))
+		} else {
+			hypers = append(hypers, cem.Hyperparameter{Lower: hyper.Lower, Upper: hyper.Upper})
+		}
+	}
 
 	cem, err := cem.New(rn.runOneSample, hypers, settings.Settings, options...)
 	panicIfError(err, "Failed to create CEM")
@@ -69,9 +85,11 @@ type Runner struct {
 	logger.Debug
 	logger.Data
 	config.Experiment
+	agentSettings map[string]json.RawMessage
+	hypers        []hyper
 }
 
-func NewRunner(exp config.Experiment) (Runner, error) {
+func NewRunner(exp config.Experiment, agentSettings map[string]json.RawMessage, hypers []hyper) (Runner, error) {
 	// Set up no-data logger and debug
 	debug := logger.NewDebug(logger.DebugConfig{})
 	data, err := logger.NewData(debug, logger.DataConfig{})
@@ -79,32 +97,51 @@ func NewRunner(exp config.Experiment) (Runner, error) {
 		return Runner{}, err
 	}
 	return Runner{
-		Debug:      debug,
-		Data:       data,
-		Experiment: exp,
+		Debug:         debug,
+		Data:          data,
+		Experiment:    exp,
+		agentSettings: agentSettings,
+		hypers:        hypers,
 	}, nil
+}
+
+func (rn Runner) newSettings(hyperparameters []float64) map[string]json.RawMessage {
+	merged := make(map[string]json.RawMessage)
+
+	// Copy from the original map to the target map
+	for key, value := range rn.agentSettings {
+		merged[key] = value
+	}
+
+	for i, hyp := range rn.hypers {
+		if hyp.IsInt {
+			merged[hyp.Name] = json.RawMessage(strconv.Itoa(int(hyperparameters[i])))
+		} else {
+			merged[hyp.Name] = json.RawMessage(strconv.FormatFloat(hyperparameters[i], 'E', -1, 64))
+		}
+	}
+
+	return merged
+}
+
+func (rn Runner) attributesWithSeed(set map[string]json.RawMessage, seed uint64) (rlglue.Attributes, error) {
+	set["seed"] = json.RawMessage(strconv.FormatUint(seed, 10))
+	attr, err := json.Marshal(set)
+	return rlglue.Attributes(attr), err
 }
 
 func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iteration int) (float64, error) {
 	average := 0
 	average_success := 0
+	set := rn.newSettings(hyperparameters)
 	for run := 0; run < len(seeds); run++ {
-		set := agent.EsarsaSettings{
-			Seed:               int64(seeds[run]),
-			NumTilings:         int(hyperparameters[0]),
-			NumTiles:           int(hyperparameters[1]),
-			Lambda:             float64(hyperparameters[2]),
-			WInit:              float64(hyperparameters[3]),
-			Alpha:              float64(hyperparameters[4]),
-			Gamma:              1.0,
-			Epsilon:            0.0,
-			AdaptiveAlpha:      0.0,
-			IsStepsizeAdaptive: false,
-			EnvName:            "acrobot",
+		attr, err := rn.attributesWithSeed(set, seeds[run])
+		if err != nil {
+			return 0, err
 		}
 
 		ag := &agent.ESarsa{Debug: rn.Debug}
-		ag.InitializeWithSettings(set, lockweight.LockWeight{})
+		ag.Initialize(0, attr, nil)
 
 		env := &environment.Acrobot{Debug: rn.Debug}
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: int64(seeds[run])}) // Episodic acrobot
@@ -141,6 +178,7 @@ func buildSettings() cemSettings {
 
 	readJsonFile(*configPath, &settings)
 	readJsonFile(*expPath, &settings.experiment)
+	readJsonFile(*agentPath, &settings.agentSettings)
 
 	return settings
 }
