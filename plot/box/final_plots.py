@@ -39,6 +39,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", 
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
     filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    #filtered = {"random": [rand_data]}
     cms_data = loading_pessimistic(cms, source)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -51,8 +52,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", 
             data = [item[2] for item in target]
             filtered[model].append(data)
     # print(filtered)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim)#, yscale=yscale)#, baseline=[fqi_data, "fqi"])
-    # plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
+    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)#, baseline=[fqi_data, "fqi"])
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -63,16 +64,17 @@ def performance_by_param(rand_lst, data):
 
 def arcrobot():
     calibration = {
-        "calibration": ac_cm
+        "trueStart_adversarialTrans_t1000": AcrobottrueStart_adversarialTrans_timeout1000,
+        "distantStart_regularTrans_t200": AcrobotdistantStart_regularTrans_timeout200,
     }
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot", source="episode", ylim=[-2000,0], yscale="log")
+    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot_box_linear", source="episode", ylim=[50,200], yscale="linear")
 
 def cartpole():
     calibration = {
-        "trueStart_adversariaTrans_t1000": trueStart_farTrans_time1000,
+        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000,
         # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
         "distStart_closeTrans_t200": distStart_closeTrans_time200,
     }
