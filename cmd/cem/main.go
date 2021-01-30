@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"time"
@@ -17,18 +19,15 @@ import (
 )
 
 var (
-	seed                 = flag.Uint64("seed", math.MaxUint64, "Seed to use; if 0xffffffffffffffff, use the time")
-	numWorkers           = flag.Int("workers", -1, "Maximum number of workers; defaults to the number of CPUs if -1")
-	numIterations        = flag.Int("iterations", 3, "Total number of iterations")
-	numSamples           = flag.Int("samples", 10, "Number of samples per iteration")
-	numRuns              = flag.Int("runs", 2, "Number of runs per sample")
-	numTimesteps         = flag.Int("timesteps", 0, "Number of timesteps per run")
-	numEpisodes          = flag.Int("episodes", -1, "Number of episodes")
-	numStepsInEpisode    = flag.Int("stepsInEpisode", -1, "Number of steps in episode")
-	maxRunLengthEpisodic = flag.Int("maxRunLengthEpisodic", 0, "Max number of steps in episode")
-	maxEpisodes          = flag.Int("maxEpisodes", 50000, "Max number of episodes")
-	percentElite         = flag.Float64("elite", 0.5, "Percent of samples that should be drawn from the elite group")
+	configPath = flag.String("cem", "config/cem/cem.json", "CEM settings file path")
+	expPath    = flag.String("exp", "config/cem/experiment.json", "Experiment settings file path")
 )
+
+type cemSettings struct {
+	cem.Settings
+	Seed       uint64
+	experiment config.Experiment
+}
 
 const e = 10.e-8
 
@@ -36,18 +35,13 @@ func main() {
 	startTime := time.Now()
 	flag.Parse()
 
+	settings := buildSettings()
+
 	options := []cem.Option{cem.Debug(os.Stdout)}
 
-	if *seed != math.MaxUint64 {
-		options = append(options, cem.Seed(*seed))
-	}
-
-	settings := cem.Settings{
-		NumWorkers:    *numWorkers,
-		NumIterations: *numIterations,
-		NumSamples:    *numSamples,
-		NumRuns:       *numRuns,
-		PercentElite:  *percentElite,
+	// If the seed is MaxUint64, then we default to time-based initialization
+	if settings.Seed != math.MaxUint64 {
+		options = append(options, cem.Seed(settings.Seed))
 	}
 
 	hypers := []cem.Hyperparameter{
@@ -58,10 +52,10 @@ func main() {
 		cem.Hyperparameter{Lower: 0, Upper: 1},
 	}
 
-	rn, err := NewRunner()
+	rn, err := NewRunner(settings.experiment)
 	panicIfError(err, "Failed to create Runner")
 
-	cem, err := cem.New(rn.runOneSample, hypers, settings, options...)
+	cem, err := cem.New(rn.runOneSample, hypers, settings.Settings, options...)
 	panicIfError(err, "Failed to create CEM")
 
 	result, err := cem.Run()
@@ -74,9 +68,10 @@ func main() {
 type Runner struct {
 	logger.Debug
 	logger.Data
+	config.Experiment
 }
 
-func NewRunner() (Runner, error) {
+func NewRunner(exp config.Experiment) (Runner, error) {
 	// Set up no-data logger and debug
 	debug := logger.NewDebug(logger.DebugConfig{})
 	data, err := logger.NewData(debug, logger.DataConfig{})
@@ -84,8 +79,9 @@ func NewRunner() (Runner, error) {
 		return Runner{}, err
 	}
 	return Runner{
-		Debug: debug,
-		Data:  data,
+		Debug:      debug,
+		Data:       data,
+		Experiment: exp,
 	}, nil
 }
 
@@ -113,11 +109,7 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 		env := &environment.Acrobot{Debug: rn.Debug}
 		env.InitializeWithSettings(environment.AcrobotSettings{Seed: int64(seeds[run])}) // Episodic acrobot
 
-		expConf := config.Experiment{
-			MaxEpisodes:          *maxEpisodes,
-			MaxRunLengthEpisodic: *maxRunLengthEpisodic,
-		}
-		exp, err := experiment.New(ag, env, expConf, rn.Debug, rn.Data)
+		exp, err := experiment.New(ag, env, rn.Experiment, rn.Debug, rn.Data)
 		if err != nil {
 			return 0, err
 		}
@@ -138,4 +130,24 @@ func panicIfError(err error, reason string) {
 	if err != nil {
 		panic("ERROR " + err.Error() + ": " + reason)
 	}
+}
+
+func buildSettings() cemSettings {
+	// Build default settings
+	settings := cemSettings{
+		Seed: math.MaxUint64,
+	}
+	settings.Settings = cem.DefaultSettings()
+
+	readJsonFile(*configPath, &settings)
+	readJsonFile(*expPath, &settings.experiment)
+
+	return settings
+}
+
+func readJsonFile(path string, val interface{}) {
+	data, err := ioutil.ReadFile(path)
+	panicIfError(err, "Couldn't load config file '"+path+"'")
+	err = json.Unmarshal(data, val)
+	panicIfError(err, "Couldn't parse config JSON '"+string(data)+"'")
 }
