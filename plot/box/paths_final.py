@@ -58,19 +58,51 @@ cpn1_fqi = [
 
 
 AcrobotdistantStart_regularTrans_timeout200 = [
-    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
-    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
-    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
-    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
-    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout200_distantStart_regularTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
 ]
 
 AcrobottrueStart_adversarialTrans_timeout1000 = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/randomrestarts/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/",
+]
+
+
+k1_notimeout = ["../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k1_notimeout/esarsa/step10k/optimalfixed_eps0/"]
+k1_timeout1000 = ["../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k1_timeout1000/esarsa/step10k/optimalfixed_eps0/"]
+k3ensemble_notimeout = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_notimeout/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_notimeout/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_notimeout/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_notimeout/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_notimeout/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
+]
+k3ensemble_timeout1000 = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_timeout1000/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_timeout1000/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_timeout1000/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_timeout1000/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_timeout1000/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
+    ]
+k3ensemble_adversarial_notimeout = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_adversarial_notimeout/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_adversarial_notimeout/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_adversarial_notimeout/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_adversarial_notimeout/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3ensemble_adversarial_notimeout/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
+]
+k3ensemble_adverarial_timeout1000 = [
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed1/optimalfixed_eps0/",
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed2/optimalfixed_eps0/",
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed3/optimalfixed_eps0/",
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
-    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/",
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
 ]
 
 

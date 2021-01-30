@@ -10,14 +10,14 @@ cmap = matplotlib.cm.get_cmap('cool')
 
 def plot_generation(te, cms, ranges, title, ylim=None):
 
-    te_data = loading_pessimistic(te)
+    te_data = loading_pessimistic(te, 'episode')
     te_data = average_run(te_data["true"])
 
     te_thrd = []
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    cms_data = loading_pessimistic(cms)
+    cms_data = loading_pessimistic(cms, 'episode')
     filtered = {}
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -49,10 +49,13 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear'):
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
     
+    '''
     if ylim[0] >= 0 and ylim[1] > 0:
         res_scale = -1
     else:
         res_scale = 1
+    '''
+    res_scale = -1
 
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
