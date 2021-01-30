@@ -94,24 +94,28 @@ def set_box_color(bp, color):
     # for patch in bp['boxes']:
     #     patch.set_facecolor(color)
 
-def plot_violins(filtered, thrd, xlabel, title, ylim=None):
+def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear"):
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
-
+    if yscale=="log" and ylim[0] < 0 and ylim[1] <= 0:
+        res_scale = -1
+    else:
+        res_scale = 1
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
+        perct = [np.array(x) * res_scale for x in perct]
         positions_group = [x-(width+0.01)*idx for x in xlocations]
-
         vp = ax.violinplot(perct, positions=positions_group, widths=width)
         set_voilin_color(vp, cmap(idx/len(all_models)))
 
-        plt.plot([], c=cmap(idx/len(all_models)), label=all_models[idx])
+        # plt.plot([], c=cmap(idx/len(all_models)), label=all_models[idx])
 
     for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i]]*2, "--", color="red", linewidth=0.75)
+        print(thrd)
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="red", linewidth=0.75)
 
     xtcs = []
     for loc in xlocations:
@@ -127,8 +131,12 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None):
     #plt.xlabel('Top percentile', labelpad=35)
     #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
     ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
-    if ylim is not None:
+
+    if ylim is not None and yscale != "log":
         ax.set_ylim(ylim)
+
+    plt.yscale(yscale)
+
     plt.legend()
     plt.tight_layout()
     # plt.show()
