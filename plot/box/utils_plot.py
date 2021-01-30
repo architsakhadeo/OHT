@@ -49,9 +49,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear'):
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
     
-    if yscale=="log" and ylim[0] < 0 and ylim[1] <= 0:
-        res_scale = -1
-    elif ylim[0] >= 0 and ylim[1] > 0:
+    if ylim[0] >= 0 and ylim[1] > 0:
         res_scale = -1
     else:
         res_scale = 1
@@ -114,7 +112,7 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear"):
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
-    if yscale=="log" and ylim[0] < 0 and ylim[1] <= 0:
+    if ylim[0] >= 0 and ylim[1] > 0:
         res_scale = -1
     else:
         res_scale = 1
