@@ -25,15 +25,17 @@ var (
 	agentPath  = flag.String("agent", "config/cem/agent.json", "Default agent settings file path")
 )
 
+type agentSettings struct {
+	Name       string
+	Default    map[string]json.RawMessage
+	CemOptions []hyper
+}
+
 type cemSettings struct {
 	cem.Settings
-	Seed          uint64
-	experiment    config.Experiment
-	agentSettings struct {
-		Name       string
-		Default    map[string]json.RawMessage
-		CemOptions []hyper
-	}
+	Seed       uint64
+	experiment config.Experiment
+	agentSettings
 }
 
 type hyper struct {
@@ -59,7 +61,7 @@ func main() {
 		options = append(options, cem.Seed(settings.Seed))
 	}
 
-	rn, err := NewRunner(settings.experiment, settings.agentSettings.Default, settings.agentSettings.CemOptions)
+	rn, err := NewRunner(settings.experiment, settings.agentSettings)
 	panicIfError(err, "Failed to create Runner")
 
 	hypers := []cem.Hyperparameter{}
@@ -85,11 +87,10 @@ type Runner struct {
 	logger.Debug
 	logger.Data
 	config.Experiment
-	agentSettings map[string]json.RawMessage
-	hypers        []hyper
+	agentSettings
 }
 
-func NewRunner(exp config.Experiment, agentSettings map[string]json.RawMessage, hypers []hyper) (Runner, error) {
+func NewRunner(exp config.Experiment, as agentSettings) (Runner, error) {
 	// Set up no-data logger and debug
 	debug := logger.NewDebug(logger.DebugConfig{})
 	data, err := logger.NewData(debug, logger.DataConfig{})
@@ -100,8 +101,7 @@ func NewRunner(exp config.Experiment, agentSettings map[string]json.RawMessage, 
 		Debug:         debug,
 		Data:          data,
 		Experiment:    exp,
-		agentSettings: agentSettings,
-		hypers:        hypers,
+		agentSettings: as,
 	}, nil
 }
 
@@ -109,11 +109,11 @@ func (rn Runner) newSettings(hyperparameters []float64) map[string]json.RawMessa
 	merged := make(map[string]json.RawMessage)
 
 	// Copy from the original map to the target map
-	for key, value := range rn.agentSettings {
+	for key, value := range rn.agentSettings.Default {
 		merged[key] = value
 	}
 
-	for i, hyp := range rn.hypers {
+	for i, hyp := range rn.CemOptions {
 		if hyp.IsInt {
 			merged[hyp.Name] = json.RawMessage(strconv.Itoa(int(hyperparameters[i])))
 		} else {
@@ -134,13 +134,18 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 	average := 0
 	average_success := 0
 	set := rn.newSettings(hyperparameters)
+
+	ag, err := agent.Create(rn.agentSettings.Name, rn.Debug)
+	if err != nil {
+		return 0, err
+	}
+
 	for run := 0; run < len(seeds); run++ {
 		attr, err := rn.attributesWithSeed(set, seeds[run])
 		if err != nil {
 			return 0, err
 		}
 
-		ag := &agent.ESarsa{Debug: rn.Debug}
 		ag.Initialize(0, attr, nil)
 
 		env := &environment.Acrobot{Debug: rn.Debug}
