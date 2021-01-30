@@ -40,6 +40,7 @@ type environmentSettings struct {
 type cemSettings struct {
 	cem.Settings
 	Seed       uint64
+	ScoreType  RunScorerGenerator
 	experiment config.Experiment
 	environmentSettings
 	agentSettings
@@ -68,7 +69,7 @@ func main() {
 		options = append(options, cem.Seed(settings.Seed))
 	}
 
-	rn, err := NewRunner(settings.experiment, settings.agentSettings, settings.environmentSettings)
+	rn, err := NewRunner(settings.experiment, settings.agentSettings, settings.environmentSettings, settings.ScoreType)
 	panicIfError(err, "Failed to create Runner")
 
 	hypers := []cem.Hyperparameter{}
@@ -96,9 +97,10 @@ type Runner struct {
 	config.Experiment
 	agentSettings
 	environmentSettings
+	newScoreGen RunScorerGenerator
 }
 
-func NewRunner(exp config.Experiment, as agentSettings, es environmentSettings) (Runner, error) {
+func NewRunner(exp config.Experiment, as agentSettings, es environmentSettings, newScoreGen RunScorerGenerator) (Runner, error) {
 	// Set up no-data logger and debug
 	debug := logger.NewDebug(logger.DebugConfig{})
 	data, err := logger.NewData(debug, logger.DataConfig{})
@@ -111,6 +113,7 @@ func NewRunner(exp config.Experiment, as agentSettings, es environmentSettings) 
 		Experiment:          exp,
 		agentSettings:       as,
 		environmentSettings: es,
+		newScoreGen:         newScoreGen,
 	}, nil
 }
 
@@ -140,8 +143,6 @@ func (rn Runner) attributesWithSeed(set map[string]json.RawMessage, seed uint64)
 }
 
 func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iteration int) (float64, error) {
-	average := 0
-	average_success := 0
 	set := rn.newSettings(hyperparameters)
 
 	ag, err := agent.Create(rn.agentSettings.Name, rn.Debug)
@@ -152,6 +153,8 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 	if err != nil {
 		return 0, err
 	}
+
+	scoreGen := rn.newScoreGen()
 
 	for run := 0; run < len(seeds); run++ {
 		attr, err := rn.attributesWithSeed(set, seeds[run])
@@ -172,15 +175,51 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 		}
 
 		listOfListOfRewards, _ := exp.Run()
-		average_success += len(listOfListOfRewards)
-
-		//Episodic Acrobot, last 1/10th of the episodes
-		for i := 0; i < len(listOfListOfRewards); i++ {
-			average += len(listOfListOfRewards[i])
-		}
+		scoreGen.UpdateRun(listOfListOfRewards)
 	}
-	average_steps_to_failure := float64(average) / float64(average_success)
-	return -average_steps_to_failure, nil //episodic  acrobot, returns negative of steps to failure
+	return scoreGen.Score(), nil
+}
+
+// RunScorer recevies the results of a series of runs and compiles them into a score.
+type RunScorer interface {
+	// UpdateRun receives the list of list of rewards from a run of the experiment.
+	UpdateRun(rewards [][]float64)
+
+	// Score returns a score for the series of runs
+	Score() float64
+}
+
+type RunScorerGenerator func() RunScorer
+
+func (rsg *RunScorerGenerator) UnmarshalJSON(data []byte) error {
+	name := ""
+	if err := json.Unmarshal(data, &name); err != nil {
+		return err
+	}
+
+	switch name {
+	case "episode-longer-is-better":
+		*rsg = func() RunScorer { return &scoreEpisodeLongerIsBetter{} }
+	default:
+		return fmt.Errorf("couldn't find RunScorerGenerator with name '%s'", name)
+	}
+	return nil
+}
+
+// scoreEpisodeLongerIsBetter calculates a score in the case of episodes, where longer runs are better.
+type scoreEpisodeLongerIsBetter struct {
+	averageSuccess, average int
+}
+
+func (su *scoreEpisodeLongerIsBetter) UpdateRun(rewards [][]float64) {
+	su.averageSuccess += len(rewards) // Add the number of successes during this run
+	for i := 0; i < len(rewards); i++ {
+		su.average += len(rewards[i]) // Adds the total number of steps taken in the run
+	}
+}
+
+func (su *scoreEpisodeLongerIsBetter) Score() float64 {
+	return -float64(su.average) / float64(su.averageSuccess) // negative of steps to failure
 }
 
 func panicIfError(err error, reason string) {
