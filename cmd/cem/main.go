@@ -23,6 +23,7 @@ var (
 	configPath = flag.String("cem", "config/cem/cem.json", "CEM settings file path")
 	expPath    = flag.String("exp", "config/cem/experiment.json", "Experiment settings file path")
 	agentPath  = flag.String("agent", "config/cem/agent.json", "Default agent settings file path")
+	envPath    = flag.String("env", "config/cem/environment.json", "Environment settings file path")
 )
 
 type agentSettings struct {
@@ -31,10 +32,16 @@ type agentSettings struct {
 	CemOptions []hyper
 }
 
+type environmentSettings struct {
+	Name     string
+	Settings map[string]json.RawMessage
+}
+
 type cemSettings struct {
 	cem.Settings
 	Seed       uint64
 	experiment config.Experiment
+	environmentSettings
 	agentSettings
 }
 
@@ -61,7 +68,7 @@ func main() {
 		options = append(options, cem.Seed(settings.Seed))
 	}
 
-	rn, err := NewRunner(settings.experiment, settings.agentSettings)
+	rn, err := NewRunner(settings.experiment, settings.agentSettings, settings.environmentSettings)
 	panicIfError(err, "Failed to create Runner")
 
 	hypers := []cem.Hyperparameter{}
@@ -88,9 +95,10 @@ type Runner struct {
 	logger.Data
 	config.Experiment
 	agentSettings
+	environmentSettings
 }
 
-func NewRunner(exp config.Experiment, as agentSettings) (Runner, error) {
+func NewRunner(exp config.Experiment, as agentSettings, es environmentSettings) (Runner, error) {
 	// Set up no-data logger and debug
 	debug := logger.NewDebug(logger.DebugConfig{})
 	data, err := logger.NewData(debug, logger.DataConfig{})
@@ -98,10 +106,11 @@ func NewRunner(exp config.Experiment, as agentSettings) (Runner, error) {
 		return Runner{}, err
 	}
 	return Runner{
-		Debug:         debug,
-		Data:          data,
-		Experiment:    exp,
-		agentSettings: as,
+		Debug:               debug,
+		Data:                data,
+		Experiment:          exp,
+		agentSettings:       as,
+		environmentSettings: es,
 	}, nil
 }
 
@@ -139,17 +148,23 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 	if err != nil {
 		return 0, err
 	}
+	env, err := environment.Create(rn.environmentSettings.Name, rn.Debug)
+	if err != nil {
+		return 0, err
+	}
 
 	for run := 0; run < len(seeds); run++ {
 		attr, err := rn.attributesWithSeed(set, seeds[run])
 		if err != nil {
 			return 0, err
 		}
-
 		ag.Initialize(0, attr, nil)
 
-		env := &environment.Acrobot{Debug: rn.Debug}
-		env.InitializeWithSettings(environment.AcrobotSettings{Seed: int64(seeds[run])}) // Episodic acrobot
+		attr, err = rn.attributesWithSeed(rn.environmentSettings.Settings, seeds[run])
+		if err != nil {
+			return 0, err
+		}
+		env.Initialize(0, attr)
 
 		exp, err := experiment.New(ag, env, rn.Experiment, rn.Debug, rn.Data)
 		if err != nil {
@@ -184,6 +199,7 @@ func buildSettings() cemSettings {
 	readJsonFile(*configPath, &settings)
 	readJsonFile(*expPath, &settings.experiment)
 	readJsonFile(*agentPath, &settings.agentSettings)
+	readJsonFile(*envPath, &settings.environmentSettings)
 
 	return settings
 }
