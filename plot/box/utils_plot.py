@@ -7,6 +7,40 @@ import matplotlib
 import matplotlib.pyplot as plt
 cmap = matplotlib.cm.get_cmap('cool')
 
+def plot_each_run(te, cms, title, ylim=None):
+    te_data = loading_pessimistic(te)
+    te_rank = ranking_allruns(te_data)
+    # te_rank = average_run(te_rank["true"])
+    te_rank = te_rank["true"]
+
+    cms_data = loading_pessimistic(cms)
+
+    for rk in te_rank.keys():
+        one_run = []
+        m_lst = list(cms_data.keys())
+        for model in m_lst:
+            model_rank = []
+            for e in te_rank[rk]:
+                pk = e[0]
+                model_rank.append(cms_data[model][rk][pk])
+            one_run.append(model_rank)
+        plot_scatters(one_run, m_lst, "{}_{}".format(title, rk))
+
+
+def plot_scatters(data, label, title):
+    plt.figure()
+    for idx in range(len(data)):
+        d = data[idx]
+        plt.scatter([i+1 for i in range(len(d))], d,
+                    label=label[idx], s=5, color=cmap(idx/len(data)))
+        max_idx = np.array(d).argmax()
+        plt.scatter([max_idx+1], np.array(d[max_idx]), facecolors='none', edgecolors=cmap(idx/len(data)), s=160)
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("{}.png".format(title))
+    plt.close()
+    plt.clf()
 
 def plot_generation(te, cms, ranges, title, ylim=None):
 
@@ -50,7 +84,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear'):
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
     
     '''
-    if ylim[0] >= 0 and ylim[1] > 0:
+    if ylim is not None and ylim[0] >= 0 and ylim[1] > 0:
         res_scale = -1
     else:
         res_scale = 1

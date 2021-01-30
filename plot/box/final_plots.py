@@ -87,6 +87,32 @@ def cartpole():
     fqi = {"fqi": cpn1_fqi}
     plot_compare_top(te, calibration, fqi, random, "../img/final_cartpole")
 
+def cartpole_rs():
+    calibration = {
+        "trueStart_adversarialTrans_t1000": RS_trueStart_farTrans_time1000,
+        "distStart_closeTrans_t200": RS_distStart_closeTrans_time200,
+    }
+    random = cpn1_rnd
+    te = {"true": cpn1_true_env}
+    fqi = {"fqi": RS_cpn1_fqi}
+    plot_compare_top(te, calibration, fqi, random, "../img/final_cartpole_rs")
 
-arcrobot()
+def cartpole_ablation():
+    calibration = {
+        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000, #
+        "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
+        "noAdversarial_t1000": trueStart_closeTrans_time1000, #
+        "noAdversarial_t0": trueStart_closeTrans_time0,
+        "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
+        "noEnsemble_t0": trueStart_noEnsemble_time0,
+    }
+    random = cpn1_rnd
+    te = {"true": cpn1_true_env}
+    fqi = {"fqi": cpn1_fqi}
+    plot_compare_top(te, calibration, fqi, random, "../img/ablation_cartpole")
+
+
+# arcrobot()
 # cartpole()
+# cartpole_rs()
+cartpole_ablation()
