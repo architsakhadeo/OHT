@@ -39,10 +39,10 @@ def check_run():
         # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
         # "distStart_closeTrans_t200": distStart_closeTrans_time200,
 
-        "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
-        # "noAdversarial_t1000": trueStart_closeTrans_time1000, #
+        # "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
+        "noAdversarial_t1000": trueStart_closeTrans_time1000, #
         # # "noAdversarial_t0": trueStart_closeTrans_time0,
-        # "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
+        "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
         # # "noEnsemble_t0": trueStart_noEnsemble_time0,
     }
     te = {"true": cpn1_true_env}

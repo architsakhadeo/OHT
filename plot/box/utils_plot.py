@@ -10,24 +10,55 @@ cmap = matplotlib.cm.get_cmap('cool')
 def plot_each_run(te, cms, title, ylim=None):
     te_data = loading_pessimistic(te)
     te_rank = ranking_allruns(te_data)
-    # te_rank = average_run(te_rank["true"])
     te_rank = te_rank["true"]
 
     cms_data = loading_pessimistic(cms)
 
-    for rk in te_rank.keys():
-        one_run = []
-        m_lst = list(cms_data.keys())
-        for model in m_lst:
-            model_rank = []
+    m_lst = list(cms_data.keys())
+    all_models = []
+    for model in m_lst:
+        one_model = []
+        for rk in te_rank.keys():
+            one_run = []
             for e in te_rank[rk]:
                 pk = e[0]
-                model_rank.append(cms_data[model][rk][pk])
-            one_run.append(model_rank)
-        plot_scatters(one_run, m_lst, "{}_{}".format(title, rk))
+                one_run.append(cms_data[model][rk][pk])
+            one_model.append(one_run)
+        all_models.append(one_model)
+    plot_scatters(all_models, m_lst, title)
 
+    # for rk in te_rank.keys():
+    #     one_run = []
+    #     m_lst = list(cms_data.keys())
+    #     for model in m_lst:
+    #         model_rank = []
+    #         for e in te_rank[rk]:
+    #             pk = e[0]
+    #             model_rank.append(cms_data[model][rk][pk])
+    #         one_run.append(model_rank)
+    #     plot_scatters_one_run(one_run, m_lst, "{}_{}".format(title, rk))
 
-def plot_scatters(data, label, title):
+def plot_scatters(all_data, label, title):
+    for idx in range(len(all_data)):
+        model_data = all_data[idx]
+        # print(np.array(model_data).shape, idx)
+        for run in model_data:
+            plt.scatter([i+1 for i in range(len(run))], run,
+                        s=2, color=cmap(idx/len(all_data)), alpha=0.3)
+
+        model_data = np.array(model_data)
+        # print(model_data.shape)
+        avg = model_data.mean(axis=0)
+        # print(label[idx], avg)
+        plt.scatter([i+1 for i in range(len(avg))], avg, marker='^', facecolors='none', s=35,
+                    label=label[idx], edgecolors=cmap(idx/len(all_data)), alpha=1)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("{}.png".format(title))
+    plt.close()
+    plt.clf()
+
+def plot_scatters_one_run(data, label, title):
     plt.figure()
     for idx in range(len(data)):
         d = data[idx]
