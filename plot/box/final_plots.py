@@ -7,7 +7,7 @@ from plot.box.utils_data import *
 from plot.box.utils_plot import *
 from plot.box.paths_final import *
 
-def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward"):
+def plot_compare_top(te, cms, fqi, rand_lst, source, title, ylim=None, yscale="linear", res_scale=1):
     ranges = [0]
     # true env data dictionary
     te_data = loading_pessimistic(te, source)
@@ -39,6 +39,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward"):
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
     filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    #filtered = {"random": [rand_data]}
     cms_data = loading_pessimistic(cms, source)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -51,8 +52,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward"):
             data = [item[2] for item in target]
             filtered[model].append(data)
     # print(filtered)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim)#, baseline=[fqi_data, "fqi"])
-    # plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
+    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -63,24 +64,55 @@ def performance_by_param(rand_lst, data):
 
 def arcrobot():
     calibration = {
-        "calibration": ac_cm
+        "k1_notimeout": k1_notimeout,
+        "k1_timeout1000": k1_timeout1000,
+        "k3ensemble_notimeout": k3ensemble_notimeout,
+        "k3ensemble_timeout1000": k3ensemble_timeout1000,
+        "k3ensemble_adversarial_notimeout": k3ensemble_adversarial_notimeout,
+        "k3ensemble_adverarial_timeout1000": k3ensemble_adverarial_timeout1000
     }
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot", source="episode")
+    plot_compare_top(te, calibration, fqi, random, "episode", "../img/final_acrobot_violin_log", ylim=[50,200], yscale="log", res_scale=-1)
 
 def cartpole():
     calibration = {
-        # "distant start": ns1_timeout1000_farStart,
-        "distant start + early timeout": ns1_timeout200_farStart,
-        # "true start + early timeout": ns1_timeout200
+        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000,
+        # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
+        "distStart_closeTrans_t200": distStart_closeTrans_time200,
     }
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_cartpole")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole")
+
+def cartpole_rs():
+    calibration = {
+        "trueStart_adversarialTrans_t1000": RS_trueStart_farTrans_time1000,
+        "distStart_closeTrans_t200": RS_distStart_closeTrans_time200,
+    }
+    random = cpn1_rnd
+    te = {"true": cpn1_true_env}
+    fqi = {"fqi": RS_cpn1_fqi}
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole_rs")
+
+def cartpole_ablation():
+    calibration = {
+        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000, #
+        "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
+        "noAdversarial_t1000": trueStart_closeTrans_time1000, #
+        "noAdversarial_t0": trueStart_closeTrans_time0,
+        "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
+        "noEnsemble_t0": trueStart_noEnsemble_time0,
+    }
+    random = cpn1_rnd
+    te = {"true": cpn1_true_env}
+    fqi = {"fqi": cpn1_fqi}
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/ablation_cartpole")
 
 
-arcrobot()
-cartpole()
+# arcrobot()
+# cartpole()
+# cartpole_rs()
+cartpole_ablation()

@@ -20,9 +20,9 @@ def sweep_model():
         # "transfurthest_t200": transfurthest_t200,
     }
     te = {"true": trueenv}
-    plot_generation(te, cms, ranges_top, "../img/model_compare_top30")
-    plot_generation(te, cms, ranges, "../img/model_compare_top60")
-    plot_generation(te, cms, ranges_all, "../img/model_compare_all")
+    plot_generation(te, cms, ranges_top, "reward", "../img/model_compare_top30")
+    plot_generation(te, cms, ranges, "reward", "../img/model_compare_top60")
+    plot_generation(te, cms, ranges_all, "reward", "../img/model_compare_all")
 
 ranges_top = [0, 0.1, 0.2, 0.3]
 ranges = [0, 0.2, 0.4, 0.6]

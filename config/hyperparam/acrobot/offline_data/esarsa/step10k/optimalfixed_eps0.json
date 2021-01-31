@@ -15,7 +15,7 @@
       "tiles": [8],
       "lambda": [0.9339087212036908],
       "alpha": [0.011186646173660882],
-      "WInit": [0.0],
+      "weight-init": [0.0],
       "is-stepsize-adaptive": [false],
       "adaptive-alpha": [0]
     },
@@ -34,7 +34,7 @@
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
-    "randomize_start_state_afterLock": true,
+    "randomize_start_state_afterLock": false,
     "steps": 0,
     "episodes": 10000000,
     "total-step-after-lock": 10000,

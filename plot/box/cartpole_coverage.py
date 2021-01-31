@@ -12,7 +12,7 @@ def sweep_model():
         # "timeout1000": ns1_timeout1000,
     }
     te = {"true": noise0_trueenv}
-    plot_generation(te, cms, ranges, "../img/sweep_model")
+    plot_generation(te, cms, ranges, "reward", "../img/sweep_model")
 
 
 ranges = [0, 0.1, 0.5, 0.9]

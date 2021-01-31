@@ -6,17 +6,18 @@
 		"gamma": 1.0,
 		"env-name": "acrobot",
 		"sweep": {
-			"tilings": [8, 16],
-			"tiles": [4, 8],
-			"lambda": [0.9],
+			"weight-init": [0.0],
 			"epsilon": [0.0],
-			"WInit": [0.0],
+			"tilings": [4, 16],
+			"tiles": [2, 8],
+			"lambda": [0.9],
 			"alpha": [0.0],
 			"is-stepsize-adaptive": [true],
-			"adaptive-alpha": [0.1, 0.06, 0.03, 0.01, 0.006, 0.003, 0.001, 0.0006, 0.0003]
+			"adaptive-alpha": [0.00048828, 0.00097656, 0.00195312, 0.00390625, 0.0078125 , 0.015625 , 0.03125 , 0.0625]
 		},
-		"enable-debug": false,
-		"seed": 1
+		"lock-weight": false,
+    	"enable-debug": false,
+    	"seed": 1
 	},
 	"environment-settings": {
 		"seed": 1,
