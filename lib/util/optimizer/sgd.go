@@ -8,15 +8,19 @@ import (
 type Sgd struct {
 	alpha     float64
 	momentum  float64
+	lambda    float64 // weight decay (L2 penalty) coefficient
 	iteration int
 
-	HiddenUpdate        []mat.Matrix
-	OutputUpdate        mat.Matrix
+	HiddenUpdate []mat.Matrix
+	OutputUpdate mat.Matrix
 }
 
 func (opt *Sgd) Init(alpha float64, momentum []float64, input int, hidden []int, output int) {
 	opt.alpha = alpha
 	opt.momentum = momentum[0]
+	if len(momentum) == 2 {
+		opt.lambda = momentum[1]
+	}
 	opt.iteration = 0
 
 	lastOut := input
@@ -28,7 +32,7 @@ func (opt *Sgd) Init(alpha float64, momentum []float64, input int, hidden []int,
 	return
 }
 
-func (opt *Sgd) Backward(lossMat, OutputWeights mat.Matrix, LayerOut, HiddenWeights []mat.Matrix, tanhLast bool) (mat.Matrix, []mat.Matrix){
+func (opt *Sgd) Backward(lossMat, OutputWeights mat.Matrix, LayerOut, HiddenWeights []mat.Matrix, tanhLast bool) (mat.Matrix, []mat.Matrix) {
 
 	var noBias, mulM mat.Matrix
 	var hr, hc, mr, mc int
@@ -51,15 +55,21 @@ func (opt *Sgd) Backward(lossMat, OutputWeights mat.Matrix, LayerOut, HiddenWeig
 		lossMat = ao.Apply(tanhPrime, lossMat)
 	}
 
-	opt.OutputUpdate = ao.Add(ao.Scale(opt.momentum, opt.OutputUpdate), ao.Scale(opt.alpha, ao.Dot(lossMat, LayerOut[len(HiddenWeights)].T())))
+	opt.OutputUpdate = ao.Add(
+		ao.Scale(opt.momentum, opt.OutputUpdate),
+		ao.Scale(opt.alpha,
+			ao.Add(ao.Dot(lossMat, LayerOut[len(HiddenWeights)].T()), ao.Scale(opt.lambda, OutputWeights))))
 	OutputWeights = ao.Add(OutputWeights, opt.OutputUpdate) //.(*mat.Dense)
 
 	for i := len(HiddenWeights) - 1; i >= 0; i-- {
 		mulM = ao.Multiply(hiddenE[i], ao.Apply(reluPrime, LayerOut[i+1]))
 		mr, mc = mulM.Dims()
 
-		opt.HiddenUpdate[i] = ao.Add(ao.Scale(opt.momentum, opt.HiddenUpdate[i]), ao.Scale(opt.alpha, ao.Dot(ao.Slice(0, mr-1, 0, mc, mulM), LayerOut[i].T()))) //.(*mat.Dense)
-		HiddenWeights[i] = ao.Add(HiddenWeights[i], opt.HiddenUpdate[i])                                                                                  //.(*mat.Dense)
+		opt.HiddenUpdate[i] = ao.Add(
+			ao.Scale(opt.momentum, opt.HiddenUpdate[i]),
+			ao.Scale(opt.alpha,
+				ao.Add(ao.Dot(ao.Slice(0, mr-1, 0, mc, mulM), LayerOut[i].T()), ao.Scale(opt.lambda, HiddenWeights[i])))) //.(*mat.Dense)
+		HiddenWeights[i] = ao.Add(HiddenWeights[i], opt.HiddenUpdate[i]) //.(*mat.Dense)
 	}
 	opt.iteration = opt.iteration + 1
 

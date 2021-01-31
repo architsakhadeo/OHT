@@ -1,9 +1,10 @@
 package optimizer
 
 import (
+	"math"
+
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"gonum.org/v1/gonum/mat"
-	"math"
 )
 
 type Adam struct {
@@ -11,6 +12,7 @@ type Adam struct {
 	beta1     float64
 	beta2     float64
 	eps       float64
+	lambda    float64 // weight decay coefficient
 	iteration int
 
 	HiddenV        []mat.Matrix
@@ -24,6 +26,10 @@ func (opt *Adam) Init(alpha float64, momentums []float64, input int, hidden []in
 	opt.beta1 = momentums[0]
 	opt.beta2 = momentums[1]
 	opt.eps = momentums[2]
+	if len(momentums) == 4 {
+		// Decoupled Weight Decay Regularization: https://arxiv.org/abs/1711.05101
+		opt.lambda = momentums[3]
+	}
 	opt.iteration = 0
 
 	lastOut := input
@@ -52,12 +58,13 @@ func (opt *Adam) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) (ma
 	mHat = ao.Scale(1.0/(1-math.Pow(opt.beta1, float64(opt.iteration+1))), m)
 	vHat = ao.Scale(1.0/(1-math.Pow(opt.beta2, float64(opt.iteration+1))), v)
 	weight = ao.Subtract(weight,
-		ao.Scale(opt.alpha, ao.Division(mHat, ao.Add(ao.Pow(vHat, 0.5), ao.Scale(opt.eps, ao.Ones(ro, co))))))
+		ao.Add(
+			ao.Scale(opt.alpha, ao.Division(mHat, ao.Add(ao.Pow(vHat, 0.5), ao.Scale(opt.eps, ao.Ones(ro, co))))),
+			ao.Scale(opt.lambda, weight)))
 	return weight, m, v
 }
 
-func (opt *Adam) Backward(lossMat, OutputWeights mat.Matrix, LayerOut, HiddenWeights []mat.Matrix, tanhLast bool) (mat.Matrix, []mat.Matrix){
-
+func (opt *Adam) Backward(lossMat, OutputWeights mat.Matrix, LayerOut, HiddenWeights []mat.Matrix, tanhLast bool) (mat.Matrix, []mat.Matrix) {
 
 	var noBias, mulM mat.Matrix
 	var hr, hc, mr, mc int

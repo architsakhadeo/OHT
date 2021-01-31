@@ -41,6 +41,7 @@ type fqiSettings struct {
 	AdamBeta1 float64 `json:"fqi-adamBeta1"`
 	AdamBeta2 float64 `json:"fqi-adamBeta2"`
 	AdamEps   float64 `json:"fqi-adamEps"`
+	L2Lambda  float64 `json:"fqi-l2Lambda"`
 
 	Bsize int    `json:"buffer-size"`
 	Btype string `json:"buffer-type"`
@@ -165,10 +166,10 @@ func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error
 
 	if agent.OptName == "Adam" {
 		agent.opt = new(optimizer.Adam)
-		agent.opt.Init(agent.Alpha, []float64{agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
+		agent.opt.Init(agent.Alpha, []float64{agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps, agent.L2Lambda}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
 	} else if agent.OptName == "Sgd" {
 		agent.opt = new(optimizer.Sgd)
-		agent.opt.Init(agent.Alpha, []float64{agent.Momentum}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
+		agent.opt.Init(agent.Alpha, []float64{agent.Momentum, agent.L2Lambda}, agent.StateDim, agent.Hidden, agent.NumberOfActions)
 	} else {
 		return errors.New("Optimizer NotImplemented")
 	}
