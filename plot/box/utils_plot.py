@@ -5,7 +5,8 @@ sys.path.insert(0, cwd+'/../..')
 from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
-cmap = matplotlib.cm.get_cmap('cool')
+# cmap = matplotlib.cm.get_cmap('cool')
+cmap = matplotlib.cm.get_cmap('hsv')
 
 def plot_each_run(te, cms, title, ylim=None):
     te_data = loading_pessimistic(te)
@@ -73,16 +74,16 @@ def plot_scatters_one_run(data, label, title):
     plt.close()
     plt.clf()
 
-def plot_generation(te, cms, ranges, title, ylim=None):
+def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", res_scale=1):
 
-    te_data = loading_pessimistic(te, 'episode')
+    te_data = loading_pessimistic(te, source)
     te_data = average_run(te_data["true"])
 
     te_thrd = []
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    cms_data = loading_pessimistic(cms, 'episode')
+    cms_data = loading_pessimistic(cms, source)
     filtered = {}
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -94,8 +95,8 @@ def plot_generation(te, cms, ranges, title, ylim=None):
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim)
-    # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 
 """
@@ -106,22 +107,13 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear'):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_scale=1):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
-    
-    '''
-    if ylim is not None and ylim[0] >= 0 and ylim[1] > 0:
-        res_scale = -1
-    else:
-        res_scale = 1
-    '''
-    res_scale = -1
-
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
@@ -174,16 +166,13 @@ def set_box_color(bp, color):
     # for patch in bp['boxes']:
     #     patch.set_facecolor(color)
 
-def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear"):
+def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_scale=1):
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
-    if ylim[0] >= 0 and ylim[1] > 0:
-        res_scale = -1
-    else:
-        res_scale = 1
+
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]

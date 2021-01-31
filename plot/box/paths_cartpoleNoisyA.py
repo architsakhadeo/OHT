@@ -29,6 +29,20 @@ trueStart_farTrans_time0 = [
     "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed4",
     "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout0/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed5",
 ]
+trueStart_farTrans_time200_k5 = [
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout200/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed1",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout200/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed2",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout200/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed3",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout200/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed4",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout200/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed5",
+]
+trueStart_farTrans_time1000_k5 = [
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed1",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed2",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed3",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed4",
+    "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k5/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed5",
+]
 trueStart_closeTrans_time1000 = [
     "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed1",
     "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0.2/ensembleseed2",

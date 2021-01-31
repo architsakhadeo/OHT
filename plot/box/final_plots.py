@@ -7,7 +7,7 @@ from plot.box.utils_data import *
 from plot.box.utils_plot import *
 from plot.box.paths_final import *
 
-def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", yscale="linear"):
+def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", yscale="linear", res_scale=1):
     ranges = [0]
     # true env data dictionary
     te_data = loading_pessimistic(te, source)
@@ -52,8 +52,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", 
             data = [item[2] for item in target]
             filtered[model].append(data)
     # print(filtered)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)#, baseline=[fqi_data, "fqi"])
-    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)
+    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -74,7 +74,7 @@ def arcrobot():
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot_violin_log", source="episode", ylim=[50,200], yscale="log")
+    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot_violin_log", source="episode", ylim=[50,200], yscale="log", res_scale=-1)
 
 def cartpole():
     calibration = {
