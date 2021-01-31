@@ -7,7 +7,7 @@ from plot.box.utils_data import *
 from plot.box.utils_plot import *
 from plot.box.paths_final import *
 
-def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", yscale="linear", res_scale=1):
+def plot_compare_top(te, cms, fqi, rand_lst, source, title, ylim=None, yscale="linear", res_scale=1):
     ranges = [0]
     # true env data dictionary
     te_data = loading_pessimistic(te, source)
@@ -74,7 +74,7 @@ def arcrobot():
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot_violin_log", source="episode", ylim=[50,200], yscale="log", res_scale=-1)
+    plot_compare_top(te, calibration, fqi, random, "episode", "../img/final_acrobot_violin_log", ylim=[50,200], yscale="log", res_scale=-1)
 
 def cartpole():
     calibration = {
@@ -85,7 +85,7 @@ def cartpole():
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_cartpole")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole")
 
 def cartpole_rs():
     calibration = {
@@ -95,7 +95,7 @@ def cartpole_rs():
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": RS_cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_cartpole_rs")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole_rs")
 
 def cartpole_ablation():
     calibration = {
@@ -109,7 +109,7 @@ def cartpole_ablation():
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/ablation_cartpole")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/ablation_cartpole")
 
 
 # arcrobot()
