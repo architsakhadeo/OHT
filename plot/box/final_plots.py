@@ -52,8 +52,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, title, ylim=None, source="reward", 
             data = [item[2] for item in target]
             filtered[model].append(data)
     # print(filtered)
-    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)#, baseline=[fqi_data, "fqi"])
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)
+    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)#, baseline=[fqi_data, "fqi"])
+    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale)
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -64,13 +64,17 @@ def performance_by_param(rand_lst, data):
 
 def arcrobot():
     calibration = {
-        "trueStart_adversarialTrans_t1000": AcrobottrueStart_adversarialTrans_timeout1000,
-        "distantStart_regularTrans_t200": AcrobotdistantStart_regularTrans_timeout200,
+        "k1_notimeout": k1_notimeout,
+        "k1_timeout1000": k1_timeout1000,
+        "k3ensemble_notimeout": k3ensemble_notimeout,
+        "k3ensemble_timeout1000": k3ensemble_timeout1000,
+        "k3ensemble_adversarial_notimeout": k3ensemble_adversarial_notimeout,
+        "k3ensemble_adverarial_timeout1000": k3ensemble_adverarial_timeout1000
     }
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot_box_linear", source="episode", ylim=[50,200], yscale="linear")
+    plot_compare_top(te, calibration, fqi, random, "../img/final_acrobot_violin_log", source="episode", ylim=[50,200], yscale="log")
 
 def cartpole():
     calibration = {

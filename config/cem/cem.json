@@ -1,0 +1,9 @@
+{
+	"ScoreType": "episode-longer-is-better",
+	"NumWorkers": -1,
+	"NumIterations": 2,
+	"NumSamples": 6,
+	"NumRuns": 2,
+	"PercentElite": 0.5,
+	"Seed": 42
+}

@@ -131,6 +131,7 @@ def sweep_model():
         print(i)
         plot_generation(te, cms[i], ranges, listOfPlots[i])
     '''
+    '''
     cms = [{
         "k1": data2500_eps0_k1_p0,
         "k3": data2500_eps0_k3_p0,
@@ -149,7 +150,7 @@ def sweep_model():
         "k5": data10k_eps10_k5_p0,
     }]
     te = {"true": true_env}
-    '''
+    
     listOfPlots = ["../../img/sweep_model/step2500/epsilon0/sweepmodel_step2500_epsilon0",
                    "../../img/sweep_model/step2500/epsilon10/sweepmodel_step2500_epsilon10",
                    "../../img/sweep_model/step2500/epsilon25/sweepmodel_step2500_epsilon25",
@@ -170,10 +171,18 @@ def sweep_model():
                    "../../img/sweep_model/step10k/epsilon100/sweepmodel_step10k_epsilon100",
                    ]
     '''
-    listOfPlots = ["../../img/sweepmodel_step2500_epsilon0",
-                   "../../img/sweepmodel_step2500_epsilon10",
-                   "../../img/sweepmodel_step10k_epsilon0",
-                   "../../img/sweepmodel_step10k_epsilon10"
+    cms = [{
+       "k1_notimeout": k1_notimeout,
+        "k1_timeout1000": k1_timeout1000,
+        "k3ensemble_notimeout": k3ensemble_notimeout,
+        "k3ensemble_timeout1000": k3ensemble_timeout1000,
+        "k3ensemble_adversarial_notimeout": k3ensemble_adversarial_notimeout,
+        "k3ensemble_adverarial_timeout1000": k3ensemble_adverarial_timeout1000,
+    }
+    ]
+
+    te = {"true": true_env}
+    listOfPlots = ["../img/ablation"
                    ]
     for i in range(len(listOfPlots)):
         print(i)
@@ -428,10 +437,10 @@ def sweep_datasize():
         print(i)
         plot_generation(te, cms[i], ranges, listOfPlots[i])
 
-ranges = [0, 0.1, 0.5]
+ranges = [0.0, 0.1, 0.2, 0.3]
 labels = ["0%\n(top param)", "10%", "20%", "30%", "40%", "50%"]
 #ranges = [[0, 0.3], [0.3, 0.7], [0.7, 1.0]]
 
-#sweep_model()
-sweep_coverage()
+sweep_model()
+#sweep_coverage()
 #sweep_datasize()
