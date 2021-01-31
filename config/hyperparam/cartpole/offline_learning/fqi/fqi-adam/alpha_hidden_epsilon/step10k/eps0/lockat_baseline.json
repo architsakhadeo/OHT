@@ -11,6 +11,7 @@
 		"fqi-adamBeta1": 0.9,
 		"fqi-adamBeta2": 0.999,
 		"fqi-adamEps": 1e-8,
+		"fqi-l2Lambda": 0.01,
 		"sweep": {
 			"alpha": [1e-3, 1e-4, 1e-5, 1e-6],
 			"fqi-hidden": [
@@ -24,7 +25,7 @@
 		},
 		"lock-weight": false,
 		"enable-debug": false,
-		"datalog": "data/hyperparam_randomStart/cartpole-noisy-action/noise_1perc/offline_data/esarsa/step10k_env/fixed_eps0/param_0/",
+		"datalog": "data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_data/esarsa/step10k_env/fixed_eps0/param_0/",
 		"weightpath": "weight/hyperparam/cartpole/fqi/step10k_env/fixed_eps0/",
 		"offline-learn": true,
 		"online-learn": false

@@ -11,6 +11,7 @@
 		"fqi-adamBeta1": 0.9,
 		"fqi-adamBeta2": 0.999,
 		"fqi-adamEps": 1e-8,
+		"fqi-l2Lambda": 0.01,
 		"sweep": {
 			"alpha": [1e-3, 1e-4, 1e-5, 1e-6],
 			"fqi-hidden": [
