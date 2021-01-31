@@ -26,15 +26,17 @@ var (
 	envPath    = flag.String("env", "config/cem/environment.json", "Environment settings file path")
 )
 
+type SettingsMap map[string]json.RawMessage
+
 type agentSettings struct {
 	Name       string
-	Default    map[string]json.RawMessage
+	Default    SettingsMap
 	CemOptions []hyper
 }
 
 type environmentSettings struct {
 	Name     string
-	Settings map[string]json.RawMessage
+	Settings SettingsMap
 }
 
 type cemSettings struct {
@@ -117,13 +119,8 @@ func NewRunner(exp config.Experiment, as agentSettings, es environmentSettings, 
 	}, nil
 }
 
-func (rn Runner) newSettings(hyperparameters []float64) map[string]json.RawMessage {
-	merged := make(map[string]json.RawMessage)
-
-	// Copy from the original map to the target map
-	for key, value := range rn.agentSettings.Default {
-		merged[key] = value
-	}
+func (rn Runner) newAgentSettings(hyperparameters []float64) SettingsMap {
+	merged := rn.agentSettings.Default.copy()
 
 	for i, hyp := range rn.CemOptions {
 		if hyp.IsInt {
@@ -136,14 +133,15 @@ func (rn Runner) newSettings(hyperparameters []float64) map[string]json.RawMessa
 	return merged
 }
 
-func (rn Runner) attributesWithSeed(set map[string]json.RawMessage, seed uint64) (rlglue.Attributes, error) {
+func (rn Runner) attributesWithSeed(set SettingsMap, seed uint64) (rlglue.Attributes, error) {
 	set["seed"] = json.RawMessage(strconv.FormatUint(seed, 10))
 	attr, err := json.Marshal(set)
 	return rlglue.Attributes(attr), err
 }
 
 func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iteration int) (float64, error) {
-	set := rn.newSettings(hyperparameters)
+	agSet := rn.newAgentSettings(hyperparameters)
+	envSet := rn.environmentSettings.Settings.copy()
 
 	ag, err := agent.Create(rn.agentSettings.Name, rn.Debug)
 	if err != nil {
@@ -157,13 +155,13 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 	scoreGen := rn.newScoreGen()
 
 	for run := 0; run < len(seeds); run++ {
-		attr, err := rn.attributesWithSeed(set, seeds[run])
+		attr, err := rn.attributesWithSeed(agSet, seeds[run])
 		if err != nil {
 			return 0, err
 		}
 		ag.Initialize(0, attr, nil)
 
-		attr, err = rn.attributesWithSeed(rn.environmentSettings.Settings, seeds[run])
+		attr, err = rn.attributesWithSeed(envSet, seeds[run])
 		if err != nil {
 			return 0, err
 		}
@@ -248,4 +246,12 @@ func readJsonFile(path string, val interface{}) {
 	panicIfError(err, "Couldn't load config file '"+path+"'")
 	err = json.Unmarshal(data, val)
 	panicIfError(err, "Couldn't parse config JSON '"+string(data)+"'")
+}
+
+func (sm SettingsMap) copy() SettingsMap {
+	newSM := make(SettingsMap)
+	for key, value := range sm {
+		newSM[key] = value
+	}
+	return newSM
 }
