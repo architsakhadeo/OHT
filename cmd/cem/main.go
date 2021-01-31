@@ -19,8 +19,6 @@ var (
 	envPath    = flag.String("env", "config/cem/environment.json", "Environment settings file path")
 )
 
-const e = 10.e-8
-
 func main() {
 	startTime := time.Now()
 	flag.Parse()
