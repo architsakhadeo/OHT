@@ -20,14 +20,10 @@ func main() {
 	flag.Parse()
 
 	data, err := ioutil.ReadFile(*configPath)
-	if err != nil {
-		panic("The config file at path '" + *configPath + "' could not be read: " + err.Error())
-	}
+	panicIfError(err, "The config file at path '"+*configPath+"' could not be read")
 
 	confs, err := config.Parse(data)
-	if err != nil {
-		panic("Could not parse the config: " + err.Error())
-	}
+	panicIfError(err, "Could not parse the config")
 
 	for i, conf := range confs {
 		if len(confs) > 1 {
@@ -42,9 +38,12 @@ func main() {
 			fmt.Printf("Running sweep %d of %d\n", *sweep, sweepLen)
 		}
 		err = experiment.Execute(*run, conf, *sweep)
+		panicIfError(err, "Could not create the experiment")
+	}
+}
 
-		if err != nil {
-			panic("Could not create experiment: " + err.Error())
-		}
+func panicIfError(err error, reason string) {
+	if err != nil {
+		panic("ERROR " + err.Error() + ": " + reason)
 	}
 }
