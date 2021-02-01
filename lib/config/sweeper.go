@@ -47,30 +47,17 @@ func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
 		return errors.New("The attributes is not valid JSON: " + err.Error())
 	}
 	swpr.allAttributes = []AttributeMap{attrs}
-	sweepAttrs, ok := attrs["sweep"]
-	if !ok {
-		return nil
-	}
-	delete(attrs, "sweep") // Neither Agent or Environment shouldn't receive the sweep info
 
-	typeStr := "sweep" // default type
-	sweepType, ok := attrs["sweep-type"]
-	if ok {
-		delete(attrs, "sweep-type")
-		err = json.Unmarshal(*sweepType, &typeStr)
-		if err != nil {
-			return errors.New("The sweep type is not valid JSON: " + err.Error())
-		}
-	}
-
-	switch typeStr {
-	case "sweep":
+	if sweepAttrs, ok := attrs["sweep"]; ok {
+		delete(attrs, "sweep") // Neither Agent or Environment should receive the sweep info
 		return swpr.loadSweeps(sweepAttrs)
-	case "list":
-		return swpr.loadList(sweepAttrs)
-	default:
-		return errors.New("Could not load unknown sweep type '" + typeStr + "'")
 	}
+	if listAttrs, ok := attrs["list"]; ok {
+		delete(attrs, "list") // Neither Agent or Environment should receive the list info
+		return swpr.loadList(listAttrs)
+	}
+
+	return nil
 }
 
 func (swpr *sweeper) loadSweeps(sweepAttrs *json.RawMessage) error {
@@ -117,12 +104,12 @@ func (swpr *sweeper) loadSweeps(sweepAttrs *json.RawMessage) error {
 	return nil
 }
 
-func (swpr *sweeper) loadList(sweepAttrs *json.RawMessage) error {
+func (swpr *sweeper) loadList(listAttrs *json.RawMessage) error {
 	// Parse out the array of settings.
 	sweepRawJson := []json.RawMessage{}
-	err := json.Unmarshal(*sweepAttrs, &sweepRawJson)
+	err := json.Unmarshal(*listAttrs, &sweepRawJson)
 	if err != nil {
-		return errors.New("The swept attributes is not valid JSON: " + err.Error())
+		return errors.New("The list attributes is not valid JSON: " + err.Error())
 	}
 
 	listOfHypers := []map[string]json.RawMessage{}

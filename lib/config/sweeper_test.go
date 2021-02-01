@@ -75,8 +75,7 @@ func newTestRlglueAttributesList() rlglue.Attributes {
 		"name": "test",
 		"gamma": 0.9,
 		"alpha": 15,
-		"sweep-type": "list",
-		"sweep": [
+		"list": [
 			{"fqi-hidden": [4, 4], "epsilon": 0, "alpha": 1e-3},
 			{"fqi-hidden": [4, 4], "alpha": 1e-3},
 			{"fqi-hidden": [4, 4], "epsilon": 0, "alpha": 1e-4},
