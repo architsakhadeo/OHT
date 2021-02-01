@@ -13,7 +13,7 @@ import (
 var (
 	configPath = flag.String("config", "config/esarsa.json", "config file for the experiment")
 	run        = flag.Uint("run", 0, "Run number")
-	sweep      = flag.Int("sweep", 0, "Sweep number")
+	sweep      = flag.Int("sweep", 0, "Sweep number (-1 to run all)")
 )
 
 func main() {
@@ -24,6 +24,17 @@ func main() {
 
 	confs, err := config.Parse(data)
 	panicIfError(err, "Could not parse the config")
+
+	if *sweep == -1 {
+		fmt.Println("Running ALL sweeps...")
+	}
+
+	var startSweep, endSweep int
+	if *sweep != -1 {
+		// Only do the one sweep
+		startSweep = *sweep
+		endSweep = *sweep
+	}
 
 	for i, conf := range confs {
 		if len(confs) > 1 {
@@ -36,9 +47,13 @@ func main() {
 
 		if *sweep != 0 {
 			fmt.Printf("Running sweep %d of %d\n", *sweep, sweepLen)
+		} else if *sweep == -1 {
+			endSweep = sweepLen
 		}
-		err = experiment.Execute(*run, conf, *sweep)
-		panicIfError(err, "Could not create the experiment")
+		for sw := startSweep; sw < endSweep; sw++ {
+			err = experiment.Execute(*run, conf, sw)
+			panicIfError(err, "Could not create the experiment")
+		}
 	}
 }
 
