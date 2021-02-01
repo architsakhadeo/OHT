@@ -4,7 +4,7 @@
 	"environment-name": "futile",
 	"agent-settings": {
 		"decreasing-epsilon": "None",
-		"gamma": 0.9,
+		"gamma": 1.0,
 		"state-len": 4,
 		"buffer-type": "random",
 		"optimizer": "Adam",
@@ -25,21 +25,21 @@
 		},
 		"lock-weight": false,
 		"enable-debug": false,
-		"datalog": "data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_data/esarsa/step10k_env/fixed_eps0/param_0/",
-		"weightpath": "weight/hyperparam/cartpole/fqi/step10k_env/fixed_eps0/",
+		"datalog": "data/hyperparam/acrobot/offline_data/esarsa/step10k/optimalfixed_eps0/param_0/",
+		"weightpath": "weight/hyperparam/acrobot/fqi/step10k_env/fixed_eps0/",
 		"offline-learn": true,
 		"online-learn": false
 	},
 	"environment-settings": {
 		"seed": 1,
-		"name": "cartpole",
+		"name": "acrobot",
 		"sweep": {
 			"delays":[[0]]
 		}
 	},
 	"experiment-settings": {
 		"steps": 256000,
-		"data-path": "data/hyperparam_randomStart/cartpole-noisy-action/noise_1perc/offline_learning/fqi/fqi-adam/alpha_hidden_epsilon/step10k_env/data_eps0/lockat_baseline/",
+		"data-path": "data/hyperparam/acrobot/offline_learning/fqi/fqi-adam/alpha_hidden_epsilon/step10k_env/data_eps0/lockat_baseline/",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-learn-progress": true,
