@@ -53,7 +53,22 @@ func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
 	}
 	delete(attrs, "sweep") // Neither Agent or Environment shouldn't receive the sweep info
 
-	return swpr.loadSweeps(sweepAttrs)
+	typeStr := "sweep" // default type
+	sweepType, ok := attrs["sweep-type"]
+	if ok {
+		delete(attrs, "sweep-type")
+		err = json.Unmarshal(*sweepType, &typeStr)
+		if err != nil {
+			return errors.New("The sweep type is not valid JSON: " + err.Error())
+		}
+	}
+
+	switch typeStr {
+	case "sweep":
+		return swpr.loadSweeps(sweepAttrs)
+	default:
+		return errors.New("Could not load unknown sweep type '" + typeStr + "'")
+	}
 }
 
 func (swpr *sweeper) loadSweeps(sweepAttrs *json.RawMessage) error {
