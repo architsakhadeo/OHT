@@ -29,7 +29,6 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title, ylim=None, yscale="l
         for pk in fqi_data_all[rk].keys():
             fqi_data.append(fqi_data_all[rk][pk])
 
-
     # random data list
     rand_data = performance_by_param(rand_lst, te_data)
 
@@ -76,17 +75,6 @@ def arcrobot():
     fqi = {"fqi": ac_fqi}
     plot_compare_top(te, calibration, fqi, random, "episode", "../img/final_acrobot_violin_log", ylim=[50,200], yscale="log", res_scale=-1)
 
-def cartpole():
-    calibration = {
-        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000,
-        # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
-        "distStart_closeTrans_t200": distStart_closeTrans_time200,
-    }
-    random = cpn1_rnd
-    te = {"true": cpn1_true_env}
-    fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole")
-
 def cartpole_rs():
     calibration = {
         "trueStart_adversarialTrans_t1000": RS_trueStart_farTrans_time1000,
@@ -97,22 +85,53 @@ def cartpole_rs():
     fqi = {"fqi": RS_cpn1_fqi}
     plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole_rs")
 
-def cartpole_ablation():
+def cartpole():
     calibration = {
-        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000, #
-        "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
-        "noAdversarial_t1000": trueStart_closeTrans_time1000, #
-        "noAdversarial_t0": trueStart_closeTrans_time0,
-        "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
-        "noEnsemble_t0": trueStart_noEnsemble_time0,
+        # "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000,
+        # # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
+        # "distStart_closeTrans_t200": distStart_closeTrans_time200,
+        "calibration": trueStart_farTrans_time1000,
     }
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "reward", "../img/ablation_cartpole")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/top_param_cartpole")
+
+def cartpole_ablation():
+    calibration = {
+        # "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000, #
+        # # "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
+        # "noAdversarial_t1000": trueStart_closeTrans_time1000, #
+        # # "noAdversarial_t0": trueStart_closeTrans_time0,
+        # "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
+        # # "noEnsemble_t0": trueStart_noEnsemble_time0,
+
+        "calibration": trueStart_farTrans_time1000, #
+        "no Adversarial": trueStart_closeTrans_time1000, #
+        "no Ensemble": trueStart_noEnsemble_time1000, #
+    }
+    random = cpn1_rnd
+    te = {"true": cpn1_true_env}
+    fqi = {"fqi": cpn1_fqi}
+    # plot_compare_top(te, calibration, fqi, random, "reward", "../img/ablation_cartpole")
+    plot_each_run(te, calibration, "reward", "../img/ablation_cartpole")
+
+def cartpole_size():
+    calibration = {
+        "10k": trueStart_farTrans_time1000,
+        "5k": trueStart_farTrans_time1000_5k,
+        "2k": trueStart_farTrans_time1000_2k,
+        "1k": trueStart_farTrans_time1000_1k,
+    }
+    random = cpn1_rnd
+    te = {"true": cpn1_true_env}
+    fqi = {"fqi": cpn1_fqi}
+    # plot_compare_top(te, calibration, fqi, random, "reward", "../img/datset_size_cartpole")
+    plot_each_run(te, calibration, "reward", "../img/dataset_size_cartpole")
 
 
 # arcrobot()
-# cartpole()
 # cartpole_rs()
-cartpole_ablation()
+cartpole()
+# cartpole_ablation()
+# cartpole_size()

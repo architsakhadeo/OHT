@@ -58,6 +58,14 @@ def percentile_worst(ranked, perc, metric):
         # target = ranked[rk][idx]
         # filtered.append([rk, target[0], target[1]])  # run number, parameter, performance
         filtered += [[rk, kv[0], kv[1]] for kv in ranked[rk][0: idx]] # run number, parameter, performance
+
+        all_perf = np.array([kv[1] for kv in ranked[rk][idx: ]])
+        # print(rk, idx, all_perf)
+        same = np.where(all_perf == filtered[-1][2])[0] + idx
+        for i in same:
+            kv = ranked[rk][i]
+            filtered += [[rk, kv[0], kv[1]]]
+
     worst_per_run = []
     for rk in ranked.keys():
         min_pk = None

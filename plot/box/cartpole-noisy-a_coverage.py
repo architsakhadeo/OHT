@@ -15,45 +15,56 @@ def sweep_model_rs():
     te = {"true": cpn1_true_env}
     plot_generation(te, cms, ranges, "reward", "../img/sweep_model_RS")
 
-    """
-    no random restart
-    """
+"""
+no random restart
+"""
 def sweep_model():
     cms = {
         "trueStart_adversariaTrans_t1000": trueStart_farTrans_time1000,
-        # # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
-        # # "distStart_closeTrans_t200": distStart_closeTrans_time200,
+        # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
+        # "distStart_closeTrans_t200": distStart_closeTrans_time200,
         # "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000, #
         # "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
         # "noAdversarial_t1000": trueStart_closeTrans_time1000, #
         # "noAdversarial_t0": trueStart_closeTrans_time0,
         # "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
         # "noEnsemble_t0": trueStart_noEnsemble_time0,
-
-        "k5_t200": trueStart_farTrans_time200_k5,
-        "k5_t1000": trueStart_farTrans_time1000_k5,
+        #
+        # "k5_t200": trueStart_farTrans_time200_k5,
+        # "k5_t1000": trueStart_farTrans_time1000_k5,
     }
     te = {"true": cpn1_true_env}
     plot_generation(te, cms, ranges, "reward", "../img/sweep_model_noRS")
 
-def check_run():
+def check_run_ablation():
     cms = {
-        "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000, #
+        "calibration model": trueStart_farTrans_time1000, #
         # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
         # "distStart_closeTrans_t200": distStart_closeTrans_time200,
 
         # "trueStart_adversarialTrans_t0": trueStart_farTrans_time0,
-        "noAdversarial_t1000": trueStart_closeTrans_time1000, #
+        "no Adversarial": trueStart_closeTrans_time1000, #
         # # "noAdversarial_t0": trueStart_closeTrans_time0,
-        "noEnsemble_t1000": trueStart_noEnsemble_time1000, #
+        "no Ensemble": trueStart_noEnsemble_time1000, #
         # # "noEnsemble_t0": trueStart_noEnsemble_time0,
     }
     te = {"true": cpn1_true_env}
-    plot_each_run(te, cms, "../img/check_avg_noRS")
+    plot_each_run(te, cms, "reward", "../img/check_avg_ablation_noRS")
+
+def check_run_size():
+    cms = {
+        "10k": trueStart_farTrans_time1000,
+        "5k": trueStart_farTrans_time1000_5k,
+        "2k": trueStart_farTrans_time1000_2k,
+        "1k": trueStart_farTrans_time1000_1k,
+    }
+    te = {"true": cpn1_true_env}
+    plot_each_run(te, cms, "reward", "../img/check_avg_size_noRS")
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
     # noise1()
     # sweep_model_rs()
     sweep_model()
-    # check_run()
+    # check_run_ablation()
+    # check_run_size()
