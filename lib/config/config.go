@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
@@ -84,6 +82,8 @@ func Parse(data json.RawMessage) ([]Config, error) {
 
 	return confs, nil
 }
+
+type AttributeMapAttr map[string]*rlglue.Attributes
 
 func parseOne(data json.RawMessage) (Config, error) {
 	var conf Config
@@ -193,84 +193,4 @@ func (conf Config) SweptAttributes(idx int) ([]rlglue.Attributes, error) {
 		attributes = append(attributes, wrapperAttributes)
 	}
 	return attributes, nil
-}
-
-type sweeper struct {
-	allAttributes []AttributeMap
-}
-
-type AttributeMap map[string]*json.RawMessage
-type AttributeMapAttr map[string]*rlglue.Attributes
-
-func (am AttributeMap) String() string {
-	strs := []string{}
-	for key, val := range am {
-		strs = append(strs, fmt.Sprintf("%s:%v", key, string(*val)))
-	}
-	return "AM<" + strings.Join(strs, ", ") + ">"
-}
-func (am AttributeMap) Copy() AttributeMap {
-	am2 := AttributeMap{}
-	for key, val := range am {
-		am2[key] = val
-	}
-	return am2
-}
-
-func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
-	swpr.allAttributes = []AttributeMap{}
-
-	attrs := AttributeMap{}
-	err := json.Unmarshal(attributes, &attrs)
-	if err != nil {
-		return errors.New("The attributes is not valid JSON: " + err.Error())
-	}
-	swpr.allAttributes = []AttributeMap{attrs}
-	sweepAttrs, ok := attrs["sweep"]
-	if !ok {
-		return nil
-	}
-	delete(attrs, "sweep") // Neither Agent or Environment shouldn't receive the sweep info
-
-	// Parse out the sweep arrays into key:array, where the array is still raw JSON.
-	sweepRawJon := map[string]json.RawMessage{}
-	err = json.Unmarshal(*sweepAttrs, &sweepRawJon)
-	if err != nil {
-		return errors.New("The swept attributes is not valid JSON: " + err.Error())
-	}
-
-	// Now for each key:array in JSON, convert the array to go arrays of raw JSON and count them.
-	// Sort keys for reproducibility.
-	keys := make([]string, 0)
-	for key := range sweepRawJon {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		arrayVals := []json.RawMessage{}
-		err = json.Unmarshal(sweepRawJon[key], &arrayVals)
-		if err != nil {
-			return errors.New("The attributes is not valid JSON: " + err.Error())
-		}
-		if len(arrayVals) == 0 {
-			break // This array is empty, so nothing to do here
-		}
-
-		newAMSlice := []AttributeMap{}
-		for _, am := range swpr.allAttributes {
-			for i := range arrayVals {
-				newAM := am
-				if i != 0 {
-					// For the first new value, we can use the previous one instead of copying. All others must copy.
-					newAM = am.Copy()
-				}
-				av := arrayVals[i]
-				newAM[key] = &av
-				newAMSlice = append(newAMSlice, newAM)
-			}
-		}
-		swpr.allAttributes = newAMSlice
-	}
-
-	return nil
 }
