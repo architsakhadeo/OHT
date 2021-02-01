@@ -82,7 +82,7 @@ func (t *TransTrees) BuildTree(allTrans [][]float64) {
 	}
 	for i := 0; i < t.numAction; i++ {
 		if len(t.data[i]) == 0 {
-			log.Print("Warning: There is no data for action %d \n", i)
+			log.Printf("Warning: There is no data for action %d \n", i)
 		} else {
 			t.trees[i] = kdtree.New(nodes(dataInTree[i]), false)
 			t.count[i] = len(dataInTree[i])

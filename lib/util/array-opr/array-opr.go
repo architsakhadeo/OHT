@@ -52,7 +52,7 @@ func AllEqualInt(arr []int) bool {
 
 func Concatenate(arr1, arr2 [][]float64) [][]float64 {
 	if len(arr1) != len(arr2) {
-		fmt.Println("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d", len(arr1), len(arr2))
+		fmt.Printf("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d\n", len(arr1), len(arr2))
 		os.Exit(1)
 	}
 	new := make([][]float64, len(arr1))
