@@ -17,9 +17,16 @@ type sweeper struct {
 type AttributeMap map[string]*json.RawMessage
 
 func (am AttributeMap) String() string {
-	strs := []string{}
-	for key, val := range am {
-		strs = append(strs, fmt.Sprintf("%s:%v", key, string(*val)))
+	keys := make([]string, 0, len(am))
+	for key, _ := range am {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	strs := make([]string, len(am))
+	for i, key := range keys {
+		val := am[key]
+		strs[i] = fmt.Sprintf("%s:%v", key, string(*val))
 	}
 	return "AM<" + strings.Join(strs, ", ") + ">"
 }
