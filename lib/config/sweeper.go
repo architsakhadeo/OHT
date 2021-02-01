@@ -46,9 +46,13 @@ func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
 	}
 	delete(attrs, "sweep") // Neither Agent or Environment shouldn't receive the sweep info
 
+	return swpr.loadSweeps(sweepAttrs)
+}
+
+func (swpr *sweeper) loadSweeps(sweepAttrs *json.RawMessage) error {
 	// Parse out the sweep arrays into key:array, where the array is still raw JSON.
 	sweepRawJon := map[string]json.RawMessage{}
-	err = json.Unmarshal(*sweepAttrs, &sweepRawJon)
+	err := json.Unmarshal(*sweepAttrs, &sweepRawJon)
 	if err != nil {
 		return errors.New("The swept attributes is not valid JSON: " + err.Error())
 	}
