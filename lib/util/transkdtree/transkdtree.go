@@ -1,25 +1,26 @@
 package transModel
 
 import (
+	"log"
+
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/spatial/kdtree"
-	"log"
 )
-
 
 /* helper */
 type nodes []node
+
 func (n nodes) Index(i int) kdtree.Comparable         { return n[i] }
 func (n nodes) Len() int                              { return len(n) }
 func (n nodes) Pivot(d kdtree.Dim) int                { return plane{nodes: n, Dim: d}.Pivot() }
 func (n nodes) Slice(start, end int) kdtree.Interface { return n[start:end] }
 
-
 /* helper */
 type node struct {
-	key []float64
+	key   []float64
 	value []float64
 }
+
 func (n node) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
 	q := c.(node)
 	return n.key[d] - q.key[d]
@@ -40,6 +41,7 @@ type plane struct {
 	kdtree.Dim
 	nodes
 }
+
 func (p plane) Less(i, j int) bool {
 	return p.nodes[i].key[p.Dim] < p.nodes[j].key[p.Dim]
 }
@@ -52,14 +54,13 @@ func (p plane) Swap(i, j int) {
 	p.nodes[i], p.nodes[j] = p.nodes[j], p.nodes[i]
 }
 
-
 /* KD-tree */
 type TransTrees struct {
-	trees        []*kdtree.Tree
-	data         [][][]float64
-	count        []int
-	numAction    int
-	stateDim     int
+	trees     []*kdtree.Tree
+	data      [][][]float64
+	count     []int
+	numAction int
+	stateDim  int
 	//distanceFunc pairwise.PairwiseDistanceFunc
 }
 
@@ -76,11 +77,11 @@ func (t *TransTrees) BuildTree(allTrans [][]float64) {
 	dataInTree := make([][]node, t.numAction)
 	for i := 0; i < len(allTrans); i++ {
 		action = int(allTrans[i][t.stateDim])
-		t.data[action] = append(t.data[action], allTrans[i])                      // sort current state
+		t.data[action] = append(t.data[action], allTrans[i])                                         // sort current state
 		dataInTree[action] = append(dataInTree[action], node{allTrans[i][:t.stateDim], allTrans[i]}) // sort current state
 	}
 	for i := 0; i < t.numAction; i++ {
-		if len(t.data[i])==0 {
+		if len(t.data[i]) == 0 {
 			log.Print("Warning: There is no data for action %d \n", i)
 		} else {
 			t.trees[i] = kdtree.New(nodes(dataInTree[i]), false)
@@ -130,6 +131,7 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 func (t *TransTrees) TreeSize(action int) int {
 	return len(t.data[action])
 }
+
 //func test() {
 //
 //	raw := [][]float64{{2, 3}, {5, 4}, {9, 6}, {4, 7}, {8, 1}, {7, 2}}
