@@ -66,6 +66,8 @@ func (swpr *sweeper) Load(attributes rlglue.Attributes) error {
 	switch typeStr {
 	case "sweep":
 		return swpr.loadSweeps(sweepAttrs)
+	case "list":
+		return swpr.loadList(sweepAttrs)
 	default:
 		return errors.New("Could not load unknown sweep type '" + typeStr + "'")
 	}
@@ -111,6 +113,44 @@ func (swpr *sweeper) loadSweeps(sweepAttrs *json.RawMessage) error {
 		}
 		swpr.allAttributes = newAMSlice
 	}
+
+	return nil
+}
+
+func (swpr *sweeper) loadList(sweepAttrs *json.RawMessage) error {
+	// Parse out the array of settings.
+	sweepRawJson := []json.RawMessage{}
+	err := json.Unmarshal(*sweepAttrs, &sweepRawJson)
+	if err != nil {
+		return errors.New("The swept attributes is not valid JSON: " + err.Error())
+	}
+
+	listOfHypers := []map[string]json.RawMessage{}
+	for _, hypers := range sweepRawJson {
+		namedHypers := map[string]json.RawMessage{}
+		err = json.Unmarshal(hypers, &namedHypers)
+		if err != nil {
+			return errors.New("The attributes is not valid JSON: " + err.Error())
+		}
+		if len(namedHypers) == 0 {
+			break // This array is empty, so nothing to do here
+		}
+		listOfHypers = append(listOfHypers, namedHypers)
+	}
+
+	newAMSlice := []AttributeMap{}
+	for _, am := range swpr.allAttributes {
+		newAM := am
+		for _, namedHypers := range listOfHypers {
+			newAM = am.Copy()
+			for key := range namedHypers {
+				val := namedHypers[key]
+				newAM[key] = &val
+			}
+			newAMSlice = append(newAMSlice, newAM)
+		}
+	}
+	swpr.allAttributes = newAMSlice
 
 	return nil
 }
