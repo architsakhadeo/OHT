@@ -31,6 +31,7 @@ type CartpoleSettings struct {
 	Delays             []int     `json:"delays"`
 	PercentNoiseState  []float64 `json:"percent_noise"`
 	PercentNoiseAction float64   `json:"percent_noise_action"`
+	NonSparseRwd	   bool		 `json:"nonsparse_rwd"`
 	//RandomizeStartState bool      `json:"randomize_start_state"`
 }
 
@@ -205,9 +206,14 @@ func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) 
 	done := (x < -xThreshold) || (x > xThreshold) || (theta < -thetaRhresholdRadians) || (theta > thetaRhresholdRadians)
 
 	var reward float64
+	if env.CartpoleSettings.NonSparseRwd {
+		reward = - (math.Abs(theta)) / thetaRhresholdRadians
+		//fmt.Println("HERE", theta, reward)
+	}
 	if done {
 		reward = -1.0
 		env.randomizeState(randomizeStartStateCondition)
+		//fmt.Println("HERE", theta, reward)
 	}
 
 	return env.getObservations(), reward, done

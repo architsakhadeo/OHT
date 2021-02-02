@@ -5,8 +5,8 @@ sys.path.insert(0, cwd+'/../..')
 from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
-# c_default = matplotlib.cm.get_cmap('cool')
-c_default = matplotlib.cm.get_cmap('hsv')
+c_default = matplotlib.cm.get_cmap('cool')
+# c_default = matplotlib.cm.get_cmap('hsv')
 c_dict = {
     "calibration": "red",
     "random": "tab:blue",
@@ -26,12 +26,12 @@ def cmap(key, idx):
     else:
         return c_default(idx)
 
-def plot_each_run(te, cms, source, title, ylim=None):
-    te_data = loading_pessimistic(te, source)
+def plot_each_run(te, cms, source, title, ylim=None, outer=None, sparse_reward=None, max_len=np.inf):
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_rank = ranking_allruns(te_data)
     te_rank = te_rank["true"]
 
-    cms_data = loading_pessimistic(cms, source)
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
 
     m_lst = list(cms_data.keys())
     all_models = []
@@ -111,16 +111,17 @@ def plot_scatters_one_run(data, label, title):
     plt.close()
     plt.clf()
 
-def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", res_scale=1):
+def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", res_scale=1,
+                    outer=None, sparse_reward=None, max_len=np.inf):
 
-    te_data = loading_pessimistic(te, source)
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
 
     te_thrd = []
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    cms_data = loading_pessimistic(cms, source)
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     filtered = {}
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -163,7 +164,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
 
     for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="red", linewidth=0.75)
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
 
     xtcs = []
     for loc in xlocations:
@@ -223,7 +224,7 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
 
     for i in range(len(thrd)):
         # print(thrd)
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="red", linewidth=0.75)
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
 
     xtcs = []
     for loc in xlocations:

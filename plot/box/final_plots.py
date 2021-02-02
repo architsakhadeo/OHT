@@ -7,22 +7,23 @@ from plot.box.utils_data import *
 from plot.box.utils_plot import *
 from plot.box.paths_final import *
 
-def plot_compare_top(te, cms, fqi, rand_lst, source, title, ylim=None, yscale="linear", res_scale=1):
+def plot_compare_top(te, cms, fqi, rand_lst, source, title,
+                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
     ranges = [0]
     # true env data dictionary
-    te_data = loading_pessimistic(te, source)
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
     # print(te_data)
 
     # fqi data
     # # best each run
-    # fqi_data_all = loading_pessimistic(fqi, source) # 30 runs in total, but different parameters
+    # fqi_data_all = loading_average(fqi, source) # 30 runs in total, but different parameters
     # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
     # fqi_data = []
     # for rk in fqi_rank.keys():
     #     fqi_data.append(fqi_rank[rk][0][1])
     # # all performance
-    fqi_data_all = loading_pessimistic(fqi, source)["fqi"] # 30 runs in total, but different parameters
+    fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
     # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
     fqi_data = []
     for rk in fqi_data_all.keys():
@@ -39,7 +40,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title, ylim=None, yscale="l
 
     filtered = {"random": [rand_data], "fqi": [fqi_data]}
     #filtered = {"random": [rand_data]}
-    cms_data = loading_pessimistic(cms, source)
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
         ranks = models_rank[model]
@@ -90,12 +91,16 @@ def cartpole():
         # "trueStart_adversarialTrans_t1000": trueStart_farTrans_time1000,
         # # "distStart_adversariaTrans_t200": distStart_farTrans_time200,
         # "distStart_closeTrans_t200": distStart_closeTrans_time200,
-        "calibration": trueStart_farTrans_time1000,
+
+        # "calibration": trueStart_farTrans_time1000,
+        # "with random start": RS_trueStart_farTrans_time1000,
+
+        "far trans": v2_trueStart_farTrans_time1000,
     }
     random = cpn1_rnd
-    te = {"true": cpn1_true_env}
+    te = {"true": v2_cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "reward", "../img/top_param_cartpole")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/v2_top_param_cartpole")
 
 def cartpole_ablation():
     calibration = {

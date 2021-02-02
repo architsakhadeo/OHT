@@ -182,3 +182,14 @@ trueStart_farTrans_time1000_1k = [
     "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step1k_env/data_eps0/drop0.2/ensembleseed5",
 ]
 
+"""
+hyperparam v2: average calibration model performance with runs in inner loop
+"""
+v2_cpn1_true_env = ["../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/online_learning/esarsa-adam/step50k/sweep/"]
+
+v2_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0/ensembleseed0",
+]
+v2_trueStart_closeTrans_time1000 = [
+    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0/ensembleseed0",
+]
