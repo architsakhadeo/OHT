@@ -1,4 +1,10 @@
 {
-	"Name": "acrobot",
-	"Settings": {}
+	"Name": "knnModel",
+	"Settings": {
+		"total-logs": 10000,
+		"neighbor-num": 3,
+        "ensemble-seed": 0,
+        "drop-percent": 0,
+        "datalog": "data/hyperparam/acrobot/offline_data/esarsa/step10k/optimalfixed_eps0/param_0/"
+	}
 }

@@ -60,7 +60,7 @@ type Hyperparameter struct {
 }
 
 // RunFunc is a function that runs the code to be optimized, returning its score
-type RunFunc func(hyperparameters []float64, seeds []uint64, iteration int) (float64, error)
+type RunFunc func(hyperparameters []float64, datasetSeed uint, seeds []uint64, iteration int) (float64, error)
 
 const e = 10.e-8
 
@@ -74,7 +74,7 @@ func DefaultSettings() Settings {
 	}
 }
 
-func New(run RunFunc, hypers []Hyperparameter, settings Settings, opts ...Option) (*Cem, error) {
+func New(run RunFunc, hypers []Hyperparameter, datasetSeed uint, settings Settings, opts ...Option) (*Cem, error) {
 	if run == nil {
 		return nil, errors.New("Cem requires a run function")
 	}
@@ -189,7 +189,7 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 	}
 }
 
-func (cem Cem) Run() ([]float64, error) {
+func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 	// Allocate memory outside of loop
 	samples := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
 	samplesRealVals := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
@@ -230,7 +230,7 @@ func (cem Cem) Run() ([]float64, error) {
 		results := make(chan averageAtIndex, cem.NumSamples)
 
 		for w := 0; w < cem.NumWorkers; w++ {
-			go cem.worker(jobs, results, samples, cem.NumRuns, iteration)
+			go cem.worker(jobs, results, samples, cem.NumRuns, iteration, datasetSeed)
 		}
 
 		for s := 0; s < cem.NumSamples; s++ {
@@ -301,14 +301,14 @@ func (cem Cem) Run() ([]float64, error) {
 	return elites.RawRowView(0), nil
 }
 
-func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, NumRuns, iteration int) {
+func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, NumRuns, iteration int, datasetSeed uint) {
 	seeds := make([]uint64, NumRuns)
 	for i := range seeds {
 		seeds[i] = uint64((NumRuns * iteration) + i)
 	}
 
 	for idx := range jobs {
-		average, err := cem.run(samples.RawRowView(idx), seeds, iteration)
+		average, err := cem.run(samples.RawRowView(idx), datasetSeed, seeds, iteration)
 		results <- averageAtIndex{
 			average: average,
 			idx:     idx,
