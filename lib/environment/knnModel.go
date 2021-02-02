@@ -39,6 +39,7 @@ type knnSettings struct {
 	PickStartS string  `json:"pick-start-state"`
 	PickNext   string  `json:"pick-next"`
 	NoisyS     float64 `json:"state-noise"`
+	ShapeReward  bool	`json:"shape-reward"`
 }
 
 type KnnModelEnv struct {
@@ -48,7 +49,9 @@ type KnnModelEnv struct {
 	rng             *rand.Rand
 	offlineData     [][]float64
 	offlineStarts   []int
+	offlineTermns   []int
 	offlineModel    transModel.TransTrees
+	terminsTree     transModel.TransTrees
 	stateDim        int
 	NumberOfActions int
 	stateRange      []float64
@@ -59,6 +62,7 @@ type KnnModelEnv struct {
 	PickStartFunc EpStartFunc
 	PickNextFunc  ChooseNeighborFunc
 
+	maxSDist float64
 	DebugArr [][]float64
 }
 
@@ -172,6 +176,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		env.stateBound[0] = append(env.stateBound[0], mn)
 		env.stateBound[1] = append(env.stateBound[1], mx)
 	}
+	env.maxSDist = env.Distance(env.stateBound[0], env.stateBound[1])
 
 	if env.NoisyS != 0 {
 		for i := 0; i < len(allTransTemp); i++ {
@@ -196,9 +201,10 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	}
 
 	env.offlineData = allTrans
-	env.offlineStarts = env.SearchOfflineStart(allTrans)
+	env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(allTrans)
+
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
-	env.offlineModel.BuildTree(allTrans)
+	env.offlineModel.BuildTree(allTrans, "current")
 
 	if env.knnSettings.PickStartS == "random-init" { // default setting
 		env.PickStartFunc = env.randomizeInitState
@@ -215,17 +221,29 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	} else { // default setting
 		env.PickNextFunc = env.CloserNeighbor
 	}
+
+	if env.ShapeReward {
+		var trans2term [][]float64
+		for i := 0; i < len(env.offlineTermns); i++ {
+			trans2term = append(trans2term, allTrans[env.offlineTermns[i]])
+		}
+		env.terminsTree = transModel.New(env.NumberOfActions, env.stateDim)
+		env.terminsTree.BuildTree(trans2term, "next")
+	}
 	return nil
 }
 
-func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) []int {
+func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) {
 	starts := []int{0}
+	termins := []int{}
 	for i := 0; i < len(allTrans)-1; i++ { // not include the end of run
 		if allTrans[i][len(allTrans[i])-1] == 1 {
 			starts = append(starts, i+1)
+			termins = append(termins, i)
+			//fmt.Println(allTrans[i], i, termins)
 		}
 	}
-	return starts
+	return starts, termins
 }
 
 func (env *KnnModelEnv) randomizeInitState() rlglue.State {
@@ -355,6 +373,25 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
+
+	if env.ShapeReward {
+		var totalRwd []float64
+		var totalDistance []float64
+		for act := 0; act < env.NumberOfActions; act++ {
+			_, _, tR, _, dist := env.terminsTree.SearchTree(env.state, act, 1)
+			if tR != nil {
+				totalRwd = append(totalRwd, tR[0])
+				totalDistance = append(totalDistance, dist[0])
+			}
+		}
+		if len(totalRwd) != 0 {
+			minD, idx := ao.ArrayMin(totalDistance)
+			termR := totalRwd[idx]
+			scale := 1.0 - minD / env.maxSDist
+			reward += scale * (termR - reward)
+			//fmt.Println(reward, scale, minD, env.maxSDist)
+		}
+	}
 	return state_copy, reward, done
 }
 
