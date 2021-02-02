@@ -25,36 +25,32 @@ func main() {
 	confs, err := config.Parse(data)
 	panicIfError(err, "Could not parse the config")
 
-	if *sweep == -1 {
-		fmt.Println("Running ALL sweeps...")
-	}
-
-	var startSweep, endSweep int
-	if *sweep != -1 {
-		// Only do the one sweep
-		startSweep = *sweep
-		endSweep = *sweep
-	}
-
 	for i, conf := range confs {
 		if len(confs) > 1 {
 			fmt.Printf("Running experiment %d of %d\n", i+1, len(confs))
 		}
-		sweepLen := conf.SweptAttrCount()
-		if *sweep >= sweepLen {
-			panic(fmt.Sprintf("Could not run sweep %d (range should be 0 to %d)", *sweep, sweepLen-1))
-		}
 
-		if *sweep != 0 {
-			fmt.Printf("Running sweep %d of %d\n", *sweep, sweepLen)
-		} else if *sweep == -1 {
-			endSweep = sweepLen
-		}
-		for sw := startSweep; sw < endSweep; sw++ {
-			err = experiment.Execute(*run, conf, sw)
-			panicIfError(err, "Could not create the experiment")
+		sweepLen := conf.SweptAttrCount()
+		if *sweep == -1 {
+			fmt.Println("Running ALL sweeps...")
+			for sw := 0; sw < sweepLen; sw++ {
+				runSweepN(*run, conf, sw, sweepLen)
+			}
+		} else {
+			if *sweep >= sweepLen {
+				panic(fmt.Sprintf("Could not run sweep %d (range should be 0 to %d)", *sweep, sweepLen-1))
+			}
+			runSweepN(*run, conf, *sweep, sweepLen)
 		}
 	}
+}
+
+func runSweepN(run uint, conf config.Config, sweep, sweepLen int) {
+	if sweep != 0 {
+		fmt.Printf("Running sweep %d of %d\n", sweep, sweepLen)
+	}
+	err := experiment.Execute(run, conf, sweep)
+	panicIfError(err, "Could not create the experiment")
 }
 
 func panicIfError(err error, reason string) {
