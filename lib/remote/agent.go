@@ -75,3 +75,18 @@ func (agent *launcherAgent) End(state rlglue.State, reward float64) {
 		Terminal: true,
 	})
 }
+
+func (agent *launcherAgent) GetLock() bool {
+	panic("Not implemented")
+	return false
+}
+
+func (agent *launcherAgent) SaveWeights(basePath string) error {
+	panic("Not implemented")
+	return nil
+}
+
+func (agent *launcherAgent) GetLearnProg() float64 {
+	panic("Not implemented")
+	return 0
+}

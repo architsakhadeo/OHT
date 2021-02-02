@@ -340,7 +340,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 	//env.Count += 1
 
 	if env.offlineModel.TreeSize(actInt) == 0 {
-		log.Print("Warning: There is no data for action %d, terminating the episode \n", act)
+		log.Printf("Warning: There is no data for action %d, terminating the episode\n", act)
 		return env.Start(randomizeStartStateCondition), env.rewardBound[0], true
 	}
 

@@ -42,7 +42,7 @@ func EqualArrys(a, b []float64) bool {
 func AllEqualInt(arr []int) bool {
 	var equal bool
 	equal = true
-	for i:=1;i<len(arr);i++ {
+	for i := 1; i < len(arr); i++ {
 		if arr[i] != arr[0] {
 			equal = false
 		}
@@ -52,7 +52,7 @@ func AllEqualInt(arr []int) bool {
 
 func Concatenate(arr1, arr2 [][]float64) [][]float64 {
 	if len(arr1) != len(arr2) {
-		fmt.Println("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d", len(arr1), len(arr2))
+		fmt.Printf("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d\n", len(arr1), len(arr2))
 		os.Exit(1)
 	}
 	new := make([][]float64, len(arr1))
@@ -134,6 +134,7 @@ func ArrayMax(array []float64) (float64, int) {
 	}
 	return max, idx
 }
+
 /*
 Min of 1-d array
 */
@@ -163,6 +164,7 @@ func ColumnMax(array [][]float64, col int) (float64, int) {
 	}
 	return max, idx
 }
+
 /*
 Min of a column in a 2-d array
 */
@@ -177,7 +179,6 @@ func ColumnMin(array [][]float64, col int) (float64, int) {
 	}
 	return min, idx
 }
-
 
 func StateTo32(state rlglue.State) []float32 {
 	var a32 []float32
@@ -270,7 +271,7 @@ func A64ArrayMulti(a float64, arr []float64) []float64 {
 	return res
 }
 
-func BitwiseAdd2D(a [][]float64, b[][]float64) [][]float64 {
+func BitwiseAdd2D(a [][]float64, b [][]float64) [][]float64 {
 	if len(a) != len(b) {
 		errors.New("Arrays should have same length")
 	}

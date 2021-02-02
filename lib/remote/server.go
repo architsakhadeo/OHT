@@ -23,7 +23,7 @@ func (srv agentServer) Initialize(ctx context.Context, attr *AgentAttributes) (*
 
 func (srv agentServer) Start(ctx context.Context, state *State) (*Action, error) {
 	action := srv.agent.Start(rlglue.State(state.Values))
-	return &Action{Action: uint64(action)}, nil
+	return &Action{Action: uint64(action.(int))}, nil
 }
 
 func (srv agentServer) Step(ctx context.Context, result *StepResult) (*Action, error) {
@@ -33,7 +33,7 @@ func (srv agentServer) Step(ctx context.Context, result *StepResult) (*Action, e
 	}
 
 	action := srv.agent.Step(rlglue.State(result.State.Values), result.Reward)
-	return &Action{Action: uint64(action)}, nil
+	return &Action{Action: uint64(action.(int))}, nil
 }
 
 type environmentServer struct {
@@ -50,12 +50,12 @@ func (srv environmentServer) Initialize(ctx context.Context, in *EnvironmentAttr
 }
 
 func (srv environmentServer) Start(ctx context.Context, in *Empty) (*State, error) {
-	state := srv.env.Start()
+	state := srv.env.Start(false)
 	return &State{Values: []float64(state)}, nil
 }
 
 func (srv environmentServer) Step(ctx context.Context, in *Action) (*StepResult, error) {
-	state, reward, terminal := srv.env.Step(rlglue.Action(in.GetAction()))
+	state, reward, terminal := srv.env.Step(rlglue.Action(in.GetAction()), false)
 	return &StepResult{State: &State{Values: []float64(state)}, Reward: reward, Terminal: terminal}, nil
 }
 
