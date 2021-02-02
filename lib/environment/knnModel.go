@@ -32,6 +32,7 @@ type ChooseNeighborFunc func([]float64, [][]float64, [][]float64, []float64, []f
 type knnSettings struct {
 	DataLog      string  `json:"datalog"`
 	Seed         int64   `json:"seed"`
+	TotalRuns    uint    `json:"total-runs"`
 	Neighbor_num int     `json:"neighbor-num"`
 	EnsembleSeed int     `json:"ensemble-seed"`
 	DropPerc     float64 `json:"drop-percent"`
@@ -114,14 +115,18 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	env.Seed += int64(run)
-	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+	env.knnSettings.Seed += int64(run / env.knnSettings.TotalRuns)
+
+	env.rng = rand.New(rand.NewSource(env.knnSettings.Seed)) // Create a new rand source for reproducibility
 	//env.Count = 0
 
 	env.Message("environment.knnModel settings", fmt.Sprintf("%+v", env.knnSettings))
 
 	folder := env.knnSettings.DataLog
-	traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
+	//traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
+	traceLog := folder + "/traces-" + strconv.Itoa(int(run % env.knnSettings.TotalRuns)) + ".csv"
+	env.Message("KNN data log", traceLog, "\n")
+
 	paramLog := folder + "/log_json.txt"
 	env.SettingFromLog(paramLog)
 	env.state = make(rlglue.State, env.stateDim)
