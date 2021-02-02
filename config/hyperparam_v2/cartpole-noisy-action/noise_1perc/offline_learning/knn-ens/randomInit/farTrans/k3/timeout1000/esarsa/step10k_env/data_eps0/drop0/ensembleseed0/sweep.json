@@ -18,11 +18,11 @@
 		"lock-weight": false,
 		"enable-debug": false,
 		"seed": 1,
-		"total-runs": 10
+		"total-logs": 10
 	},
 	"environment-settings": {
 		"seed": 1,
-		"total-runs": 10,
+		"total-logs": 10,
 		"neighbor-num": 3,
 		"datalog": "data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_data/esarsa/step10k_env/fixed_eps0/param_0/",
 		"ensemble-seed": 0,

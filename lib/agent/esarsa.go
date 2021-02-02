@@ -37,7 +37,7 @@ const (
 type EsarsaSettings struct {
 	EnableDebug        bool    `json:"enable-debug"`
 	Seed               int64   `json:"seed"`
-	TotalRuns    	   uint    `json:"total-runs"`
+	TotalLogs    	   uint    `json:"total-logs"`
 	NumTilings         int     `json:"tilings"`
 	NumTiles           int     `json:"tiles"`
 	Gamma              float64 `json:"gamma"`
@@ -141,8 +141,8 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		agent.Message("warning", "agent.ESarsa settings weren't available: "+err.Error())
 		set.Seed = 0
 	}
-	if set.TotalRuns != 0 {
-		set.Seed += int64(run / set.TotalRuns)
+	if set.TotalLogs != 0 {
+		set.Seed += int64(run / set.TotalLogs)
 	} else {
 		set.Seed += int64(run)
 	}
