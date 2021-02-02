@@ -37,10 +37,10 @@ type knnSettings struct {
 	EnsembleSeed int     `json:"ensemble-seed"`
 	DropPerc     float64 `json:"drop-percent"`
 	//Timeout      int 	 `json:"timeout"`
-	PickStartS string  `json:"pick-start-state"`
-	PickNext   string  `json:"pick-next"`
-	NoisyS     float64 `json:"state-noise"`
-	ShapeReward  bool	`json:"shape-reward"`
+	PickStartS  string  `json:"pick-start-state"`
+	PickNext    string  `json:"pick-next"`
+	NoisyS      float64 `json:"state-noise"`
+	ShapeReward bool    `json:"shape-reward"`
 }
 
 type KnnModelEnv struct {
@@ -124,9 +124,8 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	folder := env.knnSettings.DataLog
 	//traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
-	traceLog := folder + "/traces-" + strconv.Itoa(int(run % env.knnSettings.TotalLogs)) + ".csv"
+	traceLog := folder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
 	env.Message("KNN data log", traceLog, "\n")
-
 	paramLog := folder + "/log_json.txt"
 	env.SettingFromLog(paramLog)
 	env.state = make(rlglue.State, env.stateDim)
@@ -207,7 +206,6 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	env.offlineData = allTrans
 	env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(allTrans)
-
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(allTrans, "current")
 
@@ -392,7 +390,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 		if len(totalRwd) != 0 {
 			minD, idx := ao.ArrayMin(totalDistance)
 			termR := totalRwd[idx]
-			scale := 1.0 - minD / env.maxSDist
+			scale := 1.0 - minD/env.maxSDist
 			reward += scale * (termR - reward)
 			//fmt.Println(reward, scale, minD, env.maxSDist)
 		}

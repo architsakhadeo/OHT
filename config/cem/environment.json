@@ -1,6 +1,7 @@
 {
 	"Name": "knnModel",
 	"Settings": {
+		"total-logs": 10000,
 		"neighbor-num": 3,
         "ensemble-seed": 0,
         "drop-percent": 0,
