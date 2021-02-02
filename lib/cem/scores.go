@@ -25,6 +25,8 @@ func (rsg *RunScorerGenerator) UnmarshalJSON(data []byte) error {
 	switch name {
 	case "episode-longer-is-better":
 		*rsg = func() RunScorer { return &scoreEpisodeLongerIsBetter{} }
+	case "continuing-last-half":
+		*rsg = func() RunScorer { return &scoreContinuingLastHalf{} }
 	default:
 		return fmt.Errorf("couldn't find RunScorerGenerator with name '%s'", name)
 	}
@@ -45,4 +47,26 @@ func (su *scoreEpisodeLongerIsBetter) UpdateRun(rewards [][]float64) {
 
 func (su *scoreEpisodeLongerIsBetter) Score() float64 {
 	return -float64(su.average) / float64(su.averageSuccess) // negative of steps to failure
+}
+
+// scoreContinuingLastHalf calculates a score in the case of continuing, where only the last half is counted
+type scoreContinuingLastHalf struct {
+	average float64
+	numRuns int
+}
+
+func (su *scoreContinuingLastHalf) UpdateRun(listOfListOfRewards [][]float64) {
+	su.numRuns++
+	var listOfRewards []float64
+	for i := 0; i < len(listOfListOfRewards); i++ {
+		listOfRewards = append(listOfRewards, listOfListOfRewards[i]...)
+	}
+	fmt.Println("Length of run: ", len(listOfRewards))
+	for index := int(len(listOfRewards) / 2.0); index < len(listOfRewards); index++ {
+		su.average += listOfRewards[index]
+	}
+}
+
+func (su *scoreContinuingLastHalf) Score() float64 {
+	return su.average / float64(su.numRuns) // This division is a waste of time since numRuns is constant
 }

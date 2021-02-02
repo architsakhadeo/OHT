@@ -51,6 +51,10 @@ func buildSettings() cem.RunnerSettings {
 	readJsonFile(*agentPath, &settings.AgentSettings)
 	readJsonFile(*envPath, &settings.EnvironmentSettings)
 
+	fmt.Println("Experiment: ", &settings.ExperimentSettings)
+	fmt.Println("Agent: ", &settings.AgentSettings)
+	fmt.Println("Environment: ", &settings.EnvironmentSettings)
+
 	return settings
 }
 
