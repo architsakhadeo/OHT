@@ -30,6 +30,12 @@ type DataConfig struct {
 	// ShouldLogRewards determines whether rewards are saved.
 	ShouldLogRewards bool
 
+	// ShouldLogTotals determines whether the episode's total rewards and episodes are saved.
+	ShouldLogTotals bool
+
+	// ShouldLog determines whether rewards are saved.
+	ShouldLog bool
+
 	// BasePath is the path at which files are saved. A filename will be automatically set (rewards, traces, and episodes).
 	// If not set, no file is saved.
 	BasePath string
@@ -45,6 +51,9 @@ type DataLogger struct {
 
 	episodeLengths []int
 	rewards        []float64
+
+	totalReward   float64
+	totalEpisodes int
 
 	// These are used if the trace is cached in RAM.
 	prevState []rlglue.State
@@ -151,6 +160,7 @@ func (lg *DataLogger) RewardSince(step int) float64 {
 
 // LogEpisodeLength adds the provided episode length to the episode length log.
 func (lg *DataLogger) LogEpisodeLength(steps int) {
+	lg.totalEpisodes++
 	if !lg.ShouldLogEpisodeLengths {
 		return
 	}
@@ -205,6 +215,8 @@ func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.A
 		lg.rewards = append(lg.rewards, reward)
 	}
 
+	lg.totalReward += reward
+
 	var termInt int
 	if terminal {
 		termInt = 1
@@ -229,6 +241,25 @@ func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.A
 func (lg *DataLogger) SaveLog() error {
 	if lg.BasePath == "" {
 		return nil
+	}
+
+	if lg.ShouldLogTotals {
+		file, err := os.Create(path.Join(lg.BasePath, "totals-"+lg.FileSuffix+".csv"))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// Write header row
+		_, err = file.WriteString("total reward, total episodes\n")
+		if err != nil {
+			return err
+		}
+		// Write totals
+		_, err = file.WriteString(fmt.Sprintf("%f,%d\n", lg.totalReward, lg.totalEpisodes))
+		if err != nil {
+			return err
+		}
 	}
 
 	if lg.ShouldLogEpisodeLengths {
