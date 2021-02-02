@@ -33,6 +33,7 @@ type Experiment struct {
 	ShouldLogTraces               bool   `json:"should-log-traces"`
 	CacheTracesInRAM              bool   `json:"cache-traces-in-ram"`
 	ShouldLogEpisodeLengths       bool   `json:"should-log-episode-lengths"`
+	ShouldLogRewards              bool   `json:"should-log-rewards"`
 	CountAfterLock                bool   `json:"count-step-after-lock"`
 	TotalAfterCount               int    `json:"total-step-after-lock"`
 	RandomizeStartStateBeforeLock bool   `json:"randomize_start_state_beforeLock"`

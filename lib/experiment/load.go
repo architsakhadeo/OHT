@@ -38,6 +38,7 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
 		CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
 		ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
+		ShouldLogRewards:        conf.Experiment.ShouldLogRewards,
 		ShouldLogLearnProg:      conf.Experiment.ShouldLogLearnProg,
 		BasePath:                fmt.Sprint(conf.Experiment.DataPath, "/", savePath),
 		FileSuffix:              strconv.Itoa(int(run)),
