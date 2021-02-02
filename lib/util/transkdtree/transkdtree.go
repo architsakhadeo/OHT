@@ -72,13 +72,18 @@ func New(numAction int, actionIdx int) TransTrees {
 	return t
 }
 
-func (t *TransTrees) BuildTree(allTrans [][]float64) {
+func (t *TransTrees) BuildTree(allTrans [][]float64, key string) {
 	var action int
 	dataInTree := make([][]node, t.numAction)
 	for i := 0; i < len(allTrans); i++ {
 		action = int(allTrans[i][t.stateDim])
-		t.data[action] = append(t.data[action], allTrans[i])                                         // sort current state
-		dataInTree[action] = append(dataInTree[action], node{allTrans[i][:t.stateDim], allTrans[i]}) // sort current state
+
+		t.data[action] = append(t.data[action], allTrans[i])                      // sort current state
+		if key == "current" {
+			dataInTree[action] = append(dataInTree[action], node{allTrans[i][:t.stateDim], allTrans[i]}) // sort current state
+		} else if key == "next" {
+			dataInTree[action] = append(dataInTree[action], node{allTrans[i][t.stateDim+1: t.stateDim*2+1], allTrans[i]}) // sort current state
+		}
 	}
 	for i := 0; i < t.numAction; i++ {
 		if len(t.data[i]) == 0 {
@@ -91,6 +96,9 @@ func (t *TransTrees) BuildTree(allTrans [][]float64) {
 }
 
 func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float64, [][]float64, []float64, []float64, []float64) {
+	if len(t.data[action]) == 0 {
+		return nil, nil, nil, nil, nil
+	}
 	var keep kdtree.Keeper
 	q := node{target, nil} // we don't need value for a compared node
 
