@@ -24,8 +24,17 @@ type DataConfig struct {
 	// CacheTracesInRAM determines whether traces are kept in RAM.
 	CacheTracesInRAM bool
 
-	// ShouldLogEpisodeLengths determines whether episode lengths saved.
+	// ShouldLogEpisodeLengths determines whether episode lengths are saved.
 	ShouldLogEpisodeLengths bool
+
+	// ShouldLogRewards determines whether rewards are saved.
+	ShouldLogRewards bool
+
+	// ShouldLogTotals determines whether the episode's total rewards and episodes are saved.
+	ShouldLogTotals bool
+
+	// ShouldLog determines whether rewards are saved.
+	ShouldLog bool
 
 	// BasePath is the path at which files are saved. A filename will be automatically set (rewards, traces, and episodes).
 	// If not set, no file is saved.
@@ -42,6 +51,9 @@ type DataLogger struct {
 
 	episodeLengths []int
 	rewards        []float64
+
+	totalReward   float64
+	totalEpisodes int
 
 	// These are used if the trace is cached in RAM.
 	prevState []rlglue.State
@@ -62,7 +74,6 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 	lg := &DataLogger{
 		Debug:      debug,
 		DataConfig: config,
-		rewards:    []float64{},
 	}
 
 	if lg.CacheTracesInRAM {
@@ -76,6 +87,10 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 
 	if lg.ShouldLogEpisodeLengths {
 		lg.episodeLengths = []int{}
+	}
+
+	if lg.ShouldLogRewards {
+		lg.rewards = []float64{}
 	}
 
 	if lg.ShouldLogLearnProg {
@@ -131,6 +146,10 @@ func (lg *DataLogger) writeTraceHeader(headers ...string) error {
 }
 
 func (lg *DataLogger) RewardSince(step int) float64 {
+	if !lg.ShouldLogRewards {
+		return 0
+	}
+
 	var sum float64
 	end := len(lg.rewards)
 	for i := step; i < end; i++ {
@@ -141,6 +160,7 @@ func (lg *DataLogger) RewardSince(step int) float64 {
 
 // LogEpisodeLength adds the provided episode length to the episode length log.
 func (lg *DataLogger) LogEpisodeLength(steps int) {
+	lg.totalEpisodes++
 	if !lg.ShouldLogEpisodeLengths {
 		return
 	}
@@ -191,7 +211,11 @@ func (lg *DataLogger) LogLearnProg(progress float64) {
 }
 
 func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) string {
-	lg.rewards = append(lg.rewards, reward)
+	if lg.ShouldLogRewards {
+		lg.rewards = append(lg.rewards, reward)
+	}
+
+	lg.totalReward += reward
 
 	var termInt int
 	if terminal {
@@ -219,22 +243,43 @@ func (lg *DataLogger) SaveLog() error {
 		return nil
 	}
 
-	file, err := os.Create(path.Join(lg.BasePath, "rewards-"+lg.FileSuffix+".csv"))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Write header row
-	_, err = file.WriteString("rewards\n")
-	if err != nil {
-		return err
-	}
-	// Write remaining rows
-	for _, rew := range lg.rewards {
-		_, err = file.WriteString(fmt.Sprintf("%f\n", rew))
+	if lg.ShouldLogTotals {
+		file, err := os.Create(path.Join(lg.BasePath, "totals-"+lg.FileSuffix+".csv"))
 		if err != nil {
 			return err
+		}
+		defer file.Close()
+
+		// Write header row
+		_, err = file.WriteString("total reward, total episodes\n")
+		if err != nil {
+			return err
+		}
+		// Write totals
+		_, err = file.WriteString(fmt.Sprintf("%f,%d\n", lg.totalReward, lg.totalEpisodes))
+		if err != nil {
+			return err
+		}
+	}
+
+	if lg.ShouldLogEpisodeLengths {
+		file, err := os.Create(path.Join(lg.BasePath, "rewards-"+lg.FileSuffix+".csv"))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// Write header row
+		_, err = file.WriteString("rewards\n")
+		if err != nil {
+			return err
+		}
+		// Write remaining rows
+		for _, rew := range lg.rewards {
+			_, err = file.WriteString(fmt.Sprintf("%f\n", rew))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -296,6 +341,7 @@ func (lg *DataLogger) loadLog(pth string, suffix string, loadRewards, loadEpisod
 	lg.DataConfig = DataConfig{
 		ShouldLogTraces:         loadTraces,
 		ShouldLogEpisodeLengths: loadEpisodes,
+		ShouldLogRewards:        loadRewards,
 		BasePath:                pth,
 		FileSuffix:              suffix,
 	}

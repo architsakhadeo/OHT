@@ -17,6 +17,8 @@ var (
 	expPath    = flag.String("exp", "config/cem/experiment.json", "Experiment settings file path")
 	agentPath  = flag.String("agent", "config/cem/agent.json", "Default agent settings file path")
 	envPath    = flag.String("env", "config/cem/environment.json", "Environment settings file path")
+	// Make sure to pass "total-logs" in environment.json such that datasetSeed < "total-logs"
+	datasetSeed = flag.Uint("datasetSeed", 0, "data set seed for knnModel")
 )
 
 func main() {
@@ -26,10 +28,10 @@ func main() {
 	rn, err := cem.NewRunner(buildSettings())
 	panicIfError(err, "Failed to create Runner")
 
-	result, err := rn.Run([]cem.Option{cem.Debug(os.Stdout)})
+	result, err := rn.Run([]cem.Option{cem.Debug(os.Stdout)}, *datasetSeed)
 	panicIfError(err, "Failed to run CEM")
 
-	fmt.Println("\nFinal optional point: ", result)
+	fmt.Println("\nFinal optimal point: ", result)
 	fmt.Println("Execution time: ", time.Since(startTime))
 }
 
@@ -50,6 +52,10 @@ func buildSettings() cem.RunnerSettings {
 	readJsonFile(*expPath, &settings.ExperimentSettings)
 	readJsonFile(*agentPath, &settings.AgentSettings)
 	readJsonFile(*envPath, &settings.EnvironmentSettings)
+
+	fmt.Println("Experiment: ", &settings.ExperimentSettings)
+	fmt.Println("Agent: ", &settings.AgentSettings)
+	fmt.Println("Environment: ", &settings.EnvironmentSettings)
 
 	return settings
 }

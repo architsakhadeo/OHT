@@ -52,16 +52,16 @@ func (env *launcherEnvironment) Initialize(run uint, attr rlglue.Attributes) err
 }
 
 // Start returns an initial observation.
-func (env *launcherEnvironment) Start() rlglue.State {
+func (env *launcherEnvironment) Start(unused bool) rlglue.State { // TODO fix unused variable
 	ctx := context.Background()
 	state, _ := env.client.Start(ctx, &Empty{})
 	return rlglue.State(state.Values)
 }
 
 // Step takes an action and provides the new observation, the resulting reward, and whether the state is terminal.
-func (env *launcherEnvironment) Step(action rlglue.Action) (rlglue.State, float64, bool) {
+func (env *launcherEnvironment) Step(action rlglue.Action, unused bool) (rlglue.State, float64, bool) { // TODO fix unused variable
 	ctx := context.Background()
-	result, _ := env.client.Step(ctx, &Action{Action: uint64(action)})
+	result, _ := env.client.Step(ctx, &Action{Action: uint64(action.(int))}) // TODO fix the type assertions everywhere
 	return rlglue.State(result.State.Values), result.Reward, result.Terminal
 }
 

@@ -61,7 +61,7 @@ func NewRunner(set RunnerSettings) (Runner, error) {
 	}, nil
 }
 
-func (rn Runner) Run(options []Option) ([]float64, error) {
+func (rn Runner) Run(options []Option, datasetSeed uint) ([]float64, error) {
 	hypers := []Hyperparameter{}
 	for _, hyper := range rn.AgentSettings.CemOptions {
 		if hyper.IsDiscrete {
@@ -76,12 +76,12 @@ func (rn Runner) Run(options []Option) ([]float64, error) {
 		options = append(options, Seed(rn.Seed))
 	}
 
-	cem, err := New(rn.runOneSample, hypers, rn.Settings, options...)
+	cem, err := New(rn.runOneSample, hypers, datasetSeed, rn.Settings, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	return cem.Run()
+	return cem.Run(datasetSeed)
 }
 
 func (rn Runner) newAgentSettings(hyperparameters []float64) SettingsMap {
@@ -104,7 +104,7 @@ func (rn Runner) attributesWithSeed(set SettingsMap, seed uint64) (rlglue.Attrib
 	return rlglue.Attributes(attr), err
 }
 
-func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iteration int) (float64, error) {
+func (rn Runner) runOneSample(hyperparameters []float64, datasetSeed uint, seeds []uint64, iteration int) (float64, error) {
 	agSet := rn.newAgentSettings(hyperparameters)
 	envSet := rn.EnvironmentSettings.Settings.copy()
 
@@ -112,6 +112,7 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 	if err != nil {
 		return 0, err
 	}
+
 	env, err := environment.Create(rn.EnvironmentSettings.Name, rn.Debug)
 	if err != nil {
 		return 0, err
@@ -124,13 +125,15 @@ func (rn Runner) runOneSample(hyperparameters []float64, seeds []uint64, iterati
 		if err != nil {
 			return 0, err
 		}
-		ag.Initialize(0, attr, nil)
+
+		ag.Initialize(datasetSeed, attr, nil)
 
 		attr, err = rn.attributesWithSeed(envSet, seeds[run])
 		if err != nil {
 			return 0, err
 		}
-		env.Initialize(0, attr)
+
+		env.Initialize(datasetSeed, attr)
 
 		exp, err := experiment.New(ag, env, rn.ExperimentSettings, rn.Debug, rn.Data)
 		if err != nil {

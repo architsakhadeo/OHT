@@ -58,6 +58,16 @@ def percentile_worst(ranked, perc, metric):
         # target = ranked[rk][idx]
         # filtered.append([rk, target[0], target[1]])  # run number, parameter, performance
         filtered += [[rk, kv[0], kv[1]] for kv in ranked[rk][0: idx]] # run number, parameter, performance
+
+        all_perf = np.array([kv[1] for kv in ranked[rk][idx-1: ]]) # including the x_th percentile
+        same = np.where(all_perf == filtered[-1][2])[0] + (idx-1)
+        break_tie = []
+        for i in same:
+            kv = ranked[rk][i]
+            break_tie += [[rk, kv[0], kv[1]]]
+        chosen = np.random.randint(0, len(break_tie))
+        filtered[-1] = break_tie[chosen] # break tie
+
     worst_per_run = []
     for rk in ranked.keys():
         min_pk = None
@@ -133,7 +143,58 @@ return
             run number 1: {parameter0: [auc_ens1, auc_ens2, ...]}
           }
 """
-def load_rewards(paths):
+def load_total(paths, source, outer=None):
+    col_name = "total reward" if source=="reward" else "total episodes"
+    data = {}
+    for path in paths: # each ensemble seed
+        params = os.listdir(path)
+        for param in params: # each param
+            pp = os.path.join(path, param)
+            p_key = param#int(param.split("_")[1])
+
+            temp = os.listdir(pp)
+            runs = []
+            for t in temp:
+                if "totals" in t:
+                    runs.append(t)
+            if len(runs) == 0:
+                print("totals-x.csv not in folder, switching to old function")
+                if source == "reward":
+                    return load_rewards(paths, outer)
+                elif source == "episode":
+                    return load_epSteps(paths, outer)
+
+            all_runs = {}
+            for run in runs:
+                run_num = int(run.split("-")[1].split(".")[0])
+                # same log file: same run number % outer
+                # each inner seed: run number // outer
+                log = run_num % int(outer) if outer is not None else run_num
+                print(run_num, log, outer)
+
+                res = pd.read_csv(os.path.join(pp, run))[col_name][0]
+
+                rk = "run{}".format(log)
+                if rk not in all_runs.keys():
+                    # all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
+                    all_runs[rk] = [res] # {run number: auc / total step}
+                else:
+                    all_runs[rk].append(res)
+                # print(rk, log, run_num, all_runs[rk])
+
+            if outer is not None:
+                for rk in all_runs.keys():
+                    all_runs[rk] = np.mean(np.array(all_runs[rk]))
+
+            for rk in all_runs.keys():
+                if rk not in data.keys():
+                    data[rk] = {p_key: []}
+                if p_key not in data[rk].keys():
+                    data[rk][p_key] = []
+                data[rk][p_key].append(all_runs[rk])
+    return data
+
+def load_rewards(paths, outer=None):
     data = {}
     for path in paths: # each ensemble seed
         params = os.listdir(path)
@@ -149,9 +210,26 @@ def load_rewards(paths):
 
             all_runs = {}
             for run in runs:
+                run_num = int(run.split("-")[1].split(".")[0])
+                # same log file: same run number % outer
+                # each inner seed: run number // outer
+                log = run_num % int(outer) if outer is not None else run_num
+                # print(run_num, log, outer)
+
                 r_per_step = pd.read_csv(os.path.join(pp, run))['rewards']
                 # r_per_step = r_per_step[:50000]
-                all_runs["run"+run.split("-")[1].split(".")[0]] = np.mean(np.array(r_per_step)) # {run number: auc / total step}
+                rk = "run{}".format(log)
+                if rk not in all_runs.keys():
+                    # all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
+                    all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
+                else:
+                    all_runs[rk].append(np.mean(np.array(r_per_step)))
+
+                # print(rk, log, run_num, all_runs[rk])
+
+            if outer is not None:
+                for rk in all_runs.keys():
+                    all_runs[rk] = np.mean(np.array(all_runs[rk]))
 
             for rk in all_runs.keys():
                 if rk not in data.keys():
@@ -162,7 +240,7 @@ def load_rewards(paths):
     return data
 
 # Load from episodes-x.csv
-def load_sparseRewards(paths, reward=-1):
+def load_sparseRewards(paths, reward=-1, max_len=1000, outer=None):
     data = {}
     for path in paths: # each ensemble seed
         params = os.listdir(path)
@@ -178,10 +256,26 @@ def load_sparseRewards(paths, reward=-1):
 
             all_runs = {}
             for run in runs:
-                # print(os.path.join(pp, run))
+
+                run_num = int(run.split("-")[1].split(".")[0])
+                # same log file: same run number % outer
+                # each inner seed: run number // outer
+                log = run_num % int(outer) if outer is not None else run_num
+
                 ep_len = pd.read_csv(os.path.join(pp, run))['episode lengths']
                 ep_len = np.array(ep_len).reshape((-1))
-                all_runs["run"+run.split("-")[1].split(".")[0]] = len(ep_len)*reward / float(ep_len.sum()) # {run number: auc / total step}
+                ended = ep_len[np.where(ep_len != max_len)[0]] # stop before reaches limit
+
+                r_per_step = len(ended)*reward / float(ep_len.sum()) # {run number: auc / total step}
+
+                rk = "run{}".format(log)
+                if rk not in all_runs.keys():
+                    all_runs[rk] = [r_per_step] # {run number: auc / total step}
+                else:
+                    all_runs[rk].append(r_per_step)
+            if outer is not None:
+                for rk in all_runs.keys():
+                    all_runs[rk] = np.mean(np.array(all_runs[rk]))
 
             for rk in all_runs.keys():
                 if rk not in data.keys():
@@ -191,7 +285,7 @@ def load_sparseRewards(paths, reward=-1):
                 data[rk][p_key].append(all_runs[rk])
     return data
 
-def load_epSteps(paths):
+def load_epSteps(paths, outer=None):
     data = {}
     for path in paths: # each ensemble seed
         params = os.listdir(path)
@@ -207,10 +301,24 @@ def load_epSteps(paths):
 
             all_runs = {}
             for run in runs:
+                run_num = int(run.split("-")[1].split(".")[0])
+                # same log file: same run number % outer
+                # each inner seed: run number // outer
+                log = run_num % int(outer) if outer is not None else run_num
+
                 r_per_step = pd.read_csv(os.path.join(pp, run))['episode lengths']
                 negative_r_per_step = np.array(r_per_step)*-1.0
-                # all_runs[int(run.split("-")[1].split(".")[0])] = np.mean(np.array(r_per_step)) # {run number: auc / total step}
-                all_runs["run"+run.split("-")[1].split(".")[0]] = np.mean(negative_r_per_step) # {run number: auc / total step}
+
+                # r_per_step = r_per_step[:50000]
+                rk = "run{}".format(log)
+                if rk not in all_runs.keys():
+                    # all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
+                    all_runs[rk] = [np.mean(negative_r_per_step)] # {run number: auc / total step}
+                else:
+                    all_runs[rk].append(np.mean(negative_r_per_step))
+
+                # # all_runs[int(run.split("-")[1].split(".")[0])] = np.mean(np.array(r_per_step)) # {run number: auc / total step}
+                # all_runs["run"+run.split("-")[1].split(".")[0]] = np.mean(negative_r_per_step) # {run number: auc / total step}
 
             for rk in all_runs.keys():
                 if rk not in data.keys():
@@ -235,22 +343,67 @@ return:
         }
     }
 """
-def loading_pessimistic(models_paths, source="reward"):
+def loading_pessimistic(models_paths, source="reward", outer=None, sparse_reward=None, max_len=np.inf):
     models_data = {}
     for model in models_paths.keys():
         paths = models_paths[model]
         print("Loading data: {}: {}".format(model, paths[0]))
         if source == "reward":
-            data = load_rewards(paths)
-            # data = load_sparseRewards(paths)
+            data = load_rewards(paths, outer=outer)
+        elif source == "sparseRward":
+            data = load_sparseRewards(paths, reward=sparse_reward, max_len=max_len, outer=outer)
         elif source == "episode":
             # Acrobot code (please do not delete)
-            data = load_epSteps(paths)
+            data = load_epSteps(paths, outer=outer)
+
+        # New data files
+        elif source == "total-reward":
+            data = load_total(paths, "reward", outer=outer)
+        elif source == "total-episode":
+            data = load_total(paths, "episode", outer=outer)
+        else:
+            raise NotImplementedError
+
         for rk in data.keys():
             if rk in data.keys():
                 for pk in data[rk].keys():
                     if pk in data[rk].keys():
                         data[rk][pk] = np.array(data[rk][pk]).min()
+                    else:
+                        print("param doesn't exist", rk, pk)
+            else:
+                print("run doesn't exist", rk)
+
+        models_data[model] = data
+    return models_data
+def loading_average(models_paths, source="reward", outer=None, sparse_reward=None, max_len=np.inf):
+    models_data = {}
+    for model in models_paths.keys():
+        paths = models_paths[model]
+        print("Loading data: {}: {}".format(model, paths[0]))
+
+        # Old data files
+        if source == "reward":
+            data = load_rewards(paths, outer=outer)
+        elif source == "sparseReward":
+            data = load_sparseRewards(paths, reward=sparse_reward, max_len=max_len, outer=outer)
+        elif source == "episode":
+            # Acrobot code (please do not delete)
+            data = load_epSteps(paths, outer=outer)
+
+        # New data files
+        elif source == "total-reward":
+            data = load_total(paths, "reward", outer=outer)
+        elif source == "total-episode":
+            data = load_total(paths, "episode", outer=outer)
+        else:
+            raise NotImplementedError
+
+        for rk in data.keys():
+            if rk in data.keys():
+                for pk in data[rk].keys():
+                    if pk in data[rk].keys():
+                        data[rk][pk] = np.array(data[rk][pk]).mean()
                     else:
                         print("param doesn't exist", rk, pk)
             else:
