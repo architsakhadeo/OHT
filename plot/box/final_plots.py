@@ -7,7 +7,7 @@ from plot.box.utils_data import *
 from plot.box.utils_plot import *
 from plot.box.paths_final import *
 
-def plot_compare_top(te, cms, fqi, rand_lst, source, title,
+def plot_compare_top(te, cms, cem, fqi, rand_lst, source, title,
                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
     ranges = [0]
     # true env data dictionary
@@ -29,6 +29,14 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     for rk in fqi_data_all.keys():
         for pk in fqi_data_all[rk].keys():
             fqi_data.append(fqi_data_all[rk][pk])
+    
+
+    cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["cem"] # 30 runs in total, but different parameters
+    # cem_rank = ranking_allruns(cem_data_all)["cem"]
+    cem_data = []
+    for rk in cem_data_all.keys():
+        for pk in cem_data_all[rk].keys():
+            cem_data.append(cem_data_all[rk][pk])
 
     # random data list
     rand_data = performance_by_param(rand_lst, te_data)
@@ -38,7 +46,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    filtered = {"random": [rand_data], "fqi": [fqi_data], "cem": [cem_data]}
     #filtered = {"random": [rand_data]}
     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(cms_data)
@@ -64,17 +72,19 @@ def performance_by_param(rand_lst, data):
 
 def arcrobot():
     calibration = {
-        "k1_notimeout": k1_notimeout,
-        "k1_timeout1000": k1_timeout1000,
-        "k3ensemble_notimeout": k3ensemble_notimeout,
-        "k3ensemble_timeout1000": k3ensemble_timeout1000,
-        "k3ensemble_adversarial_notimeout": k3ensemble_adversarial_notimeout,
-        "k3ensemble_adverarial_timeout1000": k3ensemble_adverarial_timeout1000
+        #"k1_notimeout": k1_notimeout,
+        #"k1_timeout1000": k1_timeout1000,
+        #"k3ensemble_notimeout": k3ensemble_notimeout,
+        #k3ensemble_timeout1000": k3ensemble_timeout1000,
+        #"k3ensemble_adversarial_notimeout": k3ensemble_adversarial_notimeout,
+        #"k3ensemble_adverarial_timeout1000": k3ensemble_adverarial_timeout1000,
+        "calibration model with inner runs": k3_adversarial_timeout1000_subruns 
     }
+    cem = {"cem": ac_CEM}
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, fqi, random, "episode", "../img/final_acrobot_violin_log", ylim=[50,200], yscale="log", res_scale=-1)
+    plot_compare_top(te, calibration, cem, fqi, random, "episode", "../img/cemplots_linear", ylim=[50,200], yscale="linear", res_scale=-1, outer=10)
 
 def cartpole_rs():
     calibration = {
@@ -135,8 +145,8 @@ def cartpole_size():
     plot_each_run(te, calibration, "reward", "../img/dataset_size_cartpole")
 
 
-# arcrobot()
+arcrobot()
 # cartpole_rs()
-cartpole()
+#cartpole()
 # cartpole_ablation()
 # cartpole_size()

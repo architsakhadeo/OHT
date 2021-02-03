@@ -124,6 +124,13 @@ k3ensemble_adverarial_timeout1000 = [
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
 ]
+k3_adversarial_timeout1000_subruns = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_adversarial_timeout1000_subruns/esarsa/step10k/optimalfixed_eps0/"
+]
+ac_CEM = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/list/acrobot/online_learning/esarsa/step50k/list_realenv/"
+]
+
 
 
 """

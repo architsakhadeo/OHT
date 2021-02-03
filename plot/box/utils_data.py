@@ -329,7 +329,7 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
             data = load_sparseRewards(paths, reward=sparse_reward, max_len=max_len, outer=outer)
         elif source == "episode":
             # Acrobot code (please do not delete)
-            data = load_epSteps(paths)
+            data = load_epSteps(paths, outer=outer)
         for rk in data.keys():
             if rk in data.keys():
                 for pk in data[rk].keys():
