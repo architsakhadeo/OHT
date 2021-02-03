@@ -65,6 +65,7 @@ def percentile_worst(ranked, perc, metric):
         for i in same:
             kv = ranked[rk][i]
             break_tie += [[rk, kv[0], kv[1]]]
+        np.random.seed(int(rk.split("n")[1]))
         chosen = np.random.randint(0, len(break_tie))
         filtered[-1] = break_tie[chosen] # break tie
 
@@ -144,7 +145,7 @@ return
           }
 """
 def load_total(paths, source, outer=None):
-    col_name = "total reward" if source=="reward" else "total episodes"
+    col_name = "total reward" if source=="reward" else " total episodes"
     data = {}
     for path in paths: # each ensemble seed
         params = os.listdir(path)
@@ -158,9 +159,10 @@ def load_total(paths, source, outer=None):
                 if "totals" in t:
                     runs.append(t)
             if len(runs) == 0:
-                print("totals-x.csv not in folder, switching to old function")
+                print("totals-x.csv not in folder, switching to old function", pp)
                 if source == "reward":
-                    return load_rewards(paths, outer)
+                    # return load_rewards(paths, outer)
+                    return load_sparseRewards(paths, reward=-1, max_len=1000, outer=outer)
                 elif source == "episode":
                     return load_epSteps(paths, outer)
 
@@ -170,8 +172,9 @@ def load_total(paths, source, outer=None):
                 # same log file: same run number % outer
                 # each inner seed: run number // outer
                 log = run_num % int(outer) if outer is not None else run_num
-                print(run_num, log, outer)
+                # print(run_num, log, outer)
 
+                # print(param, run, "\n",pd.read_csv(os.path.join(pp, run)).columns)
                 res = pd.read_csv(os.path.join(pp, run))[col_name][0]
 
                 rk = "run{}".format(log)
@@ -219,8 +222,8 @@ def load_rewards(paths, outer=None):
                 r_per_step = pd.read_csv(os.path.join(pp, run))['rewards']
                 # r_per_step = r_per_step[:50000]
                 rk = "run{}".format(log)
+                # print(pd.read_csv(os.path.join(pp, run)), pp, rk, outer)
                 if rk not in all_runs.keys():
-                    # all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
                     all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
                 else:
                     all_runs[rk].append(np.mean(np.array(r_per_step)))

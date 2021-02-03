@@ -41,12 +41,14 @@ def cartpole():
         # "calibration": trueStart_farTrans_time1000,
         # "with random start": RS_trueStart_farTrans_time1000,
 
-        "far trans": v2_trueStart_farTrans_time1000,
+        "wo random restart": v2_trueStart_farTrans_time1000,
+        "random restart + dataset timeout200": v2_RSt200_trueStart_farTrans_time1000,
+        "random restart": v2_RS_trueStart_farTrans_time1000,
     }
     random = cpn1_rnd
     te = {"true": v2_cpn1_true_env}
-    fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "reward", "../img/v2_top_param_cartpole", outer=10)
+    fqi = {"fqi": v2_fqi}
+    plot_compare_top(te, calibration, fqi, random, "total-reward", "../img/cartpole_model", outer=10)
 
 def cartpole_ablation():
     calibration = {

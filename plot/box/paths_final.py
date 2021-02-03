@@ -188,8 +188,26 @@ hyperparam v2: average calibration model performance with runs in inner loop
 v2_cpn1_true_env = ["../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/online_learning/esarsa-adam/step50k/sweep/"]
 
 v2_trueStart_farTrans_time1000 = [
-    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0/ensembleseed0",
+    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0.3/ensembleseed0",
 ]
-v2_trueStart_closeTrans_time1000 = [
-    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0/ensembleseed0",
+v2_RSt200_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_rs_t200_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0.3/ensembleseed0",
+]
+v2_RS_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_rs_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0.3/ensembleseed0",
+]
+v2_fqi = [
+    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/fqi-linear/fqi-adam/step20k_env/data_eps0.1/lockat_baseline_online/"
+]
+
+AC_true_env = ["../../data/hyperparam_v2/acrobot/online_learning/esarsa/step50k/gridsearch_realenv"]
+
+AC_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_v2/acrobot/offline_learning/knn-ensemble/k3_adversarial_timeout1000_subruns/esarsa/step10k/optimalfixed_eps0/",
+]
+AC_RSt200_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_rs_t200_v2/acrobot/offline_learning/knn-ensemble/k3_adversarial_timeout1000_subruns/esarsa/step10k/optimalfixed_eps0/",
+]
+AC_RS_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_rs_v2/acrobot/offline_learning/knn-ensemble/k3_adversarial_timeout1000_subruns/esarsa/step10k/optimalfixed_eps0/",
 ]
