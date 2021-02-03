@@ -241,9 +241,7 @@ func (net *Network) LoadNetwork(
 	var err error
 	var newDense *mat.Dense
 
-	ipt := net.inputs
-	newDense = mat.NewDense(net.hiddens[0], ipt,
-		ao.RandomArray(ipt*net.hiddens[0], float64(ipt)))
+	newDense = mat.NewDense(1, 1, nil)
 	newDense.Reset()
 
 	net.HiddenWeights = []mat.Matrix{}
@@ -255,7 +253,6 @@ func (net *Network) LoadNetwork(
 		}
 		net.HiddenWeights = append(net.HiddenWeights, mat.DenseCopyOf(newDense))
 		newDense.Reset()
-		ipt = net.hiddens[i] + 1
 	}
 
 	name = "weight-output.bin"
