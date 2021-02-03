@@ -31,6 +31,7 @@ type ChooseNeighborFunc func([]float64, [][]float64, [][]float64, []float64, []f
 
 type knnSettings struct {
 	DataLog      string  `json:"datalog"`
+	TrueStartLog string  `json:"true-start-log"`
 	Seed         int64   `json:"seed"`
 	TotalLogs    uint    `json:"total-logs"`
 	Neighbor_num int     `json:"neighbor-num"`
@@ -123,15 +124,57 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.Message("environment.knnModel settings", fmt.Sprintf("%+v", env.knnSettings))
 
 	folder := env.knnSettings.DataLog
+	trueStartFolder := env.knnSettings.TrueStartLog
 	//traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
 	traceLog := folder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
+	trueStartLog := trueStartFolder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
+	//fmt.Println(traceLog)
+	//fmt.Println(trueStartLog)
+
 	env.Message("KNN data log", traceLog, "\n")
 	paramLog := folder + "/log_json.txt"
 	env.SettingFromLog(paramLog)
 	env.state = make(rlglue.State, env.stateDim)
 
+
+	//env.offlineData = allTrans
+	env.offlineData = env.LoadData(traceLog)
+	offlineStartsData := env.LoadData(trueStartLog)
+	env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(offlineStartsData)
+
+	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
+	env.offlineModel.BuildTree(env.offlineData, "current")
+
+	if env.knnSettings.PickStartS == "random-init" { // default setting
+		env.PickStartFunc = env.randomizeInitState
+	} else if env.knnSettings.PickStartS == "furthest" {
+		env.PickStartFunc = env.furthestState
+	} else if env.knnSettings.PickStartS == "random-all" {
+		env.PickStartFunc = env.randomizeState
+	} else {
+		env.PickStartFunc = env.randomizeInitState
+	}
+
+	if env.knnSettings.PickNext == "furthest" {
+		env.PickNextFunc = env.FurtherNext
+	} else { // default setting
+		env.PickNextFunc = env.CloserNeighbor
+	}
+
+	if env.ShapeReward {
+		var trans2term [][]float64
+		for i := 0; i < len(env.offlineTermns); i++ {
+			trans2term = append(trans2term, env.offlineData[env.offlineTermns[i]])
+		}
+		env.terminsTree = transModel.New(env.NumberOfActions, env.stateDim)
+		env.terminsTree.BuildTree(trans2term, "next")
+	}
+	return nil
+}
+
+func (env *KnnModelEnv) LoadData(filename string) [][]float64 {
 	// Get offline data
-	csvFile, err := os.Open(traceLog)
+	csvFile, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -159,11 +202,6 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 			} else if j == 3 { //reward
 				row[env.stateDim*2+1], _ = strconv.ParseFloat(num, 64)
 				rewards[i-1] = row[env.stateDim*2+1]
-				//if row[env.stateDim*2+1] == -1 { // termination
-				//	row[env.stateDim*2+2] = 1
-				//} else {
-				//	row[env.stateDim*2+2] = 0
-				//}
 			} else if j == 4 { //termination
 				row[env.stateDim*2+2], _ = strconv.ParseFloat(num, 64)
 			}
@@ -192,10 +230,13 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	}
 
 	var allTrans [][]float64
-	if env.EnsembleSeed != 0 {
-		tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
+	//if env.EnsembleSeed != 0 {
+	//	tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
+	if env.DropPerc != 0 {
+		//fmt.Println("HERE", env.DropPerc)
 		filteredLen := int(float64(len(allTransTemp)) * (1 - env.DropPerc))
-		filteredIdx := tempRnd.Perm(len(allTransTemp))[:filteredLen]
+		filteredIdx := env.rng.Perm(len(allTransTemp))[:filteredLen]
+		//fmt.Println("HERE", filteredIdx[:5])
 		allTrans = make([][]float64, filteredLen)
 		for i := 0; i < filteredLen; i++ {
 			allTrans[i] = allTransTemp[filteredIdx[i]]
@@ -203,37 +244,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	} else {
 		allTrans = allTransTemp
 	}
-
-	env.offlineData = allTrans
-	env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(allTrans)
-	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
-	env.offlineModel.BuildTree(allTrans, "current")
-
-	if env.knnSettings.PickStartS == "random-init" { // default setting
-		env.PickStartFunc = env.randomizeInitState
-	} else if env.knnSettings.PickStartS == "furthest" {
-		env.PickStartFunc = env.furthestState
-	} else if env.knnSettings.PickStartS == "random-all" {
-		env.PickStartFunc = env.randomizeState
-	} else {
-		env.PickStartFunc = env.randomizeInitState
-	}
-
-	if env.knnSettings.PickNext == "furthest" {
-		env.PickNextFunc = env.FurtherNext
-	} else { // default setting
-		env.PickNextFunc = env.CloserNeighbor
-	}
-
-	if env.ShapeReward {
-		var trans2term [][]float64
-		for i := 0; i < len(env.offlineTermns); i++ {
-			trans2term = append(trans2term, allTrans[env.offlineTermns[i]])
-		}
-		env.terminsTree = transModel.New(env.NumberOfActions, env.stateDim)
-		env.terminsTree.BuildTree(trans2term, "next")
-	}
-	return nil
+	return allTrans
 }
 
 func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) {
