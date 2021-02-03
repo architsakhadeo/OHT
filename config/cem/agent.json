@@ -3,16 +3,17 @@
 	"Default": {
 		"gamma": 1.0,
 		"env-name": "acrobot",
-		"adaptive-alpha": 0,
+		"alpha": 0,
+		"is-stepsize-adaptive": true,
 		"epsilon": 0,
+		"lambda": 0.9,
+		"weight-init": 0.0,
 		"numberOfActions": 0,
 		"epsilon-after-lock": 0
 	},
 	"CemOptions": [
-		{ "Name": "tilings", "Discretes": [8, 16, 32, 48], "IsDiscrete": true, "IsInt": true },
-		{ "Name": "tiles", "Discretes": [2, 4, 8], "IsDiscrete": true, "IsInt": true },
-		{ "Name": "lambda", "Upper": 1, "Lower": 0, "Discretes": [0] },
-		{ "Name": "weight-init", "Upper": 5, "Lower": -2, "Discretes": [0] },
-		{ "Name": "alpha", "Upper": 1, "Lower": 0, "Discretes": [0] }
+		{ "Name": "tilings", "Discretes": [4, 16], "IsDiscrete": true, "IsInt": true },
+		{ "Name": "tiles", "Discretes": [2, 8], "IsDiscrete": true, "IsInt": true },
+		{ "Name": "adaptive-alpha", "Upper": 1, "Lower": 0, "Discretes": [0] }
 	]
 }
