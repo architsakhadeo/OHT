@@ -55,6 +55,8 @@ type EsarsaSettings struct {
 
 	NumActions int     `json:"numberOfActions"`
 	WInit      float64 `json:"weight-init"`
+
+	RandomizeStartActionAfterLock bool   `json:"randomize_start_action_afterLock"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -253,7 +255,13 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 		agent.Message("err", "agent.ESarsa is acting on garbage state because it couldn't create tiles: "+err.Error())
 	}
 
-	oldA, _ := agent.PolicyExpectedSarsaLambda(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
+	var oldA rlglue.Action
+	if agent.RandomizeStartActionAfterLock && agent.lock {
+		oldA = agent.rng.Int() % agent.NumActions
+		fmt.Println("Random action restart", oldA)
+	} else {
+		oldA, _ = agent.PolicyExpectedSarsaLambda(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
+	}
 	agent.oldAction, _ = tpo.GetInt(oldA)
 
 	agent.timesteps++

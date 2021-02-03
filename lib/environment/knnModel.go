@@ -124,7 +124,12 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.Message("environment.knnModel settings", fmt.Sprintf("%+v", env.knnSettings))
 
 	folder := env.knnSettings.DataLog
-	trueStartFolder := env.knnSettings.TrueStartLog
+	var trueStartFolder string
+	if env.knnSettings.TrueStartLog != "" {
+		trueStartFolder = env.knnSettings.TrueStartLog
+	} else {
+		trueStartFolder = folder
+	}
 	//traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
 	traceLog := folder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
 	trueStartLog := trueStartFolder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
@@ -132,6 +137,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	//fmt.Println(trueStartLog)
 
 	env.Message("KNN data log", traceLog, "\n")
+	env.Message("KNN starts log", trueStartLog, "\n")
 	paramLog := folder + "/log_json.txt"
 	env.SettingFromLog(paramLog)
 	env.state = make(rlglue.State, env.stateDim)

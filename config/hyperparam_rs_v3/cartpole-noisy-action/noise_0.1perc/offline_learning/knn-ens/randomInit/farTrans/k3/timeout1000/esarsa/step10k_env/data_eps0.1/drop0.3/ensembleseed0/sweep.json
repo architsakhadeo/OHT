@@ -1,0 +1,50 @@
+{
+	"agent-name": "esarsa",
+	"environment-name": "knnModel",
+	"agent-settings": {
+		"env-name": "cartpole",
+		"gamma": 0.9,
+		"state-len": 4,
+		"sweep": {
+			"weight-init": [0],
+			"epsilon": [0],
+			"tilings": [4, 16],
+			"tiles": [2, 8],
+			"lambda": [0.8],
+			"alpha": [1e-03],
+			"is-stepsize-adaptive": [true],
+			"adaptive-alpha": [0.00048828, 0.00097656, 0.00195312, 0.00390625, 0.0078125 , 0.015625 , 0.03125 , 0.0625]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1,
+		"total-logs": 10
+	},
+	"environment-settings": {
+		"seed": 1,
+		"total-logs": 10,
+		"neighbor-num": 3,
+		"datalog": "data/hyperparam_rs_v3/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/fixed_eps0.1/param_0/",
+		"true-start-log": "data/hyperparam_v3/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/fixed_eps1/param_0/",
+		"ensemble-seed": 0,
+		"drop-percent": 0.3,
+		"pick-start-state": "random-init",
+		"pick-next": "furthest"
+	},
+	"experiment-settings": {
+	    "randomize_start_state_beforeLock": false,
+   		"randomize_start_state_afterLock": false,
+
+		"episodes": 1000000,
+		"steps": 0,
+		"max-run-length-episodic": 50000,
+		"steps-in-episode": 1000,
+
+		"data-path": "data/hyperparam_rs_v3/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0.3/ensembleseed0/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": true,
+		"debug-interval": 1000
+	}
+}
