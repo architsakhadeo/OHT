@@ -143,6 +143,57 @@ return
             run number 1: {parameter0: [auc_ens1, auc_ens2, ...]}
           }
 """
+def load_total(paths, source, outer=None):
+    col_name = "total reward" if source=="reward" else "total episodes"
+    data = {}
+    for path in paths: # each ensemble seed
+        params = os.listdir(path)
+        for param in params: # each param
+            pp = os.path.join(path, param)
+            p_key = param#int(param.split("_")[1])
+
+            temp = os.listdir(pp)
+            runs = []
+            for t in temp:
+                if "totals" in t:
+                    runs.append(t)
+            if len(runs) == 0:
+                print("totals-x.csv not in folder, switching to old function")
+                if source == "reward":
+                    return load_rewards(paths, outer)
+                elif source == "episode":
+                    return load_epSteps(paths, outer)
+
+            all_runs = {}
+            for run in runs:
+                run_num = int(run.split("-")[1].split(".")[0])
+                # same log file: same run number % outer
+                # each inner seed: run number // outer
+                log = run_num % int(outer) if outer is not None else run_num
+                print(run_num, log, outer)
+
+                res = pd.read_csv(os.path.join(pp, run))[col_name][0]
+
+                rk = "run{}".format(log)
+                if rk not in all_runs.keys():
+                    # all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
+                    all_runs[rk] = [res] # {run number: auc / total step}
+                else:
+                    all_runs[rk].append(res)
+                # print(rk, log, run_num, all_runs[rk])
+
+            if outer is not None:
+                for rk in all_runs.keys():
+                    all_runs[rk] = np.mean(np.array(all_runs[rk]))
+
+            for rk in all_runs.keys():
+                if rk not in data.keys():
+                    data[rk] = {p_key: []}
+                if p_key not in data[rk].keys():
+                    data[rk][p_key] = []
+                data[rk][p_key].append(all_runs[rk])
+    return data
+
 def load_rewards(paths, outer=None):
     data = {}
     for path in paths: # each ensemble seed
@@ -299,12 +350,19 @@ def loading_pessimistic(models_paths, source="reward", outer=None, sparse_reward
         print("Loading data: {}: {}".format(model, paths[0]))
         if source == "reward":
             data = load_rewards(paths, outer=outer)
-            # data = load_sparseRewards(paths)
         elif source == "sparseRward":
-            load_sparseRewards(paths, reward=sparse_reward, max_len=max_len, outer=outer)
+            data = load_sparseRewards(paths, reward=sparse_reward, max_len=max_len, outer=outer)
         elif source == "episode":
             # Acrobot code (please do not delete)
-            data = load_epSteps(paths)
+            data = load_epSteps(paths, outer=outer)
+
+        # New data files
+        elif source == "total-reward":
+            data = load_total(paths, "reward", outer=outer)
+        elif source == "total-episode":
+            data = load_total(paths, "episode", outer=outer)
+        else:
+            raise NotImplementedError
 
         for rk in data.keys():
             if rk in data.keys():
@@ -323,6 +381,8 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
     for model in models_paths.keys():
         paths = models_paths[model]
         print("Loading data: {}: {}".format(model, paths[0]))
+
+        # Old data files
         if source == "reward":
             data = load_rewards(paths, outer=outer)
         elif source == "sparseReward":
@@ -330,6 +390,14 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
         elif source == "episode":
             # Acrobot code (please do not delete)
             data = load_epSteps(paths, outer=outer)
+        # New data files
+        elif source == "total-reward":
+            data = load_total(paths, "reward", outer=outer)
+        elif source == "total-episode":
+            data = load_total(paths, "episode", outer=outer)
+        else:
+            raise NotImplementedError
+
         for rk in data.keys():
             if rk in data.keys():
                 for pk in data[rk].keys():

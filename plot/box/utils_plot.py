@@ -136,6 +136,54 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
     # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
+def plot_compare_top(te, cms, fqi, rand_lst, source, title,
+                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
+    ranges = [0]
+    # true env data dictionary
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    te_data = average_run(te_data["true"])
+
+    # fqi data
+    # all performance
+    fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
+    # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
+    fqi_data = []
+    for rk in fqi_data_all.keys():
+        for pk in fqi_data_all[rk].keys():
+            fqi_data.append(fqi_data_all[rk][pk])
+
+    # random data list
+    rand_data = performance_by_param(rand_lst, te_data)
+
+    # top true env data performance
+    te_thrd = []
+    for perc in ranges:
+        te_thrd.append(percentile_avgeraged_run(te_data, perc))
+
+    filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    #filtered = {"random": [rand_data]}
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    models_rank = ranking_allruns(cms_data)
+    for model in cms_data.keys():
+        ranks = models_rank[model]
+
+        filtered[model] = []
+        for perc in ranges:
+            target = percentile_worst(ranks, perc, te_data)
+            # data = [te_data[item[1]] for item in target]
+            data = [item[2] for item in target]
+            filtered[model].append(data)
+    # print(filtered)
+    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+
+
+def performance_by_param(rand_lst, data):
+    perf = []
+    for i in rand_lst:
+        pk = "param_{}".format(i)
+        perf.append(data[pk])
+    return perf
 
 """
 input:

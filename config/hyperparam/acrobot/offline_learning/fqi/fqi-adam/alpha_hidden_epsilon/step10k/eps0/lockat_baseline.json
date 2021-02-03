@@ -5,7 +5,7 @@
 	"agent-settings": {
 		"decreasing-epsilon": "None",
 		"gamma": 1.0,
-		"state-len": 4,
+		"state-len": 6,
 		"buffer-type": "random",
 		"optimizer": "Adam",
 		"fqi-adamBeta1": 0.9,

@@ -6,7 +6,7 @@
 		"decreasing-epsilon": "None",
 		"gamma": 1.0,
 		"env-name": "acrobot",
-		"state-len": 4,
+		"state-len": 6,
 		"buffer-type": "random",
 		"optimizer": "Adam",
 		"fqi-adamBeta1": 0.9,
@@ -57,7 +57,6 @@
 		},
 		"enable-debug": false,
 		"seed": 1,
-		"datalog": "data/hyperparam/acrobot/offline_data/esarsa/step10k/optimalfixed_eps0/param_0/",
 		"offline-learn": false,
 		"online-learn": false
 	},

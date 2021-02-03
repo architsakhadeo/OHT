@@ -84,7 +84,7 @@ def arcrobot():
     random = ac_rnd
     te = {"true": ac_true_env}
     fqi = {"fqi": ac_fqi}
-    plot_compare_top(te, calibration, cem, fqi, random, "episode", "../img/cemplots_linear", ylim=[50,200], yscale="linear", res_scale=-1, outer=10)
+    plot_compare_top(te, calibration, fqi, random, "episode", "../img/final_acrobot_violin_log", ylim=[50,200], yscale="log", res_scale=-1, outer=10)
 
 def cartpole_rs():
     calibration = {
@@ -94,7 +94,7 @@ def cartpole_rs():
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": RS_cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole_rs")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/final_cartpole_rs", outer=10)
 
 def cartpole():
     calibration = {
@@ -110,7 +110,7 @@ def cartpole():
     random = cpn1_rnd
     te = {"true": v2_cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    plot_compare_top(te, calibration, fqi, random, "reward", "../img/v2_top_param_cartpole")
+    plot_compare_top(te, calibration, fqi, random, "reward", "../img/v2_top_param_cartpole", outer=10)
 
 def cartpole_ablation():
     calibration = {
@@ -128,8 +128,8 @@ def cartpole_ablation():
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    # plot_compare_top(te, calibration, fqi, random, "reward", "../img/ablation_cartpole")
-    plot_each_run(te, calibration, "reward", "../img/ablation_cartpole")
+    # plot_compare_top(te, calibration, fqi, random, "reward", "../img/ablation_cartpole", outer=10)
+    plot_each_run(te, calibration, "reward", "../img/ablation_cartpole", outer=10)
 
 def cartpole_size():
     calibration = {
@@ -141,8 +141,8 @@ def cartpole_size():
     random = cpn1_rnd
     te = {"true": cpn1_true_env}
     fqi = {"fqi": cpn1_fqi}
-    # plot_compare_top(te, calibration, fqi, random, "reward", "../img/datset_size_cartpole")
-    plot_each_run(te, calibration, "reward", "../img/dataset_size_cartpole")
+    # plot_compare_top(te, calibration, fqi, random, "reward", "../img/datset_size_cartpole", outer=10)
+    plot_each_run(te, calibration, "reward", "../img/dataset_size_cartpole", outer=10)
 
 
 arcrobot()
