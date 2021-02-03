@@ -22,8 +22,8 @@ def sweep_model_er():
         "trueStart_closeTrans_t1000": ER_trueStart_closeTrans_time1000,
     }
     te = {"true": cpn1_true_env}
-    plot_generation(te, cms, ranges, "reward", "../img/sweep_model_ER")
-    plot_each_run(te, cms, "reward", "../img/check_avg_ablation_ER")
+    plot_generation(te, cms, ranges, "reward", "../img/sweep_model_ER", outer=10)
+    plot_each_run(te, cms, "reward", "../img/check_avg_ablation_ER", outer=10)
 
 """
 no random restart
@@ -74,7 +74,7 @@ def check_run_ablation():
         # # "noEnsemble_t0": trueStart_noEnsemble_time0,
     }
     te = {"true": cpn1_true_env}
-    plot_each_run(te, cms, "reward", "../img/check_avg_ablation_noRS")
+    plot_each_run(te, cms, "reward", "../img/check_avg_ablation_noRS", outer=10)
 
 def check_run_size():
     cms = {
@@ -84,7 +84,7 @@ def check_run_size():
         "1k": trueStart_farTrans_time1000_1k,
     }
     te = {"true": cpn1_true_env}
-    plot_each_run(te, cms, "reward", "../img/check_avg_size_noRS")
+    plot_each_run(te, cms, "reward", "../img/check_avg_size_noRS", outer=10)
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
