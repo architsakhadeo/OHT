@@ -393,7 +393,6 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
         elif source == "episode":
             # Acrobot code (please do not delete)
             data = load_epSteps(paths, outer=outer)
-
         # New data files
         elif source == "total-reward":
             data = load_total(paths, "reward", outer=outer)
