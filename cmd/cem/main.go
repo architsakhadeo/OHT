@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	configPath  = flag.String("cem", "config/cem/cem.json", "CEM settings file path")
-	expPath     = flag.String("exp", "config/cem/experiment.json", "Experiment settings file path")
-	agentPath   = flag.String("agent", "config/cem/agent.json", "Default agent settings file path")
-	envPath     = flag.String("env", "config/cem/environment.json", "Environment settings file path")
+	configPath = flag.String("cem", "config/cem/cem.json", "CEM settings file path")
+	expPath    = flag.String("exp", "config/cem/experiment.json", "Experiment settings file path")
+	agentPath  = flag.String("agent", "config/cem/agent.json", "Default agent settings file path")
+	envPath    = flag.String("env", "config/cem/environment.json", "Environment settings file path")
+	// Make sure to pass "total-logs" in environment.json such that datasetSeed < "total-logs"
 	datasetSeed = flag.Uint("datasetSeed", 0, "data set seed for knnModel")
 )
 

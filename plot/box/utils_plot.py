@@ -5,8 +5,8 @@ sys.path.insert(0, cwd+'/../..')
 from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
-# c_default = matplotlib.cm.get_cmap('cool')
-c_default = matplotlib.cm.get_cmap('hsv')
+c_default = matplotlib.cm.get_cmap('cool')
+# c_default = matplotlib.cm.get_cmap('hsv')
 c_dict = {
     "calibration": "red",
     "random": "tab:blue",
@@ -26,12 +26,12 @@ def cmap(key, idx):
     else:
         return c_default(idx)
 
-def plot_each_run(te, cms, source, title, ylim=None):
-    te_data = loading_pessimistic(te, source)
+def plot_each_run(te, cms, source, title, ylim=None, outer=None, sparse_reward=None, max_len=np.inf):
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_rank = ranking_allruns(te_data)
     te_rank = te_rank["true"]
 
-    cms_data = loading_pessimistic(cms, source)
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
 
     m_lst = list(cms_data.keys())
     all_models = []
@@ -111,16 +111,17 @@ def plot_scatters_one_run(data, label, title):
     plt.close()
     plt.clf()
 
-def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", res_scale=1):
+def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", res_scale=1,
+                    outer=None, sparse_reward=None, max_len=np.inf):
 
-    te_data = loading_pessimistic(te, source)
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
 
     te_thrd = []
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    cms_data = loading_pessimistic(cms, source)
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     filtered = {}
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -135,6 +136,54 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
     # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
+def plot_compare_top(te, cms, fqi, rand_lst, source, title,
+                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
+    ranges = [0]
+    # true env data dictionary
+    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    te_data = average_run(te_data["true"])
+
+    # fqi data
+    # all performance
+    fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
+    # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
+    fqi_data = []
+    for rk in fqi_data_all.keys():
+        for pk in fqi_data_all[rk].keys():
+            fqi_data.append(fqi_data_all[rk][pk])
+
+    # random data list
+    rand_data = performance_by_param(rand_lst, te_data)
+
+    # top true env data performance
+    te_thrd = []
+    for perc in ranges:
+        te_thrd.append(percentile_avgeraged_run(te_data, perc))
+
+    filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    #filtered = {"random": [rand_data]}
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    models_rank = ranking_allruns(cms_data)
+    for model in cms_data.keys():
+        ranks = models_rank[model]
+
+        filtered[model] = []
+        for perc in ranges:
+            target = percentile_worst(ranks, perc, te_data)
+            # data = [te_data[item[1]] for item in target]
+            data = [item[2] for item in target]
+            filtered[model].append(data)
+    # print(filtered)
+    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+
+
+def performance_by_param(rand_lst, data):
+    perf = []
+    for i in rand_lst:
+        pk = "param_{}".format(i)
+        perf.append(data[pk])
+    return perf
 
 """
 input:
@@ -163,7 +212,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
 
     for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="red", linewidth=0.75)
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
 
     xtcs = []
     for loc in xlocations:
@@ -223,7 +272,7 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
 
     for i in range(len(thrd)):
         # print(thrd)
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="red", linewidth=0.75)
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
 
     xtcs = []
     for loc in xlocations:

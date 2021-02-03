@@ -1,0 +1,41 @@
+{
+	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+	"agent-name": "esarsa",
+	"environment-name": "acrobot",
+	"agent-settings": {
+		"gamma": 1.0,
+		"env-name": "acrobot",
+		"weight-init": 0.0,
+		"epsilon": 0.0,
+		"lambda": 0.9,
+		"alpha": 0.0,
+		"is-stepsize-adaptive": true,
+		"list": [
+			{ "tilings": 16, "tiles": 8, "adaptive-alpha": 0.04528458005094914 },
+			{ "tilings": 4, "tiles": 8, "adaptive-alpha": 0.07914915035255929 }
+		],
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1,
+		"sweep": {
+			"delays": [
+				[0]
+			]
+		}
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": false,
+		"episodes": 1000000,
+		"max-run-length-episodic": 50000,
+		"data-path": "data/list/acrobot/online_learning/esarsa/step50k/list_realenv",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": true,
+		"debug-interval": 0
+	}
+}

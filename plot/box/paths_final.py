@@ -124,6 +124,13 @@ k3ensemble_adverarial_timeout1000 = [
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed4/optimalfixed_eps0/",
     "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_50k_timeout1000_trueStart_adversarialTrans/esarsa/step10k/drop0.2/ensembleseed5/optimalfixed_eps0/"
 ]
+k3_adversarial_timeout1000_subruns = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/acrobot/offline_learning/knn-ensemble/k3_adversarial_timeout1000_subruns/esarsa/step10k/optimalfixed_eps0/"
+]
+ac_CEM = [
+    "../../../../../../Downloads/data_timeoutsAndtransitions_acrobot/list/acrobot/online_learning/esarsa/step50k/list_realenv/"
+]
+
 
 
 """
@@ -182,3 +189,14 @@ trueStart_farTrans_time1000_1k = [
     "../../data/hyperparam_v1/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step1k_env/data_eps0/drop0.2/ensembleseed5",
 ]
 
+"""
+hyperparam v2: average calibration model performance with runs in inner loop
+"""
+v2_cpn1_true_env = ["../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/online_learning/esarsa-adam/step50k/sweep/"]
+
+v2_trueStart_farTrans_time1000 = [
+    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0/ensembleseed0",
+]
+v2_trueStart_closeTrans_time1000 = [
+    "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_eps0/drop0/ensembleseed0",
+]
