@@ -178,12 +178,14 @@ func (cem Cem) newSampleSlices(covariance, samples, samplesRealVals *mat.Dense, 
 }
 
 func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense) {
+
+	NumberOfSamples, _ := samples.Dims()
 	for col := 0; col < cem.numHyperparams; col++ {
 		conv := cem.hypers[col].SampleValueConverter
 		if conv == nil {
 			continue // no need to handle this column
 		}
-		for row := startRow; row < cem.NumSamples; row++ {
+		for row := startRow; row < NumberOfSamples; row++ {
 			samples.Set(row, col, conv.RealValue(samplesRealVals.At(row, col)))
 		}
 	}
@@ -191,6 +193,9 @@ func (cem Cem) updateDiscretes(startRow int, samples, samplesRealVals *mat.Dense
 
 func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 	// Allocate memory outside of loop
+	// numElite (50 %) to define stddev
+	// numEliteForMean (25 %) to define mean
+	// numRetain (50 / 5 % = 10%) to retain top param
 	samples := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
 	samplesRealVals := mat.NewDense(cem.NumSamples, cem.numHyperparams, nil)
 	descendingSamplesMetrics := make([]float64, cem.numElite)
@@ -201,15 +206,25 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 	covariance := cem.initialCovariance()
 
 	// Store mean values in elitesRealVals.RawRowView(0), since the starting distribution is centered around it
+
+	mean := mat.NewDense(1, cem.numHyperparams, nil)
+	meanRealValues := mat.NewDense(1, cem.numHyperparams, nil)
+
 	for col := 0; col < cem.numHyperparams; col++ {
-		elitesRealVals.Set(0, col, (cem.hypers[col].Lower+cem.hypers[col].Upper)/2.0)
+		meanRealValues.Set(0, col, (cem.hypers[col].Lower+cem.hypers[col].Upper)/2.0)
 	}
+
+	//for col := 0; col < cem.numHyperparams; col++ {
+	//	elitesRealVals.Set(0, col, (cem.hypers[col].Lower+cem.hypers[col].Upper)/2.0)
+	//}
 
 	if cem.debugWriter != noopWriter {
-		fmt.Fprintf(cem.debugWriter, "Mean: %v\n\n", elitesRealVals.RawRowView(0))
+		fmt.Fprintf(cem.debugWriter, "Mean: %v\n\n", meanRealValues.RawRowView(0))
 	}
 
-	numEliteElite := 0 // At first there are no elite samples
+	var numEliteForMean int
+	numEliteForMean = int(float64(cem.NumSamples) * 0.25)
+	numRetain := 0 // At first there are no elite samples
 
 	for iteration := 0; iteration < cem.NumIterations; iteration++ {
 		startIteration := time.Now()
@@ -217,7 +232,7 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 			fmt.Fprintf(cem.debugWriter, "Iteration: %d\n\n", iteration)
 		}
 
-		err := cem.newSampleSlices(covariance, samples, samplesRealVals, numEliteElite, elitesRealVals.RawRowView(0))
+		err := cem.newSampleSlices(covariance, samples, samplesRealVals, numRetain, meanRealValues.RawRowView(0))
 		if err != nil {
 			return nil, err
 		}
@@ -266,16 +281,27 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 			elitesRealVals.SetRow(ind, samplesRealVals.RawRowView(ascendingIndices[cem.NumSamples-1-ind]))
 		}
 
-		numEliteElite = cem.numElite / 2 // For every iteration after the first, we have some elite
-		for m := 0; m < numEliteElite; m++ {
+		numRetain = int(float64(cem.NumSamples) * 0.1) // For every iteration after the first, we have some elite
+		for m := 0; m < numRetain; m++ {
 			samplesRealVals.SetRow(m, elitesRealVals.RawRowView(m))
 			samples.SetRow(m, elites.RawRowView(m))
 		}
 
+		for col := 0; col < cem.numHyperparams; col++ {
+			average := 0.0
+			for sample := 0; sample < numEliteForMean; sample++ {
+				average += elitesRealVals.At(sample, col)
+			}
+			average /= float64(numEliteForMean)
+			meanRealValues.Set(0, col, average)
+		}
+		mean.SetRow(0, meanRealValues.RawRowView(0))
+		cem.updateDiscretes(0, mean, meanRealValues)
+
 		if cem.debugWriter != noopWriter {
 			fmt.Fprintf(cem.debugWriter, "Elite points: %v\n\n", elites)
 			fmt.Fprintf(cem.debugWriter, "Elite Points Metric: %v\n\n", descendingSamplesMetrics[:cem.numElite])
-			fmt.Fprintf(cem.debugWriter, "Mean point: %v\n\n", elites.RawRowView(0))
+			fmt.Fprintf(cem.debugWriter, "Mean point: %v\n\n", mean)
 		}
 
 		cov := mat.NewSymDense(cem.numHyperparams, nil)
@@ -298,7 +324,7 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 		}
 	}
 
-	return elites.RawRowView(0), nil
+	return mean.RawRowView(0), nil
 }
 
 func (cem Cem) worker(jobs <-chan int, results chan<- averageAtIndex, samples *mat.Dense, NumRuns, iteration int, datasetSeed uint) {

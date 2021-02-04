@@ -1,4 +1,4 @@
 {
 	"episodes": 50000,
-	"max-run-length-episodic": 50000
+	"max-run-length-episodic": 500
 }
