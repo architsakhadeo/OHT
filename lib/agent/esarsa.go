@@ -37,7 +37,7 @@ const (
 type EsarsaSettings struct {
 	EnableDebug        bool    `json:"enable-debug"`
 	Seed               int64   `json:"seed"`
-	TotalLogs    	   uint    `json:"total-logs"`
+	TotalLogs          uint    `json:"total-logs"`
 	NumTilings         int     `json:"tilings"`
 	NumTiles           int     `json:"tiles"`
 	Gamma              float64 `json:"gamma"`
@@ -56,7 +56,7 @@ type EsarsaSettings struct {
 	NumActions int     `json:"numberOfActions"`
 	WInit      float64 `json:"weight-init"`
 
-	RandomizeStartActionAfterLock bool   `json:"randomize_start_action_afterLock"`
+	RandomizeStartActionAfterLock bool `json:"randomize_start_action_afterLock"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -266,6 +266,11 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 
 	agent.timesteps++
 
+	agent.traces = make([][]float64, agent.NumActions) // one trace slice for each action
+	for i := 0; i < agent.NumActions; i++ {
+		agent.traces[i] = make([]float64, agent.tiler.NumberOfIndices())
+	}
+
 	if agent.EnableDebug {
 		agent.Message("msg", "start")
 	}
@@ -412,11 +417,6 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 	}
 
 	agent.timesteps++
-
-	agent.traces = make([][]float64, agent.NumActions) // one trace slice for each action
-	for i := 0; i < agent.NumActions; i++ {
-		agent.traces[i] = make([]float64, agent.tiler.NumberOfIndices())
-	}
 
 	if agent.EnableDebug {
 		agent.Message("msg", "end", "state", state, "reward", reward)
