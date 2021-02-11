@@ -72,6 +72,10 @@ func (env *Futile) GetAttributes() rlglue.Attributes {
 		attributes.NumAction = 2 //3
 		attributes.StateDim = 6
 		attributes.StateRange = []float64{2.0, 2.0, 2.0, 2.0, 2.0 * maxVel1, 2.0 * maxVel2}
+	case "puddleworld":
+		attributes.NumAction = 4 // 5
+		attributes.StateDim = 2
+		attributes.StateRange = []float64{1.0, 1.0}
 	}
 
 	attr, err := json.Marshal(&attributes)

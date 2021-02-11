@@ -37,7 +37,7 @@ const (
 type EsarsaSettings struct {
 	EnableDebug        bool    `json:"enable-debug"`
 	Seed               int64   `json:"seed"`
-	TotalLogs    	   uint    `json:"total-logs"`
+	TotalLogs          uint    `json:"total-logs"`
 	NumTilings         int     `json:"tilings"`
 	NumTiles           int     `json:"tiles"`
 	Gamma              float64 `json:"gamma"`
@@ -56,7 +56,7 @@ type EsarsaSettings struct {
 	NumActions int     `json:"numberOfActions"`
 	WInit      float64 `json:"weight-init"`
 
-	RandomizeStartActionAfterLock bool   `json:"randomize_start_action_afterLock"`
+	RandomizeStartActionAfterLock bool `json:"randomize_start_action_afterLock"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -209,6 +209,17 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		}
 
 		agent.tiler, err = util.NewMultiTiler(6, agent.EsarsaSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
+	} else if agent.EsarsaSettings.EnvName == "puddleworld" {
+		agent.NumActions = 4 // 5
+		scalers := []util.Scaler{
+			util.NewScaler(-maxFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(-maxFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(2, agent.EsarsaSettings.NumTilings, scalers)
 		if err != nil {
 			return err
 		}
