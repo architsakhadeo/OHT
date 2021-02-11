@@ -277,6 +277,11 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 
 	agent.timesteps++
 
+	agent.traces = make([][]float64, agent.NumActions) // one trace slice for each action
+	for i := 0; i < agent.NumActions; i++ {
+		agent.traces[i] = make([]float64, agent.tiler.NumberOfIndices())
+	}
+
 	if agent.EnableDebug {
 		agent.Message("msg", "start")
 	}
@@ -423,11 +428,6 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 	}
 
 	agent.timesteps++
-
-	agent.traces = make([][]float64, agent.NumActions) // one trace slice for each action
-	for i := 0; i < agent.NumActions; i++ {
-		agent.traces[i] = make([]float64, agent.tiler.NumberOfIndices())
-	}
 
 	if agent.EnableDebug {
 		agent.Message("msg", "end", "state", state, "reward", reward)
