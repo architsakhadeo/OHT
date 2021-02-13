@@ -107,6 +107,8 @@ func (agent *ESarsa) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWei
 		lw.CheckChange = agent.OnetimeRwdLock
 	} else if lw.LockCondition == "onetime-epLength" {
 		lw.CheckChange = agent.OnetimeEpLenLock
+	} else if lw.LockCondition == "onetime-epReturn" {
+		lw.CheckChange = agent.OnetimeEpReturnLock
 	} else if lw.LockCondition == "beginning" {
 		lw.CheckChange = agent.KeepLock
 	} else if lw.LockCondition == "onetime-epstep-lessthan" {
@@ -575,6 +577,30 @@ func (agent *ESarsa) OnetimeRwdLock() bool {
 		return false
 	}
 }
+
+func (agent *ESarsa) OnetimeEpReturnLock() bool {
+	if agent.lock {
+		return true
+	} else {
+		_, _, _, rewards2D, gammas2D := agent.bf.Content()
+		rewards := ao.Flatten2DFloat(rewards2D)
+		return_all := 0.0
+		for _, r := range rewards {
+			return_all += r
+		}
+		gammas := ao.Flatten2DFloat(gammas2D)
+		count := agent.Count(gammas, 0.0)
+		avgReturn := return_all / float64(count)
+		if len(gammas) < agent.Bsize {
+			return false
+		}
+		if avgReturn >= agent.lw.LockAvgReturn {
+			return true
+		}
+		return false
+	}
+}
+
 
 func (agent *ESarsa) OnetimeEpLenLock() bool {
 	if agent.lock {
