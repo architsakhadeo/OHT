@@ -7,6 +7,7 @@ type LockWeight struct {
 	DecCount                 int
 	BestAvg                  float64
 	LockAvgRwd               float64 `json:"lock-condition-reward"`
+	LockAvgReturn            float64 `json:"lock-condition-return"`
 	LockAvgEpStepLessThan    float64 `json:"lock-condition-epstep-lessthan"`
 	LockAvgEpStepGreaterThan float64 `json:"lock-condition-epstep-greaterthan"`
 	LockAvgLen               float64 `json:"lock-condition-length"`
