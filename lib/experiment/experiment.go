@@ -240,11 +240,13 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 	exp.LogEpisodeLength(numStepsThisEpisode)
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
+	exp.LogEpisodeReturn(reward)
 	//fmt.Println("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	if exp.Settings.DebugInterval != 0 {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	}
 }
+
 
 func (exp *Experiment) saveAgentWeights() {
 	err := exp.agent.SaveWeights(exp.GetBasePath())

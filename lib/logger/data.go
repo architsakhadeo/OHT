@@ -27,6 +27,9 @@ type DataConfig struct {
 	// ShouldLogEpisodeLengths determines whether episode lengths are saved.
 	ShouldLogEpisodeLengths bool
 
+	// ShouldLogReturns determines whether episode returns are saved.
+	ShouldLogReturns bool
+
 	// ShouldLogRewards determines whether rewards are saved.
 	ShouldLogRewards bool
 
@@ -50,6 +53,7 @@ type DataLogger struct {
 	DataConfig
 
 	episodeLengths []int
+	episodeReturns []float64
 	rewards        []float64
 
 	totalReward   float64
@@ -89,7 +93,11 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 		lg.episodeLengths = []int{}
 	}
 
-	if lg.ShouldLogRewards {
+	if lg.ShouldLogReturns {
+		lg.episodeReturns = []float64{}
+	}
+
+	if lg.ShouldLogRewards || lg.ShouldLogReturns || lg.ShouldLogTraces{
 		lg.rewards = []float64{}
 	}
 
@@ -146,7 +154,7 @@ func (lg *DataLogger) writeTraceHeader(headers ...string) error {
 }
 
 func (lg *DataLogger) RewardSince(step int) float64 {
-	if !lg.ShouldLogRewards {
+	if !lg.ShouldLogRewards && !lg.ShouldLogReturns && !lg.ShouldLogTraces {
 		return 0
 	}
 
@@ -165,6 +173,15 @@ func (lg *DataLogger) LogEpisodeLength(steps int) {
 		return
 	}
 	lg.episodeLengths = append(lg.episodeLengths, steps)
+}
+
+// LogEpisodeLength adds the provided episode length to the episode length log.
+func (lg *DataLogger) LogEpisodeReturn(return_ float64) {
+	lg.totalEpisodes++
+	if !lg.ShouldLogReturns {
+		return
+	}
+	lg.episodeReturns = append(lg.episodeReturns, return_)
 }
 
 // LogStep adds information from a step to the step log. It must contain previous state, current state,
@@ -211,7 +228,7 @@ func (lg *DataLogger) LogLearnProg(progress float64) {
 }
 
 func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool) string {
-	if lg.ShouldLogRewards {
+	if lg.ShouldLogRewards || lg.ShouldLogReturns || lg.ShouldLogTraces {
 		lg.rewards = append(lg.rewards, reward)
 	}
 
@@ -297,6 +314,26 @@ func (lg *DataLogger) SaveLog() error {
 		// Write remaining rows
 		for _, ep := range lg.episodeLengths {
 			_, err = file.WriteString(fmt.Sprintf("%d\n", ep))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if lg.ShouldLogReturns {
+		file, err := os.Create(path.Join(lg.BasePath, "returns-"+lg.FileSuffix+".csv"))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		// Write header row
+		_, err = file.WriteString("returns\n")
+		if err != nil {
+			return err
+		}
+		// Write remaining rows
+		for _, ep := range lg.episodeReturns {
+			_, err = file.WriteString(fmt.Sprintf("%f\n", ep))
 			if err != nil {
 				return err
 			}

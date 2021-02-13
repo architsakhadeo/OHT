@@ -33,6 +33,7 @@ type Experiment struct {
 	ShouldLogTraces               bool   `json:"should-log-traces"`
 	CacheTracesInRAM              bool   `json:"cache-traces-in-ram"`
 	ShouldLogEpisodeLengths       bool   `json:"should-log-episode-lengths"`
+	ShouldLogReturns		      bool   `json:"should-log-returns"`
 	ShouldLogRewards              bool   `json:"should-log-rewards"`
 	ShouldLogTotals               bool   `json:"should-log-totals"`
 	CountAfterLock                bool   `json:"count-step-after-lock"`
@@ -53,6 +54,7 @@ func (set *Experiment) SetToDefault() {
 	set.DataPath = ""
 	set.ShouldLogTraces = false
 	set.ShouldLogEpisodeLengths = false
+	set.ShouldLogReturns = false
 	set.ShouldLogLearnProg = false
 	set.CacheTracesInRAM = false
 	set.MaxCPUs = 0 // Does not change the default value
