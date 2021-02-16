@@ -29,8 +29,7 @@ type PuddleworldSettings struct {
 	Seed              int64     `json:"seed"`
 	Delays            []int     `json:"delays"`
 	PercentNoiseState []float64 `json:"percent_noise"`
-	NonSparseRwd      bool      `json:"nonsparse_rwd"`
-	//RandomizeStartState bool      `json:"randomize_start_state"`
+	StartHard		  bool		`json:"start-hard"`
 }
 
 type Puddleworld struct {
@@ -158,6 +157,12 @@ func (env *Puddleworld) clamp(x float64, min float64, max float64) float64 {
 }
 
 func (env *Puddleworld) randomizeState(randomizeStartStateCondition bool) {
+	if env.StartHard {
+		rnd_x := env.randFloat(0.3, 0.35)
+		rnd_y := env.randFloat(0.6, 0.65)
+		startState[0] = rnd_x
+		startState[1] = rnd_y
+	}
 	if randomizeStartStateCondition == false {
 		copy(env.state, startState)
 		return
