@@ -20,15 +20,16 @@
     "seed": 1
   },
   "environment-settings": {
-    "seed": 1
+    "seed": 1,
+    "start-hard": true
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
     "randomize_start_state_afterLock": false,
     "episodes": 4000000,
     "steps-in-episode": 0,
-    "max-run-length-episodic": 10000,
-    "data-path": "data/hyperparam_v4/puddle/online_learning/esarsa-adam/step10k/sweep/",
+    "max-run-length-episodic": 50000,
+    "data-path": "data/hyperparam_v4/puddlehard/online_learning/esarsa-adam/step50k/sweep/",
     "should-log-traces": false,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,
