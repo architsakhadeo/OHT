@@ -7,61 +7,6 @@ from plot.box.utils_data import *
 from plot.box.utils_plot import *
 from plot.box.paths_final import *
 
-def plot_compare_top(te, cms, cem, fqi, rand_lst, source, title,
-                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
-    ranges = [0]
-    # true env data dictionary
-    te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-    te_data = average_run(te_data["true"])
-    # print(te_data)
-
-    # fqi data
-    # # best each run
-    # fqi_data_all = loading_average(fqi, source) # 30 runs in total, but different parameters
-    # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
-    # fqi_data = []
-    # for rk in fqi_rank.keys():
-    #     fqi_data.append(fqi_rank[rk][0][1])
-    # # all performance
-    fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
-    # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
-    fqi_data = []
-    for rk in fqi_data_all.keys():
-        for pk in fqi_data_all[rk].keys():
-            fqi_data.append(fqi_data_all[rk][pk])
-    
-
-    cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["cem"] # 30 runs in total, but different parameters
-    # cem_rank = ranking_allruns(cem_data_all)["cem"]
-    cem_data = []
-    for rk in cem_data_all.keys():
-        for pk in cem_data_all[rk].keys():
-            cem_data.append(cem_data_all[rk][pk])
-
-    # random data list
-    rand_data = performance_by_param(rand_lst, te_data)
-
-    # top true env data performance
-    te_thrd = []
-    for perc in ranges:
-        te_thrd.append(percentile_avgeraged_run(te_data, perc))
-
-    filtered = {"random": [rand_data], "fqi": [fqi_data], "cem": [cem_data]}
-    #filtered = {"random": [rand_data]}
-    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-    models_rank = ranking_allruns(cms_data)
-    for model in cms_data.keys():
-        ranks = models_rank[model]
-
-        filtered[model] = []
-        for perc in ranges:
-            target = percentile_worst(ranks, perc, te_data)
-            # data = [te_data[item[1]] for item in target]
-            data = [item[2] for item in target]
-            filtered[model].append(data)
-    # print(filtered)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -105,14 +50,18 @@ def cartpole():
         # "calibration": trueStart_farTrans_time1000,
         # "with random start": RS_trueStart_farTrans_time1000,
 
-        "wo random restart": v2_trueStart_farTrans_time1000,
-        "random restart + dataset timeout200": v2_RSt200_trueStart_farTrans_time1000,
-        "random restart": v2_RS_trueStart_farTrans_time1000,
+        # "wo random restart": v2_trueStart_farTrans_time1000,
+        # "random restart + dataset timeout200": v2_RSt200_trueStart_farTrans_time1000,
+        # "random restart, eps 0": v2_RS_trueStart_farTrans_time1000,
+        # "eps0.1": v3_RSA_trueStart_farTrans_time1000_eps01,
+        # "random s-a restart, eps 1": v3_RSA_trueStart_farTrans_time1000_eps1,
+        "simplest, eps 1": v3_trueStart_closeTrans_time1000_eps1_noEns,
     }
     random = cpn1_rnd
     te = {"true": v2_cpn1_true_env}
     fqi = {"fqi": v2_fqi}
-    plot_compare_top(te, calibration, fqi, random, "total-reward", "../img/cartpole_model", outer=10)
+    plot_compare_top(te, calibration, fqi, random, "total-reward", "../img/cartpole_simplest", outer=10)
+    plot_each_run(te, calibration, "total-reward", "../img/cartpole_simplest_run", outer=10)
 
 def cartpole_ablation():
     calibration = {
@@ -146,9 +95,117 @@ def cartpole_size():
     # plot_compare_top(te, calibration, fqi, random, "reward", "../img/datset_size_cartpole", outer=10)
     plot_each_run(te, calibration, "reward", "../img/dataset_size_cartpole", outer=10)
 
+def final_plots_gs():
+    def ac_good_cov():
+        calibration = {
+            "calibration (grid search)": AC_eps0
+        }
+        random = ac_rnd
+        cem = {"calibration (cem)": AC_cem}
+        te = {"true": AC_true}
+        fqi = {"fqi": AC_fqi_eps0}
+        # plot_compare_top(te, calibration, fqi, random, "total-episode", "../img/final_ac_good_cov", ylim=[80,300], yscale="log", res_scale=-1, outer=10)
+        plot_compare_top(te, calibration, fqi, random, "total-episode", "../img/final_ac_good_cov", yscale="log", res_scale=-1, outer=10, cem=cem)
 
-arcrobot()
+    def ac_study_cov():
+        calibration = {
+            "eps 0": AC_eps0,
+            "eps 0.25": AC_eps025,
+            "eps 1": AC_eps1,
+        }
+        random = ac_rnd
+        te = {"true": AC_true}
+        fqi = {
+            "eps 0": AC_fqi_eps0,
+            "eps 0.25": AC_fqi_eps025,
+            "eps 1": AC_fqi_eps1,
+        }
+        # plot_compare_top(te, calibration, fqi, random, "total-episode", "../img/final_ac_study_cov", ylim=[50,200], yscale="log", res_scale=-1, outer=10)
+        plot_generation(te, calibration, [0, 0.1, 0.2, 0.5, 0.7, 0.9], "total-episode", "../img/final_ac_study_cov", ylim=[80,300], yscale="log", res_scale=-1, outer=10)
+
+    def cp_good_cov():
+        calibration = {
+            "calibration (grid search)": CP_eps1
+        }
+        random = cpn1_rnd
+        cem = {"calibration (cem)": CP_cem}
+        te = {"true": CP_true}
+        fqi = {"fqi": CP_fqi_eps1}
+        plot_compare_top(te, calibration, fqi, random, "total-reward", "../img/final_cp_good_cov", outer=10, cem=cem)
+
+    def cp_study_cov():
+        calibration = {
+            "eps 0": CP_eps0,
+            "eps 0.25": CP_eps025,
+            "eps 1": CP_eps1,
+        }
+        random = cpn1_rnd
+        te = {"true": CP_true}
+        fqi = {
+            "eps 0": CP_fqi_eps0,
+            "eps 0.25": CP_fqi_eps025,
+            "eps 1": CP_fqi_eps1,
+        }
+        plot_generation(te, calibration, [0, 0.1, 0.2, 0.5, 0.7, 0.9], "total-reward", "../img/final_cp_study_cov", outer=10, sparse_reward=-1, max_len=1000)
+
+    def ac_fqi_cov():
+        random = ac_rnd
+        te = {"true": AC_true}
+
+        cms_eps0 = {
+            "calibration": AC_eps0,
+        }
+        fqi_eps0 = {"fqi": AC_fqi_eps0}
+        # plot_compare_top(te, cms_eps0, fqi_eps0, random, "total-episode", "../img/ac_fqi_cov_eps0", ylim=[50,200], yscale="linear", res_scale=-1, outer=10)
+        plot_compare_top(te, cms_eps0, fqi_eps0, random, "total-episode", "../img/ac_fqi_cov_eps0", yscale="linear", res_scale=-1, outer=10)
+
+        cms_eps1 = {
+            "calibration": AC_eps1,
+        }
+        fqi_eps1 = {"fqi": AC_fqi_eps1}
+        # plot_compare_top(te, cms_eps1, fqi_eps1, random, "total-episode", "../img/ac_fqi_cov_eps1", ylim=[50,200], yscale="linear", res_scale=-1, outer=10)
+        plot_compare_top(te, cms_eps1, fqi_eps1, random, "total-episode", "../img/ac_fqi_cov_eps1", yscale="linear", res_scale=-1, outer=10)
+
+        cms_eps025 = {
+            "calibration": AC_eps025,
+        }
+        fqi_eps025 = {"fqi": AC_fqi_eps025}
+        # plot_compare_top(te, cms_eps025, fqi_eps025, random, "total-episode", "../img/ac_fqi_cov_eps0.25", ylim=[50,200], yscale="linear", res_scale=-1, outer=10)
+        plot_compare_top(te, cms_eps025, fqi_eps025, random, "total-episode", "../img/ac_fqi_cov_eps0.25", yscale="linear", res_scale=-1, outer=10)
+
+    def cp_fqi_cov():
+        random = cpn1_rnd
+        te = {"true": CP_true}
+
+        cms_eps0 = {
+            "calibration": CP_eps0,
+        }
+        fqi_eps0 = {"fqi": CP_fqi_eps0}
+        plot_compare_top(te, cms_eps0, fqi_eps0, random, "total-reward", "../img/cp_fqi_cov_eps0", outer=10)
+
+        cms_eps1 = {
+            "calibration": CP_eps1,
+        }
+        fqi_eps1 = {"fqi": CP_fqi_eps1}
+        plot_compare_top(te, cms_eps1, fqi_eps1, random, "total-reward", "../img/cp_fqi_cov_eps1", outer=10)
+
+        cms_eps025 = {
+            "calibration": CP_eps025,
+        }
+        fqi_eps025 = {"fqi": CP_fqi_eps025}
+        plot_compare_top(te, cms_eps025, fqi_eps025, random, "total-reward", "../img/cp_fqi_cov_eps0.25", outer=10)
+
+    ac_good_cov()
+    ac_study_cov()
+    cp_good_cov()
+    cp_study_cov()
+    ac_fqi_cov()
+    cp_fqi_cov()
+
+# arcrobot()
 # cartpole_rs()
-#cartpole()
+# cartpole()
 # cartpole_ablation()
 # cartpole_size()
+
+final_plots_gs()

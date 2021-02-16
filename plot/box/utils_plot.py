@@ -5,26 +5,63 @@ sys.path.insert(0, cwd+'/../..')
 from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
-c_default = matplotlib.cm.get_cmap('cool')
+# c_default = matplotlib.cm.get_cmap('cool')
 # c_default = matplotlib.cm.get_cmap('hsv')
-c_dict = {
-    "calibration": "red",
-    "random": "tab:blue",
-    "fqi": "orange",
 
-    "no Adversarial": "tab:blue",
-    "no Ensemble": "orange",
+# colorblind friendly color cycle https://gist.github.com/thriveth/8560036
+c_default =  ['#377eb8', '#ff7f00', '#4daf4a',
+              '#f781bf', '#a65628', '#984ea3',
+              '#999999', '#e41a1c', '#dede00']
+c_dict = {
+    "calibration": '#377eb8',
+    "calibration (grid search)": '#377eb8',
+    "random": '#ff7f00',
+    "fqi": '#4daf4a',
+    "cem": '#f781bf',
+    "calibration (cem)": '#a65628',
+
+    "no Adversarial": '#984ea3',
+    "no Ensemble": '#999999',
 
     "10k": "red",
     "5k": "tab:blue",
     "2k": "mediumseagreen",
     "1k": "orange",
+
+    "eps 0": "tab:blue",
+    "eps 0.25": "lightgreen",
+    "eps 1": "orange",
+
+    "reward -0.02": '#377eb8',
+    "reward -0.01": '#f781bf',
+    "reward -0.004": '#4daf4a',
+    "reward -0.002": '#dede00',
+
+    "return -320": '#4daf4a',
+    "return -40": '#dede00',
+
+    "return -360": '#4daf4a',
+    "return -45": '#dede00',
+
+    "random data": '#e41a1c'
+}
+m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
+m_dict = {
+    "eps 0": ".",
+    "eps 0.25": "^",
+    "eps 1": "+",
 }
 def cmap(key, idx):
     if key in c_dict.keys():
         return c_dict[key]
     else:
-        return c_default(idx)
+        # return c_default(idx)
+        return c_default[int(idx%len(c_default))]
+def mmap(key, idx):
+    if key in m_dict.keys():
+        return m_dict[key]
+    else:
+        return m_default[idx%len(m_default)]
 
 def plot_each_run(te, cms, source, title, ylim=None, outer=None, sparse_reward=None, max_len=np.inf):
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -133,24 +170,36 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    # plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
+                     cem=None,
                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
+    # print(te_data)
 
     # fqi data
-    # all performance
-    fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
-    # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
-    fqi_data = []
-    for rk in fqi_data_all.keys():
-        for pk in fqi_data_all[rk].keys():
-            fqi_data.append(fqi_data_all[rk][pk])
+    # # all performance
+    if fqi is not None:
+        fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
+        fqi_data = []
+        for rk in fqi_data_all.keys():
+            for pk in fqi_data_all[rk].keys():
+                fqi_data.append(fqi_data_all[rk][pk])
+
+
+    if cem is not None:
+        # cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["cem"] # 30 runs in total, but different parameters
+        cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["calibration (cem)"] # 30 runs in total, but different parameters
+        # cem_rank = ranking_allruns(cem_data_all)["cem"]
+        cem_data = []
+        for rk in cem_data_all.keys():
+            for pk in cem_data_all[rk].keys():
+                cem_data.append(cem_data_all[rk][pk])
 
     # random data list
     rand_data = performance_by_param(rand_lst, te_data)
@@ -160,7 +209,15 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    if cem is not None and fqi is not None:
+        filtered = {"random": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
+    elif fqi is not None:
+        filtered = {"random": [rand_data], "fqi": [fqi_data]}
+    elif cem is not None:
+        filtered = {"random": [rand_data], "calibration (cem)": [cem_data]}
+    else:
+        filtered = {"random": [rand_data]}
+
     #filtered = {"random": [rand_data]}
     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(cms_data)
@@ -176,6 +233,46 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     # print(filtered)
     plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
     #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+# def plot_compare_top(te, cms, fqi, rand_lst, source, title,
+#                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
+#     ranges = [0]
+#     # true env data dictionary
+#     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+#     te_data = average_run(te_data["true"])
+#
+#     # fqi data
+#     # all performance
+#     fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
+#     # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
+#     fqi_data = []
+#     for rk in fqi_data_all.keys():
+#         for pk in fqi_data_all[rk].keys():
+#             fqi_data.append(fqi_data_all[rk][pk])
+#
+#     # random data list
+#     rand_data = performance_by_param(rand_lst, te_data)
+#
+#     # top true env data performance
+#     te_thrd = []
+#     for perc in ranges:
+#         te_thrd.append(percentile_avgeraged_run(te_data, perc))
+#
+#     filtered = {"random": [rand_data], "fqi": [fqi_data]}
+#     # filtered = {"random": [rand_data]}
+#     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+#     models_rank = ranking_allruns(cms_data)
+#     for model in cms_data.keys():
+#         ranks = models_rank[model]
+#         # print(model)
+#         filtered[model] = []
+#         for perc in ranges:
+#             target = percentile_worst(ranks, perc, te_data)
+#             # data = [te_data[item[1]] for item in target]
+#             data = [item[2] for item in target]
+#             filtered[model].append(data)
+#     # print(filtered)
+#     plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+#     #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 
 def performance_by_param(rand_lst, data):
@@ -200,6 +297,10 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+
+    for i in range(len(thrd)):
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
+
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
@@ -210,9 +311,6 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
-
-    for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
 
     xtcs = []
     for loc in xlocations:
@@ -265,13 +363,13 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
         positions_group = [x-(width+0.01)*idx for x in xlocations]
+        # print(perct,all_models[idx], "---")
         vp = ax.violinplot(perct, positions=positions_group, widths=width)
         set_voilin_color(vp, cmap(all_models[idx], idx/len(all_models)))
 
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
 
     for i in range(len(thrd)):
-        # print(thrd)
         ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
 
     xtcs = []
@@ -294,7 +392,7 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
 
     plt.yscale(yscale)
 
-    plt.legend()
+    plt.legend(loc=1)
     plt.tight_layout()
     # plt.show()
     plt.savefig("{}.png".format(title))
@@ -310,3 +408,87 @@ def set_voilin_color(violin_parts, color):
         vp = violin_parts[partname]
         vp.set_edgecolor(color)
         vp.set_linewidth(1)
+
+
+def list2array(lst):
+    temp = []
+    for line in lst:
+        line = line.strip("\n").strip("[").strip("]")
+        num = line.split(" ")
+        for i in range(len(num)):
+            num[i] = float(num[i])
+        temp.append(num)
+    return np.array(temp)
+
+
+def get_angle(cossin):
+    cos, sin = cossin
+    ang = []
+    for i in range(len(cos)):
+        c, s = cos[i], sin[i]
+        acos = math.acos(c)
+        asin = math.asin(s)
+        if (c >= 0 and s >= 0): # acos = asin
+            ang.append(acos)
+        elif (c<=0 and s>=0):
+            ang.append(acos)
+        elif (c >= 0 and s < 0): # asin = -acos
+            ang.append(asin)
+        elif (c<=0 and s<0):
+            ang.append(-acos)
+    return ang
+
+def plot_dataset(datasets, key, dimension, group, run, title, preprocessing=None):
+
+    all_data = {}
+    for gp in group:
+        all_data[gp] = {}
+        for case in datasets:
+            all_data[gp][case] = None
+    for case in datasets:
+        path = datasets[case]
+        temp = os.listdir(path)
+
+        for t in temp:
+            if run == t.strip(".csv"):
+                trace = t
+
+        data = list2array(pd.read_csv(os.path.join(path, trace))[key])
+        for gp in group:
+            if gp != preprocessing:
+                dims = group[gp]
+                x = data[:, dims[0]]
+                y = data[:, dims[1]]
+                all_data[gp][case] = [x, y]
+
+    if preprocessing is not None:
+        if preprocessing == "angle":
+            for case in datasets:
+                th1 = get_angle(all_data["theta1"][case])
+                th2 = get_angle(all_data["theta2"][case])
+                all_data["angle"][case] = [th1, th2]
+
+            all_data.pop("theta1")
+            all_data.pop("theta2")
+            group.pop("theta1")
+            group.pop("theta2")
+
+        else:
+            raise NotImplementedError
+
+    case_key = list(datasets.keys())
+    for gp in group:
+        plt.figure()
+        for idx in range(len(case_key)):
+            x, y = all_data[gp][case_key[idx]]
+            plt.scatter(x, y, s=5, color=cmap(case_key[idx], float(idx)/len(case_key)), marker=mmap(case_key[idx], idx) , label=case_key[idx])#, alpha=0.5)
+
+        plt.xlabel(dimension[group[gp][0]])
+        plt.ylabel(dimension[group[gp][1]])
+        plt.legend()
+        plt.savefig("{}_{}_{}.png".format(title, gp, run))
+        plt.close()
+        plt.clf()
+
+    return
+

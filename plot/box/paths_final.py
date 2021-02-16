@@ -207,6 +207,19 @@ v2_fqi = [
     "../../data/hyperparam_v2/cartpole-noisy-action/noise_1perc/offline_learning/fqi-linear/fqi-adam/step20k_env/data_eps0.1/lockat_baseline_online/"
 ]
 
+"""
+v3
+"""
+v3_RSA_trueStart_farTrans_time1000_eps01 = [
+    "../../data/hyperparam_rs_v3/cartpole-noisy-action/noise_0.1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps0.1/drop0.3/ensembleseed0/",
+]
+v3_RSA_trueStart_farTrans_time1000_eps1 = [
+    "../../data/hyperparam_rs_v3/cartpole-noisy-action/noise_0.1perc/offline_learning/knn-ens/randomInit/farTrans/k3/timeout1000/esarsa/step10k_env/data_eps1/drop0.3/ensembleseed0/",
+]
+v3_trueStart_closeTrans_time1000_eps1_noEns = [
+    "../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_eps1/drop0/ensembleseed0/",
+]
+
 AC_true_env = ["../../data/hyperparam_v2/acrobot/online_learning/esarsa/step50k/gridsearch_realenv"]
 
 AC_trueStart_farTrans_time1000 = [
@@ -218,3 +231,24 @@ AC_RSt200_trueStart_farTrans_time1000 = [
 AC_RS_trueStart_farTrans_time1000 = [
     "../../data/hyperparam_rs_v2/acrobot/offline_learning/knn-ensemble/k3_adversarial_timeout1000_subruns/esarsa/step10k/optimalfixed_eps0/",
 ]
+
+"""
+final
+"""
+AC_eps1 = ["../../data/hyperparam_v3/acrobot/offline_learning/knn-ensemble/final/k3/esarsa/step5k/optimalfixed_eps100/"]
+AC_eps0 = ["../../data/hyperparam_v3/acrobot/offline_learning/knn-ensemble/final/k3/esarsa/step5k/optimalfixed_eps0/"]
+AC_eps025 = ["../../data/hyperparam_v3/acrobot/offline_learning/knn-ensemble/final/k3/esarsa/step5k/optimalfixed_eps25/"]
+AC_fqi_eps1 = ["../../data/hyperparam_v3/acrobot/offline_learning/fqi-linear/fqi-adam/step5k_env/data_eps1/lockat_baseline_online/"]
+AC_fqi_eps0 = ["../../data/hyperparam_v3/acrobot/offline_learning/fqi-linear/fqi-adam/step5k_env/data_eps0/lockat_baseline_online/"]
+AC_fqi_eps025 = ["../../data/hyperparam_v3/acrobot/offline_learning/fqi-linear/fqi-adam/step5k_env/data_eps0.25/lockat_baseline_online/"]
+AC_true = ["../../data/hyperparam_v3/acrobot/online_learning/esarsa/step50k/gridsearch_realenv/"]
+AC_cem = ["../../data/hyperparam_v3/acrobot/online_learning/cem/esarsa/step50k/acrobot_list_online/"]
+
+CP_eps1 = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step5k_env/data_eps1/drop0/ensembleseed0"]
+CP_eps0 = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step5k_env/data_eps0/drop0/ensembleseed0"]
+CP_eps025 = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step5k_env/data_eps0.25/drop0/ensembleseed0"]
+CP_fqi_eps1 = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/fqi-linear/fqi-adam/step5k_env/data_eps1/lockat_baseline_online"]
+CP_fqi_eps0 = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/fqi-linear/fqi-adam/step5k_env/data_eps0/lockat_baseline_online"]
+CP_fqi_eps025 = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/offline_learning/fqi-linear/fqi-adam/step5k_env/data_eps0.25/lockat_baseline_online"]
+CP_true = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/online_learning/esarsa-adam/step50k/sweep/"]
+CP_cem = ["../../data/hyperparam_v3/cartpole-noisy-action/noise_1perc/online_learning/cem/esarsa/step50k/cartpole_list_online/"]

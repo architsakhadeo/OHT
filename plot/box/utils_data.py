@@ -68,6 +68,7 @@ def percentile_worst(ranked, perc, metric):
         np.random.seed(int(rk.split("n")[1]))
         chosen = np.random.randint(0, len(break_tie))
         filtered[-1] = break_tie[chosen] # break tie
+        # filtered += break_tie
 
     worst_per_run = []
     for rk in ranked.keys():
@@ -145,7 +146,6 @@ return
           }
 """
 def load_total(paths, source, outer=None):
-    col_name = "total reward" if source=="reward" else " total episodes"
     data = {}
     for path in paths: # each ensemble seed
         params = os.listdir(path)
@@ -165,6 +165,8 @@ def load_total(paths, source, outer=None):
                     return load_sparseRewards(paths, reward=-1, max_len=1000, outer=outer)
                 elif source == "episode":
                     return load_epSteps(paths, outer)
+                elif source == "return":
+                    return load_epReturn(paths, outer)
 
             all_runs = {}
             for run in runs:
@@ -175,11 +177,26 @@ def load_total(paths, source, outer=None):
                 # print(run_num, log, outer)
 
                 # print(param, run, "\n",pd.read_csv(os.path.join(pp, run)).columns)
-                res = pd.read_csv(os.path.join(pp, run))[col_name][0]
+                t_rwd = pd.read_csv(os.path.join(pp, run))["total reward"][0]
+                num_ep = pd.read_csv(os.path.join(pp, run))[" total episodes"][0]
+
+                #TODO: need to refactor this
+                if source=="episode":
+                    # print("Change new data to be same as old one")
+                    res = num_ep
+                    res *= -1
+                    res = 50000 / res
+                elif source=="reward":
+                    # print("Change new data to be same as old one")
+                    res = t_rwd
+                    res = res/50000
+                elif source=="return":
+                    res = t_rwd / num_ep
+                else:
+                    raise NotImplementedError
 
                 rk = "run{}".format(log)
                 if rk not in all_runs.keys():
-                    # all_runs[rk] = [np.mean(np.array(r_per_step))] # {run number: auc / total step}
                     all_runs[rk] = [res] # {run number: auc / total step}
                 else:
                     all_runs[rk].append(res)
@@ -331,6 +348,43 @@ def load_epSteps(paths, outer=None):
                 data[rk][p_key].append(all_runs[rk])
     return data
 
+def load_epReturn(paths, outer=None):
+    data = {}
+    for path in paths: # each ensemble seed
+        params = os.listdir(path)
+        for param in params: # each param
+            pp = os.path.join(path, param)
+            p_key = param#int(param.split("_")[1])
+
+            temp = os.listdir(pp)
+            runs = []
+            for t in temp:
+                if "returns-" in t:
+                    runs.append(t)
+
+            all_runs = {}
+            for run in runs:
+                run_num = int(run.split("-")[1].split(".")[0])
+                # same log file: same run number % outer
+                # each inner seed: run number // outer
+                log = run_num % int(outer) if outer is not None else run_num
+
+                return_ep = np.array(pd.read_csv(os.path.join(pp, run))['returns'])
+
+                rk = "run{}".format(log)
+                if rk not in all_runs.keys():
+                    all_runs[rk] = [np.mean(return_ep)]
+                else:
+                    all_runs[rk].append(np.mean(return_ep))
+
+            for rk in all_runs.keys():
+                if rk not in data.keys():
+                    data[rk] = {p_key: []}
+                if p_key not in data[rk].keys():
+                    data[rk][p_key] = []
+                data[rk][p_key].append(all_runs[rk])
+    return data
+
 """
 input:
     path: ensemble_paths of models
@@ -393,11 +447,16 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
         elif source == "episode":
             # Acrobot code (please do not delete)
             data = load_epSteps(paths, outer=outer)
+        elif source == "return":
+            data = load_epReturn(paths, outer=outer)
+
         # New data files
         elif source == "total-reward":
             data = load_total(paths, "reward", outer=outer)
         elif source == "total-episode":
             data = load_total(paths, "episode", outer=outer)
+        elif source == "total-return":
+            data = load_total(paths, "return", outer=outer)
         else:
             raise NotImplementedError
 
