@@ -347,7 +347,7 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 }
 
 // Start returns an initial observation.
-func (env *KnnModelEnv) Start(randomizeStartStateCondition bool) rlglue.State {
+func (env *KnnModelEnv) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	//env.Count = 0
 	env.state = env.PickStartFunc()
 	//env.state = env.randomizeInitState()
@@ -357,10 +357,10 @@ func (env *KnnModelEnv) Start(randomizeStartStateCondition bool) rlglue.State {
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
 	//fmt.Println("Start", env.state)
-	return state_copy
+	return state_copy, ""
 }
 
-func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
+func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	//fmt.Println("---------------------")
 	actInt, _ := tpo.GetInt(act)
 
@@ -368,7 +368,8 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 
 	if env.offlineModel.TreeSize(actInt) == 0 {
 		log.Printf("Warning: There is no data for action %d, terminating the episode\n", act)
-		return env.Start(randomizeStartStateCondition), env.rewardBound[0], true
+		startReturn, _ := env.Start(randomizeStartStateCondition)
+		return startReturn, env.rewardBound[0], true, ""
 	}
 
 	states, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
@@ -424,10 +425,8 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 			//fmt.Println(reward, scale, minD, env.maxSDist)
 		}
 	}
-	//if done {
-	//	fmt.Println(state_copy)
-	//}
-	return state_copy, reward, done
+
+	return state_copy, reward, done, ""
 }
 
 //GetAttributes returns attributes for this environment.

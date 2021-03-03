@@ -132,19 +132,19 @@ func (wrapper *SensorDriftWrapper) Initialize(run uint, attr rlglue.Attributes) 
 }
 
 // Start returns an initial observation.
-func (wrapper *SensorDriftWrapper) Start(randomizeStartStateCondition bool) rlglue.State {
+func (wrapper *SensorDriftWrapper) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	return wrapper.Env.Start(randomizeStartStateCondition)
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (wrapper *SensorDriftWrapper) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
-	state, reward, done := wrapper.Env.Step(act, randomizeStartStateCondition)
+func (wrapper *SensorDriftWrapper) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
+	state, reward, done, _ := wrapper.Env.Step(act, randomizeStartStateCondition)
 	wrapper.sensorSteps++
 	for i := 0; i < wrapper.WrappedEnvAttrs.StateDim; i++ {
 		state[i] = wrapper.stateProcessFns[i](state[i], i)
 	}
-	return state, reward, done
+	return state, reward, done, ""
 }
 
 // GetAttributes returns attributes for this environment.

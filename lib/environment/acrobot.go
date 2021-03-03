@@ -169,14 +169,14 @@ func (env *Acrobot) randFloat(min, max float64) float64 {
 }
 
 // Start returns an initial observation.
-func (env *Acrobot) Start(randomizeStartStateCondition bool) rlglue.State {
+func (env *Acrobot) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	env.randomizeState(randomizeStartStateCondition)
-	return env.getObservations()
+	return env.getObservations(), ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Acrobot) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
+func (env *Acrobot) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	s := make(rlglue.State, len(env.state))
 
 	copy(s, env.state)
@@ -203,7 +203,7 @@ func (env *Acrobot) Step(act rlglue.Action, randomizeStartStateCondition bool) (
 	//}
 	reward = -1.0 //always -1
 
-	return env.getObservations(), reward, done
+	return env.getObservations(), reward, done, ""
 }
 
 func (env *Acrobot) getObservations() rlglue.State {

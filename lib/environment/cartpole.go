@@ -164,15 +164,28 @@ func (env *Cartpole) randFloat(min, max float64) float64 {
 	return env.rng.Float64()*(max-min) + min
 }
 
+func (env *Cartpole) failureType() string {
+	var info string
+	x, theta := env.state[0], env.state[2]
+	if ((x < -xThreshold) || (x > xThreshold)) {
+		info = "pos"
+	} else if ((theta < -thetaRhresholdRadians) || (theta > thetaRhresholdRadians)) {
+		info = "ang"
+	} else {
+		info = ""
+	}
+	return info
+}
+
 // Start returns an initial observation.
-func (env *Cartpole) Start(randomizeStartStateCondition bool) rlglue.State {
+func (env *Cartpole) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	env.randomizeState(randomizeStartStateCondition)
-	return env.getObservations()
+	return env.getObservations(), env.failureType()
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
+func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	x, xDot, theta, thetaDot := env.state[0], env.state[1], env.state[2], env.state[3]
 
 	force := forceMag
@@ -205,6 +218,8 @@ func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) 
 	env.state = rlglue.State{x, xDot, theta, thetaDot}
 
 	done := (x < -xThreshold) || (x > xThreshold) || (theta < -thetaRhresholdRadians) || (theta > thetaRhresholdRadians)
+	var info string
+	info = env.failureType()
 
 	var reward float64
 	if env.CartpoleSettings.PositionRwd {
@@ -225,7 +240,7 @@ func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) 
 		//fmt.Println("HERE", theta, reward)
 	}
 
-	return env.getObservations(), reward, done
+	return env.getObservations(), reward, done, info
 }
 
 func (env *Cartpole) getObservations() rlglue.State {
