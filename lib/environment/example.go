@@ -62,24 +62,24 @@ func (env *Example) Initialize(run uint, attr rlglue.Attributes) error {
 }
 
 // Start returns an initial observation.
-func (env *Example) Start(randomizeStartStateCondition bool) rlglue.State {
-	return env.stateSlice()
+func (env *Example) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
+	return env.stateSlice(), ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Example) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
+func (env *Example) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	//action := int(act)
 	action, _ := tpo.GetInt(act)
 	if action < -ExampleActionMax || action > ExampleActionMax {
-		return rlglue.State{}, 0, true //, error.New("example.Example action must be between -10 and 10")
+		return rlglue.State{}, 0, true, "" //, error.New("example.Example action must be between -10 and 10")
 	}
 	env.state += action - 10
 	if env.state >= ExampleStateMax || env.state <= -ExampleStateMax {
 		env.state = 0
 	}
 
-	return env.stateSlice(), float64(env.state), false
+	return env.stateSlice(), float64(env.state), false, ""
 }
 
 // GetAttributes returns attributes for this environment.

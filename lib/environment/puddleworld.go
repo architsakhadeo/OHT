@@ -181,14 +181,14 @@ func (env *Puddleworld) randFloat(min, max float64) float64 {
 // }
 
 // Start returns an initial observation.
-func (env *Puddleworld) Start(randomizeStartStateCondition bool) rlglue.State {
+func (env *Puddleworld) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	env.randomizeState(randomizeStartStateCondition)
-	return env.getObservations()
+	return env.getObservations(), ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Puddleworld) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
+func (env *Puddleworld) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	for i := range env.state {
 		env.state[i] += env.actions[act.(int)][i] + env.rng.NormFloat64()*0.01
 		env.state[i] = env.clamp(env.state[i], 0.0, 1.0)
@@ -198,7 +198,7 @@ func (env *Puddleworld) Step(act rlglue.Action, randomizeStartStateCondition boo
 	reward := env.getRewards()
 	done := floats.Distance(env.state, goalState, 1) < goalThreshold
 
-	return obs, reward, done
+	return obs, reward, done, ""
 }
 
 func (env *Puddleworld) getObservations() rlglue.State {

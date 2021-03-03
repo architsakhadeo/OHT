@@ -58,14 +58,14 @@ func (env *Replay) Initialize(run uint, attr rlglue.Attributes) error {
 }
 
 // Start returns an initial observation.
-func (env *Replay) Start(randomizeStartStateCondition bool) rlglue.State {
+func (env *Replay) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	st, _, _ := env.getStep()
-	return st
+	return st, ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
 // For this continuous environment, it's only terminal if the action was invalid.
-func (env *Replay) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
+func (env *Replay) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	if env.LogActionDiff && act != env.previousAction {
 		env.Message("warning", "offline agent got mismatched actions", "expected action", env.previousAction, "received action", act)
 	}
@@ -73,7 +73,7 @@ func (env *Replay) Step(act rlglue.Action, randomizeStartStateCondition bool) (r
 	if stateMismatch {
 		env.Message("msg", "Abrupt state transition, likely due to end of episode")
 	}
-	return st, rew, false
+	return st, rew, false, ""
 }
 
 func (env *Replay) getStep() (rlglue.State, float64, bool) {

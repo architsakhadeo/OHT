@@ -47,13 +47,13 @@ func (env *Futile) Initialize(run uint, attr rlglue.Attributes) error {
 }
 
 // Start returns an initial observation.
-func (env *Futile) Start(randomizeStartStateCondition bool) rlglue.State {
-	return env.state
+func (env *Futile) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
+	return env.state, ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
-func (env *Futile) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool) {
-	return env.state, 0, false
+func (env *Futile) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
+	return env.state, 0, false, ""
 }
 
 // GetAttributes returns attributes for this environment.
