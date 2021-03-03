@@ -145,7 +145,7 @@ func (lg *DataLogger) NumberOfEpisodes() int {
 
 func (lg *DataLogger) writeTraceHeader(headers ...string) error {
 	// Write header row
-	str := "new state,previous state,action,reward,terminal"
+	str := "new state,previous state,action,reward,terminal,info"
 	for _, hdr := range headers {
 		str += "," + hdr
 	}
