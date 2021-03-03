@@ -672,15 +672,28 @@ func (agent *ESarsa) GetLock() bool {
 }
 
 func (agent *ESarsa) findArgmax(array []float64) int {
+	//max := array[0]
+	//argmax := 0
+	//for i, value := range array {
+	//	if value > max {
+	//		max = value
+	//		argmax = i
+	//	}
+	//}
 	max := array[0]
-	argmax := 0
-	for i, value := range array {
+	for _, value := range array {
 		if value > max {
 			max = value
-			argmax = i
 		}
 	}
-	return argmax
+	var argmax []int
+	for i, value := range array {
+		if value == max {
+			argmax = append(argmax, i)
+		}
+	}
+	idx := agent.rng.Int() % len(argmax)
+	return argmax[idx]
 }
 
 func (agent *ESarsa) Count(array []float64, number float64) int {
