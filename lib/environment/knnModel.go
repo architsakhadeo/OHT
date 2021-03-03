@@ -42,6 +42,7 @@ type knnSettings struct {
 	PickNext    string  `json:"pick-next"`
 	NoisyS      float64 `json:"state-noise"`
 	ShapeReward bool    `json:"shape-reward"`
+	ExtraRisk   float64 `json:"extra-risk"`
 }
 
 type KnnModelEnv struct {
@@ -148,6 +149,15 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	offlineStartsData := env.LoadData(trueStartLog)
 	env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(offlineStartsData)
 
+	if env.knnSettings.ExtraRisk > 0 {
+		numIdx := int(float64(len(env.offlineData)) * env.knnSettings.ExtraRisk)
+		for i:=0; i<numIdx; i++ {
+			rndIdx := env.rng.Int() % len(env.offlineData)
+			env.offlineData[rndIdx][env.stateDim*2+1] = env.rewardBound[0]
+			env.offlineData[rndIdx][env.stateDim*2+2] = 1
+		}
+	}
+
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(env.offlineData, "current")
 
@@ -163,6 +173,8 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	if env.knnSettings.PickNext == "furthest" {
 		env.PickNextFunc = env.FurtherNext
+	} else if env.knnSettings.PickNext == "pessimistic" {
+		env.PickNextFunc = env.LowRwdNext
 	} else { // default setting
 		env.PickNextFunc = env.CloserNeighbor
 	}
@@ -412,6 +424,9 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 			//fmt.Println(reward, scale, minD, env.maxSDist)
 		}
 	}
+	//if done {
+	//	fmt.Println(state_copy)
+	//}
 	return state_copy, reward, done
 }
 
@@ -528,5 +543,46 @@ func (env *KnnModelEnv) FurtherNext(currentS []float64, states, nextStates [][]f
 	reward := rewards[chosen]
 	terminal := terminals[chosen]
 	distance := distances[chosen]
+	return state, nextState, reward, terminal, distance
+}
+
+func (env *KnnModelEnv) LowRwdNext (currentS []float64, states, nextStates [][]float64, rewards, terminals, distances []float64) ([]float64, []float64, float64, float64, float64) {
+
+	rwds := make([]float64, len(rewards))
+	minRwd, _ := ao.ArrayMin(rewards)
+	for i := 0; i < len(rewards); i++ {
+		rwds[i] = rewards[i] + minRwd
+	}
+
+	sum := 0.0
+	for i := 0; i < len(rwds); i++ {
+		sum += rwds[i] + math.Pow(10, -6)
+	}
+	pdf := make([]float64, len(rwds))
+	for i := 0; i < len(rwds); i++ {
+		pdf[i] = 1.0 - ((rwds[i] + math.Pow(10, -6)) / sum)
+	}
+	normalizedPdf := make([]float64, len(rwds))
+	normalizedSum := 0.0
+	for i := 0; i < len(rwds); i++ {
+		normalizedSum += pdf[i]
+	}
+	for i := 0; i < len(rwds); i++ {
+		normalizedPdf[i] = (pdf[i] / normalizedSum)
+	}
+	neighbor_prob := make([]float64, len(rwds))
+	temp1 := 0.0
+	for i := 0; i < len(rwds); i++ {
+		neighbor_prob[i] = temp1 + normalizedPdf[i]
+		temp1 = neighbor_prob[i]
+	}
+	chosen := random.FreqSample(neighbor_prob)
+
+	state := states[chosen]
+	nextState := nextStates[chosen]
+	reward := rewards[chosen]
+	terminal := terminals[chosen]
+	distance := distances[chosen]
+	//fmt.Println("===", rewards, reward)
 	return state, nextState, reward, terminal, distance
 }
