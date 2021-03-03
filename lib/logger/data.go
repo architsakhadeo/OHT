@@ -166,9 +166,12 @@ func (lg *DataLogger) RewardSince(step int) float64 {
 	return sum
 }
 
+func (lg *DataLogger) LogEpisodeNumber() {
+	lg.totalEpisodes++
+}
+
 // LogEpisodeLength adds the provided episode length to the episode length log.
 func (lg *DataLogger) LogEpisodeLength(steps int) {
-	lg.totalEpisodes++
 	if !lg.ShouldLogEpisodeLengths {
 		return
 	}
@@ -177,7 +180,6 @@ func (lg *DataLogger) LogEpisodeLength(steps int) {
 
 // LogEpisodeLength adds the provided episode length to the episode length log.
 func (lg *DataLogger) LogEpisodeReturn(return_ float64) {
-	lg.totalEpisodes++
 	if !lg.ShouldLogReturns {
 		return
 	}

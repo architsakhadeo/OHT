@@ -238,6 +238,7 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 }
 
 func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
+	exp.LogEpisodeNumber()
 	exp.LogEpisodeLength(numStepsThisEpisode)
 	reward := exp.RewardSince(exp.numStepsTaken - numStepsThisEpisode)
 	exp.LogEpisodeReturn(reward)

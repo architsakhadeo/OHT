@@ -10,6 +10,8 @@ type Data interface {
 	// LogEpisodeLength adds the provided episode return to the returns log.
 	LogEpisodeReturn(float64)
 
+	LogEpisodeNumber()
+
 	// LogStep adds information from a step to the step log. It must contain previous state, current state,
 	// and reward.
 	LogStep(prevState, newState rlglue.State, action rlglue.Action, reward float64, terminal bool)
