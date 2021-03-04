@@ -31,6 +31,7 @@ c_dict = {
     "eps 0": "tab:blue",
     "eps 0.25": "lightgreen",
     "eps 1": "orange",
+    "training": "grey",
 
     "reward -0.02": '#377eb8',
     "reward -0.01": '#f781bf',
@@ -51,12 +52,13 @@ m_dict = {
     "eps 0.25": "^",
     "eps 1": "+",
 }
+
 def cmap(key, idx):
     if key in c_dict.keys():
         return c_dict[key]
     else:
         # return c_default(idx)
-        return c_default[int(idx%len(c_default))]
+        return c_default[int(len(c_default)*idx)]#[int(idx%len(c_default))]
 def mmap(key, idx):
     if key in m_dict.keys():
         return m_dict[key]
@@ -438,7 +440,7 @@ def get_angle(cossin):
             ang.append(-acos)
     return ang
 
-def plot_dataset(datasets, key, dimension, group, run, title, preprocessing=None):
+def plot_dataset(datasets, key, dimension, group, run, title, preprocessing=None, setlim=None):
 
     all_data = {}
     for gp in group:
@@ -448,12 +450,14 @@ def plot_dataset(datasets, key, dimension, group, run, title, preprocessing=None
     for case in datasets:
         path = datasets[case]
         temp = os.listdir(path)
-
         for t in temp:
+            # print(temp, run, t.strip(".csv"))
             if run == t.strip(".csv"):
                 trace = t
 
-        data = list2array(pd.read_csv(os.path.join(path, trace))[key])
+        data = list2array(pd.read_csv(os.path.join(path, trace), dtype={'info': str})[key])
+        if setlim is not None:
+            data = data[setlim[0]: setlim[1]]
         for gp in group:
             if gp != preprocessing:
                 dims = group[gp]
@@ -492,3 +496,85 @@ def plot_dataset(datasets, key, dimension, group, run, title, preprocessing=None
 
     return
 
+def plot_termination(datasets, types, run, title):
+    plt.figure()
+    y_count = 0
+
+    all_data = {}
+    for cidx, case in enumerate(list(datasets.keys())):
+        path = datasets[case]
+        temp = os.listdir(path)
+        for t in temp:
+            if run == t.strip(".csv"):
+                trace = t
+        termin_type = pd.read_csv(os.path.join(path, trace), dtype={'info': str})["info"]
+
+        all_data[case] = {}
+        for tidx, tp in enumerate(types):
+            all_data[case][tp] = [] # step of termination
+            for idx in range(len(termin_type)):
+                if termin_type[idx] == tp:
+                    all_data[case][tp].append(idx)
+            plt.scatter(all_data[case][tp], [y_count] * len(all_data[case][tp]),
+                        color=cmap(case, float(cidx)/len(list(datasets.keys()))), marker=mmap(tp, tidx),
+                        label="{}-{}".format(case, tp))
+            y_count += 0.5
+        y_count += 0.5
+
+    plt.xlim(0, 5000)
+    plt.xlabel("timestep")
+    plt.legend()
+    plt.savefig("{}_{}.png".format(title, run))
+    # plt.show()
+    plt.close()
+    plt.clf()
+    return
+
+def plot_termination_perc(datasets, types, run, title):
+    plt.figure()
+
+    all_data = {}
+    for cidx, case in enumerate(list(datasets.keys())):
+        path = datasets[case]
+        temp = os.listdir(path)
+        for t in temp:
+            if run == t.strip(".csv"):
+                trace = t
+        termin_type = pd.read_csv(os.path.join(path, trace), dtype={'info': str})["info"]
+
+        all_data[case] = {}
+
+        t_count = {}
+        for tp in types:
+            t_count[tp] = 0
+
+        total_term = 0
+
+        t_perc = {}
+        for tp in types:
+            t_perc[tp] = []
+
+        xs = []
+
+        for idx in range(len(termin_type)):
+            if termin_type[idx] in types:
+                t_count[termin_type[idx]] += 1
+                total_term += 1
+
+                xs.append(idx)
+                for tp in types:
+                    t_perc[tp].append(t_count[tp] / float(total_term))
+
+        for tidx, tp in enumerate(types):
+            plt.plot(xs, t_perc[tp],
+                     color=cmap(case, float(cidx)/len(list(datasets.keys()))), marker=mmap(tp, tidx),
+                     label="{}-{}".format(case, tp))
+
+    plt.xlim(0, 5000)
+    plt.xlabel("timestep")
+    plt.legend()
+    plt.savefig("{}_{}.png".format(title, run))
+    # plt.show()
+    plt.close()
+    plt.clf()
+    return

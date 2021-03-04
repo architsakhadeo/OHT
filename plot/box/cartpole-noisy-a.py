@@ -90,7 +90,7 @@ def performance_dataset():
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
-    # sweep_model()
+    sweep_model()
     # compare_random()
     # data_density()
-    performance_dataset()
+    # performance_dataset()
