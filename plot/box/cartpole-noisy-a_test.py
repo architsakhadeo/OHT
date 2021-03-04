@@ -8,7 +8,11 @@ from plot.box.paths_cartpoleNoisyA_test import *
 def sweep_model():
     k10_far_cms = {
         "normal": cpn01_k10_far_reward002,
+        "0.01 terminal": cpn01_k10_far_reward002_risk001,
+        "0.1 terminal": cpn01_k10_far_reward002_risk01,
         "chosen data": cpn01_k10_far_reward002_withT,
+        "0.01 terminal chosen data": cpn01_k10_far_reward002_withT_risk001,
+        "0.1 terminal chosen data": cpn01_k10_far_reward002_withT_risk01,
     }
     te = {"true": cpn01_true}
     plot_generation(te, k10_far_cms, ranges, "total-reward", "../img/test_10k_k10_far_model", outer=10, sparse_reward=-1, max_len=1000)
@@ -41,8 +45,8 @@ def termination_type():
     types = ["pos", "ang"]
     for i in range(1):
         run = "traces-{}".format(i)
-        plot_termination(datasets, types, run, "../img/data_termination_scatter")
-        # plot_termination_perc(datasets, types, run, "../img/data_termination")
+        # plot_termination(datasets, types, run, "../img/data_termination_scatter")
+        plot_termination_perc(datasets, types, run, "../img/data_termination")
 
 
 if __name__ == '__main__':

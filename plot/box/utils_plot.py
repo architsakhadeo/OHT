@@ -172,8 +172,8 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-    # plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    # plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
@@ -521,7 +521,7 @@ def plot_termination(datasets, types, run, title):
             y_count += 0.5
         y_count += 0.5
 
-    plt.xlim(0, 5000)
+    # plt.xlim(0, 5000)
     plt.xlabel("timestep")
     plt.legend()
     plt.savefig("{}_{}.png".format(title, run))
@@ -531,7 +531,7 @@ def plot_termination(datasets, types, run, title):
     return
 
 def plot_termination_perc(datasets, types, run, title):
-    plt.figure()
+    # plt.figure()
 
     all_data = {}
     for cidx, case in enumerate(list(datasets.keys())):
@@ -565,16 +565,17 @@ def plot_termination_perc(datasets, types, run, title):
                 for tp in types:
                     t_perc[tp].append(t_count[tp] / float(total_term))
 
+        plt.figure()
         for tidx, tp in enumerate(types):
             plt.plot(xs, t_perc[tp],
-                     color=cmap(case, float(cidx)/len(list(datasets.keys()))), marker=mmap(tp, tidx),
+                     # color=cmap(case, float(cidx)/len(list(datasets.keys()))), marker=mmap(tp, tidx),
+                     color=cmap(tp, float(tidx)/len(types)), marker=mmap(tp, tidx),
                      label="{}-{}".format(case, tp))
-
-    plt.xlim(0, 5000)
-    plt.xlabel("timestep")
-    plt.legend()
-    plt.savefig("{}_{}.png".format(title, run))
-    # plt.show()
-    plt.close()
-    plt.clf()
+        # plt.xlim(0, 5000)
+        plt.xlabel("timestep")
+        plt.legend()
+        plt.savefig("{}_{}_{}.png".format(title, case, run))
+        # plt.show()
+        plt.close()
+        plt.clf()
     return
