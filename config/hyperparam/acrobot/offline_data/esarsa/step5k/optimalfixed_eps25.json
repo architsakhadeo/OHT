@@ -10,7 +10,7 @@
     "decreasing-epsilon": "None",
     "sweep": {
       "epsilon": [0.0],
-      "epsilon-after-lock": [0.0],
+      "epsilon-after-lock": [0.25],
       "tilings": [16],
       "tiles": [8],
       "lambda": [0.9339087212036908],
@@ -39,7 +39,7 @@
     "episodes": 10000000,
     "total-step-after-lock": 5000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam/acrobot/offline_data/esarsa/step5k/optimalfixed_eps0",
+    "data-path": "data/hyperparam/acrobot/offline_data/esarsa/step5k/optimalfixed_eps25",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,

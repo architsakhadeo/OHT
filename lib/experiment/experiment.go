@@ -139,6 +139,8 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 	var reward float64
 	var episodeEnded bool
 
+	info = ""
+
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 		info = ""
@@ -250,7 +252,6 @@ func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	}
 }
-
 
 func (exp *Experiment) saveAgentWeights() {
 	err := exp.agent.SaveWeights(exp.GetBasePath())

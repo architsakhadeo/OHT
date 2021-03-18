@@ -118,6 +118,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		return err
 	}
 	env.knnSettings.Seed += int64(run / env.knnSettings.TotalLogs)
+	// For CEM, use env.knnSettings.Seed += int64(run)
 
 	env.rng = rand.New(rand.NewSource(env.knnSettings.Seed)) // Create a new rand source for reproducibility
 	//env.Count = 0
@@ -142,7 +143,6 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	paramLog := folder + "/log_json.txt"
 	env.SettingFromLog(paramLog)
 	env.state = make(rlglue.State, env.stateDim)
-
 
 	//env.offlineData = allTrans
 	env.offlineData = env.LoadData(traceLog)

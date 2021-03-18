@@ -8,7 +8,6 @@
 		"epsilon": 0,
 		"lambda": 0.9,
 		"weight-init": 0.0,
-		"numberOfActions": 0,
 		"epsilon-after-lock": 0
 	},
 	"CemOptions": [

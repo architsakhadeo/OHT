@@ -45,8 +45,10 @@ def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Reward
 	transformedData = []
 
 	for run in range(len(failureTimesteps)):
-		# if run % 10 == 0:
-		# 	print(run, alg)
+		#if run % 10 == 0:
+		#if run == 2:
+		#	break
+		print(run, alg)
 
 		# Calculate rewards from failure timesteps
 		indexing = (failureTimesteps[run] - 1).to_numpy().flatten()
@@ -77,7 +79,8 @@ def transform_data(alg, failureTimesteps, totalTimesteps, transformation='Reward
 			elif type == 'exponential-averaging':
 				AverageRewardsList = [rewardsList[0]]
 				o_n_minus_1 = 0
-				for i in range(1, len(rewardsList)):
+				#for i in range(1, len(rewardsList)):
+				for i in range(1, 10000000):
 					o_n = o_n_minus_1  + alpha*(1 - o_n_minus_1)
 					beta_n = alpha / (o_n)
 					AverageRewardsList.append(AverageRewardsList[-1] + beta_n * (rewardsList[i] - AverageRewardsList[-1]))

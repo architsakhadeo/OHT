@@ -28,8 +28,8 @@ from loadFromEpisodeLengths import transform_data
 #dataPath = ['esarsa1/adaptive-alpha=3e-06_adaptive-stepsize=1_alpha=0.1_delays=0_enable-debug=0_epsilon=0.1_gamma=0.9_is-stepsize-adaptive=1_lambda=0.7_tiles=8_tilings=32/', 'dqn1/alpha=1e-05_buffer-size=2500_buffer-type=random_decreasing-epsilon=None_delays=0_dqn-adamBeta1=0.9_dqn-adamBeta2=0.999_dqn-adamEps=1e-08_dqn-batch=64_dqn-hidden=64,64_dqn-sync=32_e/', 'dqn2/alpha=3e-05_buffer-size=2500_buffer-type=random_decreasing-epsilon=None_delays=0_dqn-adamBeta1=0.9_dqn-adamBeta2=0.999_dqn-adamEps=1e-08_dqn-batch=64_dqn-hidden=64,64_dqn-sync=32_enable-debug=']
 #dataPath = ['esarsa1/adaptive-alpha=3e-06_adaptive-stepsize=1_alpha=0.1_delays=0_enable-debug=0_epsilon=0.1_gamma=0.9_is-stepsize-adaptive=1_lambda=0.7_tiles=8_tilings=32/', 'dqn3/alpha=3e-05_buffer-size=2500_buffer-type=random_decreasing-epsilon=None_delays=0_dqn-adamBeta1=0.9_dqn-adamBeta2=0.999_dqn-adamEps=1e-08_dqn-batch=64_dqn-hidden=64,64_dqn-sync=32/']
 
-labels = ['esarsa-3e-6', 'dqn-1e-5']
-dataPath = ['esarsa1/adaptive-alpha=3e-06_adaptive-stepsize=1_alpha=0.1_delays=0_enable-debug=0_epsilon=0.1_gamma=0.9_is-stepsize-adaptive=1_lambda=0.7_tiles=8_tilings=32/', 'dqn4/alpha=1e-05_buffer-size=2500_buffer-type=random_decreasing-epsilon=None_delays=0_dqn-adamBeta1=0.9_dqn-adamBeta2=0.999_dqn-adamEps=1e-08_dqn-batch=64_dqn-hidden=64,64_dqn-sync=32_enable-debug=0_']
+labels = ['best-longrun']
+dataPath = ['longrun/online_learning_long_CEMbest/param_0/']
 #labels = ['esarsa-3e-6']
 #dataPath = ['esarsa1/adaptive-alpha=3e-06_adaptive-stepsize=1_alpha=0.1_delays=0_enable-debug=0_epsilon=0.1_gamma=0.9_is-stepsize-adaptive=1_lambda=0.7_tiles=8_tilings=32/']
 
@@ -138,6 +138,7 @@ for i in range(len(dataPath)):
     for alg, data in convertedData.items():
         plottingData[alg] = transform_data(alg, data, totalTimesteps, transformation, window, type=averaging_type, alpha=alpha)
 
+    print(plottingData[alg])
     print('Data will be plotted for', ', '.join([k for k in plottingData.keys()]))
     print('The stored failure timesteps are transformed to: ', transformation)
 
@@ -151,15 +152,15 @@ for i in range(len(dataPath)):
 
     def plotMedian(xAxis, data, color, label):
         median = getMedian(data)
-        plt.plot(xAxis, median, label=alg+'-median'+label, color=color)
+        plt.plot(xAxis, median, label=label, color=color)
 
     def plotBest(xAxis, data, transformation, color, label):
         best = getBest(data, transformation)
-        plt.plot(xAxis, best, label=alg+'-best'+label, color=color)
+        plt.plot(xAxis, best, label=label, color=color)
 
     def plotWorst(xAxis, data, transformation, color, label):
         worst = getWorst(data,  transformation)
-        plt.plot(xAxis, worst, label=alg+'-worst'+label, color=color)
+        plt.plot(xAxis, worst, label=label, color=color)
 
     def plotMeanAndConfidenceInterval(xAxis, data, confidence, color, label):
         plotMean(xAxis, data, color, label)
@@ -237,7 +238,7 @@ for i in range(len(dataPath)):
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     for alg, data in plottingData.items():
-        lenRun = len(data[0][:1000000])
+        lenRun = len(data[0][:10000000])
         #lenRun = len(data[0])
         xAxis = np.array([i for i in range(1,lenRun+1)])
         
@@ -267,25 +268,31 @@ for i in range(len(dataPath)):
             tempxAxis = xAxis[j:j+temp]
             tempdata = data[:,j:j+temp]
 
-            if j + plotwindow >= len(xAxis):
+            if j  < 1000000:
                 #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=labels[i])
                 #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=labels[i])
                 #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=0.10, transformation=transformation, color=colors[i], label=labels[i]+'-lower', type='pertimestep')
-                plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.9, upper=1.00, transformation=transformation, color=colors[i], label=labels[i]+'-upper', type='pertimestep')
-                #plotBest(tempxAxis, tempdata, transformation=transformation, color=colors[i], label=labels[i])
+                #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=1.00, transformation=transformation, color=colors[i], label=labels[i], type='pertimestep')
+                plotMean(tempxAxis, tempdata, color=colors[i], label="Mean")
+                plotBest(tempxAxis, tempdata, transformation=transformation, color=colors[i+1], label="Best")
+                plotWorst(tempxAxis, tempdata, transformation=transformation, color=colors[i+2], label="Worst")
+                plotMedian(tempxAxis, tempdata, color=colors[i+3], label="Median")
             else:
                 #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=None)
                 #plotMeanAndConfidenceInterval(tempxAxis, tempdata, confidence=0.95, color=colors[i], label=None)
                 #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=0.10, transformation=transformation, color=colors[i], label=labels[i] +'-lower', type='pertimestep')
-                plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.9, upper=1.00, transformation=transformation, color=colors[i], label=labels[i] + '-upper', type='pertimestep')
-                #plotBest(tempxAxis, tempdata, transformation=transformation, color=colors[i], label=labels[i])
+                #plotMeanAndPercentileRegions(tempxAxis, tempdata, lower=0.0, upper=1.00, transformation=transformation, color=colors[i], label=None , type='pertimestep')
+                plotMean(tempxAxis, tempdata, color=colors[i], label=None)
+                plotBest(tempxAxis, tempdata, transformation=transformation, color=colors[i+1], label=None)
+                plotWorst(tempxAxis, tempdata, transformation=transformation, color=colors[i+2], label=None)
+                plotMedian(tempxAxis, tempdata, color=colors[i+3], label=None)
         
         #plotMeanAndPercentileRegions(xAxis, data, lower=0.025, upper=0.975, transformation=transformation, color=color, label='')
 
-xAxis = np.array([i for i in range(1,1000000+1)])
+xAxis = np.array([i for i in range(1,10000000+1)])
 plt.plot(xAxis, np.array([0 for i in range(len(xAxis))]), '--', color='black', linewidth=0.5)
 
-plt.title('ESarsa-DQN-Adam ' + 'alpha='+str(alpha), pad=25, fontsize=10)
+#plt.title('ESarsa-DQN-Adam ' + 'alpha='+str(alpha), pad=25, fontsize=10)
 plt.xlabel('Timesteps', labelpad=35)
 plt.ylabel(transformation, rotation=0, labelpad=45)
 plt.rcParams['figure.figsize'] = [8, 5.33]
@@ -295,8 +302,9 @@ plt.yticks()
 plt.xticks()
 bottom, top = plt.ylim()
 plt.ylim(-0.02, top)
+#plt.ylim(0, 1000)
 #plt.ylim(bottom, 50000)
 plt.tight_layout()
 #plt.show()
 #plt.savefig('../img/dqn-10M-'+transformation+'.png',dpi=500, bbox_inches='tight')
-plt.savefig('../img/compare-upperpertimesteppercentile-'+str(averaging_type)+'-alpha='+str(alpha)+'-'+str(transformation)+'.png',dpi=500, bbox_inches='tight')
+plt.savefig('../img/best-mean-worst-'+str(averaging_type)+'-'+str(transformation)+'.png',dpi=500, bbox_inches='tight')
