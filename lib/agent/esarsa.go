@@ -32,6 +32,9 @@ const (
 	maxFeature4 = 1.0
 	maxFeature5 = 4.0 * math.Pi
 	maxFeature6 = 9.0 * math.Pi
+
+	minCoord = 0.0
+	maxCoord = 3.0
 )
 
 type EsarsaSettings struct {
@@ -219,6 +222,17 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		scalers := []util.Scaler{
 			util.NewScaler(-maxFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
 			util.NewScaler(-maxFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(2, agent.EsarsaSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
+	} else if agent.EsarsaSettings.EnvName == "gridworld" {
+		agent.NumActions = 4 // 5
+		scalers := []util.Scaler{
+			util.NewScaler(minCoord, maxCoord, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(minCoord, maxCoord, agent.EsarsaSettings.NumTiles),
 		}
 
 		agent.tiler, err = util.NewMultiTiler(2, agent.EsarsaSettings.NumTilings, scalers)
@@ -443,7 +457,7 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 	for i := 0; i < agent.NumActions; i++ {
 		actionValues[i] = agent.ActionValue(tileCodedStateActiveFeatures, i)
 	}
-	//fmt.Println("action value", actionValue0, actionValue1)
+	//fmt.Println("action value", actionValues)
 
 	greedyAction := agent.findArgmax(actionValues)
 	//if actionValues[0] < actionValues[1] {
@@ -600,7 +614,6 @@ func (agent *ESarsa) OnetimeEpReturnLock() bool {
 		return false
 	}
 }
-
 
 func (agent *ESarsa) OnetimeEpLenLock() bool {
 	if agent.lock {
