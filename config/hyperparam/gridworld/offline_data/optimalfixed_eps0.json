@@ -1,0 +1,50 @@
+{
+    "agent-name": "esarsa",
+    "environment-name": "gridworld",
+    "agent-settings": {
+      "env-name": "gridworld",
+      "gamma": 1.0,
+      "buffer-type": "random",
+      "buffer-size": 3600,
+      "epsilon": 0.0,
+      "decreasing-epsilon": "None",
+      "sweep": {
+        "weight-init": [1.0],
+        "epsilon": [0.0],
+        "epsilon-after-lock": [0.0],
+        "tilings": [32],
+        "tiles": [4],
+        "lambda": [0.0],
+        "alpha": [0.01],
+        "is-stepsize-adaptive": [false],
+        "adaptive-alpha": [0]
+      },
+  
+      "lock-weight": true,
+      "lock-condition": "onetime-reward",
+      "lock-condition-reward": -0.04,
+  
+      "enable-debug": false,
+      "seed": 1
+    },
+    "environment-settings": {
+      "seed": 1,
+      "sweep": {
+        "delays":[[0]]
+      }
+    },
+    "experiment-settings": {
+      "randomize_start_state_beforeLock": true,
+    	"randomize_start_state_afterLock": true,
+      "steps": 0,
+      "episodes": 10000000,
+      "total-step-after-lock": 1000,
+      "count-step-after-lock": true,
+      "data-path": "data/hyperparam/gridworld/offline_data/optimalfixed_eps0/",
+      "should-log-traces": true,
+      "should-log-episode-lengths": true,
+      "should-log-rewards": true,
+      "debug-interval": 1000
+    }
+  }
+  

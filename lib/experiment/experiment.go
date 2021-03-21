@@ -150,7 +150,7 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 			newState, reward, episodeEnded, info = exp.environment.Step(action, exp.Settings.RandomizeStartStateAfterLock)
 		}
 		listOfRewards = append(listOfRewards, reward)
-		fmt.Println(prevState, action, reward, newState, episodeEnded)
+		//fmt.Println(prevState, action, reward, newState, episodeEnded)
 
 		if exp.Settings.CountAfterLock {
 			countStep = exp.agent.GetLock()

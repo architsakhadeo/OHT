@@ -582,10 +582,11 @@ func (agent *ESarsa) OnetimeRwdLock() bool {
 		_, _, _, rewards2D, _ := agent.bf.Content()
 		rewards := ao.Flatten2DFloat(rewards2D)
 		avg := ao.Average(rewards)
+		fmt.Println("Average reward in the buffer: ", avg)
 		if len(rewards) < agent.Bsize {
 			return false
 		}
-		if avg > agent.lw.LockAvgRwd {
+		if avg >= agent.lw.LockAvgRwd {
 			return true
 		}
 		return false

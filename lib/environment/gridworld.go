@@ -153,13 +153,42 @@ func (env *Gridworld) randomizeState(randomizeStartStateCondition bool) {
 		copy(env.state, startState)
 		return
 	}
+
 	for i := range env.state {
-		env.state[i] = env.randFloat(0.0, 1.0)
+		env.state[i] = env.randInt(0.0, 3.0)
 	}
+	/*
+		for true {
+			for i := range env.state {
+				env.state[i] = env.randInt(0.0, 3.0)
+			}
+			if env.state[0] == 3.0 && env.state[1] == 3.0 {
+				continue
+			} else {
+				break
+			}
+		}
+	*/
 }
 
 func (env *Gridworld) randFloat(min, max float64) float64 {
 	return env.rng.Float64()*(max-min) + min
+}
+
+func (env *Gridworld) randInt(min, max float64) float64 {
+	float := env.rng.Float64()
+	diff := 0.25 //1.0/(max - min + 1.0)
+	returnvalue := 0.0
+	if float < diff {
+		returnvalue = 0.0
+	} else if float >= diff && float < 2.0*diff {
+		returnvalue = 1.0
+	} else if float >= 2.0*diff && float < 3.0*diff {
+		returnvalue = 2.0
+	} else if float >= 3.0*diff && float < 4.0*diff {
+		returnvalue = 3.0
+	}
+	return returnvalue
 }
 
 // func (env *Puddleworld) gaussian1d(p, mu, sig float64) float64 {

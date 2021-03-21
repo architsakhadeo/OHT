@@ -11,7 +11,7 @@
 			"tilings": [8],
 			"tiles": [4],
 			"lambda": [0.0],
-			"alpha": [0.1],
+			"alpha": [0.01],
 			"is-stepsize-adaptive": [false],
 			"adaptive-alpha": [0.00048828]
 		},
@@ -28,10 +28,10 @@
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
     	"randomize_start_state_afterLock": false,
-		"episodes": 50,
-		"max-run-length-episodic": 5000000,
+		"episodes": 10000,
+		"max-run-length-episodic": 150,
 		"data-path": "data/hyperparam/gridworld/online_learning/esarsa/10k/gridsearch_realenv",
-		"should-log-traces": false,
+		"should-log-traces": true,
 		"should-log-rewards": true, 
 		"should-log-episode-lengths": true,
 		"debug-interval": 1000
