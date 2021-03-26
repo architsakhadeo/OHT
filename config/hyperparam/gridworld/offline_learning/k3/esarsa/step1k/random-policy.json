@@ -1,0 +1,43 @@
+{
+        "agent-name": "esarsa",
+        "environment-name": "knnModel",
+        "agent-settings": {
+                "env-name": "gridworld",
+                "gamma": 1.0,
+                "sweep": {
+                        "weight-init": [0.44943500234000283],
+		        "epsilon": [0.0],
+			"tilings": [1, 2, 4],
+			"tiles": [2, 4],
+                        "alpha": [0.5, 0.125, 0.015625],
+                        "lambda": [0.1736509903889488],
+                        "is-stepsize-adaptive": [false],
+                        "adaptive-alpha": [0.0]
+                },
+                "lock-weight": false,
+                "enable-debug": false,
+                "seed": 1,
+                "total-logs": 8
+        },
+        "environment-settings": {
+                "seed": 1,
+                "total-logs": 8,
+                "neighbor-num": 3,
+                "drop-percent": 0.0,
+                "ensemble-seed": 0,
+                "datalog": "data/hyperparam/gridworld/Traces/random-policy/"
+        },
+        "experiment-settings": {
+                "randomize_start_state_beforeLock": false,
+   		"randomize_start_state_afterLock": false,
+                "steps": 0,    
+                "episodes": 1000000,
+                "max-run-length-episodic": 1000,
+                "data-path": "data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/random-policy/",
+                "should-log-traces": true,
+                "should-log-episode-lengths": false,
+                "should-log-rewards": false,
+                "should-log-totals": true,
+                "debug-interval": 0
+        }
+    }

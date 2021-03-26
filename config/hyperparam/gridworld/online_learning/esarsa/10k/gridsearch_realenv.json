@@ -6,15 +6,15 @@
 		"gamma": 1.0,
 		"env-name": "gridworld",
 		"sweep": {
-			"weight-init": [0.0],
+			"weight-init": [0.44943500234000283],
 			"epsilon": [0.0],
-			"tilings": [8],
-			"tiles": [4],
-			"lambda": [0.0],
-			"alpha": [0.01],
+			"tilings": [1, 2, 4],
+			"tiles": [2, 4],
+			"alpha": [0.5, 0.125, 0.03125, 0.0078125],
+			"lambda": [0.1736509903889488],
 			"is-stepsize-adaptive": [false],
-			"adaptive-alpha": [0.00048828]
-		},
+			"adaptive-alpha": [0.0]
+	},
 		"lock-weight": false,
     	"enable-debug": false,
     	"seed": 1
@@ -29,11 +29,12 @@
 		"randomize_start_state_beforeLock": false,
     	"randomize_start_state_afterLock": false,
 		"episodes": 10000,
-		"max-run-length-episodic": 150,
-		"data-path": "data/hyperparam/gridworld/online_learning/esarsa/10k/gridsearch_realenv",
+		"max-run-length-episodic": 1000,
+		"data-path": "data/hyperparam/gridworld/online_learning/esarsa/1k/gridsearch_realenv/",
 		"should-log-traces": true,
 		"should-log-rewards": true, 
 		"should-log-episode-lengths": true,
+		"should-log-totals": true,
 		"debug-interval": 1000
 	}
 }
