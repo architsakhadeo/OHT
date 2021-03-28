@@ -1,0 +1,3 @@
+numberOfActions=4
+stateDimension=2
+stateRange=4,4
