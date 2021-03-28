@@ -9,7 +9,7 @@
 		        "epsilon": [0.0],
 			"tilings": [1, 2, 4],
 			"tiles": [2, 4],
-                        "alpha": [0.5, 0.125, 0.015625],
+                        "alpha": [0.5, 0.125, 0.03125, 0.0078125],
                         "lambda": [0.1736509903889488],
                         "is-stepsize-adaptive": [false],
                         "adaptive-alpha": [0.0]
@@ -17,11 +17,11 @@
                 "lock-weight": false,
                 "enable-debug": false,
                 "seed": 1,
-                "total-logs": 8
+                "total-logs": 30
         },
         "environment-settings": {
                 "seed": 1,
-                "total-logs": 8,
+                "total-logs": 30,
                 "neighbor-num": 3,
                 "drop-percent": 0.0,
                 "ensemble-seed": 0,
@@ -35,8 +35,8 @@
                 "max-run-length-episodic": 1000,
                 "data-path": "data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/learning-policy/",
                 "should-log-traces": true,
-                "should-log-episode-lengths": false,
-                "should-log-rewards": false,
+                "should-log-episode-lengths": true,
+                "should-log-rewards": true,
                 "should-log-totals": true,
                 "debug-interval": 0
         }

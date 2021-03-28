@@ -35,8 +35,8 @@
                 "max-run-length-episodic": 1000,
                 "data-path": "data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/all-transitions/",
                 "should-log-traces": true,
-                "should-log-episode-lengths": false,
-                "should-log-rewards": false,
+                "should-log-episode-lengths": true,
+                "should-log-rewards": true,
                 "should-log-totals": true,
                 "debug-interval": 0
         }
