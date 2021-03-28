@@ -371,13 +371,14 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 		startReturn, _ := env.Start(randomizeStartStateCondition)
 		return startReturn, env.rewardBound[0], true, ""
 	}
-
+	//fmt.Println("Before target:", env.state)
+	//fmt.Println(env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num))
 	states, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
-
 	//fmt.Print("===, ", actInt)
 	//fmt.Println(env.offlineModel.SearchTree(env.state, 1, env.Neighbor_num))
 	//fmt.Println(env.offlineModel.SearchTree(env.state, 0, env.Neighbor_num))
-
+	//fmt.Println("Outside function:", states, nextStates, rewards, terminals, distances)
+	//fmt.Println("Length of state:", len(states))
 	_, nextState, reward, terminal, _ := env.PickNextFunc(env.state, states, nextStates, rewards, terminals, distances)
 
 	env.state = nextState
@@ -496,6 +497,7 @@ func (env *KnnModelEnv) CloserNeighbor(currentS []float64, states, nextStates []
 	reward := rewards[chosen]
 	terminal := terminals[chosen]
 	distance := distances[chosen]
+	//fmt.Println("After:", state, nextState, reward, terminal, distance)
 	return state, nextState, reward, terminal, distance
 }
 
