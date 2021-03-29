@@ -1,0 +1,10 @@
+true_env = ["../../data/hyperparam/gridworld/online_learning/esarsa/1k/gridsearch_realenv/"]
+
+data_alltransitions = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/all-transitions/"]
+data_badpolicy = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/bad-policy/"]
+data_learningpolicy = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/learning-policy/"]
+data_nearoptimalbetterpolicy = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/nearoptimal-better-policy/"]
+data_nearoptimalworsepolicy = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/nearoptimal-worse-policy/"]
+data_optimalpolicy = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/optimal-policy/"]
+data_optimalpolicyexploringstarts = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/optimal-policy-exploringstarts/"]
+data_randompolicy = ["../../data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/random-policy/"]

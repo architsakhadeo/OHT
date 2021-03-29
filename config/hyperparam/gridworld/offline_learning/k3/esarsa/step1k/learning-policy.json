@@ -25,7 +25,8 @@
                 "neighbor-num": 3,
                 "drop-percent": 0.0,
                 "ensemble-seed": 0,
-                "datalog": "data/hyperparam/gridworld/Traces/learning-policy/"
+                "datalog": "data/hyperparam/gridworld/Traces/learning-policy/",
+                "true-start-log": "data/hyperparam/gridworld/Traces/learning-policy/"
         },
         "experiment-settings": {
                 "randomize_start_state_beforeLock": false,
@@ -35,8 +36,8 @@
                 "max-run-length-episodic": 1000,
                 "data-path": "data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/learning-policy/",
                 "should-log-traces": true,
-                "should-log-episode-lengths": true,
-                "should-log-rewards": true,
+                "should-log-episode-lengths": false,
+                "should-log-rewards": false,
                 "should-log-totals": true,
                 "debug-interval": 0
         }

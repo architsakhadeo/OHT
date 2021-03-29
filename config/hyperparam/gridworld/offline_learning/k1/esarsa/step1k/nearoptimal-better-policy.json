@@ -22,10 +22,10 @@
         "environment-settings": {
                 "seed": 1,
                 "total-logs": 30,
-                "neighbor-num": 3,
+                "neighbor-num": 1,
                 "drop-percent": 0.0,
                 "ensemble-seed": 0,
-                "datalog": "data/hyperparam/gridworld/Traces/nearoptimal-worse-policy/",
+                "datalog": "data/hyperparam/gridworld/Traces/nearoptimal-better-policy/",
                 "true-start-log": "data/hyperparam/gridworld/Traces/learning-policy/"
         },
         "experiment-settings": {
@@ -34,7 +34,7 @@
                 "steps": 0,    
                 "episodes": 1000000,
                 "max-run-length-episodic": 1000,
-                "data-path": "data/hyperparam/gridworld/offline_learning/knn-ensemble/k3/step1k/nearoptimal-worse-policy/",
+                "data-path": "data/hyperparam/gridworld/offline_learning/knn-ensemble/k1/step1k/nearoptimal-better-policy/",
                 "should-log-traces": true,
                 "should-log-episode-lengths": false,
                 "should-log-rewards": false,
