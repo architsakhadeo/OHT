@@ -51,8 +51,9 @@ type KnnModelEnv struct {
 	state           rlglue.State
 	rng             *rand.Rand
 	offlineData     [][]float64
-	offlineStarts   []int
-	offlineTermns   []int
+	trueData        [][]float64
+	trueStarts      []int
+	trueTermns      []int
 	offlineModel    transModel.TransTrees
 	terminsTree     transModel.TransTrees
 	stateDim        int
@@ -146,12 +147,12 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	//env.offlineData = allTrans
 	env.offlineData = env.LoadData(traceLog)
-	offlineStartsData := env.LoadData(trueStartLog)
-	env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(offlineStartsData)
+	env.trueData = env.LoadData(trueStartLog)
+	env.trueStarts, env.trueTermns = env.SearchOfflineStart(env.trueData)
 
 	if env.knnSettings.ExtraRisk > 0 {
 		numIdx := int(float64(len(env.offlineData)) * env.knnSettings.ExtraRisk)
-		for i:=0; i<numIdx; i++ {
+		for i := 0; i < numIdx; i++ {
 			rndIdx := env.rng.Int() % len(env.offlineData)
 			env.offlineData[rndIdx][env.stateDim*2+1] = env.rewardBound[0]
 			env.offlineData[rndIdx][env.stateDim*2+2] = 1
@@ -181,8 +182,8 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	if env.ShapeReward {
 		var trans2term [][]float64
-		for i := 0; i < len(env.offlineTermns); i++ {
-			trans2term = append(trans2term, env.offlineData[env.offlineTermns[i]])
+		for i := 0; i < len(env.trueTermns); i++ {
+			trans2term = append(trans2term, env.offlineData[env.trueTermns[i]])
 		}
 		env.terminsTree = transModel.New(env.NumberOfActions, env.stateDim)
 		env.terminsTree.BuildTree(trans2term, "next")
@@ -279,15 +280,15 @@ func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) 
 }
 
 func (env *KnnModelEnv) randomizeInitState() rlglue.State {
-	randIdx := env.rng.Intn(len(env.offlineStarts))
-	state := env.offlineData[env.offlineStarts[randIdx]][:env.stateDim]
+	randIdx := env.rng.Intn(len(env.trueStarts))
+	state := env.trueData[env.trueStarts[randIdx]][:env.stateDim]
 	return state
 }
 
 ///* For debugging only */
 //func (env *KnnModelEnv) cheatingChoice() rlglue.State {
-//	randIdx := env.rng.Intn(len(env.offlineStarts))
-//	state := env.offlineData[env.offlineStarts[randIdx]-1]
+//	randIdx := env.rng.Intn(len(env.trueStarts))
+//	state := env.offlineData[env.trueStarts[randIdx]-1]
 //	fmt.Println("terminal ", state)
 //	state = state[:env.stateDim]
 //	return state
@@ -547,7 +548,7 @@ func (env *KnnModelEnv) FurtherNext(currentS []float64, states, nextStates [][]f
 	return state, nextState, reward, terminal, distance
 }
 
-func (env *KnnModelEnv) LowRwdNext (currentS []float64, states, nextStates [][]float64, rewards, terminals, distances []float64) ([]float64, []float64, float64, float64, float64) {
+func (env *KnnModelEnv) LowRwdNext(currentS []float64, states, nextStates [][]float64, rewards, terminals, distances []float64) ([]float64, []float64, float64, float64, float64) {
 
 	rwds := make([]float64, len(rewards))
 	minRwd, _ := ao.ArrayMin(rewards)
