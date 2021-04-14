@@ -128,6 +128,7 @@ def average_run(data):
             group_by_param[pk].append(data[rk][pk])
     for pk in all_params:
         group_by_param[pk] = np.array(group_by_param[pk]).mean()
+    print(group_by_param)
     return group_by_param
 
 # def average_param(data):

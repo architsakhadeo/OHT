@@ -327,22 +327,36 @@ def sweep_coverage():
                    ]
     '''
     cms = {
-        "all-transitions": data_alltransitions,
+    "all-transitions": data_alltransitions_k1,
+    "random-policy": data_randompolicy_k1,
+    "learning-policy": data_learningpolicy_k1
     }
-    #"random-policy": data_randompolicy,
-    #"learning-policy": data_learningpolicy,
-    #"optimal-policy": data_optimalpolicy,
-    #"data_nearoptimalbetterpolicy": data_nearoptimalbetterpolicy,
-    #"data_nearoptimalworsepolicy": data_nearoptimalworsepolicy,
-    #"data_badpolicy": data_badpolicy,
+    #"all-transitions": data_alltransitions_k1,
+    #"random-policy": data_randompolicy_k1,
+    #"learning-policy": data_learningpolicy_k1,
+    #"optimal-policy": data_optimalpolicy_k1,
+    #"optimal-policy-exploringstarts": data_optimalpolicyexploringstarts_k1,
+    #"data_nearoptimalbetterpolicy": data_nearoptimalbetterpolicy_k1,
+    #"data_nearoptimalworsepolicy": data_nearoptimalworsepolicy_k1,
+    #"data_badpolicy": data_badpolicy_k1
+    
+    #"all-transitions": data_alltransitions_k3,
+    #"random-policy": data_randompolicy_k3,
+    #"learning-policy": data_learningpolicy_k3,
+    #"optimal-policy": data_optimalpolicy_k3,
+    #"optimal-policy-exploringstarts": data_optimalpolicyexploringstarts_k3,
+    #"data_nearoptimalbetterpolicy": data_nearoptimalbetterpolicy_k3,
+    #"data_nearoptimalworsepolicy": data_nearoptimalworsepolicy_k3,
+    #"data_badpolicy": data_badpolicy_k3
+
     te = {"true": true_env}
     listOfPlots = ["../../img/gridworld",
                    ]
     #for i in range(len(listOfPlots)):
     #    print(i)
     #    plot_generation(te, cms[i], ranges, listOfPlots[i])
-    plot_generation(te, cms, ranges, "pure-total-reward", "../../img/gridworld", outer=30, sparse_reward=None)
-    #plot_each_run(te, cms, "total-return", "../../img/gridworld", outer=30, sparse_reward=-1)
+    plot_generation(te, cms, ranges, "pure-total-reward", "../../img/gridworld_K1_0to30_interesting", outer=30, sparse_reward=None)
+    #plot_each_run(te, cms, "pure-total-reward", "../../img/gridworld_K3_bad-policy", outer=30, sparse_reward=None)
 
 def sweep_datasize():
     cms = [{
