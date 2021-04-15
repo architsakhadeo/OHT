@@ -354,7 +354,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 					} else {
 						g = -agent.delta * agent.traces[j][i]
 						agent.m[j][i] = agent.beta1*agent.m[j][i] + (1-agent.beta1)*g
-						agent.v[j][i] = agent.beta1*agent.v[j][i] + (1-agent.beta1)*g*g
+						agent.v[j][i] = agent.beta2*agent.v[j][i] + (1-agent.beta2)*g*g
 
 						mhat = agent.m[j][i] / (1 - math.Pow(agent.beta1, agent.timesteps))
 						vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
