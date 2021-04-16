@@ -6,14 +6,14 @@
     "gamma": 0.99858261302,
     "state-len": 4,
     "sweep": {
-      "weight-init": [0],
+      "weight-init": [100],
       "epsilon": [0],
-      "tilings": [4, 16],
+      "tilings": [8, 32],
       "tiles": [2, 8],
       "lambda": [0.8],
       "alpha": [1e-03],
       "is-stepsize-adaptive": [true],
-      "adaptive-alpha": [0.00097656, 0.00195312, 0.00390625, 0.0078125 , 0.015625 , 0.03125 , 0.0625, 0.125]
+      "adaptive-alpha": [0.00195312, 0.00390625, 0.0078125 , 0.015625 , 0.03125 , 0.0625, 0.125, 0.25]
     },
     "lock-weight": false,
     "enable-debug": false,
@@ -22,7 +22,7 @@
   "environment-settings": {
     "seed": 1,
     "percent_noise_action": 0.001,
-    "rwd_position": true,
+    "rwd_one": true,
     "sweep": {
       "delays":[[0]]
     }
@@ -30,8 +30,8 @@
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
     "randomize_start_state_afterLock": false,
-    "steps": 50000,
-    "data-path": "data/hyperparam_v4/cartpole-noisy-action_rwdpos/noise_0.1perc/online_learning/esarsa-adam/step50k/sweep/",
+    "steps": 100000,
+    "data-path": "data/hyperparam_v4/cartpole-noisy-action_rwd1/noise_0.1perc/online_learning/esarsa-adam/step100k/sweep/",
     "should-log-traces": false,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,

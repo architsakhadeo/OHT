@@ -98,3 +98,7 @@ func (env *Example) stateSlice() rlglue.State {
 	}
 	return st
 }
+
+func (env *Example) GetInfo(info string, value float64) interface{} {
+	return nil
+}

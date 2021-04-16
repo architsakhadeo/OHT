@@ -77,6 +77,7 @@ func (exp *Experiment) Run() ([][]float64, error) {
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
 
 	//return exp.SaveLog()
+	//exp.environment.GetInfo("visitCount", 0.0)
 	return listOfListOfRewards, exp.SaveLog()
 }
 
@@ -236,7 +237,6 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 
 	// Save FA weights.
 	exp.saveAgentWeights()
-
 	return listOfRewards
 }
 

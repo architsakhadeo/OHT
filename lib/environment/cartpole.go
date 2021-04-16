@@ -278,3 +278,7 @@ func (env *Cartpole) GetAttributes() rlglue.Attributes {
 
 	return attr
 }
+
+func (env *Cartpole) GetInfo(info string, value float64) interface{} {
+	return nil
+}

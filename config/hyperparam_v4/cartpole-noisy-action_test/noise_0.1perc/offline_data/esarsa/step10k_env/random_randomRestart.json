@@ -6,12 +6,12 @@
     "gamma": 0.99858261302,
     "state-len": 4,
     "buffer-type": "random",
-    "buffer-size": 1,
+    "buffer-size": 2500,
     "decreasing-epsilon": "None",
     "sweep": {
-      "weight-init": [100],
-      "epsilon": [1],
-      "epsilon-after-lock": [1],
+      "weight-init": [1.5296211887157671],
+      "epsilon": [0],
+      "epsilon-after-lock": [0],
       "tilings": [16],
       "tiles": [8],
       "lambda": [0.843576960790207],
@@ -21,7 +21,8 @@
     },
 
     "lock-weight": true,
-    "lock-condition": "beginning",
+    "lock-condition": "onetime-reward",
+    "lock-condition-reward": -1,
 
     "enable-debug": false,
     "seed": 100
@@ -29,19 +30,18 @@
   "environment-settings": {
     "seed": 100,
     "percent_noise_action": 0.001,
-    "rwd_position": true,
     "sweep": {
       "delays":[[0]]
     }
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
-    "randomize_start_state_afterLock": false,
+    "randomize_start_state_afterLock": true,
     "steps": 5000000,
     "episodes": 0,
     "total-step-after-lock": 10000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam_v4/cartpole-noisy-action_rwdpos/noise_0.1perc/offline_data/esarsa/step10k_env/random/",
+    "data-path": "data/hyperparam_v4/cartpole-noisy-action_test/noise_0.1perc/offline_data/esarsa/step10k_env/random/random_restart/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "debug-interval": 1000

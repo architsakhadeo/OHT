@@ -29,7 +29,7 @@
   "environment-settings": {
     "seed": 100,
     "percent_noise_action": 0.001,
-    "rwd_position": true,
+    "rwd_one": true,
     "sweep": {
       "delays":[[0]]
     }
@@ -41,7 +41,7 @@
     "episodes": 0,
     "total-step-after-lock": 10000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam_v4/cartpole-noisy-action_rwdpos/noise_0.1perc/offline_data/esarsa/step10k_env/random/",
+    "data-path": "data/hyperparam_v4/cartpole-noisy-action_rwd1/noise_0.1perc/offline_data/esarsa/step10k_env/random/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "debug-interval": 1000

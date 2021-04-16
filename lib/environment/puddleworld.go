@@ -295,3 +295,7 @@ func (env *Puddleworld) GetAttributes() rlglue.Attributes {
 
 	return attr
 }
+
+func (env *Puddleworld) GetInfo(info string, value float64) interface{} {
+	return nil
+}
