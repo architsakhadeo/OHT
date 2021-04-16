@@ -32,6 +32,9 @@ const (
 	maxFeature4 = 1.0
 	maxFeature5 = 4.0 * math.Pi
 	maxFeature6 = 9.0 * math.Pi
+
+	minCoord = 0.0
+	maxCoord = 3.0
 )
 
 type EsarsaSettings struct {
@@ -47,7 +50,9 @@ type EsarsaSettings struct {
 	Alpha              float64 `json:"alpha"`
 	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
+	SoftmaxTemperature float64 `json:"softmax-temperature"`
 	EnvName            string  `json:"env-name"`
+	Beta1              float64 `json:"beta1"`
 
 	StateDim int    `json:"state-len"`
 	Bsize    int    `json:"buffer-size"`
@@ -134,6 +139,8 @@ func DefaultESarsaSettings() EsarsaSettings {
 		IsStepsizeAdaptive: false,
 		WInit:              0.0,
 		EnvName:            "cartpole",
+		SoftmaxTemperature: 1.0,
+		Beta1:              0.9,
 	}
 }
 
@@ -174,7 +181,7 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		agent.stepsize = agent.EsarsaSettings.AdaptiveAlpha / float64(agent.EsarsaSettings.NumTilings) // Setting adaptive stepsize
 	}
 
-	agent.beta1 = 0.9
+	agent.beta1 = agent.EsarsaSettings.Beta1
 	agent.beta2 = 0.999
 	agent.e = math.Pow(10, -8)
 
@@ -219,6 +226,17 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		scalers := []util.Scaler{
 			util.NewScaler(-maxFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
 			util.NewScaler(-maxFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(2, agent.EsarsaSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
+	} else if agent.EsarsaSettings.EnvName == "gridworld" {
+		agent.NumActions = 4 // 5
+		scalers := []util.Scaler{
+			util.NewScaler(minCoord, maxCoord, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(minCoord, maxCoord, agent.EsarsaSettings.NumTiles),
 		}
 
 		agent.tiler, err = util.NewMultiTiler(2, agent.EsarsaSettings.NumTilings, scalers)
@@ -273,7 +291,7 @@ func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
 		oldA = agent.rng.Int() % agent.NumActions
 		fmt.Println("Random action restart", oldA)
 	} else {
-		oldA, _ = agent.PolicyExpectedSarsaLambda(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
+		oldA, _ = agent.SoftmaxPolicy(agent.oldStateActiveFeatures) // Exp-Sarsa-L policy
 	}
 	agent.oldAction, _ = tpo.GetInt(oldA)
 
@@ -308,7 +326,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 		agent.traces[oldA][value] = 1             // replacing active traces to 1
 	}
 
-	newAction, epsilons := agent.PolicyExpectedSarsaLambda(newStateActiveFeatures) // Exp-Sarsa-L policy
+	newAction, epsilons := agent.SoftmaxPolicy(newStateActiveFeatures) // Exp-Sarsa-L policy
 
 	if agent.lw.UseLock {
 		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.EsarsaSettings.Gamma)
@@ -338,7 +356,7 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 					} else {
 						g = -agent.delta * agent.traces[j][i]
 						agent.m[j][i] = agent.beta1*agent.m[j][i] + (1-agent.beta1)*g
-						agent.v[j][i] = agent.beta1*agent.v[j][i] + (1-agent.beta1)*g*g
+						agent.v[j][i] = agent.beta2*agent.v[j][i] + (1-agent.beta2)*g*g
 
 						mhat = agent.m[j][i] / (1 - math.Pow(agent.beta1, agent.timesteps))
 						vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
@@ -378,7 +396,7 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 		agent.traces[oldA][value] = 1             // replacing active traces to 1
 	}
 
-	newAction, epsilons := agent.PolicyExpectedSarsaLambda(newStateActiveFeatures) // Exp-Sarsa-L policy
+	newAction, epsilons := agent.SoftmaxPolicy(newStateActiveFeatures) // Exp-Sarsa-L policy
 
 	if agent.lw.UseLock {
 		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, 0.0)
@@ -408,7 +426,7 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 					} else {
 						g = -agent.delta * agent.traces[j][i]
 						agent.m[j][i] = agent.beta1*agent.m[j][i] + (1-agent.beta1)*g
-						agent.v[j][i] = agent.beta1*agent.v[j][i] + (1-agent.beta1)*g*g
+						agent.v[j][i] = agent.beta2*agent.v[j][i] + (1-agent.beta2)*g*g
 
 						mhat = agent.m[j][i] / (1 - math.Pow(agent.beta1, agent.timesteps))
 						vhat = agent.v[j][i] / (1 - math.Pow(agent.beta2, agent.timesteps))
@@ -436,14 +454,14 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 	}
 }
 
-// PolicyExpectedSarsaLambda returns action based on tile coded state
-func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []int) (rlglue.Action, []float64) {
+// EpsilonGreedyPolicy returns action based on tile coded state using epsilon greedy
+func (agent *ESarsa) EpsilonGreedyPolicy(tileCodedStateActiveFeatures []int) (rlglue.Action, []float64) {
 	// Calculates action values
 	actionValues := make([]float64, agent.NumActions)
 	for i := 0; i < agent.NumActions; i++ {
 		actionValues[i] = agent.ActionValue(tileCodedStateActiveFeatures, i)
 	}
-	//fmt.Println("action value", actionValue0, actionValue1)
+	//fmt.Println("action value", actionValues)
 
 	greedyAction := agent.findArgmax(actionValues)
 	//if actionValues[0] < actionValues[1] {
@@ -456,6 +474,72 @@ func (agent *ESarsa) PolicyExpectedSarsaLambda(tileCodedStateActiveFeatures []in
 		probs[i] = (agent.Epsilon / float64(agent.NumActions))
 	}
 	probs[greedyAction] = 1 - agent.Epsilon + (agent.Epsilon / float64(agent.NumActions))
+
+	cummulativeProbs := make([]float64, agent.NumActions)
+	sum := 0.0
+	for i := range probs {
+		sum += probs[i]
+		cummulativeProbs[i] = sum
+	}
+	// Calculates Epsilon-greedy probabilities for both actions
+	//probs := make([]float64, agent.NumActions) // Probabilities of taking actions 0 and 1
+	//probs[(greedyAction+1)%2] = agent.Epsilon / 2
+	//probs[greedyAction] = 1 - probs[(greedyAction+1)%2]
+
+	// Random sampling action based on epsilon-greedy policy
+	var action rlglue.Action
+	flag := false
+	randomval := agent.rng.Float64()
+
+	for i := 0; i < agent.NumActions-1; i++ {
+		if randomval <= cummulativeProbs[i] {
+			action = i
+			flag = true
+			break
+		}
+	}
+	if flag == false {
+		action = agent.NumActions - 1
+	}
+
+	return action, probs
+}
+
+// SoftmaxPolicy returns action based on tile coded state using softmax policy
+func (agent *ESarsa) SoftmaxPolicy(tileCodedStateActiveFeatures []int) (rlglue.Action, []float64) {
+	// Calculates action values
+	actionValues := make([]float64, agent.NumActions)
+	for i := 0; i < agent.NumActions; i++ {
+		actionValues[i] = agent.ActionValue(tileCodedStateActiveFeatures, i)
+	}
+
+	max := actionValues[0]
+	for _, value := range actionValues {
+		if value > max {
+			max = value
+		}
+	}
+
+	for i := 0; i < agent.NumActions; i++ {
+		actionValues[i] -= max
+	}
+
+	expActionValues := make([]float64, agent.NumActions)
+	for i := 0; i < agent.NumActions; i++ {
+		expActionValues[i] = math.Exp(actionValues[i] / agent.SoftmaxTemperature)
+	}
+
+	var sumExpActionValues float64
+	for i := 0; i < agent.NumActions; i++ {
+		sumExpActionValues += expActionValues[i]
+	}
+
+	sumExpActionValues += agent.e
+
+	probs := make([]float64, agent.NumActions) // Probabilities of taking actions 0 and 1
+	for i := range probs {
+		probs[i] = (expActionValues[i] / sumExpActionValues)
+	}
 
 	cummulativeProbs := make([]float64, agent.NumActions)
 	sum := 0.0
@@ -568,10 +652,11 @@ func (agent *ESarsa) OnetimeRwdLock() bool {
 		_, _, _, rewards2D, _ := agent.bf.Content()
 		rewards := ao.Flatten2DFloat(rewards2D)
 		avg := ao.Average(rewards)
+		//fmt.Println("Average reward in the buffer: ", avg)
 		if len(rewards) < agent.Bsize {
 			return false
 		}
-		if avg > agent.lw.LockAvgRwd {
+		if avg >= agent.lw.LockAvgRwd {
 			return true
 		}
 		return false
@@ -600,7 +685,6 @@ func (agent *ESarsa) OnetimeEpReturnLock() bool {
 		return false
 	}
 }
-
 
 func (agent *ESarsa) OnetimeEpLenLock() bool {
 	if agent.lock {

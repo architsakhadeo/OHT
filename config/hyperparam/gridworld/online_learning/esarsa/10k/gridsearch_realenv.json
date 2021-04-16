@@ -1,0 +1,41 @@
+{
+	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+	"agent-name": "esarsa",
+	"environment-name": "gridworld",
+	"agent-settings": {
+		"gamma": 1.0,
+		"env-name": "gridworld",
+		"sweep": {
+			"weight-init": [0.44943500234000283],
+			"epsilon": [0.0],
+			"tilings": [1, 2, 4],
+			"tiles": [2, 4],
+			"alpha": [0.5, 0.125, 0.03125, 0.0078125],
+			"lambda": [0.1736509903889488],
+			"is-stepsize-adaptive": [false],
+			"adaptive-alpha": [0.0]
+	},
+		"lock-weight": false,
+    	"enable-debug": false,
+    	"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1,
+		"sweep":{
+			"delays": [[0]]
+		}
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+    	"randomize_start_state_afterLock": false,
+		"episodes": 10000,
+		"max-run-length-episodic": 1000,
+		"data-path": "data/hyperparam/gridworld/online_learning/esarsa/1k/gridsearch_realenv/",
+		"should-log-traces": true,
+		"should-log-rewards": true, 
+		"should-log-episode-lengths": true,
+		"should-log-totals": true,
+		"debug-interval": 1000
+	}
+}
+

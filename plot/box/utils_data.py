@@ -128,6 +128,7 @@ def average_run(data):
             group_by_param[pk].append(data[rk][pk])
     for pk in all_params:
         group_by_param[pk] = np.array(group_by_param[pk]).mean()
+    print(group_by_param)
     return group_by_param
 
 # def average_param(data):
@@ -192,6 +193,8 @@ def load_total(paths, source, outer=None):
                     res = res/50000
                 elif source=="return":
                     res = t_rwd / num_ep
+                elif source=="pure-total-reward":
+                    res = t_rwd    
                 else:
                     raise NotImplementedError
 
@@ -433,6 +436,7 @@ def loading_pessimistic(models_paths, source="reward", outer=None, sparse_reward
 
         models_data[model] = data
     return models_data
+    
 def loading_average(models_paths, source="reward", outer=None, sparse_reward=None, max_len=np.inf):
     models_data = {}
     for model in models_paths.keys():
@@ -457,6 +461,8 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
             data = load_total(paths, "episode", outer=outer)
         elif source == "total-return":
             data = load_total(paths, "return", outer=outer)
+        elif source == "pure-total-reward":
+            data = load_total(paths, "pure-total-reward", outer=outer)
         else:
             raise NotImplementedError
 

@@ -6,7 +6,7 @@ from loadFromEpisodeLengths import transform_data
 
 
 #dirpath = '../data/hyperparam/cartpole/offline_learning/knn/k3/esarsa-adam/step20k_env/lockat_baseline/'
-dirpath = '../data/hyperparam/cartpole/offline_learning/knn/k1/esarsa-adam/step50k_env/learning_eps8_5ktimesteps/'
+dirpath = '../data/hyperparam/gridworld/online_learning/esarsa/1k/gridsearch_realenv/'
 subdirs = os.listdir(dirpath)
 
 def AUC(data):
@@ -23,14 +23,14 @@ for s in range(len(subdirs)):
     data = load_data(dirpath+subdirs[s])
     convertedData, totalTimesteps = convert_data('', data)
 
-    transformation = 'Average-Rewards'
-    window = 2500
+    transformation = 'Returns'
+    window = 100
     alpha = 0.0004
     averaging_type='exponential-averaging'
 
     transformedData = transform_data('', convertedData, totalTimesteps, transformation, window, type=averaging_type, alpha=alpha)
-    #performance[subdirs[s]] = AUC(transformedData)
-    performance[subdirs[s]] = bottom10percentile(transformedData)
+    performance[subdirs[s]] = AUC(transformedData)
+    #performance[subdirs[s]] = bottom10percentile(transformedData)
     print('-------------------------------------------------------')
 
 print((sorted(performance.items(), key=lambda item:item[1]))[::-1])

@@ -42,6 +42,8 @@
     "data-path": "data/hyperparam/acrobot/offline_data/esarsa/step5k/optimalfixed_eps0",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
+    "should-log-rewards": false,
+    "should-log-totals": false,
     "debug-interval": 1000
   }
 }

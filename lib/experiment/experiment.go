@@ -140,6 +140,8 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 	var reward float64
 	var episodeEnded bool
 
+	info = ""
+
 	numStepsThisEpisode := 0
 	for isEpisodic || exp.numStepsTaken < exp.Settings.MaxSteps {
 		info = ""
@@ -149,6 +151,7 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 			newState, reward, episodeEnded, info = exp.environment.Step(action, exp.Settings.RandomizeStartStateAfterLock)
 		}
 		listOfRewards = append(listOfRewards, reward)
+		//fmt.Println(prevState, action, reward, newState, episodeEnded)
 
 		if exp.Settings.CountAfterLock {
 			countStep = exp.agent.GetLock()
@@ -250,7 +253,6 @@ func (exp *Experiment) logEndOfEpisode(numStepsThisEpisode int) {
 		exp.Message("total reward", reward, "episode", exp.numEpisodesDone, "total steps", exp.numStepsTaken, "episode steps", numStepsThisEpisode)
 	}
 }
-
 
 func (exp *Experiment) saveAgentWeights() {
 	err := exp.agent.SaveWeights(exp.GetBasePath())

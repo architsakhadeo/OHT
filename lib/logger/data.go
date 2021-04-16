@@ -66,7 +66,7 @@ type DataLogger struct {
 	terminals []int
 	others    [][]float64
 	learnProg []float64
-	infos []string
+	info      []string
 
 	// file is used for writing out the trace.
 	file *os.File
@@ -98,7 +98,7 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 		lg.episodeReturns = []float64{}
 	}
 
-	if lg.ShouldLogRewards || lg.ShouldLogReturns || lg.ShouldLogTraces{
+	if lg.ShouldLogRewards || lg.ShouldLogReturns || lg.ShouldLogTraces {
 		lg.rewards = []float64{}
 	}
 
@@ -231,7 +231,7 @@ func (lg *DataLogger) LogLearnProg(progress float64) {
 }
 
 func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool, info string) string {
-	if lg.ShouldLogRewards || lg.ShouldLogReturns || lg.ShouldLogTraces {
+	if lg.ShouldLogRewards {
 		lg.rewards = append(lg.rewards, reward)
 	}
 
@@ -248,7 +248,7 @@ func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.A
 		lg.currState = append(lg.currState, currState)
 		lg.actions = append(lg.actions, action)
 		lg.terminals = append(lg.terminals, termInt)
-		lg.infos = append(lg.infos, info)
+		lg.info = append(lg.info, info)
 	}
 
 	if !lg.ShouldLogTraces {

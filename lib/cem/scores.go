@@ -27,6 +27,8 @@ func (rsg *RunScorerGenerator) UnmarshalJSON(data []byte) error {
 		*rsg = func() RunScorer { return &scoreEpisodeLongerIsBetter{} }
 	case "continuing-last-half":
 		*rsg = func() RunScorer { return &scoreContinuingLastHalf{} }
+	case "average-return-per-episode":
+		*rsg = func() RunScorer { return &averageReturnPerEpisode{} }
 	default:
 		return fmt.Errorf("couldn't find RunScorerGenerator with name '%s'", name)
 	}
@@ -38,6 +40,8 @@ type scoreEpisodeLongerIsBetter struct {
 	averageSuccess, average int
 }
 
+// This is averaged across numRuns since we add the total number of steps across all runs
+// but we also add the total number of successes across all runs
 func (su *scoreEpisodeLongerIsBetter) UpdateRun(rewards [][]float64) {
 	su.averageSuccess += len(rewards) // Add the number of successes during this run
 	for i := 0; i < len(rewards); i++ {
@@ -69,4 +73,25 @@ func (su *scoreContinuingLastHalf) UpdateRun(listOfListOfRewards [][]float64) {
 
 func (su *scoreContinuingLastHalf) Score() float64 {
 	return su.average / float64(su.numRuns) // This division is a waste of time since numRuns is constant
+}
+
+// scoreEpisodeLongerIsBetter calculates a score in the case of episodes, where longer runs are better.
+type averageReturnPerEpisode struct {
+	averageSuccess int
+	average        float64
+}
+
+// This is averaged across numRuns since we add the rewards across all runs
+// but we also add the total number of successes across all runs
+func (su *averageReturnPerEpisode) UpdateRun(rewards [][]float64) {
+	su.averageSuccess += len(rewards) // Add the number of successes during this run
+	for i := 0; i < len(rewards); i++ {
+		for j := 0; j < len(rewards[i]); j++ {
+			su.average += rewards[i][j] // Adds the total number of steps taken in the run
+		}
+	}
+}
+
+func (su *averageReturnPerEpisode) Score() float64 {
+	return float64(su.average) / float64(su.averageSuccess) // average return per episode
 }
