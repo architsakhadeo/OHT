@@ -29,7 +29,7 @@ type PuddleworldSettings struct {
 	Seed              int64     `json:"seed"`
 	Delays            []int     `json:"delays"`
 	PercentNoiseState []float64 `json:"percent_noise"`
-	StartHard		  bool		`json:"start-hard"`
+	StartHard         bool      `json:"start-hard"`
 }
 
 type Puddleworld struct {
@@ -167,8 +167,16 @@ func (env *Puddleworld) randomizeState(randomizeStartStateCondition bool) {
 		copy(env.state, startState)
 		return
 	}
-	for i := range env.state {
-		env.state[i] = env.randFloat(0.0, 1.0)
+
+	for true {
+		for i := range env.state {
+			env.state[i] = env.randFloat(0.0, 1.0)
+		}
+		// randomly start in non-goal region states
+		if floats.Distance(env.state, goalState, 1) >= goalThreshold {
+			return
+		}
+
 	}
 }
 

@@ -52,6 +52,7 @@ type EsarsaSettings struct {
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
 	SoftmaxTemperature float64 `json:"softmax-temperature"`
 	EnvName            string  `json:"env-name"`
+	Beta1              float64 `json:"beta1"`
 
 	StateDim int    `json:"state-len"`
 	Bsize    int    `json:"buffer-size"`
@@ -139,6 +140,7 @@ func DefaultESarsaSettings() EsarsaSettings {
 		WInit:              0.0,
 		EnvName:            "cartpole",
 		SoftmaxTemperature: 1.0,
+		Beta1:              0.9,
 	}
 }
 
@@ -179,7 +181,7 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		agent.stepsize = agent.EsarsaSettings.AdaptiveAlpha / float64(agent.EsarsaSettings.NumTilings) // Setting adaptive stepsize
 	}
 
-	agent.beta1 = 0.9
+	agent.beta1 = agent.EsarsaSettings.Beta1
 	agent.beta2 = 0.999
 	agent.e = math.Pow(10, -8)
 

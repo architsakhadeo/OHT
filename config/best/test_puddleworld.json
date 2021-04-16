@@ -1,0 +1,43 @@
+{
+    "agent-name": "esarsa",
+    "environment-name": "puddleworld",
+    "agent-settings": {
+      "env-name": "puddleworld",
+      "gamma": 1,
+      "state-len": 2,
+      "sweep": {
+        "weight-init": [3.4438134771108433],
+        "epsilon": [0],
+        "tilings": [16],
+        "tiles": [8],
+        "lambda": [0.23851445080097175],
+        "alpha": [0],
+        "is-stepsize-adaptive": [true],
+        "adaptive-alpha": [0.5774032045995984],
+        "beta1": [0.5561171359938084],
+        "softmax-temp": [0.8750577165725871]
+      },
+      "lock-weight": false,
+      "enable-debug": false,
+      "seed": 1
+    },
+    "environment-settings": {
+      "seed": 1,
+      "start-hard": true
+    },
+    "experiment-settings": {
+      "randomize_start_state_beforeLock": false,
+      "randomize_start_state_afterLock": false,
+      "episodes": 4000000,
+      "steps-in-episode": 0,
+      "max-run-length-episodic": 100000,
+      "data-path": "data/best/puddleworld/",
+      "should-log-traces": false,
+      "should-log-episode-lengths": true,
+      "should-log-rewards": true,
+      "should-log-totals": true,
+      "should-log-returns": true,
+      "debug-interval": 1000
+    }
+  }
+  
