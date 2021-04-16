@@ -233,11 +233,10 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 		log.Fatal(err)
 	}
 
-	allTransObs := make([][]float64, len(allTransStr)-1)
+	allTransObs := make([][]float64, len(allTransStr)-1) // transitions, using environment state
 	rewards := make([]float64, len(allTransStr)-1)
-	states := make([][]float64, len(allTransStr)-1)
-	allStates := make([][]float64, len(allTransStr)-1)
-	allNextStates := make([][]float64, len(allTransStr)-1)
+	allStates := make([][]float64, len(allTransStr)-1) // current states
+	allNextStates := make([][]float64, len(allTransStr)-1) // next states
 	allTermin := make([]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
@@ -246,27 +245,20 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 			if j == 0 { // next state
 				num = num[1 : len(num)-1] // remove square brackets
 				copy(row[env.stateDim+1:env.stateDim*2+1], convformat.ListStr2Float(num, " "))
-				states[i-1] = row[env.stateDim+1 : env.stateDim*2+1]
-
-				rowS := make([]float64, env.stateDim)
-				num = num[1 : len(num)-1] // remove square brackets
-				copy(rowS, convformat.ListStr2Float(num, " "))
-				allNextStates[i-1] = rowS
+				copy(allNextStates[i-1], row[env.stateDim+1 : env.stateDim*2+1])
 
 			} else if j == 1 { // current state
 				num = num[1 : len(num)-1]
 				copy(row[:env.stateDim], convformat.ListStr2Float(num, " "))
-
-				rowS := make([]float64, env.stateDim)
-				num = num[1 : len(num)-1]
-				copy(rowS, convformat.ListStr2Float(num, " "))
-				allStates[i-1] = rowS
+				copy(allStates[i-1], row[:env.stateDim])
 
 			} else if j == 2 { // action
 				row[env.stateDim], _ = strconv.ParseFloat(num, 64)
+
 			} else if j == 3 { //reward
 				row[env.stateDim*2+1], _ = strconv.ParseFloat(num, 64)
 				rewards[i-1] = row[env.stateDim*2+1]
+
 			} else if j == 4 { //termination
 				row[env.stateDim*2+2], _ = strconv.ParseFloat(num, 64)
 				allTermin[i-1], _ = strconv.ParseFloat(num, 64)
@@ -284,15 +276,12 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 	allRep := repFunc.Predict(allStates)
 
 	allTransRep := make([][]float64, len(allTransStr)-1)
-	//rewards := make([]float64, len(allTransStr)-1)
-	//states := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
-		row := make([]float64, env.repSettings.RepLen*2+3+1)
+		row := make([]float64, env.repSettings.RepLen*2+3+1) // The last bit is the index
 		for j, num := range trans {
 			if j == 0 { // next state
 				copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen*2+1], allNextRep[j])
-				//states[i-1] = row[env.repSettings.RepLen+1 : env.repSettings.RepLen*2+1]
 			} else if j == 1 { // current state
 				copy(row[:env.repSettings.RepLen], allRep[j])
 			} else if j == 2 { // action
@@ -312,9 +301,9 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 	env.rewardBound[0], _ = ao.ArrayMin(rewards)
 	env.rewardBound[1], _ = ao.ArrayMax(rewards)
 	env.stateBound = make([][]float64, 2)
-	for i := 0; i < len(states[0]); i++ {
-		mn, _ := ao.ColumnMin(states, i)
-		mx, _ := ao.ColumnMax(states, i)
+	for i := 0; i < len(allStates[0]); i++ {
+		mn, _ := ao.ColumnMin(allStates, i)
+		mx, _ := ao.ColumnMax(allStates, i)
 		env.stateBound[0] = append(env.stateBound[0], mn)
 		env.stateBound[1] = append(env.stateBound[1], mx)
 	}
