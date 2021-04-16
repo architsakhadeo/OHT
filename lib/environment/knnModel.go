@@ -179,16 +179,18 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	//}
 
 	if env.knnSettings.ExtraRisk > 0 {
-		numIdx := int(float64(len(env.offlineData)) * env.knnSettings.ExtraRisk)
+		numIdx := int(float64(len(env.offlineDataObs)) * env.knnSettings.ExtraRisk)
 		for i := 0; i < numIdx; i++ {
-			rndIdx := env.rng.Int() % len(env.offlineData)
-			env.offlineData[rndIdx][env.stateDim*2+1] = env.rewardBound[0]
-			env.offlineData[rndIdx][env.stateDim*2+2] = 1
+			rndIdx := env.rng.Int() % len(env.offlineDataObs)
+			env.offlineDataObs[rndIdx][env.stateDim*2+1] = env.rewardBound[0]
+			env.offlineDataObs[rndIdx][env.stateDim*2+2] = 1
+			env.offlineDataRep[rndIdx][env.stateDim*2+1] = env.rewardBound[0]
+			env.offlineDataRep[rndIdx][env.stateDim*2+2] = 1
 		}
 	}
 
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
-	env.offlineModel.BuildTree(env.offlineData, "current")
+	env.offlineModel.BuildTree(env.offlineDataRep, "current")
 
 	if env.knnSettings.PickStartS == "random-init" { // default setting
 		env.PickStartFunc = env.randomizeInitState
@@ -211,7 +213,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	if env.ShapeReward {
 		var trans2term [][]float64
 		for i := 0; i < len(env.trueTermns); i++ {
-			trans2term = append(trans2term, env.offlineData[env.trueTermns[i]])
+			trans2term = append(trans2term, env.offlineDataObs[env.trueTermns[i]])
 		}
 		env.terminsTree = transModel.New(env.NumberOfActions, env.stateDim)
 		env.terminsTree.BuildTree(trans2term, "next")
@@ -389,7 +391,7 @@ func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) 
 
 func (env *KnnModelEnv) randomizeInitState() rlglue.State {
 	randIdx := env.rng.Intn(len(env.trueStarts))
-	state := env.trueData[env.trueStarts[randIdx]][:env.stateDim]
+	state := env.trueDataObs[env.trueStarts[randIdx]][:env.stateDim]
 	return state
 }
 
@@ -403,8 +405,8 @@ func (env *KnnModelEnv) randomizeInitState() rlglue.State {
 //}
 
 func (env *KnnModelEnv) randomizeState() rlglue.State {
-	randIdx := env.rng.Intn(len(env.offlineData))
-	state := env.offlineData[randIdx][:env.stateDim]
+	randIdx := env.rng.Intn(len(env.offlineDataObs))
+	state := env.offlineDataObs[randIdx][:env.stateDim]
 	return state
 }
 
@@ -728,8 +730,8 @@ func (env *KnnModelEnv) LogVisitCount() error {
 	//if err != nil {
 	//	return err
 	//}
-	for i:=0; i<len(env.offlineData); i++ {
-		key := ao.FloatAryToString(env.offlineData[i][env.stateDim+1:env.stateDim*2+1], " ")
+	for i:=0; i<len(env.offlineDataObs); i++ {
+		key := ao.FloatAryToString(env.offlineDataObs[i][env.stateDim+1:env.stateDim*2+1], " ")
 		_, err := file.WriteString(fmt.Sprintf("%v,%d\n", key, env.VisitCount[key]))
 		if err != nil {
 			return err
