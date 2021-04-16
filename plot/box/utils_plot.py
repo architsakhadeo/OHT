@@ -499,6 +499,7 @@ def plot_dataset(datasets, key, dimension, group, run, title, preprocessing=None
 def plot_termination(datasets, types, run, title):
     plt.figure()
     y_count = 0
+    y_label = [[], []]
 
     all_data = {}
     for cidx, case in enumerate(list(datasets.keys())):
@@ -517,13 +518,19 @@ def plot_termination(datasets, types, run, title):
                     all_data[case][tp].append(idx)
             plt.scatter(all_data[case][tp], [y_count] * len(all_data[case][tp]),
                         color=cmap(case, float(cidx)/len(list(datasets.keys()))), marker=mmap(tp, tidx),
-                        label="{}-{}".format(case, tp))
+                        )# label="{}-{}".format(case, tp))
+            y_label[1].append("{}-{}".format(case, tp))
+            y_label[0].append(y_count)
+            # print(y_label[-1], y_count)
             y_count += 0.5
+
         y_count += 0.5
 
     # plt.xlim(0, 5000)
     plt.xlabel("timestep")
-    plt.legend()
+    plt.ylim(-0.5, y_count)
+    plt.yticks(y_label[0], y_label[1], rotation=50)
+    # plt.legend()
     plt.savefig("{}_{}.png".format(title, run))
     # plt.show()
     plt.close()
@@ -571,7 +578,7 @@ def plot_termination_perc(datasets, types, run, title):
                      # color=cmap(case, float(cidx)/len(list(datasets.keys()))), marker=mmap(tp, tidx),
                      color=cmap(tp, float(tidx)/len(types)), marker=mmap(tp, tidx),
                      label="{}-{}".format(case, tp))
-        # plt.xlim(0, 5000)
+        plt.xlim(0, 20000)
         plt.xlabel("timestep")
         plt.legend()
         plt.savefig("{}_{}_{}.png".format(title, case, run))
