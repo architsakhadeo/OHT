@@ -55,7 +55,9 @@ type repSettings struct {
 	TrainBatch		int 	`json:"rep-train-batch"`
 	LearnRate		float64 `json:"rep-train-learning-rate"`
 	TrainHiddenLy	[]int 	`json:"rep-hidden"`
-	RepLen			int 	`json:"rep-rep-dim"`
+
+	RepLen			int 	`json:"rep-dim"`
+	RepName			string 	`json:"rep-name"`
 }
 
 type KnnModelEnv struct {
@@ -139,6 +141,13 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
+	err = json.Unmarshal(attr, &env.repSettings)
+	if err != nil {
+		err = errors.New("environment.knnModel settings error: " + err.Error())
+		env.Message("err", err)
+		return err
+	}
+
 	env.knnSettings.Seed += int64(run / env.knnSettings.TotalLogs)
 	// For CEM, use env.knnSettings.Seed += int64(run)
 
@@ -173,10 +182,6 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.trueStarts, env.trueTermns = env.SearchOfflineStart(env.trueDataObs)
 
 	env.VisitCount = make(map[string]int)
-	//for i:=0; i<len(env.offlineData); i++ {
-	//	key := ao.FloatAryToString(env.offlineData[i][env.stateDim+1:env.stateDim*2+1], " ")
-	//	env.VisitCount[key] = 0
-	//}
 
 	if env.knnSettings.ExtraRisk > 0 {
 		numIdx := int(float64(len(env.offlineDataObs)) * env.knnSettings.ExtraRisk)
@@ -188,7 +193,6 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 			env.offlineDataRep[rndIdx][env.stateDim*2+2] = 1
 		}
 	}
-
 	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
 	env.offlineModel.BuildTree(env.offlineDataRep, "current")
 
@@ -245,11 +249,15 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 			if j == 0 { // next state
 				num = num[1 : len(num)-1] // remove square brackets
 				copy(row[env.stateDim+1:env.stateDim*2+1], convformat.ListStr2Float(num, " "))
+
+				allNextStates[i-1] = make([]float64, env.stateDim)
 				copy(allNextStates[i-1], row[env.stateDim+1 : env.stateDim*2+1])
 
 			} else if j == 1 { // current state
 				num = num[1 : len(num)-1]
 				copy(row[:env.stateDim], convformat.ListStr2Float(num, " "))
+
+				allStates[i-1] = make([]float64, env.stateDim)
 				copy(allStates[i-1], row[:env.stateDim])
 
 			} else if j == 2 { // action
@@ -267,13 +275,21 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 		allTransObs[i-1] = row
 	}
 
-	repModel := representation.NewLaplace()
-	repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
-		env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
-		env.repSettings.TrainHiddenLy, allStates, allTermin, env.repSettings.RepLen)
-	repFunc := repModel.Train()
-	allNextRep := repFunc.Predict(allNextStates)
-	allRep := repFunc.Predict(allStates)
+	var allNextRep [][]float64
+	var allRep [][]float64
+	if env.repSettings.RepName == "Laplace" {
+		repModel := representation.NewLaplace()
+		repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
+			env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
+			env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen)
+		repFunc := repModel.Train()
+		allNextRep = repFunc.Predict(allNextStates)
+		allRep = repFunc.Predict(allStates)
+	} else {
+		env.repSettings.RepLen = env.stateDim
+		allNextRep = allNextStates
+		allRep = allStates
+	}
 
 	allTransRep := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
@@ -281,9 +297,9 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 		row := make([]float64, env.repSettings.RepLen*2+3+1) // The last bit is the index
 		for j, num := range trans {
 			if j == 0 { // next state
-				copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen*2+1], allNextRep[j])
+				copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen*2+1], allNextRep[i-1])
 			} else if j == 1 { // current state
-				copy(row[:env.repSettings.RepLen], allRep[j])
+				copy(row[:env.repSettings.RepLen], allRep[i-1])
 			} else if j == 2 { // action
 				row[env.repSettings.RepLen], _ = strconv.ParseFloat(num, 64)
 			} else if j == 3 { //reward
@@ -295,6 +311,8 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 		}
 		row[env.repSettings.RepLen*2+3] = float64(i-1) // index
 		allTransRep[i-1] = row
+		//fmt.Println(allTransRep[i-1])
+		//fmt.Println(allTransObs[i-1], "\n")
 	}
 
 	env.rewardBound = make([]float64, 2)
@@ -311,10 +329,10 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 
 	if env.NoisyS != 0 {
 		for i := 0; i < len(allTransRep); i++ {
-			temp := env.AddStateNoise(allTransRep[i][:env.stateDim], env.stateBound)
-			copy(allTransRep[i][:env.stateDim], temp)
-			temp = env.AddStateNoise(allTransRep[i][env.stateDim+1:env.stateDim*2+1], env.stateBound)
-			copy(allTransRep[i][env.stateDim+1:env.stateDim*2+1], temp)
+			temp := env.AddStateNoise(allTransObs[i][:env.stateDim], env.stateBound)
+			copy(allTransObs[i][:env.stateDim], temp)
+			temp = env.AddStateNoise(allTransObs[i][env.stateDim+1:env.stateDim*2+1], env.stateBound)
+			copy(allTransObs[i][env.stateDim+1:env.stateDim*2+1], temp)
 		}
 	}
 
@@ -338,31 +356,6 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 		allTransObsKeep = allTransObs
 	}
 	return allTransObsKeep, allTransRepKeep
-	//if env.NoisyS != 0 {
-	//	for i := 0; i < len(allTransTemp); i++ {
-	//		temp := env.AddStateNoise(allTransTemp[i][:env.stateDim], env.stateBound)
-	//		copy(allTransTemp[i][:env.stateDim], temp)
-	//		temp = env.AddStateNoise(allTransTemp[i][env.stateDim+1:env.stateDim*2+1], env.stateBound)
-	//		copy(allTransTemp[i][env.stateDim+1:env.stateDim*2+1], temp)
-	//	}
-	//}
-	//
-	//var allTrans [][]float64
-	////if env.EnsembleSeed != 0 {
-	////	tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
-	//if env.DropPerc != 0 {
-	//	//fmt.Println("HERE", env.DropPerc)
-	//	filteredLen := int(float64(len(allTransTemp)) * (1 - env.DropPerc))
-	//	filteredIdx := env.rng.Perm(len(allTransTemp))[:filteredLen]
-	//	//fmt.Println("HERE", filteredIdx[:5])
-	//	allTrans = make([][]float64, filteredLen)
-	//	for i := 0; i < filteredLen; i++ {
-	//		allTrans[i] = allTransTemp[filteredIdx[i]]
-	//	}
-	//} else {
-	//	allTrans = allTransTemp
-	//}
-	//return allTrans
 }
 
 func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) {
@@ -410,7 +403,11 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 	size := 0
 	for act := 0; act < env.NumberOfActions; act++ {
 		size = env.offlineModel.TreeSize(act)
-		states, _, _, _, distances := env.offlineModel.SearchTree(env.state, act, size)
+		_, _, _, _, distances, repIdxs := env.offlineModel.SearchTree(env.state, act, size)
+		states := make([][]float64, len(repIdxs))
+		for j, id := range repIdxs {
+			copy(states[j], env.offlineDataObs[id][:env.stateDim])
+		}
 		copy(totalStates[idx:idx+size], states)
 		copy(totalDistance[idx:idx+size], distances)
 		idx += size
@@ -477,12 +474,17 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 	}
 	//fmt.Println("Before target:", env.state)
 	//fmt.Println(env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num))
-	states, nextStates, rewards, terminals, distances := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
-	//fmt.Print("===, ", actInt)
-	//fmt.Println(env.offlineModel.SearchTree(env.state, 1, env.Neighbor_num))
-	//fmt.Println(env.offlineModel.SearchTree(env.state, 0, env.Neighbor_num))
+	_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+	states := make([][]float64, len(repIdxs))
+	nextStates := make([][]float64, len(repIdxs))
+	for j, id := range repIdxs {
+		states[j] = make([]float64, env.stateDim)
+		nextStates[j] = make([]float64, env.stateDim)
+		copy(states[j], env.offlineDataObs[id][:env.stateDim])
+		copy(nextStates[j], env.offlineDataObs[id][env.stateDim+1 : env.stateDim*2+1])
+	}
+
 	temp, nextState, reward, terminal, _ := env.PickNextFunc(env.state, states, nextStates, rewards, terminals, distances)
-	//_, nextState, reward, terminal, _ := env.PickNextFunc(env.state, states, nextStates, rewards, terminals, distances)
 
 	env.state = nextState
 
@@ -513,7 +515,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 		var totalRwd []float64
 		var totalDistance []float64
 		for act := 0; act < env.NumberOfActions; act++ {
-			_, _, tR, _, dist := env.terminsTree.SearchTree(env.state, act, 1)
+			_, _, tR, _, dist, _ := env.terminsTree.SearchTree(env.state, act, 1)
 			if tR != nil {
 				totalRwd = append(totalRwd, tR[0])
 				totalDistance = append(totalDistance, dist[0])
@@ -603,7 +605,7 @@ func (env *KnnModelEnv) CloserNeighbor(currentS []float64, states, nextStates []
 	reward := rewards[chosen]
 	terminal := terminals[chosen]
 	distance := distances[chosen]
-	//fmt.Println("After:", state, nextState, reward, terminal, distance)
+	//fmt.Println("After:", state, nextState, reward, terminal, distance, distances)
 	return state, nextState, reward, terminal, distance
 }
 
