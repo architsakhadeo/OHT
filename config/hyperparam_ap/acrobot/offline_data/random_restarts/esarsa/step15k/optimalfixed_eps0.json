@@ -6,7 +6,7 @@
     "state-len": 6,
     "env-name": "acrobot",
     "buffer-type": "random",
-    "buffer-size": 1600,
+    "buffer-size": 2000,
     "decreasing-epsilon": "None",
     "sweep": {
       "epsilon": [0.0],
@@ -24,7 +24,7 @@
 
     "lock-weight": true,
     "lock-condition": "onetime-epstep-lessthan",
-    "lock-condition-epstep-lessthan": 80,
+    "lock-condition-epstep-lessthan": 100,
     "enable-debug": false,
     "seed": 1
   },
