@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strings"
 
 	"github.com/stellentus/cartpoles/lib/rlglue"
 )
+
+
+func FloatAryToString(a []float64, delim string) string {
+	return strings.Trim(strings.Replace(fmt.Sprint(a), " ", delim, -1), "[]")
+}
 
 func Search2D(target []float64, list [][]float64) int {
 	for idx, l := range list {
@@ -410,11 +416,31 @@ func Flatten2DInt(inputData [][]int) []int {
 	return flatten
 }
 
-func Average(inputData []float64) float64 {
+func Sum(inputData []float64) float64 {
 	sum := 0.0
 	for i := 0; i < len(inputData); i++ {
 		sum = sum + inputData[i]
 	}
+	return sum
+}
+func Average(inputData []float64) float64 {
+	sum := Sum(inputData)
 	sum = sum / float64(len(inputData))
 	return sum
+}
+
+func SumOnAxis2D(inputData [][]float64, axis int) []float64 {
+	temp := make([]float64, len(inputData))
+	for i:=0; i<len(inputData); i++ {
+		temp[i] = Sum(inputData[i])
+	}
+	if axis == 1 {
+		return temp
+	} else if axis==0 {
+		sum := make([]float64, 1)
+		sum[0] = Sum(temp)
+		return sum
+	} else {
+		return nil
+	}
 }

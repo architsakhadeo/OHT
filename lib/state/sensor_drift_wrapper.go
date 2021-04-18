@@ -194,3 +194,7 @@ func (wrapper *SensorDriftWrapper) logisticProb(idx int) float64 {
 func (wrapper *SensorDriftWrapper) clamp(x float64, idx int) float64 {
 	return math.Max(-wrapper.noiseMax[idx], math.Min(x, wrapper.noiseMax[idx]))
 }
+
+func (wrapper *SensorDriftWrapper) GetInfo(info string, value float64) interface{} {
+	return nil
+}

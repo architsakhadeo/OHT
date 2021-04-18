@@ -1,0 +1,33 @@
+{
+  "agent-name": "esarsa",
+  "environment-name": "cartpole",
+  "agent-settings": {
+    "gamma": 0.9,
+    "state-len": 4,
+    "sweep": {
+      "epsilon": [0.05],
+      "tilings": [1, 4, 16],
+      "tiles": [2, 4, 8],
+      "lambda": [0.8],
+      "alpha": [1e-03],
+      "is-stepsize-adaptive": [true],
+      "adaptive-alpha": [1, 1e-3, 1e-6]
+    },
+    "lock-weight": false,
+    "enable-debug": false,
+    "seed": 1
+  },
+  "environment-settings": {
+    "seed": 1,
+    "sweep": {
+      "delays":[[0]]
+    }
+  },
+  "experiment-settings": {
+    "steps": 50000,
+    "data-path": "data/hyperparam/cartpole/online_learning/esarsa-adam/step50k/sweep/",
+    "should-log-traces": false,
+    "should-log-episode-lengths": true,
+    "debug-interval": 1000
+  }
+}

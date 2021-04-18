@@ -13,4 +13,6 @@ type Environment interface {
 
 	// GetAttributes returns attributes for this environment.
 	GetAttributes() Attributes
+
+	GetInfo(info string, value float64) interface{}
 }

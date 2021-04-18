@@ -85,3 +85,7 @@ func (env *Futile) GetAttributes() rlglue.Attributes {
 
 	return attr
 }
+
+func (env *Futile) GetInfo(info string, value float64) interface{} {
+	return nil
+}

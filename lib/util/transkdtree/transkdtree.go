@@ -95,9 +95,9 @@ func (t *TransTrees) BuildTree(allTrans [][]float64, key string) {
 	}
 }
 
-func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float64, [][]float64, []float64, []float64, []float64) {
+func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float64, [][]float64, []float64, []float64, []float64, []int) {
 	if len(t.data[action]) == 0 {
-		return nil, nil, nil, nil, nil
+		return nil, nil, nil, nil, nil, nil
 	}
 	var keep kdtree.Keeper
 	q := node{target, nil} // we don't need value for a compared node
@@ -120,6 +120,7 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 	var rewards []float64
 	var terminals []float64
 	var dists []float64
+	var idxs []int
 	//fmt.Println(`k closest transitions to`, target)
 	//fmt.Println(len(keep.(*kdtree.NKeeper).Heap))
 	for _, c := range keep.(*kdtree.NKeeper).Heap {
@@ -129,6 +130,7 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 		rewards = append(rewards, p.value[t.stateDim*2+1])
 		terminals = append(terminals, p.value[t.stateDim*2+2])
 		dists = append(dists, p.Distance(q))
+		idxs = append(idxs, int(p.value[t.stateDim*2+3]))
 		//fmt.Println(states, nextStates, rewards, terminals, dists)
 		//fmt.Println(i, p.key, p.Distance(q))
 	}
@@ -137,7 +139,8 @@ func (t *TransTrees) SearchTree(target []float64, action int, k int) ([][]float6
 
 	//fmt.Println()
 	//fmt.Println("Inside function:",states, nextStates, rewards, terminals, dists)
-	return states, nextStates, rewards, terminals, dists}
+	return states, nextStates, rewards, terminals, dists, idxs
+}
 
 func (t *TransTrees) TreeSize(action int) int {
 	return len(t.data[action])

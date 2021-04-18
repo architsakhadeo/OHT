@@ -321,3 +321,7 @@ func (env *Acrobot) rk4(y0 rlglue.State, t [2]float64) rlglue.State {
 
 	return y1
 }
+
+func (env *Acrobot) GetInfo(info string, value float64) interface{} {
+	return nil
+}

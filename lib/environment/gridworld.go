@@ -350,3 +350,7 @@ func (env *Gridworld) GetAttributes() rlglue.Attributes {
 
 	return attr
 }
+
+func (env *Gridworld) GetInfo(info string, value float64) interface{} {
+	return nil
+}

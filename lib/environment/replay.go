@@ -99,3 +99,7 @@ func stateWithAction(st rlglue.State, act rlglue.Action) rlglue.State {
 	actFloat, _ := tpo.GetFloat(act)
 	return append(st, actFloat)
 }
+
+func (env *Replay) GetInfo(info string, value float64) interface{} {
+	return nil
+}
