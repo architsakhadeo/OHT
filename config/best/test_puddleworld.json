@@ -6,31 +6,30 @@
       "gamma": 1,
       "state-len": 2,
       "sweep": {
-        "weight-init": [3.4438134771108433],
+        "weight-init": [4.26777746547663],
         "epsilon": [0],
         "tilings": [16],
         "tiles": [8],
-        "lambda": [0.23851445080097175],
+        "lambda": [0.13599512569901503],
         "alpha": [0],
         "is-stepsize-adaptive": [true],
-        "adaptive-alpha": [0.5774032045995984],
-        "beta1": [0.5561171359938084],
-        "softmax-temp": [0.8750577165725871]
+        "adaptive-alpha": [0.3447819838884125],
+        "beta1": [0.9],
+        "softmax-temp": [0.11718025129729964]
       },
       "lock-weight": false,
       "enable-debug": false,
       "seed": 1
     },
     "environment-settings": {
-      "seed": 1,
-      "start-hard": true
+      "seed": 1
     },
     "experiment-settings": {
-      "randomize_start_state_beforeLock": false,
-      "randomize_start_state_afterLock": false,
+      "randomize_start_state_beforeLock": true,
+      "randomize_start_state_afterLock": true,
       "episodes": 4000000,
       "steps-in-episode": 0,
-      "max-run-length-episodic": 100000,
+      "max-run-length-episodic": 1000,
       "data-path": "data/best/puddleworld/",
       "should-log-traces": false,
       "should-log-episode-lengths": true,
