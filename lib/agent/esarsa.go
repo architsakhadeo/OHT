@@ -50,7 +50,7 @@ type EsarsaSettings struct {
 	Alpha              float64 `json:"alpha"`
 	AdaptiveAlpha      float64 `json:"adaptive-alpha"`
 	IsStepsizeAdaptive bool    `json:"is-stepsize-adaptive"`
-	SoftmaxTemperature float64 `json:"softmax-temperature"`
+	SoftmaxTemperature float64 `json:"softmax-temp"`
 	EnvName            string  `json:"env-name"`
 	Beta1              float64 `json:"beta1"`
 

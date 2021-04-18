@@ -18,8 +18,8 @@
 			"weight-init": [4.270180451447466],
 			"is-stepsize-adaptive": [true],
 			"adaptive-alpha": [0.3531856536492844],
-			"beta1": [0.3423875317143536],
-			"softmax-temp": [0.12194088114632218]
+			"beta1": [0.3423875317143536],
+			"softmax-temp": [0.12194088114632218]
 		},
 
 		"lock-weight": true,

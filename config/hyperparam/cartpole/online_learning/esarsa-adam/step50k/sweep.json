@@ -14,7 +14,7 @@
       "alpha": [0.01],
       "is-stepsize-adaptive": [false],
       "adaptive-alpha": [1, 1e-3, 1e-6],
-      "softmax-temperature": [1.0]
+      "softmax-temp": [1.0]
     },
     "lock-weight": false,
     "enable-debug": false,
