@@ -370,6 +370,7 @@ func BitwisePower(array []float64, p float64) []float64 {
 	return res
 }
 
+
 func ReSize1DInt(inputData []int, rows, columns int) [][]int {
 	if rows*columns != len(inputData) {
 		fmt.Println("ReSize1DInt: Wrong Size")
@@ -443,4 +444,20 @@ func SumOnAxis2D(inputData [][]float64, axis int) []float64 {
 	} else {
 		return nil
 	}
+}
+
+func Absolute2D(inputData [][]float64) [][]float64 {
+	res := make([][]float64, len(inputData))
+	for i:=0; i<len(inputData); i++ {
+		res[i] = make([]float64, len(inputData[i]))
+		res[i] = Absolute(inputData[i])
+	}
+	return res
+}
+func Absolute(inputData []float64) []float64 {
+	res := make([]float64, len(inputData))
+	for i:=0; i<len(inputData); i++ {
+		res[i] = math.Abs(inputData[i])
+	}
+	return res
 }
