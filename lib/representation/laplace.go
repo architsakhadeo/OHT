@@ -144,27 +144,27 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) float64 {
 	}
 	lp.repFunc.Backward(avgLossMat, lp.optimizer)
 
-	//closeLoss := lp.GetAttractiveLoss(closesRep, statesRep)
-	//avgLossMat = make([][]float64, len(states))
-	//for i:=0; i<len(states); i++ {
-	//	avgLossMat[i] = make([]float64, lp.repLen)
-	//	for j := 0; j < lp.repLen; j++ {
-	//		avgLossMat[i][j] = closeLoss[i]
-	//	}
-	//}
-	//lp.repFunc.Forward(closes)
-	//lp.repFunc.Backward(avgLossMat, lp.optimizer)
-	//
-	//farLoss := ao.A64ArrayMulti(lp.beta, lp.GetRepulsiveLoss(farsRep, statesRep))
-	//avgLossMat = make([][]float64, len(states))
-	//for i:=0; i<len(states); i++ {
-	//	avgLossMat[i] = make([]float64, lp.repLen)
-	//	for j := 0; j < lp.repLen; j++ {
-	//		avgLossMat[i][j] = farLoss[i]
-	//	}
-	//}
-	//lp.repFunc.Forward(fars)
-	//lp.repFunc.Backward(avgLossMat, lp.optimizer)
+	closeLoss := lp.GetAttractiveLoss(closesRep, statesRep)
+	avgLossMat = make([][]float64, len(states))
+	for i:=0; i<len(states); i++ {
+		avgLossMat[i] = make([]float64, lp.repLen)
+		for j := 0; j < lp.repLen; j++ {
+			avgLossMat[i][j] = closeLoss[i]
+		}
+	}
+	lp.repFunc.Forward(closes)
+	lp.repFunc.Backward(avgLossMat, lp.optimizer)
+
+	farLoss := ao.A64ArrayMulti(lp.beta, lp.GetRepulsiveLoss(farsRep, statesRep))
+	avgLossMat = make([][]float64, len(states))
+	for i:=0; i<len(states); i++ {
+		avgLossMat[i] = make([]float64, lp.repLen)
+		for j := 0; j < lp.repLen; j++ {
+			avgLossMat[i][j] = farLoss[i]
+		}
+	}
+	lp.repFunc.Forward(fars)
+	lp.repFunc.Backward(avgLossMat, lp.optimizer)
 
 	return ao.Average(avgLoss)
 }
