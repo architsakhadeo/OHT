@@ -1,6 +1,7 @@
 package representation
 
 import (
+	"fmt"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
@@ -71,9 +72,9 @@ func (lp *Laplace) OrganizeData(dataSet [][]float64, terminSet []float64) ([][][
 		var traj [][]float64
 		termin = false
 		k = 0
-		for !termin && k < lp.trajLen{
+		for !termin && k < lp.trajLen && i+k < len(dataSet){
 			traj = append(traj, dataSet[i+k])
-			termin = (terminSet[i+k] == 0)
+			termin = (terminSet[i+k] == 1)
 			k += 1
 		}
 		organized = append(organized, traj)
@@ -83,9 +84,13 @@ func (lp *Laplace) OrganizeData(dataSet [][]float64, terminSet []float64) ([][][
 }
 
 func (lp *Laplace) Train() network.Network {
+	losses := make([]float64, 100)
 	for i := 0; i < lp.numStep; i++ {
 		states, closes, fars := lp.Sample(lp.batchSize)
-		lp.Update(states, closes, fars)
+		losses[i%len(losses)] = lp.Update(states, closes, fars)
+		if i%len(losses) == 0 && i != 0{
+			fmt.Println("Training loss at step", i, "is", ao.Average(losses))
+		}
 	}
 	return lp.repFunc
 }
@@ -103,26 +108,32 @@ func (lp *Laplace) Sample(batchSize int) ([][]float64, [][]float64, [][]float64)
 	for i := 0; i < lp.batchSize; i++ {
 		chosen := lp.rng.Intn(len(lp.dataSet))
 		states[i] = lp.dataSet[chosen][0]
-		closes[i] = lp.dataSet[chosen][random.FreqSample(ao.NormalizeProb(lp.lambdaProb[:lp.dataLenSet[chosen]]))]
+
+		normP := ao.NormalizeProb(lp.lambdaProb[:lp.dataLenSet[chosen]])
+		closes[i] = lp.dataSet[chosen][random.FreqSample(normP)]
 		fars[i] = lp.dataSet[lp.rng.Intn(len(lp.dataSet))][0]
 	}
 	return states, closes, fars
 }
 
-func (lp *Laplace) Update(states, closes, fars [][]float64) {
+func (lp *Laplace) Update(states, closes, fars [][]float64) float64 {
 	statesRep := lp.repFunc.Forward(states)
 	closesRep := lp.repFunc.Forward(closes)
 	farsRep := lp.repFunc.Forward(fars)
 	attractiveLoss := lp.GetAttractiveLoss(statesRep, closesRep)
 	repulsiveLoss := lp.GetRepulsiveLoss(statesRep, farsRep)
 	avgLoss := attractiveLoss + lp.beta * repulsiveLoss
+	fmt.Println(attractiveLoss, repulsiveLoss)
 
-	avgLossMat := make([][]float64, 1)
-	avgLossMat[0] = make([]float64, lp.repLen)
-	for j := 0; j < lp.repLen; j++ {
-		avgLossMat[0][j] = avgLoss
+	avgLossMat := make([][]float64, len(states))
+	for i:=0; i<len(states); i++ {
+		avgLossMat[i] = make([]float64, lp.repLen)
+		for j := 0; j < lp.repLen; j++ {
+			avgLossMat[i][j] = avgLoss
+		}
 	}
 	lp.repFunc.Backward(avgLossMat, lp.optimizer)
+	return avgLoss
 }
 
 //func (lp *Laplace) GetAttractiveLoss(statesRep, closesRep [][]float64) [][]float64 {
@@ -137,12 +148,15 @@ func (lp *Laplace) GetAttractiveLoss(statesRep, closesRep [][]float64) float64 {
 }
 
 func (lp *Laplace) GetRepulsiveLoss(statesRep, farsRep [][]float64) float64 {
+	// \phi(u)^T \phi(v)
 	dotProd := ao.SumOnAxis2D(ao.BitwiseMulti2D(statesRep, farsRep), 1)
 
+	// - |\phi(u)|^2
 	statesNorm := ao.BitwisePower2D(statesRep, 2)
 	statesNormSum := ao.SumOnAxis2D(statesNorm, 1)
 	statesNormWeighted := ao.A64ArrayMulti(lp.delta*(-1), statesNormSum)
 
+	// - |\phi(v)|^2
 	farsNorm := ao.BitwisePower2D(farsRep, 2)
 	farsNormSum := ao.SumOnAxis2D(farsNorm, 1)
 	farsNormWeighted := ao.A64ArrayMulti(lp.delta*(-1), farsNormSum)
