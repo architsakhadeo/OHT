@@ -138,38 +138,38 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) (float64, float64) {
 	repulsiveLoss, rlBeforeDer := lp.GetRepulsiveLoss(statesRep, farsRep)
 	avgLoss := ao.BitwiseAdd(attractiveLoss, ao.A64ArrayMulti(lp.beta, repulsiveLoss))
 	//fmt.Println(ao.Average(attractiveLoss), ao.Average(repulsiveLoss))
-	avgLossMat := make([][]float64, len(states))
+	statesAvgLossMat := make([][]float64, len(states))
 	for i:=0; i<len(states); i++ {
-		avgLossMat[i] = make([]float64, lp.repLen)
+		statesAvgLossMat[i] = make([]float64, lp.repLen)
 		for j := 0; j < lp.repLen; j++ {
-			avgLossMat[i][j] = avgLoss[i]
+			statesAvgLossMat[i][j] = avgLoss[i]
 		}
 	}
-	lp.repFunc.Backward(avgLossMat, lp.optimizer)
+	lp.repFunc.Backward(statesAvgLossMat, lp.optimizer)
 
 	closeLoss, clBeforeDer := lp.GetAttractiveLoss(closesRep, statesRep)
-	avgLossMat = make([][]float64, len(states))
+	closeAvgLossMat := make([][]float64, len(states))
 	for i:=0; i<len(states); i++ {
-		avgLossMat[i] = make([]float64, lp.repLen)
+		closeAvgLossMat[i] = make([]float64, lp.repLen)
 		for j := 0; j < lp.repLen; j++ {
-			avgLossMat[i][j] = closeLoss[i]
+			closeAvgLossMat[i][j] = closeLoss[i]
 		}
 	}
 	lp.repFunc.Forward(closes)
-	lp.repFunc.Backward(avgLossMat, lp.optimizer)
+	lp.repFunc.Backward(closeAvgLossMat, lp.optimizer)
 
 	farLoss, fBeforeDer := lp.GetRepulsiveLoss(farsRep, statesRep)
 	farLoss = ao.A64ArrayMulti(lp.beta, farLoss)
 	fBeforeDer = ao.A64ArrayMulti(lp.beta, fBeforeDer)
-	avgLossMat = make([][]float64, len(states))
+	farAvgLossMat := make([][]float64, len(states))
 	for i:=0; i<len(states); i++ {
-		avgLossMat[i] = make([]float64, lp.repLen)
+		farAvgLossMat[i] = make([]float64, lp.repLen)
 		for j := 0; j < lp.repLen; j++ {
-			avgLossMat[i][j] = farLoss[i]
+			farAvgLossMat[i][j] = farLoss[i]
 		}
 	}
 	lp.repFunc.Forward(fars)
-	lp.repFunc.Backward(avgLossMat, lp.optimizer)
+	lp.repFunc.Backward(farAvgLossMat, lp.optimizer)
 
 	//return ao.Average(avgLoss)
 	return ao.Average(ao.BitwiseAdd(ao.BitwiseAdd(ao.BitwiseAdd(attractiveLoss, repulsiveLoss), closeLoss), farLoss)),
