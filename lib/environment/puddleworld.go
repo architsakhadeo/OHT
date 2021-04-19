@@ -191,6 +191,7 @@ func (env *Puddleworld) randFloat(min, max float64) float64 {
 // Start returns an initial observation.
 func (env *Puddleworld) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	env.randomizeState(randomizeStartStateCondition)
+	//fmt.Println("Random start state: ", env.state)
 	return env.getObservations(), ""
 }
 
