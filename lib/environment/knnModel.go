@@ -431,13 +431,14 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
 
-	prob := make([]float64, len(totalDistance))
-	temp1 := 0.0
-	for i := 0; i < len(totalDistance); i++ {
-		prob[i] = temp1 + normalizedPdf[i]
-		temp1 = prob[i]
-	}
-	chosen := random.FreqSample(prob)
+	//prob := make([]float64, len(totalDistance))
+	//temp1 := 0.0
+	//for i := 0; i < len(totalDistance); i++ {
+	//	prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = prob[i]
+	//}
+	//chosen := random.FreqSample(prob)
+	chosen := random.FreqSample(normalizedPdf)
 	state := totalStates[chosen]
 	//fmt.Printf("%.2f \n", totalDistance[chosen])
 	return state
@@ -592,13 +593,14 @@ func (env *KnnModelEnv) CloserNeighbor(currentS []float64, states, nextStates []
 	for i := 0; i < len(distances); i++ {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
-	neighbor_prob := make([]float64, len(distances))
-	temp1 := 0.0
-	for i := 0; i < len(distances); i++ {
-		neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = neighbor_prob[i]
-	}
-	chosen := random.FreqSample(neighbor_prob)
+	//neighbor_prob := make([]float64, len(distances))
+	//temp1 := 0.0
+	//for i := 0; i < len(distances); i++ {
+	//	neighbor_prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = neighbor_prob[i]
+	//}
+	//chosen := random.FreqSample(neighbor_prob)
+	chosen := random.FreqSample(normalizedPdf)
 
 	state := states[chosen]
 	nextState := nextStates[chosen]
@@ -639,13 +641,13 @@ func (env *KnnModelEnv) FurtherNext(currentS []float64, states, nextStates [][]f
 	for i := 0; i < len(dists); i++ {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
-	neighbor_prob := make([]float64, len(dists))
-	temp1 := 0.0
-	for i := 0; i < len(dists); i++ {
-		neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = neighbor_prob[i]
-	}
-	chosen := random.FreqSample(neighbor_prob)
+	//neighbor_prob := make([]float64, len(dists))
+	//temp1 := 0.0
+	//for i := 0; i < len(dists); i++ {
+	//	neighbor_prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = neighbor_prob[i]
+	//}
+	chosen := random.FreqSample(normalizedPdf)
 
 	state := states[chosen]
 	nextState := nextStates[chosen]
@@ -679,13 +681,13 @@ func (env *KnnModelEnv) LowRwdNext(currentS []float64, states, nextStates [][]fl
 	for i := 0; i < len(rwds); i++ {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
-	neighbor_prob := make([]float64, len(rwds))
-	temp1 := 0.0
-	for i := 0; i < len(rwds); i++ {
-		neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = neighbor_prob[i]
-	}
-	chosen := random.FreqSample(neighbor_prob)
+	//neighbor_prob := make([]float64, len(rwds))
+	//temp1 := 0.0
+	//for i := 0; i < len(rwds); i++ {
+	//	neighbor_prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = neighbor_prob[i]
+	//}
+	chosen := random.FreqSample(normalizedPdf)
 
 	state := states[chosen]
 	nextState := nextStates[chosen]
