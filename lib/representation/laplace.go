@@ -1,11 +1,11 @@
 package representation
 
 import (
-	"fmt"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/network"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
 	"github.com/stellentus/cartpoles/lib/util/random"
+	"log"
 	"math"
 	"math/rand"
 )
@@ -87,13 +87,16 @@ func (lp *Laplace) OrganizeData(dataSet [][]float64, terminSet []float64) ([][][
 }
 
 func (lp *Laplace) Train() network.Network {
-	deriv := make([]float64, 1000)
-	losses := make([]float64, 1000)
+	logTime := 1000
+	deriv := make([]float64, logTime)
+	losses := make([]float64, logTime)
 	for i := 0; i < lp.numStep; i++ {
 		states, closes, fars := lp.Sample(lp.batchSize)
-		deriv[i%len(losses)], losses[i%len(losses)] = lp.Update(states, closes, fars)
+		deriv[i%logTime], losses[i%logTime] = lp.Update(states, closes, fars)
 		if i%len(losses) == 0 && i!=0 {
-			fmt.Println("Training loss at step", i, "is", ao.Average(losses), ". Derivative is", ao.Average(deriv))
+			//fmt.Println("Training loss at step", i, "is", ao.Average(losses), ". Derivative is", ao.Average(deriv))
+			log.Printf("Training loss at step %d is %f, derivative is %f", i, ao.Average(losses), ao.Average(deriv))
+			lp.Test()
 		}
 	}
 	return lp.repFunc
@@ -109,7 +112,7 @@ func (lp *Laplace) Sample(batchSize int) ([][]float64, [][]float64, [][]float64)
 		closes[i] = make([]float64, lp.inputLen)
 		fars[i] = make([]float64, lp.inputLen)
 	}
-	for i := 0; i < lp.batchSize; i++ {
+	for i := 0; i < batchSize; i++ {
 		//chosen := lp.rng.Intn(len(lp.dataSet))
 		//states[i] = lp.dataSet[chosen][0]
 		//
@@ -129,10 +132,10 @@ func (lp *Laplace) Sample(batchSize int) ([][]float64, [][]float64, [][]float64)
 
 func (lp *Laplace) Update(states, closes, fars [][]float64) (float64, float64) {
 	statesRep := lp.repFunc.Forward(states)
-	//closesRep := lp.repFunc.Forward(closes)
-	//farsRep := lp.repFunc.Forward(fars)
-	closesRep := lp.repFunc.Predict(closes)
-	farsRep := lp.repFunc.Predict(fars)
+	closesRep := lp.repFunc.Forward(closes)
+	farsRep := lp.repFunc.Forward(fars)
+	//closesRep := lp.repFunc.Predict(closes)
+	//farsRep := lp.repFunc.Predict(fars)
 
 	attractiveLoss, alBeforeDer := lp.GetAttractiveLoss(statesRep, closesRep)
 	repulsiveLoss, rlBeforeDer := lp.GetRepulsiveLoss(statesRep, farsRep)
@@ -145,7 +148,7 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) (float64, float64) {
 			statesAvgLossMat[i][j] = avgLoss[i]
 		}
 	}
-	lp.repFunc.Backward(statesAvgLossMat, lp.optimizer)
+	//lp.repFunc.Backward(statesAvgLossMat, lp.optimizer)
 
 	closeLoss, clBeforeDer := lp.GetAttractiveLoss(closesRep, statesRep)
 	closeAvgLossMat := make([][]float64, len(states))
@@ -155,8 +158,8 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) (float64, float64) {
 			closeAvgLossMat[i][j] = closeLoss[i]
 		}
 	}
-	lp.repFunc.Forward(closes)
-	lp.repFunc.Backward(closeAvgLossMat, lp.optimizer)
+	//lp.repFunc.Forward(closes)
+	//lp.repFunc.Backward(closeAvgLossMat, lp.optimizer)
 
 	farLoss, fBeforeDer := lp.GetRepulsiveLoss(farsRep, statesRep)
 	farLoss = ao.A64ArrayMulti(lp.beta, farLoss)
@@ -168,8 +171,9 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) (float64, float64) {
 			farAvgLossMat[i][j] = farLoss[i]
 		}
 	}
-	lp.repFunc.Forward(fars)
-	lp.repFunc.Backward(farAvgLossMat, lp.optimizer)
+	//lp.repFunc.Forward(fars)
+	//lp.repFunc.Backward(farAvgLossMat, lp.optimizer)
+	lp.repFunc.Backward(ao.BitwiseAdd2D(ao.BitwiseAdd2D(statesAvgLossMat, closeAvgLossMat), farAvgLossMat), lp.optimizer)
 
 	//return ao.Average(avgLoss)
 	return ao.Average(ao.BitwiseAdd(ao.BitwiseAdd(ao.BitwiseAdd(attractiveLoss, repulsiveLoss), closeLoss), farLoss)),
@@ -227,4 +231,26 @@ func (lp *Laplace) GetRepulsiveLoss(statesRep, farsRep [][]float64) ([]float64, 
 	repul := ao.BitwiseAdd(dotProd, statesNormWeighted)
 
 	return repul, beforeDer
+}
+
+func (lp *Laplace) Test() {
+	//states, closes, fars := lp.Sample(1)
+	//statesRep := lp.repFunc.Predict(states)
+	//closesRep := lp.repFunc.Predict(closes)
+	//farsRep := lp.repFunc.Predict(fars)
+	//
+	//fmt.Println("Test input", states, closes, fars)
+	//fmt.Println(statesRep)
+	//fmt.Println(closesRep)
+	//fmt.Println(farsRep)
+
+	states, closes, fars := lp.Sample(1000)
+	statesRep := lp.repFunc.Predict(states)
+	closesRep := lp.repFunc.Predict(closes)
+	farsRep := lp.repFunc.Predict(fars)
+
+	closeDist := ao.Average(ao.L2DistanceAxis1(statesRep, closesRep))
+	farDist := ao.Average(ao.L2DistanceAxis1(statesRep, farsRep))
+
+	log.Printf("Test: close pair distance is %f, far pair distance is %f", closeDist, farDist)
 }

@@ -30,14 +30,14 @@
 		"pick-start-state": "random-init",
 
 		"rep-train-num-step": 30000,
-		"rep-train-beta": 4,
+		"rep-train-beta": 5,
 		"rep-train-delta": 0.05,
 		"rep-train-lambda": 0.9,
-		"rep-train-traj-len": 20,
+		"rep-train-traj-len": 50,
 		"rep-train-batch": 128,
-		"rep-train-learning-rate": 0.001,
+		"rep-train-learning-rate": 0.0001,
 		"rep-hidden": [128, 128],
-		"rep-dim": 20,
+		"rep-dim": 4,
 		"rep-name": "Laplace"
 	},
 	"experiment-settings": {
