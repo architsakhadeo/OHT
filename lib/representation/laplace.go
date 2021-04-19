@@ -87,12 +87,13 @@ func (lp *Laplace) OrganizeData(dataSet [][]float64, terminSet []float64) ([][][
 }
 
 func (lp *Laplace) Train() network.Network {
+	deriv := make([]float64, 1000)
 	losses := make([]float64, 1000)
 	for i := 0; i < lp.numStep; i++ {
 		states, closes, fars := lp.Sample(lp.batchSize)
-		losses[i%len(losses)] = lp.Update(states, closes, fars)
+		deriv[i%len(losses)], losses[i%len(losses)] = lp.Update(states, closes, fars)
 		if i%len(losses) == 0 && i!=0 {
-			fmt.Println("Training loss at step", i, "is", ao.Average(losses))
+			fmt.Println("Training loss at step", i, "is", ao.Average(losses), ". Derivative is", ao.Average(deriv))
 		}
 	}
 	return lp.repFunc
@@ -126,13 +127,15 @@ func (lp *Laplace) Sample(batchSize int) ([][]float64, [][]float64, [][]float64)
 	return states, closes, fars
 }
 
-func (lp *Laplace) Update(states, closes, fars [][]float64) float64 {
+func (lp *Laplace) Update(states, closes, fars [][]float64) (float64, float64) {
 	statesRep := lp.repFunc.Forward(states)
+	//closesRep := lp.repFunc.Forward(closes)
+	//farsRep := lp.repFunc.Forward(fars)
 	closesRep := lp.repFunc.Predict(closes)
 	farsRep := lp.repFunc.Predict(fars)
 
-	attractiveLoss := lp.GetAttractiveLoss(statesRep, closesRep)
-	repulsiveLoss := lp.GetRepulsiveLoss(statesRep, farsRep)
+	attractiveLoss, alBeforeDer := lp.GetAttractiveLoss(statesRep, closesRep)
+	repulsiveLoss, rlBeforeDer := lp.GetRepulsiveLoss(statesRep, farsRep)
 	avgLoss := ao.BitwiseAdd(attractiveLoss, ao.A64ArrayMulti(lp.beta, repulsiveLoss))
 	//fmt.Println(ao.Average(attractiveLoss), ao.Average(repulsiveLoss))
 	avgLossMat := make([][]float64, len(states))
@@ -144,7 +147,7 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) float64 {
 	}
 	lp.repFunc.Backward(avgLossMat, lp.optimizer)
 
-	closeLoss := lp.GetAttractiveLoss(closesRep, statesRep)
+	closeLoss, clBeforeDer := lp.GetAttractiveLoss(closesRep, statesRep)
 	avgLossMat = make([][]float64, len(states))
 	for i:=0; i<len(states); i++ {
 		avgLossMat[i] = make([]float64, lp.repLen)
@@ -155,7 +158,9 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) float64 {
 	lp.repFunc.Forward(closes)
 	lp.repFunc.Backward(avgLossMat, lp.optimizer)
 
-	farLoss := ao.A64ArrayMulti(lp.beta, lp.GetRepulsiveLoss(farsRep, statesRep))
+	farLoss, fBeforeDer := lp.GetRepulsiveLoss(farsRep, statesRep)
+	farLoss = ao.A64ArrayMulti(lp.beta, farLoss)
+	fBeforeDer = ao.A64ArrayMulti(lp.beta, fBeforeDer)
 	avgLossMat = make([][]float64, len(states))
 	for i:=0; i<len(states); i++ {
 		avgLossMat[i] = make([]float64, lp.repLen)
@@ -166,43 +171,44 @@ func (lp *Laplace) Update(states, closes, fars [][]float64) float64 {
 	lp.repFunc.Forward(fars)
 	lp.repFunc.Backward(avgLossMat, lp.optimizer)
 
-	return ao.Average(avgLoss)
+	//return ao.Average(avgLoss)
+	return ao.Average(ao.BitwiseAdd(ao.BitwiseAdd(ao.BitwiseAdd(attractiveLoss, repulsiveLoss), closeLoss), farLoss)),
+		ao.Average(ao.BitwiseAdd(ao.BitwiseAdd(ao.BitwiseAdd(alBeforeDer, rlBeforeDer), clBeforeDer), fBeforeDer))
 }
 
 //func (lp *Laplace) GetAttractiveLoss(statesRep, closesRep [][]float64) [][]float64 {
-func (lp *Laplace) GetAttractiveLoss(statesRep, closesRep [][]float64) []float64 {
-	//diff := ao.BitwiseMinus2D(statesRep, closesRep)
-	//diffPow := ao.BitwisePower2D(diff, 2)
-	////diffPow = ao.A64ArrayMulti2D(0.5, diffPow)
-	////return diffPow
-	//axisSum := ao.SumOnAxis2D(diffPow, 1)
-	////avg := ao.Average(axisSum) * 0.5
-	////return avg
-	//return axisSum
+func (lp *Laplace) GetAttractiveLoss(statesRep, closesRep [][]float64) ([]float64, []float64) {
+	temp := ao.BitwiseMinus2D(statesRep, closesRep)
+	tempPow := ao.BitwisePower2D(temp, 2)
+	//diffPow = ao.A64ArrayMulti2D(0.5, diffPow)
+	//return diffPow
+	beforeDer := ao.SumOnAxis2D(tempPow, 1)
+	//fmt.Println("Attractive", ao.Average(beforeDer))
 
-	diff := ao.BitwiseMinus2D(statesRep, closesRep)
+	//diff := ao.BitwiseMinus2D(statesRep, closesRep)
+	diff := ao.BitwiseMinus2D(closesRep, statesRep)
 	axisSum := ao.SumOnAxis2D(diff, 1)
-	return axisSum
+	return axisSum, beforeDer
 }
 
-func (lp *Laplace) GetRepulsiveLoss(statesRep, farsRep [][]float64) []float64 {
-	//// (\phi(u)^T \phi(v))^2
-	//dotProd := ao.SumOnAxis2D(ao.BitwisePower2D(ao.BitwiseMulti2D(statesRep, farsRep), 2), 1)
-	//
-	//// - |\phi(u)|^2
-	//statesNorm := ao.BitwisePower2D(statesRep, 2)
-	//statesNormSum := ao.SumOnAxis2D(statesNorm, 1)
-	//statesNormWeighted := ao.A64ArrayMulti(lp.delta*(-1), statesNormSum)
-	//
-	//// - |\phi(v)|^2
-	//farsNorm := ao.BitwisePower2D(farsRep, 2)
-	//farsNormSum := ao.SumOnAxis2D(farsNorm, 1)
-	//farsNormWeighted := ao.A64ArrayMulti(lp.delta*(-1), farsNormSum)
-	//
-	////d := math.Pow(float64(lp.repLen) * lp.delta, 2)
-	////repul := ao.Average(ao.BitwiseAdd(ao.BitwiseAdd(dotProd, statesNormWeighted), farsNormWeighted)) + d
-	//repul := ao.BitwiseAdd(ao.BitwiseAdd(dotProd, statesNormWeighted), farsNormWeighted)
-	//return repul
+func (lp *Laplace) GetRepulsiveLoss(statesRep, farsRep [][]float64) ([]float64, []float64) {
+	// (\phi(u)^T \phi(v))^2
+	tempdotProd := ao.SumOnAxis2D(ao.BitwisePower2D(ao.BitwiseMulti2D(statesRep, farsRep), 2), 1)
+
+	// - |\phi(u)|^2
+	tempstatesNorm := ao.BitwisePower2D(statesRep, 2)
+	tempstatesNormSum := ao.SumOnAxis2D(tempstatesNorm, 1)
+	tempstatesNormWeighted := ao.A64ArrayMulti(lp.delta*(-1), tempstatesNormSum)
+
+	// - |\phi(v)|^2
+	tempfarsNorm := ao.BitwisePower2D(farsRep, 2)
+	tempfarsNormSum := ao.SumOnAxis2D(tempfarsNorm, 1)
+	tempfarsNormWeighted := ao.A64ArrayMulti(lp.delta*(-1), tempfarsNormSum)
+
+	//d := math.Pow(float64(lp.repLen) * lp.delta, 2)
+	//repul := ao.Average(ao.BitwiseAdd(ao.BitwiseAdd(dotProd, statesNormWeighted), farsNormWeighted)) + d
+	beforeDer := ao.BitwiseAdd(ao.BitwiseAdd(tempdotProd, tempstatesNormWeighted), tempfarsNormWeighted)
+	//fmt.Println("Repulsive", ao.Average(beforeDer))
 
 	// (\phi(u)^T \phi(v))^2
 	dotProd := ao.SumOnAxis2D(ao.BitwiseMulti2D(ao.BitwiseMulti2D(statesRep, farsRep), farsRep), 1)
@@ -220,5 +226,5 @@ func (lp *Laplace) GetRepulsiveLoss(statesRep, farsRep [][]float64) []float64 {
 	//repul := ao.BitwiseAdd(ao.BitwiseAdd(dotProd, statesNormWeighted), farsNormWeighted)
 	repul := ao.BitwiseAdd(dotProd, statesNormWeighted)
 
-	return repul
+	return repul, beforeDer
 }
