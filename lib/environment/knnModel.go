@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/stellentus/cartpoles/lib/representation"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"github.com/stellentus/cartpoles/lib/util/network"
 	"gonum.org/v1/gonum/mat"
 	"path"
 
@@ -64,6 +65,9 @@ type KnnModelEnv struct {
 	logger.Debug
 	knnSettings
 	repSettings
+	Trained			bool
+	repFunc			network.Network
+
 	state           rlglue.State
 	rng             *rand.Rand
 
@@ -278,13 +282,17 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 	var allNextRep [][]float64
 	var allRep [][]float64
 	if env.repSettings.RepName == "Laplace" {
-		repModel := representation.NewLaplace()
-		repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
-			env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
-			env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen)
-		repFunc := repModel.Train()
-		allNextRep = repFunc.Predict(allNextStates)
-		allRep = repFunc.Predict(allStates)
+		if !env.Trained {
+			repModel := representation.NewLaplace()
+			repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
+				env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
+				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen)
+			env.repFunc = repModel.Train()
+			log.Println("Representation has been trained")
+			env.Trained = true
+		}
+		allNextRep = env.repFunc.Predict(allNextStates)
+		allRep = env.repFunc.Predict(allStates)
 	} else {
 		env.repSettings.RepLen = env.stateDim
 		allNextRep = allNextStates
