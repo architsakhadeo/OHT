@@ -37,7 +37,7 @@
     "episodes": 100000,
     "total-step-after-lock": 10000,
     "count-step-after-lock": true,
-    "data-path": "data/hyperparam_v4/puddlehard/offline_data/esarsa/step10k_env/random/",
+    "data-path": "data/hyperparam_v5/puddlehard/offline_data/esarsa/step10k_env/random/",
     "should-log-traces": true,
     "should-log-episode-lengths": false,
     "debug-interval": 1000

@@ -1,0 +1,60 @@
+{
+	"agent-name": "esarsa",
+	"environment-name": "knnModel",
+	"agent-settings": {
+		"env-name": "puddleworld",
+		"gamma": 1,
+		"state-len": 2,
+		"sweep": {
+			"weight-init": [0],
+			"epsilon": [0],
+			"tilings": [4, 16],
+			"tiles": [2, 8],
+			"lambda": [0.9],
+			"alpha": [1e-03],
+			"is-stepsize-adaptive": [true],
+			"adaptive-alpha": [0.00195312, 0.00390625, 0.0078125 , 0.015625 , 0.03125 , 0.0625, 0.125, 0.25]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1,
+		"total-logs": 10
+	},
+	"environment-settings": {
+		"seed": 1,
+		"total-logs": 10,
+		"neighbor-num": 1,
+		"datalog": "data/hyperparam_v5/puddlehard/offline_data/esarsa/step10k_env/random/param_0/",
+		"ensemble-seed": 1,
+		"drop-percent": 0,
+		"pick-start-state": "random-init",
+
+		"rep-train-num-step": 30000,
+		"rep-train-beta": 5,
+		"rep-train-delta": 0.05,
+		"rep-train-lambda": 0.9,
+		"rep-train-traj-len": 50,
+		"rep-train-batch": 128,
+		"rep-train-learning-rate": 0.0001,
+		"rep-hidden": [128, 128],
+		"rep-dim": 4,
+		"rep-name": "Laplace"
+	},
+	"experiment-settings": {
+	    "randomize_start_state_beforeLock": false,
+   		"randomize_start_state_afterLock": false,
+
+		"episodes": 1000000,
+		"steps": 0,
+		"max-run-length-episodic": 50000,
+		"steps-in-episode": 1000,
+
+		"data-path": "data/hyperparam_v5/puddlehard/offline_learning/knn/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_random/drop0/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": true,
+		"should-log-returns": true,
+		"debug-interval": 0
+	}
+}

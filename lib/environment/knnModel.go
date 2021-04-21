@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/stellentus/cartpoles/lib/representation"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"github.com/stellentus/cartpoles/lib/util/network"
 	"gonum.org/v1/gonum/mat"
 	"path"
 
@@ -64,6 +65,10 @@ type KnnModelEnv struct {
 	logger.Debug
 	knnSettings
 	repSettings
+	Trained			bool
+	repFunc			network.Network
+
+	rep           	[]float64
 	state           rlglue.State
 	rng             *rand.Rand
 
@@ -176,8 +181,10 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.state = make(rlglue.State, env.stateDim)
 
 	//env.offlineData = allTrans
-	env.offlineDataObs, env.offlineDataRep = env.LoadData(traceLog)
-	env.trueDataObs, env.trueDataRep = env.LoadData(trueStartLog)
+	var treeStateDim int
+	env.offlineDataObs, env.offlineDataRep, treeStateDim = env.LoadData(traceLog)
+	env.trueDataObs, env.trueDataRep, _ = env.LoadData(trueStartLog)
+
 	//env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(offlineStartsData)
 	env.trueStarts, env.trueTermns = env.SearchOfflineStart(env.trueDataObs)
 
@@ -193,7 +200,8 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 			env.offlineDataRep[rndIdx][env.stateDim*2+2] = 1
 		}
 	}
-	env.offlineModel = transModel.New(env.NumberOfActions, env.stateDim)
+
+	env.offlineModel = transModel.New(env.NumberOfActions, treeStateDim)
 	env.offlineModel.BuildTree(env.offlineDataRep, "current")
 
 	if env.knnSettings.PickStartS == "random-init" { // default setting
@@ -225,7 +233,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	return nil
 }
 
-func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
+func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int) {
 	// Get offline data
 	csvFile, err := os.Open(filename)
 	if err != nil {
@@ -278,18 +286,24 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 	var allNextRep [][]float64
 	var allRep [][]float64
 	if env.repSettings.RepName == "Laplace" {
-		repModel := representation.NewLaplace()
-		repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
-			env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
-			env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen)
-		repFunc := repModel.Train()
-		allNextRep = repFunc.Predict(allNextStates)
-		allRep = repFunc.Predict(allStates)
+		if !env.Trained {
+			repModel := representation.NewLaplace()
+			repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
+				env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
+				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen)
+			env.repFunc = repModel.Train()
+			log.Println("Representation has been trained")
+			env.Trained = true
+		}
+		allNextRep = env.repFunc.Predict(allNextStates)
+		allRep = env.repFunc.Predict(allStates)
+		log.Println("Obs to Rep")
 	} else {
 		env.repSettings.RepLen = env.stateDim
 		allNextRep = allNextStates
 		allRep = allStates
 	}
+	treeStateDim := len(allRep[0])
 
 	allTransRep := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
@@ -355,7 +369,7 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 		allTransRepKeep = allTransRep
 		allTransObsKeep = allTransObs
 	}
-	return allTransObsKeep, allTransRepKeep
+	return allTransObsKeep, allTransRepKeep, treeStateDim
 }
 
 func (env *KnnModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) {
@@ -431,13 +445,14 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
 
-	prob := make([]float64, len(totalDistance))
-	temp1 := 0.0
-	for i := 0; i < len(totalDistance); i++ {
-		prob[i] = temp1 + normalizedPdf[i]
-		temp1 = prob[i]
-	}
-	chosen := random.FreqSample(prob)
+	//prob := make([]float64, len(totalDistance))
+	//temp1 := 0.0
+	//for i := 0; i < len(totalDistance); i++ {
+	//	prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = prob[i]
+	//}
+	//chosen := random.FreqSample(prob)
+	chosen := random.FreqSample(normalizedPdf)
 	state := totalStates[chosen]
 	//fmt.Printf("%.2f \n", totalDistance[chosen])
 	return state
@@ -447,10 +462,14 @@ func (env *KnnModelEnv) furthestState() rlglue.State {
 func (env *KnnModelEnv) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
 	//env.Count = 0
 	env.state = env.PickStartFunc()
-	//env.state = env.randomizeInitState()
-	//env.state = env.randomizeState()
-	//env.state = env.furthestState()
-	//env.state = env.cheatingChoice()
+	if env.repSettings.RepName == "Laplace" {
+		temp := make([][]float64, 1)
+		temp[0] = make([]float64, len(env.state))
+		temp[0] = env.state
+		env.rep = env.repFunc.Predict(temp)[0]
+	} else {
+		env.rep = env.state
+	}
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
 
@@ -474,7 +493,8 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 	}
 	//fmt.Println("Before target:", env.state)
 	//fmt.Println(env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num))
-	_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+	//_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
+	_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.rep, actInt, env.Neighbor_num)
 	states := make([][]float64, len(repIdxs))
 	nextStates := make([][]float64, len(repIdxs))
 	for j, id := range repIdxs {
@@ -487,6 +507,14 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 	temp, nextState, reward, terminal, _ := env.PickNextFunc(env.state, states, nextStates, rewards, terminals, distances)
 
 	env.state = nextState
+	if env.repSettings.RepName == "Laplace" {
+		temp := make([][]float64, 1)
+		temp[0] = make([]float64, len(env.state))
+		temp[0] = env.state
+		env.rep = env.repFunc.Predict(temp)[0]
+	} else {
+		env.rep = env.state
+	}
 
 	//idx := ao.Search2D(env.state, env.DebugArr)
 	//if idx > -1 {
@@ -529,7 +557,7 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 			//fmt.Println(reward, scale, minD, env.maxSDist)
 		}
 	}
-
+	//fmt.Println(actInt, state_copy)
 	env.TempCount += 1
 	//fmt.Println(env.TempCount)
 	//if env.TempCount == 49999 {
@@ -592,13 +620,14 @@ func (env *KnnModelEnv) CloserNeighbor(currentS []float64, states, nextStates []
 	for i := 0; i < len(distances); i++ {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
-	neighbor_prob := make([]float64, len(distances))
-	temp1 := 0.0
-	for i := 0; i < len(distances); i++ {
-		neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = neighbor_prob[i]
-	}
-	chosen := random.FreqSample(neighbor_prob)
+	//neighbor_prob := make([]float64, len(distances))
+	//temp1 := 0.0
+	//for i := 0; i < len(distances); i++ {
+	//	neighbor_prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = neighbor_prob[i]
+	//}
+	//chosen := random.FreqSample(neighbor_prob)
+	chosen := random.FreqSample(normalizedPdf)
 
 	state := states[chosen]
 	nextState := nextStates[chosen]
@@ -639,13 +668,13 @@ func (env *KnnModelEnv) FurtherNext(currentS []float64, states, nextStates [][]f
 	for i := 0; i < len(dists); i++ {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
-	neighbor_prob := make([]float64, len(dists))
-	temp1 := 0.0
-	for i := 0; i < len(dists); i++ {
-		neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = neighbor_prob[i]
-	}
-	chosen := random.FreqSample(neighbor_prob)
+	//neighbor_prob := make([]float64, len(dists))
+	//temp1 := 0.0
+	//for i := 0; i < len(dists); i++ {
+	//	neighbor_prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = neighbor_prob[i]
+	//}
+	chosen := random.FreqSample(normalizedPdf)
 
 	state := states[chosen]
 	nextState := nextStates[chosen]
@@ -679,13 +708,13 @@ func (env *KnnModelEnv) LowRwdNext(currentS []float64, states, nextStates [][]fl
 	for i := 0; i < len(rwds); i++ {
 		normalizedPdf[i] = (pdf[i] / normalizedSum)
 	}
-	neighbor_prob := make([]float64, len(rwds))
-	temp1 := 0.0
-	for i := 0; i < len(rwds); i++ {
-		neighbor_prob[i] = temp1 + normalizedPdf[i]
-		temp1 = neighbor_prob[i]
-	}
-	chosen := random.FreqSample(neighbor_prob)
+	//neighbor_prob := make([]float64, len(rwds))
+	//temp1 := 0.0
+	//for i := 0; i < len(rwds); i++ {
+	//	neighbor_prob[i] = temp1 + normalizedPdf[i]
+	//	temp1 = neighbor_prob[i]
+	//}
+	chosen := random.FreqSample(normalizedPdf)
 
 	state := states[chosen]
 	nextState := nextStates[chosen]
