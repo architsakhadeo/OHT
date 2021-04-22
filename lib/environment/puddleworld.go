@@ -37,6 +37,7 @@ type Puddleworld struct {
 	PuddleworldSettings
 	state             rlglue.State
 	rng               *rand.Rand
+	rngStartState     *rand.Rand
 	buffer            [][]float64
 	bufferInsertIndex []int
 	actions           [][]float64
@@ -72,6 +73,7 @@ func (env *Puddleworld) InitializeWithSettings(set PuddleworldSettings) error {
 	//fmt.Println("Set Seed:", set.Seed)
 	//fmt.Println("Seed actually used by the environment: ", env.Seed)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+	env.rngStartState = rand.New(rand.NewSource(env.Seed))
 
 	env.actions = make([][]float64, 4) // 5
 	for i := range env.actions {
@@ -135,7 +137,7 @@ func (env *Puddleworld) InitializeWithSettings(set PuddleworldSettings) error {
 	return nil
 }
 
-func (env *Puddleworld) noisyState() rlglue.State {
+func (env *Puddleworld) noisyState(startS bool) rlglue.State {
 	stateLowerBound := []float64{0.0, 0.0}
 	stateUpperBound := []float64{1.0, 1.0}
 
@@ -145,10 +147,13 @@ func (env *Puddleworld) noisyState() rlglue.State {
 	if len(env.PercentNoiseState) != 0 {
 		// Only add noise if it's configured
 		for i := range state {
-			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i])
+			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i], startS)
 			state[i] = env.clamp(state[i], stateLowerBound[i], stateUpperBound[i])
 		}
 	}
+	//if startS == true {
+	//	fmt.Println("Randomize Noisy Start State: ", state)
+	//}
 	return state
 }
 
@@ -156,32 +161,41 @@ func (env *Puddleworld) clamp(x float64, min float64, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
 
-func (env *Puddleworld) randomizeState(randomizeStartStateCondition bool) {
+// StartS is a boolean variable. It is used to maintain same start states each episode
+// for each hyperparam with the same run/seed.
+func (env *Puddleworld) randomizeState(randomizeStartStateCondition bool, startS bool) {
 	if env.StartHard {
-		rnd_x := env.randFloat(0.3, 0.35)
-		rnd_y := env.randFloat(0.6, 0.65)
+		rnd_x := env.randFloat(0.3, 0.35, startS)
+		rnd_y := env.randFloat(0.6, 0.65, startS)
 		startState[0] = rnd_x
 		startState[1] = rnd_y
 	}
 	if randomizeStartStateCondition == false {
 		copy(env.state, startState)
+		//fmt.Println("Randomize Start State: ", env.state)
 		return
 	}
 
 	for true {
 		for i := range env.state {
-			env.state[i] = env.randFloat(0.0, 1.0)
+			env.state[i] = env.randFloat(0.0, 1.0, startS)
 		}
 		// randomly start in non-goal region states
 		if floats.Distance(env.state, goalState, 1) >= goalThreshold {
+			//fmt.Println("Randomize Start State: ", env.state)
 			return
 		}
 
 	}
+	//fmt.Println("Randomize Start State: ", env.state)
 }
 
-func (env *Puddleworld) randFloat(min, max float64) float64 {
-	return env.rng.Float64()*(max-min) + min
+func (env *Puddleworld) randFloat(min, max float64, startS bool) float64 {
+	if startS == true {
+		return env.rngStartState.Float64()*(max-min) + min
+	} else {
+		return env.rng.Float64()*(max-min) + min
+	}
 }
 
 // func (env *Puddleworld) gaussian1d(p, mu, sig float64) float64 {
@@ -190,9 +204,9 @@ func (env *Puddleworld) randFloat(min, max float64) float64 {
 
 // Start returns an initial observation.
 func (env *Puddleworld) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
-	env.randomizeState(randomizeStartStateCondition)
+	env.randomizeState(randomizeStartStateCondition, true)
 	//fmt.Println("Random start state: ", env.state)
-	return env.getObservations(), ""
+	return env.getObservations(true), ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
@@ -203,16 +217,16 @@ func (env *Puddleworld) Step(act rlglue.Action, randomizeStartStateCondition boo
 		env.state[i] = env.clamp(env.state[i], 0.0, 1.0)
 	}
 
-	obs := env.getObservations()
+	obs := env.getObservations(false)
 	reward := env.getRewards()
 	done := floats.Distance(env.state, goalState, 1) < goalThreshold
 
 	return obs, reward, done, ""
 }
 
-func (env *Puddleworld) getObservations() rlglue.State {
+func (env *Puddleworld) getObservations(startS bool) rlglue.State {
 	// Add noise to state to get observations
-	observations := env.noisyState()
+	observations := env.noisyState(startS)
 
 	// Add delays
 	if len(env.Delays) != 0 {

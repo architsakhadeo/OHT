@@ -31,6 +31,7 @@ type Gridworld struct {
 	GridworldSettings
 	state             rlglue.State
 	rng               *rand.Rand
+	rngStartState     *rand.Rand
 	buffer            [][]float64
 	bufferInsertIndex []int
 	actions           [][]float64
@@ -66,6 +67,7 @@ func (env *Gridworld) InitializeWithSettings(set GridworldSettings) error {
 	//fmt.Println("Set Seed:", set.Seed)
 	//fmt.Println("Seed actually used by the environment: ", env.Seed)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+	env.rngStartState = rand.New(rand.NewSource(env.Seed))
 
 	// actions
 	// 0.0 = left
@@ -127,7 +129,7 @@ func (env *Gridworld) InitializeWithSettings(set GridworldSettings) error {
 	return nil
 }
 
-func (env *Gridworld) noisyState() rlglue.State {
+func (env *Gridworld) noisyState(startS bool) rlglue.State {
 	stateLowerBound := []float64{0.0, 0.0}
 	stateUpperBound := []float64{1.0, 1.0}
 
@@ -137,10 +139,13 @@ func (env *Gridworld) noisyState() rlglue.State {
 	if len(env.PercentNoiseState) != 0 {
 		// Only add noise if it's configured
 		for i := range state {
-			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i])
+			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i], startS)
 			state[i] = env.clamp(state[i], stateLowerBound[i], stateUpperBound[i])
 		}
 	}
+	//if startS == true {
+	//	fmt.Println("Randomize Noisy Start State: ", state)
+	//}
 	return state
 }
 
@@ -148,15 +153,17 @@ func (env *Gridworld) clamp(x float64, min float64, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
 
-func (env *Gridworld) randomizeState(randomizeStartStateCondition bool) {
+func (env *Gridworld) randomizeState(randomizeStartStateCondition bool, startS bool) {
 	if randomizeStartStateCondition == false {
 		copy(env.state, startState)
+		//fmt.Println("Randomize Start State: ", env.state)
 		return
 	}
 
 	for i := range env.state {
-		env.state[i] = env.randInt(0.0, 3.0)
+		env.state[i] = env.randInt(0.0, 3.0, startS)
 	}
+	//fmt.Println("Randomize Start State: ", env.state)
 	/*
 		for true {
 			for i := range env.state {
@@ -171,12 +178,22 @@ func (env *Gridworld) randomizeState(randomizeStartStateCondition bool) {
 	*/
 }
 
-func (env *Gridworld) randFloat(min, max float64) float64 {
-	return env.rng.Float64()*(max-min) + min
+func (env *Gridworld) randFloat(min, max float64, startS bool) float64 {
+	if startS == true {
+		return env.rngStartState.Float64()*(max-min) + min
+	} else {
+		return env.rng.Float64()*(max-min) + min
+	}
 }
 
-func (env *Gridworld) randInt(min, max float64) float64 {
-	float := env.rng.Float64()
+func (env *Gridworld) randInt(min, max float64, startS bool) float64 {
+	var float float64
+	if startS == true {
+		float = env.rngStartState.Float64()
+	} else {
+		float = env.rng.Float64()
+	}
+
 	diff := 0.25 //1.0/(max - min + 1.0)
 	returnvalue := 0.0
 	if float < diff {
@@ -197,9 +214,9 @@ func (env *Gridworld) randInt(min, max float64) float64 {
 
 // Start returns an initial observation.
 func (env *Gridworld) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
-	env.randomizeState(randomizeStartStateCondition)
+	env.randomizeState(randomizeStartStateCondition, true)
 	//fmt.Println("Start state", env.state)
-	return env.getObservations(), ""
+	return env.getObservations(true), ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
@@ -217,7 +234,7 @@ func (env *Gridworld) Step(act rlglue.Action, randomizeStartStateCondition bool)
 	env.state = env.getNextState(env.state, act)
 	//fmt.Println("Next state: ", env.state)
 
-	obs := env.getObservations()
+	obs := env.getObservations(false)
 	var done bool
 	if obs[0] == goalPos[0] && obs[1] == goalPos[1] {
 		done = true
@@ -231,9 +248,9 @@ func (env *Gridworld) Step(act rlglue.Action, randomizeStartStateCondition bool)
 	return obs, reward, done, ""
 }
 
-func (env *Gridworld) getObservations() rlglue.State {
+func (env *Gridworld) getObservations(startS bool) rlglue.State {
 	// Add noise to state to get observations
-	observations := env.noisyState()
+	observations := env.noisyState(startS)
 
 	// Add delays
 	if len(env.Delays) != 0 {

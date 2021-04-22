@@ -31,8 +31,8 @@ type CartpoleSettings struct {
 	Delays             []int     `json:"delays"`
 	PercentNoiseState  []float64 `json:"percent_noise"`
 	PercentNoiseAction float64   `json:"percent_noise_action"`
-	PositionRwd	   	   bool		 `json:"rwd_position"`
-	OneRwd	   		   bool		 `json:"rwd_one"`
+	PositionRwd        bool      `json:"rwd_position"`
+	OneRwd             bool      `json:"rwd_one"`
 	//RandomizeStartState bool      `json:"randomize_start_state"`
 }
 
@@ -41,6 +41,7 @@ type Cartpole struct {
 	CartpoleSettings
 	state             rlglue.State
 	rng               *rand.Rand
+	rngStartState     *rand.Rand
 	buffer            [][]float64
 	bufferInsertIndex []int
 }
@@ -74,6 +75,7 @@ func (env *Cartpole) InitializeWithSettings(set CartpoleSettings) error {
 	//fmt.Println("Set Seed:", set.Seed)
 	//fmt.Println("Seed actually used by the environment: ", env.Seed)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+	env.rngStartState = rand.New(rand.NewSource(env.Seed))
 
 	if len(env.PercentNoiseState) == 1 {
 		// Copy it for all dimensions
@@ -128,7 +130,7 @@ func (env *Cartpole) InitializeWithSettings(set CartpoleSettings) error {
 	return nil
 }
 
-func (env *Cartpole) noisyState() rlglue.State {
+func (env *Cartpole) noisyState(startS bool) rlglue.State {
 	stateLowerBound := []float64{-2.4, -4.0, -(12 * 2 * math.Pi / 360), -3.5}
 	stateUpperBound := []float64{2.4, 4.0, (12 * 2 * math.Pi / 360), 3.5}
 
@@ -138,10 +140,13 @@ func (env *Cartpole) noisyState() rlglue.State {
 	if len(env.PercentNoiseState) != 0 {
 		// Only add noise if it's configured
 		for i := range state {
-			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i])
+			state[i] += env.randFloat(env.PercentNoiseState[i]*stateLowerBound[i], env.PercentNoiseState[i]*stateUpperBound[i], startS)
 			state[i] = env.clamp(state[i], stateLowerBound[i], stateUpperBound[i])
 		}
 	}
+	//if startS == true {
+	//	fmt.Println("Randomize Noisy Start State: ", state)
+	//}
 	return state
 }
 
@@ -149,27 +154,32 @@ func (env *Cartpole) clamp(x float64, min float64, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
 
-func (env *Cartpole) randomizeState(randomizeStartStateCondition bool) {
+func (env *Cartpole) randomizeState(randomizeStartStateCondition bool, startS bool) {
 	for i := range env.state {
-		env.state[i] = env.randFloat(stateMin, stateMax)
+		env.state[i] = env.randFloat(stateMin, stateMax, startS)
 	}
 
 	if randomizeStartStateCondition == true {
-		env.state[0] = env.randFloat(-xThreshold, xThreshold)
-		env.state[2] = env.randFloat(-thetaRhresholdRadians, thetaRhresholdRadians)
+		env.state[0] = env.randFloat(-xThreshold, xThreshold, startS)
+		env.state[2] = env.randFloat(-thetaRhresholdRadians, thetaRhresholdRadians, startS)
 	}
+	//fmt.Println("Randomize Start State: ", env.state)
 }
 
-func (env *Cartpole) randFloat(min, max float64) float64 {
-	return env.rng.Float64()*(max-min) + min
+func (env *Cartpole) randFloat(min, max float64, startS bool) float64 {
+	if startS == true {
+		return env.rngStartState.Float64()*(max-min) + min
+	} else {
+		return env.rng.Float64()*(max-min) + min
+	}
 }
 
 func (env *Cartpole) failureType() string {
 	var info string
 	x, theta := env.state[0], env.state[2]
-	if ((x < -xThreshold) || (x > xThreshold)) {
+	if (x < -xThreshold) || (x > xThreshold) {
 		info = "pos"
-	} else if ((theta < -thetaRhresholdRadians) || (theta > thetaRhresholdRadians)) {
+	} else if (theta < -thetaRhresholdRadians) || (theta > thetaRhresholdRadians) {
 		info = "ang"
 	} else {
 		info = ""
@@ -179,8 +189,8 @@ func (env *Cartpole) failureType() string {
 
 // Start returns an initial observation.
 func (env *Cartpole) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
-	env.randomizeState(randomizeStartStateCondition)
-	return env.getObservations(), env.failureType()
+	env.randomizeState(randomizeStartStateCondition, true)
+	return env.getObservations(true), env.failureType()
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
@@ -223,7 +233,7 @@ func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) 
 
 	var reward float64
 	if env.CartpoleSettings.PositionRwd {
-		reward = - (math.Abs(theta)) / thetaRhresholdRadians
+		reward = -(math.Abs(theta)) / thetaRhresholdRadians
 		if (x < -xThreshold) || (x > xThreshold) {
 			//fmt.Println(reward, done)
 			reward -= 1
@@ -236,16 +246,17 @@ func (env *Cartpole) Step(act rlglue.Action, randomizeStartStateCondition bool) 
 		if (!env.CartpoleSettings.PositionRwd) && (!env.CartpoleSettings.OneRwd) {
 			reward = -1.0
 		}
-		env.randomizeState(randomizeStartStateCondition)
+		env.randomizeState(randomizeStartStateCondition, true)
+		return env.getObservations(true), reward, done, info
 		//fmt.Println("HERE", theta, reward)
 	}
 
-	return env.getObservations(), reward, done, info
+	return env.getObservations(false), reward, done, info
 }
 
-func (env *Cartpole) getObservations() rlglue.State {
+func (env *Cartpole) getObservations(startS bool) rlglue.State {
 	// Add noise to state to get observations
-	observations := env.noisyState()
+	observations := env.noisyState(startS)
 
 	// Add delays
 	if len(env.Delays) != 0 {
