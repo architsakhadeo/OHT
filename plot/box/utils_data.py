@@ -455,6 +455,9 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
             data = load_epReturn(paths, outer=outer)
 
         # New data files
+        elif source == "totals":
+            data = load_total(paths, "return", outer=outer)
+
         elif source == "total-reward":
             data = load_total(paths, "reward", outer=outer)
         elif source == "total-episode":

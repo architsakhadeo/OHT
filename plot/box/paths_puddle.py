@@ -11,3 +11,7 @@ pdhard_true = ["../../data/hyperparam_v4/puddlehard/online_learning/esarsa-adam/
 pdhard_random = ["../../data/hyperparam_v4/puddlehard/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_random/drop0.3"]
 pdhard_return360 = ["../../data/hyperparam_v4/puddlehard/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_return-360/drop0.3"]
 pdhard_return45 = ["../../data/hyperparam_v4/puddlehard/offline_learning/knn-ens/randomInit/closeTrans/k3/timeout1000/esarsa/step10k_env/data_return-45/drop0.3"]
+
+pdrand_rnd = [34, 4, 43, 30, 24, 32, 40, 11, 20, 30, 3, 16, 53, 45, 0, 21, 43, 23, 44, 50, 9, 41, 37, 37, 11, 2, 26, 33, 18, 20]
+pdrand_true = ["../../data/hyperparam_v5/puddlerand/online_learning/esarsa/step1M/sweep"]
+pdrand_returnOpt = ["../../data/hyperparam_v5/puddlerand/offline_learning/knn/randomInit/closeTrans/k3/timeout1000/esarsa/step15k_env/data_optimal/drop0"]
