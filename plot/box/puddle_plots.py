@@ -7,23 +7,19 @@ from plot.box.paths_puddle import *
 
 def top_param():
     calibration = {
-        "random data": pd_random,
-        "return -320": pd_return320,
-        "return -40": pd_return40,
+        "calibration model": pd_offline,
     }
     random = pd_rnd
     te = {"true": pd_true}
-    plot_compare_top(te, calibration, None, random, "total-return", "../img/puddle_top", outer=10)#, ylim=[-150, -10])
+    plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_lognegate_ylim", outer=30, yscale="log", res_scale=-1, ylim=[-100, 0])
 
 def sweep_model():
-    k3_close_cms = {
-        "random data": pd_random,
-        "return -320": pd_return320,
-        "return -40": pd_return40,
+    calibration = {
+        "calibration model": pd_offline,
     }
     te = {"true": pd_true}
-    plot_generation(te, k3_close_cms, ranges, "total-return", "../img/puddle_model", outer=10, sparse_reward=-1, max_len=1000)
-    # plot_each_run(te, cms, "total-reward", "../img/v2_model_run", outer=10, sparse_reward=-1, max_len=1000)
+    #plot_generation(te, calibration, ranges, "totals", "../img/puddle_model_ylim", outer=30, sparse_reward=-1, max_len=1000)
+    plot_each_run(te, calibration, "totals", "../img/puddleworld_run", outer=30, sparse_reward=-1, max_len=1000)
 
 def data_density():
     datasets = {
@@ -43,7 +39,7 @@ def data_density():
 
 
 if __name__ == '__main__':
-    ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
+    ranges = [0, 0.05, 0.1]
     top_param()
-    sweep_model()
-    data_density()
+    #sweep_model()
+    #data_density()

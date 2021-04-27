@@ -177,7 +177,8 @@ def load_total(paths, source, outer=None):
                 log = run_num % int(outer) if outer is not None else run_num
                 # print(run_num, log, outer)
 
-                # print(param, run, "\n",pd.read_csv(os.path.join(pp, run)).columns)
+                #print(param, run)
+                #print(pd.read_csv(os.path.join(pp, run)).columns)
                 t_rwd = pd.read_csv(os.path.join(pp, run))["total reward"][0]
                 num_ep = pd.read_csv(os.path.join(pp, run))[" total episodes"][0]
 
@@ -466,6 +467,8 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
             data = load_total(paths, "return", outer=outer)
         elif source == "pure-total-reward":
             data = load_total(paths, "pure-total-reward", outer=outer)
+        elif source == "totals":
+            data = load_total(paths, "return", outer=outer)
         else:
             raise NotImplementedError
 

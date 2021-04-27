@@ -39,6 +39,7 @@ type Acrobot struct {
 	AcrobotSettings
 	state              rlglue.State
 	rng                *rand.Rand
+	rngStartState      *rand.Rand
 	buffer             [][]float64
 	bufferInsertIndex  []int
 	availTorqueActions []float64
@@ -73,6 +74,7 @@ func (env *Acrobot) InitializeWithSettings(set AcrobotSettings) error {
 	//fmt.Println("Set Seed:", set.Seed)
 	//fmt.Println("Seed actually used by the environment: ", env.Seed)
 	env.rng = rand.New(rand.NewSource(env.Seed)) // Create a new rand source for reproducibility
+	env.rngStartState = rand.New(rand.NewSource(env.Seed))
 	//env.availTorqueActions = []float64{+1.0, 0.0, -1.0}
 	env.availTorqueActions = []float64{+1.0, -1.0}
 
@@ -129,7 +131,7 @@ func (env *Acrobot) InitializeWithSettings(set AcrobotSettings) error {
 	return nil
 }
 
-func (env *Acrobot) noisyState() rlglue.State {
+func (env *Acrobot) noisyState(startS bool) rlglue.State {
 	stateLowerBound := []float64{-1.0, -1.0, -1.0, -1.0, -maxVel1, -maxVel2}
 	stateUpperBound := []float64{1.0, 1.0, 1.0, 1.0, maxVel1, maxVel2}
 
@@ -138,10 +140,13 @@ func (env *Acrobot) noisyState() rlglue.State {
 	if len(env.PercentNoise) != 0 {
 		// Only add noise if it's configured
 		for i := range state {
-			state[i] += env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i])
+			state[i] += env.randFloat(env.PercentNoise[i]*stateLowerBound[i], env.PercentNoise[i]*stateUpperBound[i], startS)
 			state[i] = env.clamp(state[i], stateLowerBound[i], stateUpperBound[i])
 		}
 	}
+	//if startS == true {
+	//	fmt.Println("Randomize Noisy Start State: ", state)
+	//}
 	return state
 }
 
@@ -149,29 +154,34 @@ func (env *Acrobot) clamp(x float64, min float64, max float64) float64 {
 	return math.Max(min, math.Min(x, max))
 }
 
-func (env *Acrobot) randomizeState(randomizeStartStateCondition bool) {
+func (env *Acrobot) randomizeState(randomizeStartStateCondition bool, startS bool) {
 	for i := range env.state {
-		env.state[i] = env.randFloat(stateMinV, stateMaxV)
+		env.state[i] = env.randFloat(stateMinV, stateMaxV, startS)
 	}
 	if randomizeStartStateCondition == true {
 		for true {
-			env.state[0] = env.randFloat(-math.Pi, math.Pi)
-			env.state[1] = env.randFloat(-math.Pi, math.Pi)
+			env.state[0] = env.randFloat(-math.Pi, math.Pi, startS)
+			env.state[1] = env.randFloat(-math.Pi, math.Pi, startS)
 			if -math.Cos(env.state[0])-math.Cos(env.state[1]+env.state[0]) <= 1.0 {
 				break
 			}
 		}
 	}
+	//fmt.Println("Randomize Start State: ", env.state)
 }
 
-func (env *Acrobot) randFloat(min, max float64) float64 {
-	return env.rng.Float64()*(max-min) + min
+func (env *Acrobot) randFloat(min, max float64, startS bool) float64 {
+	if startS == true {
+		return env.rngStartState.Float64()*(max-min) + min
+	} else {
+		return env.rng.Float64()*(max-min) + min
+	}
 }
 
 // Start returns an initial observation.
 func (env *Acrobot) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
-	env.randomizeState(randomizeStartStateCondition)
-	return env.getObservations(), ""
+	env.randomizeState(randomizeStartStateCondition, true)
+	return env.getObservations(true), ""
 }
 
 // Step takes an action and provides the resulting reward, the new observation, and whether the state is terminal.
@@ -203,12 +213,12 @@ func (env *Acrobot) Step(act rlglue.Action, randomizeStartStateCondition bool) (
 	//}
 	reward = -1.0 //always -1
 
-	return env.getObservations(), reward, done, ""
+	return env.getObservations(false), reward, done, ""
 }
 
-func (env *Acrobot) getObservations() rlglue.State {
+func (env *Acrobot) getObservations(startS bool) rlglue.State {
 	// Add noise to state to get observations
-	observations := env.noisyState()
+	observations := env.noisyState(startS)
 
 	// Add delays
 	if len(env.Delays) != 0 {
