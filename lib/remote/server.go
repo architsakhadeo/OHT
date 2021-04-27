@@ -50,12 +50,12 @@ func (srv environmentServer) Initialize(ctx context.Context, in *EnvironmentAttr
 }
 
 func (srv environmentServer) Start(ctx context.Context, in *Empty) (*State, error) {
-	state := srv.env.Start(false)
+	state, _ := srv.env.Start(false)
 	return &State{Values: []float64(state)}, nil
 }
 
 func (srv environmentServer) Step(ctx context.Context, in *Action) (*StepResult, error) {
-	state, reward, terminal := srv.env.Step(rlglue.Action(in.GetAction()), false)
+	state, reward, terminal, _ := srv.env.Step(rlglue.Action(in.GetAction()), false)
 	return &StepResult{State: &State{Values: []float64(state)}, Reward: reward, Terminal: terminal}, nil
 }
 
