@@ -231,7 +231,7 @@ func (lg *DataLogger) LogLearnProg(progress float64) {
 }
 
 func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool, info string) string {
-	if lg.ShouldLogRewards {
+	if lg.ShouldLogRewards || lg.ShouldLogReturns{
 		lg.rewards = append(lg.rewards, reward)
 	}
 
