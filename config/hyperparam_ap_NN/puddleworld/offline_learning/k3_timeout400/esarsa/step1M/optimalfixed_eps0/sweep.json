@@ -1,0 +1,44 @@
+{
+	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+	"agent-name": "esarsa",
+	"environment-name": "networkModel",
+	"agent-settings": {
+		"gamma": 1.0,
+		"state-len": 2,
+		"env-name": "puddleworld",
+		"sweep": {
+			"tilings": [16],
+			"tiles": [8],
+			"is-stepsize-adaptive": [true],
+			"alpha": [0.0],
+			"lambda": [0.14345759728429092],
+			"epsilon": [0.0],
+			"adaptive-alpha": [0.00039242850405476045, 0.0011772855121642814, 0.003531856536492844],
+			"beta1": [0.0, 0.9],
+			"softmax-temp": [1.0, 10.0, 100.0],
+			"weight-init": [0.0, 4.0, 8.0]
+		},
+		"lock-weight": false,
+    	"enable-debug": false,
+    	"seed": 1,
+		"total-logs": 30
+	},
+	"environment-settings": {
+		"seed": 1,
+		"total-logs": 30,
+        "ensemble-seed": 0,
+		"datalog": "../../../../Downloads/transferabledata/new/hyperparam_ap/puddleworld/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/"
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+    	"randomize_start_state_afterLock": false,
+		"steps": 0,
+		"episodes": 1000000,
+		"max-run-length-episodic": 100,
+		"steps-in-episode": 400,
+		"data-path": "data/hyperparam_ap_NN/puddleworld/offline_learning/k3_timeout400/esarsa/step1M/optimalfixed_eps0/sweep/",
+		"should-log-totals": true,
+		"debug-interval": 0
+	}
+}
+

@@ -1,0 +1,45 @@
+{
+	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+	"agent-name": "esarsa",
+	"environment-name": "networkModel",
+	"agent-settings": {
+		"gamma": 1.0,
+		"state-len": 6,
+		"env-name": "acrobot",
+		"sweep": {
+			"tilings": [16],
+			"tiles": [8],
+			"is-stepsize-adaptive": [true],
+			"alpha": [0.0],
+			"lambda": [0.8848763719431171],
+			"epsilon": [0.0],
+			"adaptive-alpha": [0.004733074230606279, 0.04733074230606279, 0.4733074230606279],
+			"beta1": [0.0, 0.9],
+			"softmax-temp": [1.0, 10.0, 100.0],
+			"weight-init": [0.0, 4.0, 8.0]
+		},
+		"lock-weight": false,
+    	"enable-debug": false,
+    	"seed": 1,
+		"total-logs": 30
+	},
+	"environment-settings": {
+		"seed": 1,
+		"total-logs": 30,
+        "ensemble-seed": 0,
+		"datalog": "../../../../Downloads/transferabledata/new/hyperparam_ap/acrobot/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
+		"true-start-log": "../../../../Downloads/transferabledata/new//hyperparam_ap/acrobot/offline_data/true_restarts/esarsa/step15k/optimalfixed_eps0/param_0/"
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+    	"randomize_start_state_afterLock": false,
+		"steps": 0,
+		"episodes": 1000000,
+		"max-run-length-episodic": 7500,
+		"steps-in-episode": 750,
+		"data-path": "data/hyperparam_ap_NN/acrobot/offline_learning/k3_timeout750/esarsa/step7500/optimalfixed_eps0/sweep/",
+		"should-log-totals": true,
+		"debug-interval": 0
+	}
+}
+
