@@ -113,7 +113,7 @@ func (actor *Actor) Update(x []float64, delta float64, action rlglue.Action, pro
 
 	// do the update
 	dLogPi.Scale(actor.alpha*delta, dLogPi)
-	actor.weight.Sub(actor.weight, dLogPi)
+	actor.weight.Add(actor.weight, dLogPi)
 	return nil
 }
 
@@ -135,7 +135,7 @@ func (critic *Critic) ValueAt(x []float64) float64 {
 func (critic *Critic) Update(x []float64, delta float64) error {
 	n := critic.weight.Len()
 	update := mat.NewVecDense(n, nil)
-	update.AddScaledVec(update, critic.alpha*delta, mat.NewVecDense(n, x))
+	update.ScaleVec(critic.alpha*delta, mat.NewVecDense(n, x))
 	critic.weight.AddVec(critic.weight, update)
 	return nil
 }
@@ -259,8 +259,8 @@ func (agent *ActorCritic) Step(state rlglue.State, reward float64) rlglue.Action
 
 	delta := reward + agent.Gamma*agent.critic.ValueAt(feat) - agent.critic.ValueAt(agent.oldStateActiveFeatures)
 
-	agent.actor.Update(feat, delta, agent.oldAction, agent.oldProbs)
-	agent.critic.Update(feat, delta)
+	agent.actor.Update(agent.oldStateActiveFeatures, delta, agent.oldAction, agent.oldProbs)
+	agent.critic.Update(agent.oldStateActiveFeatures, delta)
 
 	agent.oldAction = newAction
 	agent.oldProbs = probs
