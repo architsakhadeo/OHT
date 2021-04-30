@@ -225,3 +225,96 @@ func boolToInt(x bool) int {
 func arrayToString(a []interface{}, delim string) string {
 	return strings.Trim(strings.Replace(fmt.Sprint(a), " ", delim, -1), "[]")
 }
+
+func OverwritableLogger(logPath string, id int, envAttr rlglue.Attributes) error {
+	fullPath := logPath + "/running_log_" + strconv.Itoa(id) + ".txt"
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+		_ = os.MkdirAll(logPath, 0777)
+	}
+	if _, err := os.Stat(fullPath); err == nil {
+		e := os.Remove(fullPath)
+		if e != nil {
+			log.Fatal(e)
+		}
+	}
+	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.SetOutput(file)
+	//log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	log.New(os.Stdout, "", log.Ldate | log.Ltime)
+
+	var sweepAttrMap map[string]interface{}
+	attrsAll := []rlglue.Attributes{envAttr}
+	for _, attrs := range attrsAll {
+		err := json.Unmarshal(attrs, &sweepAttrMap)
+		if err != nil {
+			return errors.New("Could not parse attributes: " + err.Error())
+		}
+		pstrings := []string{}
+		for name, value := range sweepAttrMap {
+			switch value := value.(type) {
+			case int, float64, string:
+				pstrings = append(pstrings, fmt.Sprint(name, "=", value))
+			case bool:
+				pstrings = append(pstrings, fmt.Sprint(name, "=", boolToInt(value)))
+			case []interface{}:
+				pstrings = append(pstrings, fmt.Sprint(name, "=", arrayToString(value, ",")))
+			default:
+				return errors.New("Unexpected type")
+			}
+		}
+		sort.Strings(pstrings)
+		for _, param := range pstrings {
+			log.Println(param)
+		}
+	}
+
+	return nil
+}
+
+func EnvParamSweep(run uint, conf config.Config, sweepIdx int) error {
+	debugLogger := logger.NewDebug(logger.DebugConfig{
+		ShouldPrintDebug: true,
+	})
+	attrs, err := conf.SweptAttributes(sweepIdx)
+	_, envAttr, wrapperAttrs := attrs[0], attrs[1], attrs[2:]
+	if err != nil {
+		return errors.New("Cannot run sweep: " + err.Error())
+	}
+	savePath, err := parameterStringify(run, sweepIdx)
+	if err != nil {
+		return errors.New("Failed to format path: " + err.Error())
+	}
+	_ = OverwritableLogger(fmt.Sprint(conf.Experiment.DataPath, "/", savePath), int(run), envAttr)
+
+	//dataLogger, err := logger.NewData(debugLogger, logger.DataConfig{
+	//	ShouldLogTraces:         conf.Experiment.ShouldLogTraces,
+	//	CacheTracesInRAM:        conf.Experiment.CacheTracesInRAM,
+	//	ShouldLogEpisodeLengths: conf.Experiment.ShouldLogEpisodeLengths,
+	//	ShouldLogReturns: 		 conf.Experiment.ShouldLogReturns,
+	//	ShouldLogRewards:        conf.Experiment.ShouldLogRewards,
+	//	ShouldLogTotals:         conf.Experiment.ShouldLogTotals,
+	//	ShouldLogLearnProg:      conf.Experiment.ShouldLogLearnProg,
+	//	BasePath:                fmt.Sprint(conf.Experiment.DataPath, "/", savePath),
+	//	FileSuffix:              strconv.Itoa(int(run)),
+	//})
+	//if err != nil {
+	//	return errors.New("Could not create data logger: " + err.Error())
+	//}
+
+	runtime.GOMAXPROCS(conf.MaxCPUs) // Limit the number of CPUs to the provided value (unchanged if the input is <1)
+
+	env, err := InitializeEnvironment(conf.EnvironmentName, run, envAttr, debugLogger)
+	if err != nil {
+		return errors.New("Could not initialize environment: " + err.Error())
+	}
+
+	env, err = InitializeEnvWrapper(conf.WrapperNames, run, wrapperAttrs, env, debugLogger)
+	if err != nil {
+		err = errors.New("Could not initialize wrapper: " + err.Error())
+	}
+
+	return err
+}

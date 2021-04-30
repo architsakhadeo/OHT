@@ -60,6 +60,9 @@ type repSettings struct {
 
 	RepLen  int    `json:"rep-dim"`
 	RepName string `json:"rep-name"`
+
+	IsTest      bool `json:"rep-is-test"`
+	TestForward int  `json:"rep-test-forward"`
 }
 
 type KnnModelEnv struct {
@@ -185,6 +188,9 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	var treeStateDim int
 	env.offlineDataObs, env.offlineDataRep, treeStateDim = env.LoadData(traceLog)
 	env.trueDataObs, env.trueDataRep, _ = env.LoadData(trueStartLog)
+	if env.repSettings.IsTest == true {
+		return nil
+	}
 
 	//env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(offlineStartsData)
 	env.trueStarts, env.trueTermns = env.SearchOfflineStart(env.trueDataObs)
@@ -291,8 +297,13 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 			repModel := representation.NewLaplace()
 			repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
 				env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
-				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen)
-			env.repFunc = repModel.Train()
+				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen, env.repSettings.TestForward)
+			if !env.repSettings.IsTest {
+				env.repFunc = repModel.Train()
+			} else {
+				env.repFunc = repModel.CrossValidation()
+			}
+
 			log.Println("Representation has been trained")
 			env.Trained = true
 		}
