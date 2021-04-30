@@ -484,3 +484,40 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
 
         models_data[model] = data
     return models_data
+
+def loading_info_one_run(file, eval_key):
+    with open(file, "r") as f:
+        content = f.readlines()
+    evals = []
+    key = "End of cross validation."
+    for i in range(len(content)-1, -1, -1):
+        l = content[i]
+        if key in l:
+            e = float(l.split(eval_key)[1].split(". ")[0])
+            evals.append(e)
+    if len(evals) > 0:
+        return np.array(evals).mean()
+    else:
+        return None
+
+def loading_info_one_param(path, eval_key):
+    all_runs = os.listdir(path)
+    evals = []
+    for run in all_runs:
+        e = loading_info_one_run(os.path.join(path, run), eval_key)
+        if e is not None:
+            evals.append(e)
+    if len(evals) > 0:
+        return np.array(evals).mean()
+    else:
+        return None
+
+def loading_info_all(path, eval_key):
+    all_param = os.listdir(path)
+    res_dict = {}
+    for p in all_param:
+        idx = int(p.split("param_")[1])
+        res = loading_info_one_param(os.path.join(path, p), eval_key)
+        if res is not None:
+            res_dict[idx] = res
+    return res_dict
