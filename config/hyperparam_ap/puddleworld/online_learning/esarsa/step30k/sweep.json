@@ -31,6 +31,7 @@
 		"steps": 0,
 		"episodes": 10000000,
 		"max-run-length-episodic": 30000,
+		"steps-in-episode": 400,
 		"data-path": "data/hyperparam_ap/puddleworld/online_learning/esarsa/step30k/sweep/",
 		"should-log-totals": true,
 		"debug-interval": 0
