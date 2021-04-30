@@ -98,6 +98,29 @@ func Index2d(array [][]float64, rowStart int, rowEnd int, colStart int, colEnd i
 }
 
 /*
+sample from 1-d array
+*/
+func SampleByIdx1dInt(array []int, rowIdx []int) []int {
+	res := make([]int, len(rowIdx))
+	for i := 0; i < len(rowIdx); i++ {
+		res[i] = array[rowIdx[i]]
+	}
+	return res
+}
+/*
+sample from 3-d array
+*/
+func SampleByIdx3d(array [][][]float64, rowIdx []int) [][][]float64 {
+	var res [][][]float64
+	for i := 0; i < len(rowIdx); i++ {
+		temp := make([][]float64, len(array[rowIdx[i]]))
+		copy(temp, array[rowIdx[i]])
+		res = append(res, temp)
+	}
+	return res
+}
+
+/*
 Index in each row of 2-d array
 */
 func RowIndexFloat(array [][]float64, idx []int) []float64 {
