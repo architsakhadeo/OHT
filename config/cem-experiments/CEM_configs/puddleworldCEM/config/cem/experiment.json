@@ -1,0 +1,7 @@
+{
+        "randomize_start_state_beforeLock": true,
+        "randomize_start_state_afterLock": true,
+        "episodes": 100000,
+        "max-run-length-episodic": 30000,
+        "steps-in-episode": 400
+}

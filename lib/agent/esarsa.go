@@ -158,6 +158,9 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 		set.Seed += int64(run)
 	}
 
+	// For CEM + KNN, do not mention total-logs in the cem/agent.json file, i.e. total-logs = 0
+	// set.Seed += int64(run)
+
 	lw := lockweight.LockWeight{}
 	err = json.Unmarshal(expAttr, &lw)
 	if err != nil {

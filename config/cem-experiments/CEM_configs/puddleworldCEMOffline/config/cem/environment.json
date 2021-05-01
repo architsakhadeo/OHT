@@ -1,0 +1,10 @@
+{
+        "Name": "knnModel",
+        "Settings": {
+                "total-logs": 30,
+                "neighbor-num": 3,
+                "drop-percent": 0.0,
+                "ensemble-seed": 0,
+                "datalog": "data/hyperparam_ap/puddleworld/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/"
+        }
+}
