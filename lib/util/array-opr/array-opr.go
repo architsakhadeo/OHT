@@ -484,3 +484,16 @@ func Absolute(inputData []float64) []float64 {
 	}
 	return res
 }
+
+func OneHotSet(idx float64, bin int) []float64 {
+	res := make([]float64, bin)
+	res[int(idx)] = 1
+	return res
+}
+func OneHotSet2D(idx []float64, bin int) [][]float64 {
+	res := make([][]float64, bin)
+	for i:=0; i<len(idx); i++ {
+		res[i] = OneHotSet(idx[i], bin)
+	}
+	return res
+}

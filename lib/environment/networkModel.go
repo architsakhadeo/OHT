@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path"
-
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	transModel "github.com/stellentus/cartpoles/lib/util/transModel/transnetwork"
+	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
 	"log"
 	"math"
@@ -35,6 +35,11 @@ type networkSettings struct {
 	//Timeout      int 	 `json:"timeout"`
 	PickStartS string  `json:"pick-start-state"`
 	NoisyS     float64 `json:"state-noise"`
+
+	TrainEpoch	int 	`json:"train-epoch"`
+	TrainBatchSize	int `json:"train-batch"`
+	HiddenLayer []int 	`json:"train-hidden-layer"`
+	TrainLearningRate float64 	`json:"train-learning-rate"`
 }
 
 type networkModelEnv struct {
@@ -53,6 +58,8 @@ type networkModelEnv struct {
 	trueStarts  []int
 	trueTermns  []int
 
+	offlineModel    *transModel.TransNetwork
+
 	stateDim        int
 	NumberOfActions int
 	stateRange      []float64
@@ -62,9 +69,6 @@ type networkModelEnv struct {
 
 	maxSDist  float64
 	DebugArr  [][]float64
-	TempCount int
-
-	VisitCount map[string]int
 }
 
 func init() {
@@ -119,7 +123,6 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	// For CEM, use env.networkSettings.Seed += int64(run)
 
 	env.rng = rand.New(rand.NewSource(env.networkSettings.Seed)) // Create a new rand source for reproducibility
-	env.TempCount = 0
 
 	env.Message("environment.networkModel settings", fmt.Sprintf("%+v", env.networkSettings))
 
@@ -149,19 +152,12 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.trueDataObs = env.LoadData(trueStartLog)
 	fmt.Println("True Data Loaded")
 
-	//env.offlineStarts, env.offlineTermns = env.SearchOfflineStart(offlineStartsData)
 	env.trueStarts, env.trueTermns = env.SearchOfflineStart(env.trueDataObs)
-	//fmt.Println("True Starts: ", env.trueStarts)
-	//fmt.Println("True Terms: ", env.trueTermns)
 
-	env.VisitCount = make(map[string]int)
-	//fmt.Println("Visit Counts: ", env.VisitCount)
-
-	//env.offlineModel = transModel.New(env.NumberOfActions, treeStateDim)
-	//env.neuralNet = network.CreateNetwork(agent.StateDim, agent.Hidden, agent.NumberOfActions, agent.Alpha,
-	//	agent.Decay, agent.Momentum, agent.AdamBeta1, agent.AdamBeta2, agent.AdamEps)
-	// INSTEAD NEURAL NETWORK TRAIN
-	//env.offlineModel.BuildTree(env.offlineDataRep, "current")
+	env.offlineModel = transModel.New()
+	env.offlineModel.Initialize(env.networkSettings.Seed, env.offlineDataObs, env.networkSettings.TrainEpoch, env.networkSettings.TrainBatchSize,
+		env.networkSettings.TrainLearningRate, env.networkSettings.HiddenLayer, env.stateDim, env.NumberOfActions)
+	env.offlineModel.Train()
 
 	if env.networkSettings.PickStartS == "random-init" { // default setting
 		env.PickStartFunc = env.randomizeInitState
@@ -301,7 +297,6 @@ func (env *networkModelEnv) randomizeState() rlglue.State {
 
 // Start returns an initial observation.
 func (env *networkModelEnv) Start(randomizeStartStateCondition bool) (rlglue.State, string) {
-	//env.Count = 0
 	env.state = env.PickStartFunc()
 	fmt.Println("Picked Start State: ", env.state)
 	state_copy := make([]float64, env.stateDim)
@@ -309,68 +304,16 @@ func (env *networkModelEnv) Start(randomizeStartStateCondition bool) (rlglue.Sta
 
 	key := ao.FloatAryToString(env.state, " ")
 	fmt.Println("Key: ", key)
-	env.VisitCount[key] += 1
-	env.TempCount += 1
-	//fmt.Println("---", key, env.VisitCount[key])
-
-	//fmt.Println("Start", env.state)
 	return state_copy, ""
 }
 
 func (env *networkModelEnv) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
-	//fmt.Println("---------------------")
-
-	////////actInt, _ := tpo.GetInt(act)
-
-	//fmt.Println("Before target:", env.state)
-	//fmt.Println(env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num))
-	//_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
-	//_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.rep, actInt, env.Neighbor_num)
-	//states := make([][]float64, len(repIdxs))
-	//nextStates := make([][]float64, len(repIdxs))
-	//for j, id := range repIdxs {
-	//	states[j] = make([]float64, env.stateDim)
-	//	nextStates[j] = make([]float64, env.stateDim)
-	//	copy(states[j], env.offlineDataObs[id][:env.stateDim])
-	//	copy(nextStates[j], env.offlineDataObs[id][env.stateDim+1:env.stateDim*2+1])
-	//}
-
-	//temp, nextState, reward, terminal, _ := env.PickNextFunc(env.state, states, nextStates, rewards, terminals, distances)
-
-	//temp, nextState, reward, terminal := network.Predict()
-
-	////////env.state = nextState
-
-	//idx := ao.Search2D(env.state, env.DebugArr)
-	//if idx > -1 {
-	//	fmt.Printf("%d, %d, %.2f, %d, \n", act, idx, env.DebugArr[idx], terminals[chosen])
-	//} else {
-	//	fmt.Println(act, idx, terminals[chosen])
-	//}
-	//env.DebugArr = append(env.DebugArr, env.state)
-
-	var done bool
-	//if terminals[chosen] == 0 {
-	////////if terminal == 0 {
-	////////	done = false
-	////////} else {
-	////////	done = true
-	////////	fmt.Println("Terminal state", temp)
-	////////}
-	key := ao.FloatAryToString(env.state, " ")
-	env.VisitCount[key] += 1
-	//fmt.Println("---", key, env.VisitCount[key])
-
+	actInt, _ := tpo.GetInt(act)
+	nextState, reward, done := env.offlineModel.PredictSingleTrans(env.state, float64(actInt))
+	env.state = nextState
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
-	//fmt.Println(actInt, state_copy)
-	env.TempCount += 1
-	//fmt.Println(env.TempCount)
-	//if env.TempCount == 49999 {
-	//	env.PrintVisitLog()
-	//}
-	////////return state_copy, reward, done, ""
-	return state_copy, 0.0, done, ""
+	return state_copy, reward, done, ""
 }
 
 //GetAttributes returns attributes for this environment.
@@ -411,41 +354,5 @@ func (env *networkModelEnv) AddStateNoise(data []float64, bound [][]float64) []f
 }
 
 func (env *networkModelEnv) GetInfo(info string, value float64) interface{} {
-	if info == "visitCount" {
-		return env.LogVisitCount()
-	} else {
-		return nil
-	}
-}
-func (env *networkModelEnv) LogVisitCount() error {
-	file, err := os.Create(path.Join("plot/temp/", "visits-"+strconv.Itoa(int(env.networkSettings.Seed))+".csv"))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Write header row
-	_, err = file.WriteString("states,visits\n")
-	if err != nil {
-		return err
-	}
-	// Write totals
-	//_, err = file.WriteString(fmt.Sprintf("%f,%d\n", lg.totalReward, lg.totalEpisodes))
-	//if err != nil {
-	//	return err
-	//}
-	for i := 0; i < len(env.offlineDataObs); i++ {
-		key := ao.FloatAryToString(env.offlineDataObs[i][env.stateDim+1:env.stateDim*2+1], " ")
-		_, err := file.WriteString(fmt.Sprintf("%v,%d\n", key, env.VisitCount[key]))
-		if err != nil {
-			return err
-		}
-	}
-	//for state, count := range env.VisitCount {
-	//	fmt.Println(state, count)
-	//	_, err := file.WriteString(fmt.Sprintf("%s,%d\n", state, count))
-	//}
-
-	fmt.Println("Save log in", path.Join("plot/temp/", "visits-"+string(env.networkSettings.Seed)+".csv"))
-	return err
+	return nil
 }

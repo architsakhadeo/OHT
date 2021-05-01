@@ -21,7 +21,7 @@ import (
 
 	"github.com/stellentus/cartpoles/lib/util/convformat"
 	"github.com/stellentus/cartpoles/lib/util/random"
-	transModel "github.com/stellentus/cartpoles/lib/util/transkdtree"
+	transModel "github.com/stellentus/cartpoles/lib/util/transModel/transkdtree"
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
 	"github.com/stellentus/cartpoles/lib/logger"
@@ -75,12 +75,12 @@ type KnnModelEnv struct {
 	state           rlglue.State
 	rng             *rand.Rand
 
-	offlineDataRep     [][]float64
-	offlineDataObs     [][]float64
+	offlineDataRep  [][]float64
+	offlineDataObs  [][]float64
 	offlineStarts   []int
 	offlineTermns   []int
-	trueDataRep        [][]float64
-	trueDataObs        [][]float64
+	trueDataRep     [][]float64
+	trueDataObs     [][]float64
 	trueStarts      []int
 	trueTermns      []int
 	offlineModel    transModel.TransTrees
