@@ -1,6 +1,9 @@
 package logger
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 const longInterval = 1000000000 // A really large number, which should make the client log rarely
 
@@ -30,6 +33,8 @@ func (lg *debugLogger) Message(args ...interface{}) {
 	if !lg.ShouldPrintDebug {
 		return
 	}
+	currentTime := time.Now()
+	fmt.Print(currentTime.Format("2006/01/02 15:04:05 "))
 	fmt.Println(args...)
 }
 
