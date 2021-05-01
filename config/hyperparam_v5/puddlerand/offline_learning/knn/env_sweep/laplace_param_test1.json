@@ -31,7 +31,7 @@
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
 
-		"rep-train-num-step": 10000,
+		"rep-train-num-step": 30000,
 		"rep-train-beta": 5,
 		"rep-train-delta": 0.05,
 		"rep-train-lambda": 0.5,
