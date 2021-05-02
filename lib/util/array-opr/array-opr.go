@@ -108,6 +108,18 @@ func SampleByIdx1dInt(array []int, rowIdx []int) []int {
 	return res
 }
 /*
+sample from 2-d array
+*/
+func SampleByIdx2d(array [][]float64, rowIdx []int) [][]float64 {
+	var res [][]float64
+	for i := 0; i < len(rowIdx); i++ {
+		temp := make([]float64, len(array[rowIdx[i]]))
+		copy(temp, array[rowIdx[i]])
+		res = append(res, temp)
+	}
+	return res
+}
+/*
 sample from 3-d array
 */
 func SampleByIdx3d(array [][][]float64, rowIdx []int) [][][]float64 {

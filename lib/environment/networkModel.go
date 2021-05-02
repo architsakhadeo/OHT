@@ -40,6 +40,10 @@ type networkSettings struct {
 	TrainBatchSize	int `json:"train-batch"`
 	HiddenLayer []int 	`json:"train-hidden-layer"`
 	TrainLearningRate float64 	`json:"train-learning-rate"`
+
+	IsTest	bool 	`json:"is-test"`
+
+	ClipPrediction bool `json:"clip-prediction"`
 }
 
 type networkModelEnv struct {
@@ -157,7 +161,12 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineModel = transModel.New()
 	env.offlineModel.Initialize(env.networkSettings.Seed, env.offlineDataObs, env.networkSettings.TrainEpoch, env.networkSettings.TrainBatchSize,
 		env.networkSettings.TrainLearningRate, env.networkSettings.HiddenLayer, env.stateDim, env.NumberOfActions)
-	env.offlineModel.Train()
+	if !env.IsTest {
+		env.offlineModel.Train()
+	} else {
+		env.offlineModel.CrossValidation()
+		return nil
+	}
 
 	if env.networkSettings.PickStartS == "random-init" { // default setting
 		env.PickStartFunc = env.randomizeInitState
@@ -310,6 +319,16 @@ func (env *networkModelEnv) Start(randomizeStartStateCondition bool) (rlglue.Sta
 func (env *networkModelEnv) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	actInt, _ := tpo.GetInt(act)
 	nextState, reward, done := env.offlineModel.PredictSingleTrans(env.state, float64(actInt))
+	if env.ClipPrediction {
+		for i:=0; i<env.stateDim; i++{
+			temp := math.Max(nextState[i], env.stateBound[0][i])
+			temp = math.Min(temp, env.stateBound[1][i])
+			nextState[i] = temp
+		}
+		temp := math.Max(reward, env.rewardBound[0])
+		temp = math.Min(temp, env.rewardBound[1])
+		reward = temp
+	}
 	env.state = nextState
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)

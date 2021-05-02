@@ -113,7 +113,7 @@ func (lp *Laplace) Train() network.Network {
 	for i := 0; i < lp.numStep; i++ {
 		states, closes, fars := lp.Sample(lp.batchSize)
 		deriv[i%logTime], losses[i%logTime] = lp.Update(states, closes, fars)
-		if i%len(losses) == 0 {
+		if i!=0 && i%len(losses) == 0 {
 			//fmt.Println("Training loss at step", i, "is", ao.Average(losses), ". Derivative is", ao.Average(deriv))
 			log.Printf("Training loss at step %d is %f, derivative is %f", i, ao.Average(losses), ao.Average(deriv))
 			_, testLoss := lp.Test()
