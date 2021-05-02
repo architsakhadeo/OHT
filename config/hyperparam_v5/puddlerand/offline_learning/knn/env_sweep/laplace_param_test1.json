@@ -44,10 +44,10 @@
 
 		"rep-is-test": true,
 		"sweep": {
-			"rep-train-beta": [5, 2],
-			"rep-train-delta": [0.05],
-			"rep-train-lambda": [0.8, 0.5],
-			"rep-train-traj-len": [10, 5, 2],
+			"rep-train-beta": [5],
+			"rep-train-delta": [0.05, 0.5],
+			"rep-train-lambda": [0.8],
+			"rep-train-traj-len": [10, 5],
 			"rep-train-learning-rate": [0.001, 0.0003, 0.0001, 0.00003],
 			"rep-test-forward": [1]
 		}

@@ -34,9 +34,9 @@
 		"is-test": true,
 		"sweep": {
 			"train-epoch": [100],
-			"train-batch": [32],
+			"train-batch": [16, 32, 128],
 			"train-hidden-layer": [[128,128]],
-			"train-learning-rate": [0.001]
+			"train-learning-rate": [0.001, 0.0003, 0.0001, 0.00003]
 		}
 	},
 	"experiment-settings": {
@@ -47,12 +47,12 @@
 		"max-run-length-episodic": 80000,
 		"steps-in-episode": 400,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_sweep/network_param_temp",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_sweep/network_param",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
-		"should-log-totals": true,
-		"should-log-returns": true,
+		"should-log-totals": false,
+		"should-log-returns": false,
 		"debug-interval": 0
 	}
 }
