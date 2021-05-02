@@ -51,7 +51,8 @@ func (opt *Adam) Init(alpha float64, momentums []float64, input int, hidden []in
 func (opt *Adam) AdamUpdate(lossMat, lastOut, weight, oldM, oldV mat.Matrix) (mat.Matrix, mat.Matrix, mat.Matrix) {
 	var grad, m, v mat.Matrix
 	var mHat, vHat mat.Matrix
-	grad = ao.Scale(-1, ao.Dot(lossMat, lastOut.T()))
+	//grad = ao.Scale(-1, ao.Dot(lossMat, lastOut.T()))
+	grad = ao.Dot(lossMat, lastOut.T())
 	m = ao.Add(ao.Scale(opt.beta1, oldM), ao.Scale(1-opt.beta1, grad))
 	v = ao.Add(ao.Scale(opt.beta2, oldV), ao.Scale(1-opt.beta2, ao.Pow(grad, 2.0)))
 	ro, co := m.Dims()
