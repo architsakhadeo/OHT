@@ -1,0 +1,32 @@
+{
+	"agent-name": "actorcritic",
+	"environment-name": "cartpole",
+	"agent-settings": {
+		"gamma": 0.9,
+		"state-len": 4,
+        "env-name": "cartpole",
+		"sweep": {
+			"actor-alpha": [1e-1, 1e-3, 1e-6, 1e-9],
+			"critic-alpha": [1e-1, 1e-3, 1e-6, 1e-9],
+			"tilings": [16, 4, 16],
+			"tiles": [2, 4, 8]
+		},
+		
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1,
+		"sweep": {
+			"delays":[[0]]
+		}
+	},
+	"experiment-settings": {
+		"steps": 50000,
+		"data-path": "data/hyperparam/cartpole/online_learning/ac/step50k/sweep",
+		"should-log-traces": true,
+		"should-log-episode-lengths": true,
+		"debug-interval": 1000
+	}
+}

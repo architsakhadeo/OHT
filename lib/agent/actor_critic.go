@@ -75,8 +75,6 @@ func (actor *Actor) Act(x []float64) (rlglue.Action, mat.Vector) {
 	feat := mat.NewVecDense(len(x), x)
 	actiondim, _ := actor.weight.Dims()
 	logit := mat.NewVecDense(actiondim, nil)
-	// r, c := actor.weight.Dims()
-	// fmt.Println("feat dim:", feat.Len(), "weight dim:", r, c)
 	logit.MulVec(actor.weight, feat)
 
 	probs := softmax(logit)
@@ -91,8 +89,6 @@ func (actor *Actor) Update(x []float64, delta float64, action rlglue.Action, pro
 
 	// calculate the gradient
 	adim := probs.Len()
-	// r, c := actor.weight.Dims()
-	// fmt.Println("probs", adim, "w", r, c)
 	dLogPi := mat.NewDense(adim, len(x), nil)
 
 	actionInt, ok := action.(int)
@@ -164,7 +160,6 @@ func (agent *ActorCritic) Initialize(run uint, expAttr, envAttr rlglue.Attribute
 			util.NewScaler(-maxAngle, maxAngle, agent.acSettings.NumTiles),
 			util.NewScaler(-maxAngularVelocity, maxAngularVelocity, agent.acSettings.NumTiles),
 		}
-
 		agent.tiler, err = util.NewMultiTiler(stateDim, agent.acSettings.NumTilings, scalers)
 		if err != nil {
 			return err
@@ -283,8 +278,8 @@ func (agent *ActorCritic) End(state rlglue.State, reward float64) {
 
 	delta := reward + agent.Gamma*agent.critic.ValueAt(feat) - agent.critic.ValueAt(agent.oldStateActiveFeatures)
 
-	agent.actor.Update(feat, delta, agent.oldAction, agent.oldProbs)
-	agent.critic.Update(feat, delta)
+	agent.actor.Update(agent.oldStateActiveFeatures, delta, agent.oldAction, agent.oldProbs)
+	agent.critic.Update(agent.oldStateActiveFeatures, delta)
 
 	agent.oldAction = newAction
 	agent.oldProbs = probs
@@ -314,7 +309,7 @@ func softmax(logit mat.Vector) mat.Vector {
 	}
 
 	for i := 0; i < probs.Len(); i++ {
-		probs.SetVec(i, math.Exp(logit.AtVec(i)/denom))
+		probs.SetVec(i, math.Exp(logit.AtVec(i))/denom)
 	}
 
 	return probs
@@ -341,14 +336,6 @@ func sample(probs mat.Vector, rng *rand.Rand) int {
 		}
 	}
 	return ret
-}
-
-func sliceIntToFloat64(ar []int) []float64 {
-	newar := make([]float64, len(ar))
-	for i, v := range ar {
-		newar[i] = float64(v)
-	}
-	return newar
 }
 
 func prepareFeatFromTC(ind []int, xdim int) []float64 {
