@@ -1,0 +1,36 @@
+{
+	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+	"agent-name": "esarsa",
+	"environment-name": "puddleworld",
+	"agent-settings": {
+		"gamma": 1.0,
+		"state-len": 2,
+		"env-name": "puddleworld",
+		"tilings": 16,
+		"tiles": 8,
+		"is-stepsize-adaptive": true,
+		"alpha": 0.0,
+		"lambda": 0.14345759728429092,
+		"epsilon": 0.0,
+		"list": [
+			{ "adaptive-alpha": 0.48961042353107503, "beta1": 0.44929232604858266, "softmax-temp": 0.45119820592690796, "weight-init": 4.022093198796372}
+		],
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1
+	},
+	"environment-settings": {
+		"seed": 1
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": true,
+        "randomize_start_state_afterLock": true,
+        "steps": 0,
+        "episodes": 10000000,
+        "max-run-length-episodic": 30000,
+        "steps-in-episode": 400,
+        "data-path": "data/hyperparam_ap/puddleworld/list/CEMonline_onlineEvaluation/esarsa/step15k/sweep/",
+        "should-log-totals": true,
+        "debug-interval": 0
+}
+}
