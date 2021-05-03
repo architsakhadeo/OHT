@@ -1,22 +1,22 @@
 {
 	"comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
 	"agent-name": "esarsa",
-	"environment-name": "puddleworld",
+	"environment-name": "acrobot",
 	"agent-settings": {
 		"gamma": 1.0,
-		"state-len": 2,
-		"env-name": "puddleworld",
+		"state-len": 6,
+		"env-name": "acrobot",
 		"sweep": {
 			"tilings": [16],
 			"tiles": [8],
 			"is-stepsize-adaptive": [true],
 			"alpha": [0.0],
-			"lambda": [0.14345759728429092],
+			"lambda": [0.8848763719431171],
 			"epsilon": [0.0],
-			"adaptive-alpha": [0.00039242850405476045, 0.0011772855121642814, 0.003531856536492844],
+			"adaptive-alpha": [0.0023665371153031396, 0.023665371153031396, 0.23665371153031396],
 			"beta1": [0.0, 0.9],
 			"softmax-temp": [1.0, 10.0, 100.0],
-			"weight-init": [0.0, 4.0, 8.0]
+			"weight-init": [0.0, 8.0, 16.0]
 		},
 		"lock-weight": false,
     	"enable-debug": false,
@@ -26,14 +26,14 @@
 		"seed": 1
 	},
 	"experiment-settings": {
-		"randomize_start_state_beforeLock": true,
-    	"randomize_start_state_afterLock": true,
+		"randomize_start_state_beforeLock": false,
+    	"randomize_start_state_afterLock": false,
 		"steps": 0,
-		"episodes": 10000000,
-		"max-run-length-episodic": 1000000,
-		"data-path": "data/hyperparam_v5/puddlerand/online_learning/esarsa/step1M/sweep/",
+		"episodes": 1000000,
+		"max-run-length-episodic": 15000,
+		"steps-in-episode": 750,
+		"data-path": "data/hyperparam_v5/acrobot/online_learning/esarsa/step15k/sweep/",
 		"should-log-totals": true,
-		"should-log-returns": true,
 		"debug-interval": 0
 	}
 }

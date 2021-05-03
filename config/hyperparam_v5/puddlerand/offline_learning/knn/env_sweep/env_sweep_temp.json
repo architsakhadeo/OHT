@@ -31,7 +31,7 @@
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
 
-		"rep-train-num-step": 10000,
+		"rep-train-num-step": 30000,
 		"rep-train-beta": 5,
 		"rep-train-delta": 0.05,
 		"rep-train-lambda": 0.5,
@@ -46,10 +46,11 @@
 		"sweep": {
 			"rep-train-beta": [5],
 			"rep-train-delta": [0.05],
-			"rep-train-lambda": [0.8],
-			"rep-train-traj-len": [10],
-			"rep-train-learning-rate": [0.0003],
-			"rep-test-forward": [0]
+			"rep-train-lambda": [0.5],
+			"rep-train-traj-len": [5],
+			"rep-train-learning-rate": [0.0001],
+			"rep-test-forward": [1],
+			"rep-dim": [4]
 		}
 	},
 	"experiment-settings": {
@@ -60,7 +61,7 @@
 		"max-run-length-episodic": 80000,
 		"steps-in-episode": 400,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/randomInit/closeTrans/k3/timeout1000/esarsa/step15k_env/data_optimal/laplace_param_temp",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_sweep/laplace_param_temp",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,

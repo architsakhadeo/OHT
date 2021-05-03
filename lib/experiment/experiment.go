@@ -187,7 +187,8 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 				(exp.Settings.CountAfterLock && countStep)) {
 			end = time.Now()
 			delta = end.Sub(start)
-			fmt.Println("Running time", exp.numStepsTaken, delta)
+			currentTime := time.Now()
+			fmt.Println(currentTime.Format("2006/01/02 15:04:05"), " Running time", exp.numStepsTaken, delta)
 			start = time.Now()
 		}
 

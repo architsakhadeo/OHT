@@ -22,7 +22,7 @@ import (
 
 	"github.com/stellentus/cartpoles/lib/util/convformat"
 	"github.com/stellentus/cartpoles/lib/util/random"
-	transModel "github.com/stellentus/cartpoles/lib/util/transkdtree"
+	transModel "github.com/stellentus/cartpoles/lib/util/transModel/transkdtree"
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
 	"github.com/stellentus/cartpoles/lib/logger"

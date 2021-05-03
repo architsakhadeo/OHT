@@ -108,6 +108,18 @@ func SampleByIdx1dInt(array []int, rowIdx []int) []int {
 	return res
 }
 /*
+sample from 2-d array
+*/
+func SampleByIdx2d(array [][]float64, rowIdx []int) [][]float64 {
+	var res [][]float64
+	for i := 0; i < len(rowIdx); i++ {
+		temp := make([]float64, len(array[rowIdx[i]]))
+		copy(temp, array[rowIdx[i]])
+		res = append(res, temp)
+	}
+	return res
+}
+/*
 sample from 3-d array
 */
 func SampleByIdx3d(array [][][]float64, rowIdx []int) [][][]float64 {
@@ -481,6 +493,19 @@ func Absolute(inputData []float64) []float64 {
 	res := make([]float64, len(inputData))
 	for i:=0; i<len(inputData); i++ {
 		res[i] = math.Abs(inputData[i])
+	}
+	return res
+}
+
+func OneHotSet(idx float64, bin int) []float64 {
+	res := make([]float64, bin)
+	res[int(idx)] = 1
+	return res
+}
+func OneHotSet2D(idx []float64, bin int) [][]float64 {
+	res := make([][]float64, bin)
+	for i:=0; i<len(idx); i++ {
+		res[i] = OneHotSet(idx[i], bin)
 	}
 	return res
 }

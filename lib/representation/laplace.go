@@ -32,6 +32,7 @@ type Laplace struct {
 	testClose 		[][]float64
 	testFar 		[][]float64
 	testForward 	int
+	convergeCheck	int
 }
 
 func NewLaplace() *Laplace {
@@ -68,6 +69,7 @@ func (lp *Laplace) Initialize(seed int, numStep int, beta float64, delta float64
 	lp.repLen = repLen
 
 	lp.NetworkInit()
+	lp.convergeCheck = 3
 }
 
 func (lp *Laplace) NetworkInit() {
@@ -76,7 +78,6 @@ func (lp *Laplace) NetworkInit() {
 	lp.optimizer = new(optimizer.Adam)
 	lp.optimizer.Init(lp.learningRate, []float64{0.9, 0.999, 1e-08}, lp.inputLen, lp.hiddenLayer, lp.repLen)
 }
-
 
 func (lp *Laplace) OrganizeData(dataSet [][]float64, terminSet []float64) ([][][]float64) {
 	var organized [][][]float64
@@ -108,14 +109,19 @@ func (lp *Laplace) Train() network.Network {
 	logTime := 1000
 	deriv := make([]float64, logTime)
 	losses := make([]float64, logTime)
+	trace := make([]float64, lp.convergeCheck)
 	for i := 0; i < lp.numStep; i++ {
 		states, closes, fars := lp.Sample(lp.batchSize)
 		deriv[i%logTime], losses[i%logTime] = lp.Update(states, closes, fars)
-		//if i%len(losses) == 0 && i!=0 {
-		if i%len(losses) == 0 {
+		if i!=0 && i%len(losses) == 0 {
 			//fmt.Println("Training loss at step", i, "is", ao.Average(losses), ". Derivative is", ao.Average(deriv))
 			log.Printf("Training loss at step %d is %f, derivative is %f", i, ao.Average(losses), ao.Average(deriv))
-			lp.Test(nil)
+			_, testLoss := lp.Test()
+			trace[i % lp.convergeCheck] = testLoss
+			if (i > lp.convergeCheck) && (trace[i % lp.convergeCheck] > trace[(i-1) % lp.convergeCheck]) && (trace[(i-1) % lp.convergeCheck] > trace[(i-2) % lp.convergeCheck]) {
+				log.Println("Converged.")
+				break
+			}
 		}
 	}
 	return lp.repFunc
@@ -123,8 +129,6 @@ func (lp *Laplace) Train() network.Network {
 
 func (lp *Laplace) CrossValidation() network.Network {
 	logTime := 1000
-	deriv := make([]float64, logTime)
-	losses := make([]float64, logTime)
 
 	allData := make([][][]float64, len(lp.dataSet))
 	//allDataLen := make([]int, len(lp.dataSet))
@@ -149,6 +153,10 @@ func (lp *Laplace) CrossValidation() network.Network {
 	for j:=0; j < 5; j++ {
 		// initialize network
 		lp.NetworkInit()
+		deriv := make([]float64, logTime)
+		losses := make([]float64, logTime)
+		trace := make([]float64, lp.convergeCheck)
+
 		testIdx := make([]int, testSize)
 		copy(testIdx, allIdx[j * testSize: (j+1) * testSize])
 
@@ -169,18 +177,22 @@ func (lp *Laplace) CrossValidation() network.Network {
 		//}
 
 		log.Printf("Cross Validation %d.", j)
-		startTest = lp.Test(testIdx)
+		startTest, _ = lp.Test()
 		for i := 0; i < lp.numStep; i++ {
 			states, closes, fars := lp.Sample(lp.batchSize)
 			deriv[i%logTime], losses[i%logTime] = lp.Update(states, closes, fars)
-			//if i%len(losses) == 0 && i!=0 {
 			if i!=0 && i%len(losses) == 0 {
 				//fmt.Println("Training loss at step", i, "is", ao.Average(losses), ". Derivative is", ao.Average(deriv))
 				log.Printf("Step %d: Training loss = %f. Derivative = %f", i, ao.Average(losses), ao.Average(deriv))
-				lp.Test(testIdx)
+				_, testLoss := lp.Test()
+				trace[i % lp.convergeCheck] = testLoss
+				if (i > lp.convergeCheck) && (trace[i % lp.convergeCheck] > trace[(i-1) % lp.convergeCheck]) && (trace[(i-1) % lp.convergeCheck] > trace[(i-2) % lp.convergeCheck]) {
+					log.Println("Converged.")
+					break
+				}
 			}
 		}
-		endTest = lp.Test(testIdx)
+		endTest, _ = lp.Test()
 		endTests[j] = endTest
 		improves[j] = endTest - startTest
 	}
@@ -346,7 +358,7 @@ func (lp *Laplace) GetRepulsiveLoss(statesRep, farsRep [][]float64) ([]float64, 
 	return repul, beforeDer
 }
 
-func (lp *Laplace) Test(idx []int) float64 {
+func (lp *Laplace) Test() (float64, float64) {
 	var states, closes, fars [][]float64
 	if lp.testState == nil {
 		states, closes, fars = lp.Sample(1000)
@@ -362,6 +374,11 @@ func (lp *Laplace) Test(idx []int) float64 {
 	closeDist := ao.Average(ao.L2DistanceAxis1(statesRep, closesRep))
 	farDist := ao.Average(ao.L2DistanceAxis1(statesRep, farsRep))
 	da := (farDist - closeDist) / farDist
-	log.Printf("Test: close pair distance = %f. far pair distance = %f. DynamicAwareness = %f", closeDist, farDist, da)
-	return da
+
+	_, alForLog := lp.GetAttractiveLoss(statesRep, closesRep)
+	_, rlForLog := lp.GetRepulsiveLoss(statesRep, farsRep)
+	avgLoss := ao.Average(ao.BitwiseAdd(alForLog, ao.A64ArrayMulti(lp.beta, rlForLog)))
+
+	log.Printf("Test: close pair distance = %f. far pair distance = %f. DynamicAwareness = %f. Loss = %f", closeDist, farDist, da, avgLoss)
+	return da, avgLoss
 }
