@@ -58,7 +58,7 @@ func AllEqualInt(arr []int) bool {
 
 func Concatenate(arr1, arr2 [][]float64) [][]float64 {
 	if len(arr1) != len(arr2) {
-		fmt.Printf("2 arrays should have the same lenght. Length arr1 = %d, length arr2 = %d\n", len(arr1), len(arr2))
+		fmt.Printf("Concatenate: Arrays should have the same length. Length arr1 = %d, length arr2 = %d\n", len(arr1), len(arr2))
 		os.Exit(1)
 	}
 	new := make([][]float64, len(arr1))
@@ -503,7 +503,7 @@ func OneHotSet(idx float64, bin int) []float64 {
 	return res
 }
 func OneHotSet2D(idx []float64, bin int) [][]float64 {
-	res := make([][]float64, bin)
+	res := make([][]float64, len(idx))
 	for i:=0; i<len(idx); i++ {
 		res[i] = OneHotSet(idx[i], bin)
 	}
