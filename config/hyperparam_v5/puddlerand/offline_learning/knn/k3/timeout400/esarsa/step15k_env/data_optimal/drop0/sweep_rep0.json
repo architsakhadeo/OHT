@@ -1,6 +1,6 @@
 {
 	"agent-name": "esarsa",
-	"environment-name": "networkModel",
+	"environment-name": "knnModel",
 	"agent-settings": {
 		"gamma": 1.0,
 		"state-len": 2,
@@ -12,10 +12,10 @@
 			"alpha": [0.0],
 			"lambda": [0.14345759728429092],
 			"epsilon": [0.0],
-			"adaptive-alpha": [0.00039242850405476045],
+			"adaptive-alpha": [0.013080950135158682, 0.039242850405476044, 0.11772855121642813],
 			"beta1": [0.0, 0.9],
-			"softmax-temp": [1.0],
-			"weight-init": [0.0]
+			"softmax-temp": [1.0, 10.0, 100.0],
+			"weight-init": [0.0, 4.0, 8.0]
 		},
 		"lock-weight": false,
 		"enable-debug": false,
@@ -41,33 +41,22 @@
 		"rep-hidden": [128, 128],
 		"rep-dim": 4,
 		"rep-test-forward": 0,
-		"rep-name": "Laplace",
-
-		"is-test": true,
-		"sweep": {
-			"rep-name": ["Laplace", null],
-			"train-separated": [true],
-			"scale-input": [false],
-			"train-epoch": [100],
-			"train-batch": [16],
-			"train-hidden-layer": [[128,128]],
-			"train-learning-rate": [0.001, 0.0003, 0.0001, 0.00003, 0.00001]
-		}
+		"rep-name": "Laplace"
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
 		"randomize_start_state_afterLock": false,
 		"steps": 0,
 		"episodes": 1000000,
-		"max-run-length-episodic": 80000,
+		"max-run-length-episodic": 30000,
 		"steps-in-episode": 400,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_sweep/network_param_laplace_separated",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/k3/timeout400/esarsa/step15k_env/data_optimal/drop0/sweep_rep0",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
-		"should-log-totals": false,
-		"should-log-returns": false,
+		"should-log-totals": true,
+		"should-log-returns": true,
 		"debug-interval": 0
 	}
 }
