@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stellentus/cartpoles/lib/representation"
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
+	"github.com/stellentus/cartpoles/lib/util/network"
 	transModel "github.com/stellentus/cartpoles/lib/util/transModel/transnetwork"
 	tpo "github.com/stellentus/cartpoles/lib/util/type-opr"
 
@@ -32,9 +34,9 @@ type networkSettings struct {
 	TotalLogs    uint    `json:"total-logs"`
 	EnsembleSeed int     `json:"ensemble-seed"`
 	DropPerc     float64 `json:"drop-percent"`
-	//Timeout      int 	 `json:"timeout"`
 	PickStartS string  `json:"pick-start-state"`
 
+	TrainSeparated  bool	`json:"train-separated"`
 	TrainEpoch	int 	`json:"train-epoch"`
 	TrainBatchSize	int `json:"train-batch"`
 	HiddenLayer []int 	`json:"train-hidden-layer"`
@@ -49,19 +51,20 @@ type networkSettings struct {
 type networkModelEnv struct {
 	logger.Debug
 	networkSettings
-	//repSettings
+	repSettings
+
 	Trained bool
-	//repFunc network.Network
+	repFunc network.Network
 
 	//rep   []float64
 	state rlglue.State
 	rng   *rand.Rand
 
-	//offlineDataRep  [][]float64
+	offlineDataRep  [][]float64
 	offlineDataObs [][]float64
 	offlineStarts  []int
 	offlineTermns  []int
-	//trueDataRep     [][]float64
+	trueDataRep     [][]float64
 	trueDataObs [][]float64
 	trueStarts  []int
 	trueTermns  []int
@@ -126,15 +129,15 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	//err = json.Unmarshal(attr, &env.repSettings)
-	//if err != nil {
-	//	err = errors.New("environment.networkModel settings error: " + err.Error())
-	//	env.Message("err", err)
-	//	return err
-	//}
-	//if env.repSettings.RepName == "Laplace" {
-	//	env.ScaleInput = false // Do not scale input if using representation
-	//}
+	err = json.Unmarshal(attr, &env.repSettings)
+	if err != nil {
+		err = errors.New("environment.networkModel settings error: " + err.Error())
+		env.Message("err", err)
+		return err
+	}
+	if env.repSettings.RepName == "Laplace" {
+		env.ScaleInput = false // Do not scale input if using representation
+	}
 
 	env.networkSettings.Seed += int64(run / env.networkSettings.TotalLogs)
 	// For CEM, use env.networkSettings.Seed += int64(run)
@@ -159,10 +162,10 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.SettingFromLog(paramLog)
 	env.state = make(rlglue.State, env.stateDim)
 
-	//env.offlineDataObs, env.offlineDataRep = env.LoadData(traceLog)
-	env.offlineDataObs = env.LoadData(traceLog)
+	env.offlineDataObs, env.offlineDataRep = env.LoadData(traceLog)
+	//env.offlineDataObs = env.LoadData(traceLog)
 	fmt.Println("Offline Data Loaded")
-	env.trueDataObs = env.LoadData(trueStartLog)
+	env.trueDataObs, _ = env.LoadData(trueStartLog)
 	fmt.Println("True Data Loaded")
 
 	env.trueStarts, env.trueTermns = env.SearchOfflineStart(env.trueDataObs)
@@ -171,13 +174,13 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	var trainingData [][]float64
 	if env.ScaleInput {
 		trainingData = env.ScaleTrans(env.offlineDataObs, env.stateBound, env.rewardBound)
-	//} else if env.repSettings.RepName == "Laplace" {
-	//	trainingData = env.offlineDataRep
+	} else if env.repSettings.RepName == "Laplace" {
+		trainingData = env.offlineDataRep
 	} else {
 		trainingData = env.offlineDataObs
 	}
 	env.offlineModel.Initialize(env.networkSettings.Seed, trainingData, env.networkSettings.TrainEpoch, env.networkSettings.TrainBatchSize,
-		env.networkSettings.TrainLearningRate, env.networkSettings.HiddenLayer, env.stateDim, env.NumberOfActions)
+		env.networkSettings.TrainLearningRate, env.networkSettings.HiddenLayer, env.repSettings.RepLen, env.stateDim, env.NumberOfActions, env.networkSettings.TrainSeparated)
 	if !env.networkSettings.IsTest {
 		env.offlineModel.Train()
 	} else {
@@ -194,7 +197,7 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	return nil
 }
 
-func (env *networkModelEnv) LoadData(filename string) [][]float64 {
+func (env *networkModelEnv) LoadData(filename string) ([][]float64, [][]float64) {
 	// Get offline data
 	csvFile, err := os.Open(filename)
 	if err != nil {
@@ -244,55 +247,59 @@ func (env *networkModelEnv) LoadData(filename string) [][]float64 {
 		allTransObs[i-1] = row
 	}
 
-	//var allNextRep [][]float64
-	//var allRep [][]float64
-	//if env.repSettings.RepName == "Laplace" {
-	//	if !env.Trained {
-	//		repModel := representation.NewLaplace()
-	//		repModel.Initialize(int(env.networkSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
-	//			env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
-	//			env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen, env.repSettings.TestForward)
-	//		if !env.repSettings.IsTest {
-	//			env.repFunc = repModel.Train()
-	//		} else {
-	//			env.repFunc = repModel.CrossValidation()
-	//		}
-	//
-	//		log.Println("Representation has been trained")
-	//		env.Trained = true
-	//	}
-	//	allNextRep = env.repFunc.Predict(allNextStates)
-	//	allRep = env.repFunc.Predict(allStates)
-	//	log.Println("Obs to Rep")
-	//} else {
-	//	env.repSettings.RepLen = env.stateDim
-	//	allNextRep = allNextStates
-	//	allRep = allStates
-	//}
-	//
-	//allTransRep := make([][]float64, len(allTransStr)-1)
-	//for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
-	//	trans := allTransStr[i]
-	//	row := make([]float64, env.repSettings.RepLen*2+3+1) // The last bit is the index
-	//	for j, num := range trans {
-	//		if j == 0 { // next state
-	//			copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen*2+1], allNextRep[i-1])
-	//		} else if j == 1 { // current state
-	//			copy(row[:env.repSettings.RepLen], allRep[i-1])
-	//		} else if j == 2 { // action
-	//			row[env.repSettings.RepLen], _ = strconv.ParseFloat(num, 64)
-	//		} else if j == 3 { //reward
-	//			row[env.repSettings.RepLen*2+1], _ = strconv.ParseFloat(num, 64)
-	//			//rewards[i-1] = row[env.repSettings.RepLen*2+1]
-	//		} else if j == 4 { //termination
-	//			row[env.repSettings.RepLen*2+2], _ = strconv.ParseFloat(num, 64)
-	//		}
-	//	}
-	//	row[env.repSettings.RepLen*2+3] = float64(i - 1) // index
-	//	allTransRep[i-1] = row
-	//	//fmt.Println(allTransRep[i-1])
-	//	//fmt.Println(allTransObs[i-1], "\n")
-	//}
+	var allNextRep [][]float64
+	var allRep [][]float64
+	if env.repSettings.RepName == "Laplace" {
+		if !env.Trained {
+			repModel := representation.NewLaplace()
+			repModel.Initialize(int(env.networkSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
+				env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
+				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen, env.repSettings.TestForward)
+			if !env.repSettings.IsTest {
+				env.repFunc = repModel.Train()
+			} else {
+				env.repFunc = repModel.CrossValidation()
+			}
+
+			log.Println("Representation has been trained")
+			env.Trained = true
+		}
+		allNextRep = env.repFunc.Predict(allNextStates)
+		allRep = env.repFunc.Predict(allStates)
+		log.Println("Obs to Rep")
+	} else {
+		env.repSettings.RepLen = env.stateDim
+		allNextRep = allNextStates
+		allRep = allStates
+	}
+
+	allTransRep := make([][]float64, len(allTransStr)-1)
+	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
+		trans := allTransStr[i]
+		//row := make([]float64, env.repSettings.RepLen*2+3+1) // The last bit is the index
+		row := make([]float64, env.repSettings.RepLen+env.stateDim+3+1) // The last bit is the index
+		for j, num := range trans {
+			if j == 0 { // next state
+				//copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen+1], allNextRep[i-1])
+				copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen+env.stateDim+1], allNextRep[i-1])
+			} else if j == 1 { // current state
+				copy(row[:env.repSettings.RepLen], allRep[i-1])
+			} else if j == 2 { // action
+				row[env.repSettings.RepLen], _ = strconv.ParseFloat(num, 64)
+			} else if j == 3 { //reward
+				//row[env.repSettings.RepLen*2+1], _ = strconv.ParseFloat(num, 64)
+				row[env.repSettings.RepLen+env.stateDim+1], _ = strconv.ParseFloat(num, 64)
+			} else if j == 4 { //termination
+				//row[env.repSettings.RepLen*2+2], _ = strconv.ParseFloat(num, 64)
+				row[env.repSettings.RepLen+env.stateDim+2], _ = strconv.ParseFloat(num, 64)
+			}
+		}
+		//row[env.repSettings.RepLen*2+3] = float64(i - 1) // index
+		row[env.repSettings.RepLen+env.stateDim+3] = float64(i - 1) // index
+		allTransRep[i-1] = row
+		//fmt.Println(allTransRep[i-1])
+		//fmt.Println(allTransObs[i-1], "\n")
+	}
 
 	env.rewardBound = make([][]float64, 2)
 	env.rewardBound[0] = make([]float64, 1)
@@ -309,22 +316,23 @@ func (env *networkModelEnv) LoadData(filename string) [][]float64 {
 	}
 	fmt.Println("States min, max:", env.stateBound[0], env.stateBound[1])
 
-	//var allTransRepKeep [][]float64
+	var allTransRepKeep [][]float64
 	var allTransObsKeep [][]float64
 	if env.DropPerc != 0 {
 		filteredLen := int(float64(len(allTransObs)) * (1 - env.DropPerc))
 		filteredIdx := env.rng.Perm(len(allTransObs))[:filteredLen]
-		//allTransRepKeep = make([][]float64, filteredLen)
+		allTransRepKeep = make([][]float64, filteredLen)
 		allTransObsKeep = make([][]float64, filteredLen)
 		for i := 0; i < filteredLen; i++ {
-			//allTransRepKeep[i] = allTransRep[filteredIdx[i]]
+			allTransRepKeep[i] = allTransRep[filteredIdx[i]]
 			allTransObsKeep[i] = allTransObs[filteredIdx[i]]
 		}
 	} else {
+		allTransRepKeep = allTransRep
 		allTransObsKeep = allTransObs
 	}
-	//return allTransObsKeep, allTransRepKeep
-	return allTransObsKeep
+	return allTransObsKeep, allTransRepKeep
+	//return allTransObsKeep
 }
 
 func (env *networkModelEnv) SearchOfflineStart(allTrans [][]float64) ([]int, []int) {
@@ -359,17 +367,30 @@ func (env *networkModelEnv) Start(randomizeStartStateCondition bool) (rlglue.Sta
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
 
-	key := ao.FloatAryToString(env.state, " ")
-	fmt.Println("Key: ", key)
+	//key := ao.FloatAryToString(env.state, " ")
+	//fmt.Println("Key: ", key)
 	return state_copy, ""
 }
 
 func (env *networkModelEnv) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	actInt, _ := tpo.GetInt(act)
+
 	if env.ScaleInput {
 		env.state, _ = env.Normalizer(env.state, nil, env.stateBound)
 	}
-	nextState, reward, done := env.offlineModel.PredictSingleTrans(env.state, float64(actInt))
+
+	var currentS []float64
+	if env.repSettings.RepName == "Laplace" {
+		temp := make([][]float64, 1)
+		temp[0] = make([]float64, len(env.state))
+		temp[0] = env.state
+		currentS = env.repFunc.Predict(temp)[0]
+	} else {
+		currentS = env.state
+	}
+	//nextState, reward, done := env.offlineModel.PredictSingleTrans(env.state, float64(actInt))
+	nextState, reward, done := env.offlineModel.PredictSingleTrans(currentS, float64(actInt))
+
 	if env.ScaleInput {
 		nextState, _ = env.UnNormalizer(nextState, nil, env.stateBound)
 		reward2d := make([]float64, 1)
@@ -388,14 +409,6 @@ func (env *networkModelEnv) Step(act rlglue.Action, randomizeStartStateCondition
 		reward = temp
 	}
 	env.state = nextState
-	//if env.repSettings.RepName == "Laplace" {
-	//	temp := make([][]float64, 1)
-	//	temp[0] = make([]float64, len(env.state))
-	//	temp[0] = env.state
-	//	env.rep = env.repFunc.Predict(temp)[0]
-	//} else {
-	//	env.rep = env.state
-	//}
 
 	state_copy := make([]float64, env.stateDim)
 	copy(state_copy, env.state)
