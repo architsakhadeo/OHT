@@ -38,7 +38,7 @@
     "pick-start-state": "random-init",
 
     "train-separated": true,
-    "scale-state": false,
+    "scale-state": true,
     "scale-reward": false,
     "clip-prediction": true,
     "train-epoch": 100,
@@ -47,9 +47,9 @@
     "train-learning-rate": 0.0003,
 
     "model-save": true,
-    "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn",
+    "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_scale",
     "model-load": false,
-    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn"
+    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_scale"
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
@@ -57,9 +57,9 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 80000,
-    "steps-in-episode": 400,
+    "steps-in-episode": 500,
 
-    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn",
+    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_scale",
     "should-log-traces": false,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,

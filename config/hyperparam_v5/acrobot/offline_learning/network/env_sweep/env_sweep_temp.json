@@ -51,7 +51,8 @@
     "is-test": true,
     "sweep": {
       "train-separated": [true],
-      "scale-input": [false],
+      "scale-state": [false],
+      "scale-reward": [false],
       "train-epoch": [200],
       "train-batch": [16],
       "train-hidden-layer": [[128,128]],
@@ -64,7 +65,7 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 80000,
-    "steps-in-episode": 400,
+    "steps-in-episode": 500,
 
     "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_sweep/network_param_temp",
     "should-log-traces": false,

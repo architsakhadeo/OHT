@@ -37,33 +37,19 @@
     "drop-percent": 0,
     "pick-start-state": "random-init",
 
-    "rep-train-num-step": 30000,
-    "rep-train-beta": 5,
-    "rep-train-delta": 0.5,
-    "rep-train-lambda": 0.8,
-    "rep-train-traj-len": 20,
-    "rep-train-batch": 128,
-    "rep-train-learning-rate": 0.00003,
-    "rep-hidden": [128, 128],
-    "rep-dim": 8,
-    "rep-name": "Laplace",
-
-    "rep-save": false,
-    "rep-load": true,
-    "rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/rep_laplace",
-
     "train-separated": true,
-    "scale-input": false,
+    "scale-state": false,
+    "scale-reward": false,
     "clip-prediction": true,
-    "train-epoch": 200,
+    "train-epoch": 100,
     "train-batch": 16,
     "train-hidden-layer": [128,128],
-    "train-learning-rate": 0.0001,
+    "train-learning-rate": 0.0003,
 
     "model-save": true,
-    "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_laplace",
+    "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn",
     "model-load": false,
-    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_laplace"
+    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn"
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
@@ -71,9 +57,9 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 80000,
-    "steps-in-episode": 400,
+    "steps-in-episode": 500,
 
-    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_laplace",
+    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn",
     "should-log-traces": false,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,

@@ -45,9 +45,9 @@
 		"rep-name": "Laplace",
 		
 		"rep-save": true,
-		"rep-save-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/temp",
+		"rep-save-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/rep_laplace",
 		"rep-load": false,
-		"rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/temp",
+		"rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/rep_laplace",
 
 		"rep-is-test": false
 	},
@@ -57,9 +57,9 @@
 		"steps": 0,
 		"episodes": 1000000,
 		"max-run-length-episodic": 80000,
-		"steps-in-episode": 400,
+		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/temp",
+		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/rep_laplace",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,

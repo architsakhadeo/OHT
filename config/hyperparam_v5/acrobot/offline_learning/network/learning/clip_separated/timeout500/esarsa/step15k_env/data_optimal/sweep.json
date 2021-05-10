@@ -1,0 +1,65 @@
+{
+  "agent-name": "esarsa",
+  "environment-name": "networkModel",
+  "agent-settings": {
+    "gamma": 1.0,
+    "state-len": 6,
+    "env-name": "acrobot",
+    "sweep": {
+      "tilings": [16],
+      "tiles": [8],
+      "is-stepsize-adaptive": [true],
+      "alpha": [0.0],
+      "lambda": [0.8],
+      "epsilon": [0.0],
+      "adaptive-alpha": [0.003, 0.03, 0.3],
+      "beta1": [0.0, 0.9],
+      "softmax-temp": [1.0, 10.0, 100.0],
+      "weight-init": [0.0, 8.0, 16.0]
+    },
+    "lock-weight": false,
+    "enable-debug": false,
+    "seed": 1,
+
+    "total-logs": 30
+  },
+  "environment-settings": {
+    "seed": 1,
+    "total-logs": 30,
+    "datalog": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
+    "true-start-log": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
+    "ensemble-seed": 0,
+    "drop-percent": 0,
+    "pick-start-state": "random-init",
+
+    "train-separated": true,
+    "scale-state": false,
+    "scale-reward": false,
+    "clip-prediction": true,
+
+    "train-epoch": 100,
+    "train-batch": 16,
+    "train-hidden-layer": [128,128],
+    "train-learning-rate": 0.0003,
+
+    "model-save": false,
+    "model-load": true,
+    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn"
+  },
+  "experiment-settings": {
+    "randomize_start_state_beforeLock": false,
+    "randomize_start_state_afterLock": false,
+    "steps": 0,
+    "episodes": 1000000,
+    "max-run-length-episodic": 15000,
+    "steps-in-episode": 500,
+
+    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_separated/timeout500/esarsa/step15k_env/data_optimal/sweep",
+    "should-log-traces": false,
+    "should-log-episode-lengths": false,
+    "should-log-rewards": false,
+    "should-log-totals": true,
+    "should-log-returns": true,
+    "debug-interval": 0
+  }
+}

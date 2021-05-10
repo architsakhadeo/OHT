@@ -48,10 +48,14 @@
     "rep-dim": 8,
     "rep-name": "Laplace",
 
+    "rep-save": false,
+    "rep-load": true,
+    "rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/rep_laplace",
+
     "is-test": true,
     "sweep": {
       "train-separated": [true],
-      "scale-state": [false],
+      "scale-state": [true],
       "scale-reward": [false],
       "train-epoch": [100],
       "train-batch": [16],
@@ -65,9 +69,9 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 80000,
-    "steps-in-episode": 400,
+    "steps-in-episode": 500,
 
-    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_sweep/network_param_laplace_separated",
+    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_sweep/network_param_scale_laplace_separated",
     "should-log-traces": false,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,
