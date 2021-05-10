@@ -42,9 +42,15 @@ type networkSettings struct {
 	HiddenLayer []int 	`json:"train-hidden-layer"`
 	TrainLearningRate float64 	`json:"train-learning-rate"`
 
+	NNSave      bool `json:"model-save"`
+	SavePath	 string `json:"model-save-path"`
+	NNLoad      bool `json:"model-load"`
+	LoadPath	 string `json:"model-load-path"`
+
 	IsTest	bool 	`json:"is-test"`
 
-	ScaleInput bool 	`json:"scale-input"`
+	ScaleState bool 	`json:"scale-state"`
+	ScaleReward bool 	`json:"scale-reward"`
 	ClipPrediction bool `json:"clip-prediction"`
 }
 
@@ -75,9 +81,11 @@ type networkModelEnv struct {
 	NumberOfActions int
 	stateRange      []float64
 	rewardBound     [][]float64
-	stateBound      [][]float64
+	inputStateBound      [][]float64
+	outputStateBound      [][]float64
 	PickStartFunc   EpStartFuncNet
 
+	LoadedLog string
 	DebugArr  [][]float64
 }
 
@@ -135,9 +143,9 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		env.Message("err", err)
 		return err
 	}
-	if env.repSettings.RepName == "Laplace" {
-		env.ScaleInput = false // Do not scale input if using representation
-	}
+	//if env.repSettings.RepName == "Laplace" {
+	//	env.ScaleState = false // Do not scale input if using representation
+	//}
 
 	env.networkSettings.Seed += int64(run / env.networkSettings.TotalLogs)
 	// For CEM, use env.networkSettings.Seed += int64(run)
@@ -153,8 +161,9 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	} else {
 		trueStartFolder = folder
 	}
-	traceLog := folder + "/traces-" + strconv.Itoa(int(run%env.networkSettings.TotalLogs)) + ".csv"
-	trueStartLog := trueStartFolder + "/traces-" + strconv.Itoa(int(run%env.networkSettings.TotalLogs)) + ".csv"
+	env.LoadedLog = strconv.Itoa(int(run%env.networkSettings.TotalLogs))
+	traceLog := folder + "/traces-" + env.LoadedLog + ".csv"
+	trueStartLog := trueStartFolder + "/traces-" + env.LoadedLog + ".csv"
 
 	env.Message("network data log", traceLog, "\n")
 	env.Message("network starts log", trueStartLog, "\n")
@@ -172,21 +181,39 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 
 	env.offlineModel = transModel.New()
 	var trainingData [][]float64
-	if env.ScaleInput {
-		trainingData = env.ScaleTrans(env.offlineDataObs, env.stateBound, env.rewardBound)
-	} else if env.repSettings.RepName == "Laplace" {
-		trainingData = env.offlineDataRep
+	var nnFolder string
+	if env.ScaleState || env.ScaleReward {
+		trainingData = env.ScaleTrans(env.offlineDataRep, env.inputStateBound, env.outputStateBound, env.rewardBound)
+		if env.repSettings.RepName == "Laplace" {
+			nnFolder = "/nn-scale-laplace-"
+		} else {
+			nnFolder = "/nn-scale-"
+		}
 	} else {
-		trainingData = env.offlineDataObs
+		trainingData = env.offlineDataRep
+		if env.repSettings.RepName == "Laplace" {
+			nnFolder = "/nn-laplace-"
+		} else {
+			nnFolder = "/nn-"
+		}
 	}
+
 	env.offlineModel.Initialize(env.networkSettings.Seed, trainingData, env.networkSettings.TrainEpoch, env.networkSettings.TrainBatchSize,
 		env.networkSettings.TrainLearningRate, env.networkSettings.HiddenLayer, env.repSettings.RepLen, env.stateDim, env.NumberOfActions, env.networkSettings.TrainSeparated)
-	if !env.networkSettings.IsTest {
-		env.offlineModel.Train()
+	if env.networkSettings.NNLoad {
+		env.offlineModel.LoadFunc(env.networkSettings.LoadPath + nnFolder + env.LoadedLog + "/")
 	} else {
-		env.offlineModel.CrossValidation()
-		return nil
+		if env.networkSettings.IsTest {
+			env.offlineModel.CrossValidation()
+			return nil
+		} else {
+			env.offlineModel.Train()
+		}
 	}
+	if env.networkSettings.NNSave {
+		env.offlineModel.SaveFunc(env.networkSettings.SavePath + nnFolder + env.LoadedLog + "/")
+	}
+
 
 	if env.networkSettings.PickStartS == "random-init" { // default setting
 		env.PickStartFunc = env.randomizeInitState
@@ -247,7 +274,7 @@ func (env *networkModelEnv) LoadData(filename string) ([][]float64, [][]float64)
 		allTransObs[i-1] = row
 	}
 
-	var allNextRep [][]float64
+	//var allNextRep [][]float64
 	var allRep [][]float64
 	if env.repSettings.RepName == "Laplace" {
 		if !env.Trained {
@@ -255,23 +282,31 @@ func (env *networkModelEnv) LoadData(filename string) ([][]float64, [][]float64)
 			repModel.Initialize(int(env.networkSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
 				env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
 				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen, env.repSettings.TestForward)
-			if !env.repSettings.IsTest {
-				env.repFunc = repModel.Train()
+
+			if env.repSettings.RepLoad {
+				env.repFunc = repModel.LoadFunc(env.repSettings.LoadPath + "/laplace-"+env.LoadedLog)
 			} else {
-				env.repFunc = repModel.CrossValidation()
+				if env.repSettings.IsTest {
+					env.repFunc = repModel.CrossValidation()
+				} else {
+					env.repFunc = repModel.Train()
+				}
 			}
 
+			if env.repSettings.RepSave {
+				env.repFunc = repModel.SaveFunc(env.repSettings.SavePath + "/laplace-" + env.LoadedLog)
+			}
 			log.Println("Representation has been trained")
 			env.Trained = true
 		}
-		allNextRep = env.repFunc.Predict(allNextStates)
+		//allNextRep = env.repFunc.Predict(allNextStates)
 		allRep = env.repFunc.Predict(allStates)
 		log.Println("Obs to Rep")
 	} else {
 		env.repSettings.RepLen = env.stateDim
-		allNextRep = allNextStates
 		allRep = allStates
 	}
+	//allNextRep = allNextStates
 
 	allTransRep := make([][]float64, len(allTransStr)-1)
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
@@ -280,8 +315,8 @@ func (env *networkModelEnv) LoadData(filename string) ([][]float64, [][]float64)
 		row := make([]float64, env.repSettings.RepLen+env.stateDim+3+1) // The last bit is the index
 		for j, num := range trans {
 			if j == 0 { // next state
-				//copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen+1], allNextRep[i-1])
-				copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen+env.stateDim+1], allNextRep[i-1])
+				//copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen+env.stateDim+1], allNextRep[i-1])
+				copy(row[env.repSettings.RepLen+1:env.repSettings.RepLen+env.stateDim+1], allNextStates[i-1])
 			} else if j == 1 { // current state
 				copy(row[:env.repSettings.RepLen], allRep[i-1])
 			} else if j == 2 { // action
@@ -307,14 +342,22 @@ func (env *networkModelEnv) LoadData(filename string) ([][]float64, [][]float64)
 	env.rewardBound[0][0], _ = ao.ArrayMin(rewards)
 	env.rewardBound[1][0], _ = ao.ArrayMax(rewards)
 	fmt.Println("Rewards min, max:", env.rewardBound[0], env.rewardBound[1])
-	env.stateBound = make([][]float64, 2)
-	for i := 0; i < len(allStates[0]); i++ {
-		mn, _ := ao.ColumnMin(allStates, i)
-		mx, _ := ao.ColumnMax(allStates, i)
-		env.stateBound[0] = append(env.stateBound[0], mn)
-		env.stateBound[1] = append(env.stateBound[1], mx)
+	env.inputStateBound = make([][]float64, 2)
+	env.outputStateBound = make([][]float64, 2)
+	for i := 0; i < len(allRep[0]); i++ {
+		mn, _ := ao.ColumnMin(allRep, i)
+		mx, _ := ao.ColumnMax(allRep, i)
+		env.inputStateBound[0] = append(env.inputStateBound[0], mn)
+		env.inputStateBound[1] = append(env.inputStateBound[1], mx)
 	}
-	fmt.Println("States min, max:", env.stateBound[0], env.stateBound[1])
+	for i := 0; i < len(allNextStates[0]); i++ {
+		mn, _ := ao.ColumnMin(allNextStates, i)
+		mx, _ := ao.ColumnMax(allNextStates, i)
+		env.outputStateBound[0] = append(env.outputStateBound[0], mn)
+		env.outputStateBound[1] = append(env.outputStateBound[1], mx)
+	}
+	fmt.Println("inputStates min, max:", env.inputStateBound[0], env.inputStateBound[1])
+	fmt.Println("outputStates min, max:", env.outputStateBound[0], env.outputStateBound[1])
 
 	var allTransRepKeep [][]float64
 	var allTransObsKeep [][]float64
@@ -375,10 +418,6 @@ func (env *networkModelEnv) Start(randomizeStartStateCondition bool) (rlglue.Sta
 func (env *networkModelEnv) Step(act rlglue.Action, randomizeStartStateCondition bool) (rlglue.State, float64, bool, string) {
 	actInt, _ := tpo.GetInt(act)
 
-	if env.ScaleInput {
-		env.state, _ = env.Normalizer(env.state, nil, env.stateBound)
-	}
-
 	var currentS []float64
 	if env.repSettings.RepName == "Laplace" {
 		temp := make([][]float64, 1)
@@ -388,20 +427,27 @@ func (env *networkModelEnv) Step(act rlglue.Action, randomizeStartStateCondition
 	} else {
 		currentS = env.state
 	}
+
+	if env.ScaleState {
+		currentS, _ = env.Normalizer(currentS, nil, env.inputStateBound)
+	}
 	//nextState, reward, done := env.offlineModel.PredictSingleTrans(env.state, float64(actInt))
 	nextState, reward, done := env.offlineModel.PredictSingleTrans(currentS, float64(actInt))
 
-	if env.ScaleInput {
-		nextState, _ = env.UnNormalizer(nextState, nil, env.stateBound)
+	if env.ScaleState {
+		nextState, _ = env.UnNormalizer(nextState, nil, env.outputStateBound)
+	}
+	if env.ScaleReward {
 		reward2d := make([]float64, 1)
 		reward2d[0] = reward
 		reward2d, _ = env.UnNormalizer(reward2d, nil, env.rewardBound)
 		reward = reward2d[0]
 	}
+
 	if env.ClipPrediction {
 		for i:=0; i<env.stateDim; i++{
-			temp := math.Max(nextState[i], env.stateBound[0][i])
-			temp = math.Min(temp, env.stateBound[1][i])
+			temp := math.Max(nextState[i], env.outputStateBound[0][i])
+			temp = math.Min(temp, env.outputStateBound[1][i])
 			nextState[i] = temp
 		}
 		temp := math.Max(reward, env.rewardBound[0][0])
@@ -434,16 +480,20 @@ func (env *networkModelEnv) GetAttributes() rlglue.Attributes {
 	return attr
 }
 
-func (env *networkModelEnv) ScaleTrans(trans [][]float64, stateBound [][]float64, rewardBound [][]float64) ([][]float64) {
-	states := ao.Index2d(trans, 0, len(trans), 0, env.stateDim)
-	actions := ao.Index2d(trans, 0, len(trans), env.stateDim, env.stateDim+1)
-	nextStates := ao.Index2d(trans, 0, len(trans), env.stateDim+1, env.stateDim*2+1)
-	rewards := ao.Index2d(trans, 0, len(trans), env.stateDim*2+1, env.stateDim*2+2)
-	termins := ao.Index2d(trans, 0, len(trans), env.stateDim*2+2, env.stateDim*2+3)
+func (env *networkModelEnv) ScaleTrans(trans [][]float64, inputStateBound, outputStateBound, rewardBound [][]float64) ([][]float64) {
+	states := ao.Index2d(trans, 0, len(trans), 0, env.repSettings.RepLen)
+	actions := ao.Index2d(trans, 0, len(trans), env.repSettings.RepLen, env.repSettings.RepLen+1)
+	nextStates := ao.Index2d(trans, 0, len(trans), env.repSettings.RepLen+1, env.repSettings.RepLen+env.stateDim+1)
+	rewards := ao.Index2d(trans, 0, len(trans), env.repSettings.RepLen+env.stateDim+1, env.repSettings.RepLen+env.stateDim+2)
+	termins := ao.Index2d(trans, 0, len(trans), env.repSettings.RepLen+env.stateDim+2, env.repSettings.RepLen+env.stateDim+3)
 
-	_, states = env.Normalizer(nil, states, stateBound)
-	_, nextStates = env.Normalizer(nil, nextStates, stateBound)
-	_, rewards = env.Normalizer(nil, rewards, rewardBound)
+	if env.ScaleState {
+		_, states = env.Normalizer(nil, states, inputStateBound)
+		_, nextStates = env.Normalizer(nil, nextStates, outputStateBound)
+	}
+	if env.ScaleReward {
+		_, rewards = env.Normalizer(nil, rewards, rewardBound)
+	}
 	scaledTrans := ao.Concatenate(ao.Concatenate(ao.Concatenate(ao.Concatenate(states, actions), nextStates), rewards), termins)
 	return scaledTrans
 }

@@ -61,8 +61,13 @@ type repSettings struct {
 	RepLen  int    `json:"rep-dim"`
 	RepName string `json:"rep-name"`
 
-	IsTest      bool `json:"rep-is-test"`
-	TestForward int  `json:"rep-test-forward"`
+	RepSave      bool `json:"rep-save"`
+	SavePath	 string `json:"rep-save-path"`
+	RepLoad      bool `json:"rep-load"`
+	LoadPath	 string `json:"rep-load-path"`
+
+	IsTest     	 bool `json:"rep-is-test"`
+	TestForward  int  `json:"rep-test-forward"`
 }
 
 type KnnModelEnv struct {
@@ -100,6 +105,8 @@ type KnnModelEnv struct {
 	TempCount int
 
 	VisitCount map[string]int
+	LoadedLog string
+	RunNumber string
 }
 
 func init() {
@@ -158,6 +165,7 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	}
 
 	env.knnSettings.Seed += int64(run / env.knnSettings.TotalLogs)
+	env.RunNumber = strconv.Itoa(int(run / env.knnSettings.TotalLogs))
 	// For CEM, use env.knnSettings.Seed += int64(run)
 
 	env.rng = rand.New(rand.NewSource(env.knnSettings.Seed)) // Create a new rand source for reproducibility
@@ -173,8 +181,9 @@ func (env *KnnModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 		trueStartFolder = folder
 	}
 	//traceLog := folder + "/traces-" + strconv.Itoa(int(run)) + ".csv"
-	traceLog := folder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
-	trueStartLog := trueStartFolder + "/traces-" + strconv.Itoa(int(run%env.knnSettings.TotalLogs)) + ".csv"
+	env.LoadedLog = strconv.Itoa(int(run%env.knnSettings.TotalLogs))
+	traceLog := folder + "/traces-" + env.LoadedLog + ".csv"
+	trueStartLog := trueStartFolder + "/traces-" + env.LoadedLog + ".csv"
 	//fmt.Println(traceLog)
 	//fmt.Println(trueStartLog)
 
@@ -298,12 +307,20 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 			repModel.Initialize(int(env.knnSettings.Seed), env.repSettings.TrainStep, env.repSettings.TrainBeta, env.repSettings.TrainDelta,
 				env.repSettings.TrainLambda, env.repSettings.TrainTrajLen, env.repSettings.TrainBatch, env.repSettings.LearnRate,
 				env.repSettings.TrainHiddenLy, allStates, allTermin, env.stateDim, env.repSettings.RepLen, env.repSettings.TestForward)
-			if !env.repSettings.IsTest {
-				env.repFunc = repModel.Train()
+
+			if env.repSettings.RepLoad {
+				env.repFunc = repModel.LoadFunc(env.repSettings.LoadPath + "/laplace-"+env.LoadedLog)
 			} else {
-				env.repFunc = repModel.CrossValidation()
+				if env.repSettings.IsTest {
+					env.repFunc = repModel.CrossValidation()
+				} else {
+					env.repFunc = repModel.Train()
+				}
 			}
 
+			if env.repSettings.RepSave {
+				env.repFunc = repModel.SaveFunc(env.repSettings.SavePath + "/laplace-" + env.LoadedLog)
+			}
 			log.Println("Representation has been trained")
 			env.Trained = true
 		}

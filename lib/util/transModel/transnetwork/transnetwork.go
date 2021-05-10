@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"path"
 )
 
 type TransNetwork struct {
@@ -288,4 +289,50 @@ func (tn *TransNetwork) organizeTest(idx []int, dataSet [][]float64) ([][]float6
 		copy(truths[i], dataSet[idx[i]][tn.inputStateDim+1:])
 	}
 	return inputs, truths
+}
+
+func (tn *TransNetwork) SaveFunc(pth string) {
+	if tn.separatedNetwork {
+		err := tn.nnFunc[0].SaveNetwork(path.Join(pth, "nextstate"))
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[1].SaveNetwork(path.Join(pth, "reward"))
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[2].SaveNetwork(path.Join(pth, "termination"))
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	} else {
+		err := tn.nnFunc[0].SaveNetwork(pth)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	}
+	log.Println("TransNetwork function saved to:", pth)
+}
+
+func (tn *TransNetwork) LoadFunc(pth string) {
+	if tn.separatedNetwork {
+		err := tn.nnFunc[0].LoadNetwork(path.Join(pth, "nextstate"), tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[1].LoadNetwork(path.Join(pth, "reward"), tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[2].LoadNetwork(path.Join(pth, "termination"), tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	} else {
+		err := tn.nnFunc[0].LoadNetwork(pth, tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	}
+	log.Println("TransNetwork function loaded from:", pth)
 }
