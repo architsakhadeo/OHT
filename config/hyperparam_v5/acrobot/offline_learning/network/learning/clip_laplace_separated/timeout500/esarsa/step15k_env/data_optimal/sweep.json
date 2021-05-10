@@ -50,7 +50,7 @@
 
     "rep-save": false,
     "rep-load": true,
-    "rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/rep_laplace/",
+    "rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/step15k/rep_laplace/",
 
     "train-epoch": 100,
     "train-batch": 16,
@@ -59,7 +59,7 @@
 
     "model-save": false,
     "model-load": true,
-    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn_laplace/"
+    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step15k/nn_laplace/"
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,

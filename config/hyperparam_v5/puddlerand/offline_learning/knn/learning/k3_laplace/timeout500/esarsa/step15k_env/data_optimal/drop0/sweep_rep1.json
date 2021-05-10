@@ -45,7 +45,7 @@
 
 		"rep-save": false,
 		"rep-load": true,
-		"rep-load-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/rep_laplace"
+		"rep-load-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/step15k/rep_laplace"
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,

@@ -1,6 +1,6 @@
 {
 	"agent-name": "esarsa",
-	"environment-name": "networkModel",
+	"environment-name": "knnModel",
 	"agent-settings": {
 		"gamma": 1.0,
 		"state-len": 2,
@@ -31,20 +31,24 @@
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
 
-		"train-separated": true,
-		"scale-state": false,
-		"scale-reward": false,
-		"clip-prediction": true,
-		"train-epoch": 100,
-		"train-batch": 16,
-		"train-hidden-layer": [128,128],
-		"train-learning-rate": 0.001,
+		"rep-train-num-step": 30000,
+		"rep-train-beta": 5,
+		"rep-train-delta": 0.05,
+		"rep-train-lambda": 0.8,
+		"rep-train-traj-len": 10,
+		"rep-train-batch": 128,
+		"rep-train-learning-rate": 0.0003,
+		"rep-hidden": [128, 128],
+		"rep-dim": 4,
+		"rep-test-forward": 1,
+		"rep-name": "Laplace",
 
-		"model-save": true,
-		"model-save-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/nn",
-		"model-load": false,
-		"model-load-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/nn"
+		"rep-save": true,
+		"rep-save-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/step15k/rep_laplace",
+		"rep-load": false,
+		"rep-load-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/step15k/rep_laplace",
 
+		"rep-is-test": false
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
@@ -54,7 +58,7 @@
 		"max-run-length-episodic": 80000,
 		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/nn",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/step15k/rep_laplace",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
