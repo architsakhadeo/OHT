@@ -228,6 +228,17 @@ func (agent *FqiLinear) InitTiler() error {
 		if err != nil {
 			return err
 		}
+	} else if agent.fqiLinearSettings.EnvName == "puddleworld" {
+		agent.fqiLinearSettings.NumberOfActions = 4 // 5
+		scalers := []util.Scaler{
+			util.NewScaler(minFeature1, maxFeature1, agent.fqiLinearSettings.NumTiles),
+			util.NewScaler(minFeature2, maxFeature2, agent.fqiLinearSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(2, agent.fqiLinearSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
 	} else {
 		return errors.New("Environment NotImplemented")
 	}
