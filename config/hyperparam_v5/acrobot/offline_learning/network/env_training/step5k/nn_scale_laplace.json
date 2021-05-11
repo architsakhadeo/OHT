@@ -31,14 +31,29 @@
     "seed": 1,
     "total-logs": 30,
     "neighbor-num": 3,
-    "datalog": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
-    "true-start-log": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
+    "datalog": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step5k/optimalfixed_eps0/param_0/",
+    "true-start-log": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step5k/optimalfixed_eps0/param_0/",
     "ensemble-seed": 0,
     "drop-percent": 0,
     "pick-start-state": "random-init",
 
+    "rep-train-num-step": 30000,
+    "rep-train-beta": 5,
+    "rep-train-delta": 0.5,
+    "rep-train-lambda": 0.8,
+    "rep-train-traj-len": 20,
+    "rep-train-batch": 128,
+    "rep-train-learning-rate": 0.00003,
+    "rep-hidden": [128, 128],
+    "rep-dim": 8,
+    "rep-name": "Laplace",
+
+    "rep-save": false,
+    "rep-load": true,
+    "rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/step5k/rep_laplace",
+
     "train-separated": true,
-    "scale-state": false,
+    "scale-state": true,
     "scale-reward": false,
     "clip-prediction": true,
     "train-epoch": 100,
@@ -47,9 +62,9 @@
     "train-learning-rate": 0.0003,
 
     "model-save": true,
-    "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn",
+    "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step5k/nn_scale_laplace",
     "model-load": false,
-    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn"
+    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step5k/nn_scale_laplace"
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
@@ -59,7 +74,7 @@
     "max-run-length-episodic": 80000,
     "steps-in-episode": 500,
 
-    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/nn",
+    "data-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step5k/nn_scale_laplace",
     "should-log-traces": false,
     "should-log-episode-lengths": false,
     "should-log-rewards": false,

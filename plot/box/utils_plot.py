@@ -44,7 +44,14 @@ c_dict = {
     "return -360": '#4daf4a',
     "return -45": '#dede00',
 
-    "random data": '#e41a1c'
+    "random data": '#e41a1c',
+
+    "knn": '#377eb8',
+    "knn(laplace)": '#f781bf',
+    "network": '#4daf4a',
+    "network(laplace)": '#dede00',
+    "network(scaled)": '#e41a1c',
+    "network(scaled+laplace)": '#984ea3',
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -373,6 +380,8 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
 
     for i in range(len(thrd)):
         ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
+        #ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [-26.11002104240409 * res_scale]*2, color="black", linewidth=2.0)
+        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [-139.3 * res_scale]*2, color="black", linewidth=2.0)
 
     xtcs = []
     for loc in xlocations:

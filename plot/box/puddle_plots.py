@@ -7,11 +7,13 @@ from plot.box.paths_puddle import *
 
 def top_param():
     calibration = {
-        "calibration model": pd_offline,
+        "calibration model": pd_offline
     }
     random = pd_rnd
     te = {"true": pd_true}
-    plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_lognegate_ylim", outer=30, yscale="log", res_scale=-1, ylim=[-100, 0])
+    cem = {"calibration (cem)": pd_cemOffline}
+    #plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_lognegate_ylim", outer=30, yscale="log", res_scale=-1, ylim=[-100, 0])
+    plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_ylim", cem, outer=30, ylim=[-100, 0])
 
 def sweep_model():
     calibration = {
@@ -39,7 +41,7 @@ def data_density():
 
 
 if __name__ == '__main__':
-    ranges = [0, 0.05, 0.1]
+    ranges = [0]
     top_param()
     #sweep_model()
     #data_density()

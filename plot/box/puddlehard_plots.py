@@ -27,9 +27,7 @@ def sweep_model():
 
 def data_density():
     datasets = {
-        "random": "../../data/hyperparam_v4/puddlehard/offline_data/esarsa/step10k_env/random/param_0/",
-        "return -360": "../../data/hyperparam_v4/puddlehard/offline_data/esarsa/step10k_env/return-360/param_0/",
-        "return -45": "../../data/hyperparam_v4/puddlehard/offline_data/esarsa/step10k_env/return-45/param_0/",
+        "return -45": "../../data/hyperparam_v5/puddlehard/offline_data/esarsa/step10k_env/return-45/param_0/",
     }
     dimension = {
         0: "x",
@@ -44,6 +42,6 @@ def data_density():
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
-    top_param()
-    sweep_model()
-    # data_density()
+    # top_param()
+    # sweep_model()
+    data_density()

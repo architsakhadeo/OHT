@@ -9,8 +9,8 @@ def compare_random():
     calibration = {
         "random data": cpn01_k10_far_random,
         "reward -0.02": cpn01_k10_far_reward02,
-        "reward -0.01": cpn01_k10_far_reward01,
-        "reward -0.004": cpn01_k10_far_reward004,
+        # "reward -0.01": cpn01_k10_far_reward01,
+        # "reward -0.004": cpn01_k10_far_reward004,
         "reward -0.002": cpn01_k10_far_reward002,
     }
     random = cpn1_rnd
@@ -40,9 +40,9 @@ def sweep_model():
 def data_density():
     datasets = {
         "random": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/random/param_0",
-        "reward -0.02": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.02/param_0",
-        "reward -0.01": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.01/param_0",
-        "reward -0.004": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.004/param_0",
+        # "reward -0.02": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.02/param_0",
+        # "reward -0.01": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.01/param_0",
+        # "reward -0.004": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.004/param_0",
         "reward -0.002": "../../data/hyperparam_v4/cartpole-noisy-action/noise_0.1perc/offline_data/esarsa/step10k_env/reward-0.002/param_0",
     }
     dimension = {
@@ -90,7 +90,7 @@ def performance_dataset():
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
-    sweep_model()
-    # compare_random()
+    # sweep_model()
+    compare_random()
     # data_density()
     # performance_dataset()
