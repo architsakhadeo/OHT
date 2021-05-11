@@ -38,7 +38,7 @@
 		"episodes": 10000000,
 		"total-step-after-lock": 15000,
 		"count-step-after-lock": true,
-		"data-path": "data/hyperparam_ap/acrobot/offline_data/true_restarts/esarsa/step15k/optimalfixed_eps0/",
+		"data-path": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step15k/optimalfixed_eps0/",
 		"should-log-traces": true,
 		"should-log-episode-lengths": false,
 		"debug-interval": 0
