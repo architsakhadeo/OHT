@@ -137,6 +137,8 @@ data10k_eps50_k5_p20_ens = [
 ]
 '''
 
-ac_true = ["../../../../../../Downloads/transferabledata/new/data/hyperparam_ap/acrobot/online_learning/esarsa/step7500/sweep/"]
+ac_true = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/online_learning/esarsa/step15k/sweep/"]
 ac_rnd = [34, 4, 43, 30, 24, 32, 40, 11, 20, 30, 3, 16, 53, 45, 0, 21, 43, 23, 44, 50, 9, 41, 37, 37, 11, 2, 26, 33, 18, 20]
-ac_offline = ["../../../../../../Downloads/transferabledata/new/data/hyperparam_ap/acrobot/offline_learning/k3_timeout750/esarsa/step7500/optimalfixed_eps0/sweep/"]
+ac_offline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/offline_learning/k3_timeout750/esarsa/step15k/optimalfixed_eps0/sweep/"]
+ac_cemOffline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/list/CEMoffline_onlineEvaluation/esarsa/step15k/sweep/"]
+ac_cemOnline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/list/CEMonline_onlineEvaluation/esarsa/step15k/sweep/"]
