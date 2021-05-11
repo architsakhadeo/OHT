@@ -7,10 +7,15 @@ from plot.box.paths_acrobot import *
 
 def top_param():
     calibration = {
-        "calibration model": ac_offline,
+        "knn": ac_knn,
+        "knn(laplace)": ac_laplace_knn,
+        "network": ac_network,
+        "network(laplace)": ac_laplace_network,
+        "network(scaled)": ac_scale_network,
+        "network(scaled+laplace)": ac_scale_laplace_network,
     }
     random = ac_rnd
-    te = {"true": ac_true}
+    te = {"true": ac_true_temp}
     plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_top", outer=30, res_scale=-1)#, ylim=[-100, 0])
 
 def sweep_model():
