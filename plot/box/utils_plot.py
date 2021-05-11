@@ -44,7 +44,14 @@ c_dict = {
     "return -360": '#4daf4a',
     "return -45": '#dede00',
 
-    "random data": '#e41a1c'
+    "random data": '#e41a1c',
+
+    "knn": '#377eb8',
+    "knn(laplace)": '#f781bf',
+    "network": '#4daf4a',
+    "network(laplace)": '#dede00',
+    "network(scaled)": '#e41a1c',
+    "network(scaled+laplace)": '#984ea3',
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {

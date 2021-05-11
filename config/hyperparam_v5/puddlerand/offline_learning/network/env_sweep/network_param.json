@@ -33,10 +33,13 @@
 
 		"is-test": true,
 		"sweep": {
+			"train-separated": [true],
+			"scale-state": [false],
+			"scale-reward": [false],
 			"train-epoch": [100],
-			"train-batch": [16, 32, 128],
+			"train-batch": [16],
 			"train-hidden-layer": [[128,128]],
-			"train-learning-rate": [0.001, 0.0003, 0.0001, 0.00003]
+			"train-learning-rate": [0.001, 0.0003, 0.0001, 0.00003, 0.00001]
 		}
 	},
 	"experiment-settings": {
@@ -45,9 +48,9 @@
 		"steps": 0,
 		"episodes": 1000000,
 		"max-run-length-episodic": 80000,
-		"steps-in-episode": 400,
+		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_sweep/network_param",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_sweep/network_param_separated",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,

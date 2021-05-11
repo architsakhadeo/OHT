@@ -382,3 +382,23 @@ func (lp *Laplace) Test() (float64, float64) {
 	log.Printf("Test: close pair distance = %f. far pair distance = %f. DynamicAwareness = %f. Loss = %f", closeDist, farDist, da, avgLoss)
 	return da, avgLoss
 }
+
+func (lp *Laplace) SaveFunc(path string) network.Network {
+	err := lp.repFunc.SaveNetwork(path)
+	if err != nil {
+		log.Println("Laplace unable to save networks: " + err.Error())
+	} else {
+		log.Println("Laplace function saved to:", path)
+	}
+	return lp.repFunc
+}
+
+func (lp *Laplace) LoadFunc(path string) network.Network {
+	err := lp.repFunc.LoadNetwork(path, lp.inputLen, lp.hiddenLayer, lp.repLen)
+	if err != nil {
+		log.Println("Laplace failed to load NN weights: " + err.Error())
+	} else {
+		log.Println("Laplace function loaded from:", path)
+	}
+	return lp.repFunc
+}

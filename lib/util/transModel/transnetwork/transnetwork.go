@@ -8,16 +8,18 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"path"
 )
 
 type TransNetwork struct {
 	seed	 		int64
 	rng 			*rand.Rand
 	numAction 		int
-	stateDim  		int
+	inputStateDim  int
+	outputStateDim  int
 	hiddenLayer   	[]int
-	nnFunc			network.Network
-	optimizer		optimizer.Optimizer
+	nnFunc			[]network.Network
+	optimizer		[]optimizer.Optimizer
 	learningRate   	float64
 	batchSize   	int
 	numEpoch		int
@@ -30,6 +32,7 @@ type TransNetwork struct {
 	testTruths 		[][]float64
 
 	convergeCheck	int
+	separatedNetwork bool
 }
 
 func New() *TransNetwork {
@@ -37,28 +40,52 @@ func New() *TransNetwork {
 }
 
 func (tn *TransNetwork) Initialize(seed int64, dataSet [][]float64, numEpoch int, batchSize int, learningRate float64, hiddenLayer []int,
-	stateDim int, numAction int) {
+	inputStateDim int, outputStateDim int, numAction int, separatedNN bool) {
 
 	tn.seed = seed
 	tn.rng = rand.New(rand.NewSource(int64(seed)))
 	tn.dataSet = dataSet
 	tn.numEpoch = numEpoch
-	tn.stateDim = stateDim
+	tn.inputStateDim = inputStateDim
+	tn.outputStateDim = outputStateDim
 	tn.numAction = numAction
 	tn.hiddenLayer = hiddenLayer
 	tn.learningRate = learningRate
 	tn.batchSize = batchSize
-	tn.NetworkInit()
 	tn.convergeCheck = 3
+	tn.separatedNetwork = separatedNN
+	if tn.separatedNetwork {
+		tn.nnFunc = make([]network.Network, 3)
+		tn.optimizer = make([]optimizer.Optimizer, 3)
+	} else {
+		tn.nnFunc = make([]network.Network, 1)
+		tn.optimizer = make([]optimizer.Optimizer, 1)
+	}
+	tn.NetworkInit()
 }
 
 func (tn *TransNetwork) NetworkInit() {
-	inputLen := tn.stateDim+tn.numAction
-	outputLen := tn.stateDim+2
-	tn.nnFunc = network.CreateNetwork(inputLen, tn.hiddenLayer, outputLen, tn.learningRate,
-		0, 0, 0.9, 0.999, 1e-08)
-	tn.optimizer = new(optimizer.Adam)
-	tn.optimizer.Init(tn.learningRate, []float64{0.9, 0.999, 1e-08}, inputLen, tn.hiddenLayer, outputLen)
+	inputLen := tn.inputStateDim+tn.numAction
+	if tn.separatedNetwork {
+		tn.nnFunc[0] = network.CreateNetwork(inputLen, tn.hiddenLayer, tn.outputStateDim, tn.learningRate,
+			0, 0, 0.9, 0.999, 1e-08)
+		tn.nnFunc[1] = network.CreateNetwork(inputLen, tn.hiddenLayer, 1, tn.learningRate,
+			0, 0, 0.9, 0.999, 1e-08)
+		tn.nnFunc[2] = network.CreateNetwork(inputLen, tn.hiddenLayer, 1, tn.learningRate,
+			0, 0, 0.9, 0.999, 1e-08)
+		tn.optimizer[0] = new(optimizer.Adam)
+		tn.optimizer[0].Init(tn.learningRate, []float64{0.9, 0.999, 1e-08}, inputLen, tn.hiddenLayer, tn.outputStateDim)
+		tn.optimizer[1] = new(optimizer.Adam)
+		tn.optimizer[1].Init(tn.learningRate, []float64{0.9, 0.999, 1e-08}, inputLen, tn.hiddenLayer, 1)
+		tn.optimizer[2] = new(optimizer.Adam)
+		tn.optimizer[2].Init(tn.learningRate, []float64{0.9, 0.999, 1e-08}, inputLen, tn.hiddenLayer, 1)
+	} else {
+		outputLen := tn.outputStateDim+2
+		tn.nnFunc[0] = network.CreateNetwork(inputLen, tn.hiddenLayer, outputLen, tn.learningRate,
+			0, 0, 0.9, 0.999, 1e-08)
+		tn.optimizer[0] = new(optimizer.Adam)
+		tn.optimizer[0].Init(tn.learningRate, []float64{0.9, 0.999, 1e-08}, inputLen, tn.hiddenLayer, outputLen)
+	}
 }
 
 func (tn *TransNetwork) OrganizeData(dataSet [][]float64) ([][]float64, [][]float64) {
@@ -66,22 +93,20 @@ func (tn *TransNetwork) OrganizeData(dataSet [][]float64) ([][]float64, [][]floa
 	output := make([][]float64, len(dataSet))
 
 	for i:=0; i<len(dataSet); i++ {
-		input[i] = make([]float64, tn.stateDim+tn.numAction)
-		output[i] = make([]float64, tn.stateDim+2)
-		action := dataSet[i][tn.stateDim]
+		input[i] = make([]float64, tn.inputStateDim+tn.numAction)
+		output[i] = make([]float64, tn.outputStateDim+2)
+		action := dataSet[i][tn.inputStateDim]
 		oneHotA := ao.OneHotSet(action, tn.numAction)
-		//fmt.Println(dataSet[i][: tn.stateDim])
-		copy(input[i][: tn.stateDim], dataSet[i][: tn.stateDim])
-		copy(input[i][tn.stateDim: ], oneHotA)
-		copy(output[i], dataSet[i][tn.stateDim+1: ])
+		copy(input[i][: tn.inputStateDim], dataSet[i][: tn.inputStateDim])
+		copy(input[i][tn.inputStateDim: ], oneHotA)
+		copy(output[i], dataSet[i][tn.inputStateDim+1: ])
 	}
 
 	return input, output
 }
 
-func (tn *TransNetwork) Train() network.Network {
+func (tn *TransNetwork) Train() []network.Network {
 	tn.inputData, tn.groundTruth = tn.OrganizeData(tn.dataSet)
-
 	deriv := make([]float64, len(tn.inputData)/tn.batchSize+1)
 	losses := make([]float64, len(tn.inputData)/tn.batchSize+1)
 	trace := make([]float64, tn.convergeCheck)
@@ -109,7 +134,7 @@ func (tn *TransNetwork) Train() network.Network {
 	return tn.nnFunc
 }
 
-func (tn *TransNetwork) CrossValidation() network.Network {
+func (tn *TransNetwork) CrossValidation() []network.Network {
 	allData := make([][]float64, len(tn.dataSet))
 	copy(allData, tn.dataSet)
 
@@ -158,8 +183,8 @@ func (tn *TransNetwork) SampleIdx(idx []int) ([][]float64, [][]float64) {
 	truths := make([][]float64, batchSize)
 
 	for i := range inputs {
-		inputs[i] = make([]float64, tn.stateDim+tn.numAction)
-		truths[i] = make([]float64, tn.stateDim+2)
+		inputs[i] = make([]float64, tn.inputStateDim+tn.numAction)
+		truths[i] = make([]float64, tn.outputStateDim+2)
 	}
 	for i := 0; i < batchSize; i++ {
 		inputs[i] = tn.inputData[idx[i]]
@@ -169,18 +194,47 @@ func (tn *TransNetwork) SampleIdx(idx []int) ([][]float64, [][]float64) {
 }
 
 func (tn *TransNetwork) Update(inputs, truths [][]float64) (float64, float64){
-	predicts := tn.nnFunc.Forward(inputs)
-	loss4Log := loss.MseLoss(truths, predicts)
-	deriv := loss.MseLossDeriv(truths, predicts)
-	tn.nnFunc.Backward(deriv, tn.optimizer)
-	return ao.SumOnAxis2D(deriv, 0)[0] / float64(len(deriv)*len(deriv[0])), loss4Log
+	allLoss := make([]float64, len(tn.nnFunc))
+	allDeriv := make([]float64, len(tn.nnFunc))
+	var allTruth [][][]float64
+	if len(tn.nnFunc) == 3 {
+		allTruth = make([][][]float64, 3)
+		allTruth[0] = ao.Index2d(truths, 0, len(truths), 0, tn.outputStateDim)
+		allTruth[1] = ao.Index2d(truths, 0, len(truths), tn.outputStateDim, tn.outputStateDim+1)
+		allTruth[2] = ao.Index2d(truths, 0, len(truths), tn.outputStateDim+1, tn.outputStateDim+2)
+	} else {
+		allTruth = make([][][]float64, 1)
+		allTruth[0] = truths
+	}
+	for i:=0; i<len(tn.nnFunc); i++ {
+		predicts := tn.nnFunc[i].Forward(inputs)
+		allLoss[i] = loss.MseLoss(allTruth[i], predicts)
+		deriv := loss.MseLossDeriv(allTruth[i], predicts)
+		tn.nnFunc[i].Backward(deriv, tn.optimizer[i])
+		allDeriv[i] = ao.Average(ao.Flatten2DFloat(deriv))
+	}
+	return ao.Average(allDeriv), ao.Average(allLoss)
 }
 
 func (tn *TransNetwork) Predict(state [][]float64, action []float64) ([][]float64){
 	oneHotActs := ao.OneHotSet2D(action, tn.numAction)
 	inputs := ao.Concatenate(state, oneHotActs)
-	predicts := tn.nnFunc.Predict(inputs)
-	return predicts
+	res := tn.PredictHelper(inputs)
+	return res
+}
+
+func (tn *TransNetwork) PredictHelper(inputs [][]float64) ([][]float64){
+	predicts := make([][][]float64, len(tn.nnFunc))
+	for i:=0; i<len(tn.nnFunc); i++ {
+		predicts[i] = tn.nnFunc[i].Predict(inputs)
+	}
+	var res [][]float64
+	if tn.separatedNetwork {
+		res = ao.Concatenate(ao.Concatenate(predicts[0], predicts[1]), predicts[2])
+	} else {
+		res = predicts[0]
+	}
+	return res
 }
 
 func (tn *TransNetwork) PredictSingleTrans(state []float64, action float64) ([]float64, float64, bool){
@@ -189,9 +243,9 @@ func (tn *TransNetwork) PredictSingleTrans(state []float64, action float64) ([]f
 	tempS[0] = state
 	tempA[0] = action
 	predicts := tn.Predict(tempS, tempA)
-	states := ao.Index2d(predicts, 0, len(predicts), 0, tn.stateDim)[0]
-	rewards := ao.Flatten2DFloat(ao.Index2d(predicts, 0, len(predicts), tn.stateDim, tn.stateDim+1))[0]
-	tempT := ao.Flatten2DFloat(ao.Index2d(predicts, 0, len(predicts), tn.stateDim+1, tn.stateDim+2))[0]
+	states := ao.Index2d(predicts, 0, len(predicts), 0, tn.outputStateDim)[0]
+	rewards := ao.Flatten2DFloat(ao.Index2d(predicts, 0, len(predicts), tn.outputStateDim, tn.outputStateDim+1))[0]
+	tempT := ao.Flatten2DFloat(ao.Index2d(predicts, 0, len(predicts), tn.outputStateDim+1, tn.outputStateDim+2))[0]
 	var terminal bool
 	if tempT > 0.5 {
 		terminal = true
@@ -214,10 +268,8 @@ func (tn *TransNetwork) Test() (float64) {
 		inputs = tn.testInputs
 		truths = tn.testTruths
 	}
-
-	predicts := tn.nnFunc.Predict(inputs)
+	predicts := tn.PredictHelper(inputs)
 	loss4Log := loss.MseLoss(truths, predicts)
-
 	log.Printf("Test: Loss = %f", loss4Log)
 	return loss4Log
 }
@@ -228,13 +280,59 @@ func (tn *TransNetwork) organizeTest(idx []int, dataSet [][]float64) ([][]float6
 	truths := make([][]float64, batchSize)
 
 	for i := range inputs {
-		inputs[i] = make([]float64, tn.stateDim+tn.numAction)
-		truths[i] = make([]float64, tn.stateDim+2)
+		inputs[i] = make([]float64, tn.inputStateDim+tn.numAction)
+		truths[i] = make([]float64, tn.outputStateDim+2)
 	}
 	for i := 0; i < batchSize; i++ {
-		copy(inputs[i][:tn.stateDim], dataSet[idx[i]][:tn.stateDim])
-		copy(inputs[i][tn.stateDim: ], ao.OneHotSet(dataSet[idx[i]][tn.stateDim], tn.numAction))
-		copy(truths[i], dataSet[idx[i]][tn.stateDim+1:])
+		copy(inputs[i][:tn.inputStateDim], dataSet[idx[i]][:tn.inputStateDim])
+		copy(inputs[i][tn.inputStateDim: ], ao.OneHotSet(dataSet[idx[i]][tn.inputStateDim], tn.numAction))
+		copy(truths[i], dataSet[idx[i]][tn.inputStateDim+1:])
 	}
 	return inputs, truths
+}
+
+func (tn *TransNetwork) SaveFunc(pth string) {
+	if tn.separatedNetwork {
+		err := tn.nnFunc[0].SaveNetwork(path.Join(pth, "nextstate"))
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[1].SaveNetwork(path.Join(pth, "reward"))
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[2].SaveNetwork(path.Join(pth, "termination"))
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	} else {
+		err := tn.nnFunc[0].SaveNetwork(pth)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	}
+	log.Println("TransNetwork function saved to:", pth)
+}
+
+func (tn *TransNetwork) LoadFunc(pth string) {
+	if tn.separatedNetwork {
+		err := tn.nnFunc[0].LoadNetwork(path.Join(pth, "nextstate"), tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[1].LoadNetwork(path.Join(pth, "reward"), tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+		err = tn.nnFunc[2].LoadNetwork(path.Join(pth, "termination"), tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	} else {
+		err := tn.nnFunc[0].LoadNetwork(pth, tn.inputStateDim+tn.numAction, tn.hiddenLayer, tn.outputStateDim)
+		if err != nil {
+			log.Println("TransNetwork unable to save networks: " + err.Error())
+		}
+	}
+	log.Println("TransNetwork function loaded from:", pth)
 }

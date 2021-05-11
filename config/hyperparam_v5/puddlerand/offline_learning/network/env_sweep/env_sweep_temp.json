@@ -31,9 +31,24 @@
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
 
+		"rep-train-num-step": 30000,
+		"rep-train-beta": 5,
+		"rep-train-delta": 0.05,
+		"rep-train-lambda": 0.8,
+		"rep-train-traj-len": 5,
+		"rep-train-batch": 128,
+		"rep-train-learning-rate": 0.0003,
+		"rep-hidden": [128, 128],
+		"rep-dim": 4,
+		"rep-test-forward": 0,
+		"rep-name": "Laplace",
+
 		"is-test": true,
 		"sweep": {
-			"train-epoch": [100],
+			"train-separated": [true],
+			"scale-state": [false],
+			"scale-reward": [false],
+			"train-epoch": [200],
 			"train-batch": [32],
 			"train-hidden-layer": [[128,128]],
 			"train-learning-rate": [0.0003]
@@ -45,7 +60,7 @@
 		"steps": 0,
 		"episodes": 1000000,
 		"max-run-length-episodic": 80000,
-		"steps-in-episode": 400,
+		"steps-in-episode": 500,
 
 		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_sweep/network_param_temp",
 		"should-log-traces": false,

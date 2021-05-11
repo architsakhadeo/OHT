@@ -2,6 +2,7 @@ import os
 import sys
 cwd = os.getcwd()
 sys.path.insert(0, cwd+'/../..')
+import pandas
 from plot.box.utils_plot import *
 from plot.box.paths_cartpoleNoisyA_test import *
 
@@ -48,9 +49,25 @@ def termination_type():
         # plot_termination(datasets, types, run, "../img/data_termination_scatter")
         plot_termination_perc(datasets, types, run, "../img/data_termination")
 
+def visit_log():
+    path = "../temp/visits-1.csv"
+    visits = np.array(pandas.read_csv(path)["visits"])
+    # print(visits.argmax(), visits.max(), visits.sum())
+    # x = np.arange(len(visits))
+    non_zero = np.where(visits>0)[0]
+    visits = visits[non_zero]
+    x = np.arange(len(visits))
+    print("Non-zero data count", len(non_zero))
+
+    fig, ax = plt.subplots()
+    # ax.bar(x, visits, log=True)
+    ax.bar(x, visits)
+    plt.ylabel("visit times")
+    plt.show()
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
     # sweep_model()
     # data_density()
-    termination_type()
+    # termination_type()
+    visit_log()
