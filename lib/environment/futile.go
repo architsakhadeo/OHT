@@ -41,6 +41,8 @@ func (env *Futile) Initialize(run uint, attr rlglue.Attributes) error {
 		env.state = make(rlglue.State, 4)
 	case "acrobot":
 		env.state = make(rlglue.State, 6)
+	case "puddleworld":
+		env.state = make(rlglue.State, 2)
 	}
 
 	return nil
