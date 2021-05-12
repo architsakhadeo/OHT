@@ -13,10 +13,16 @@ def top_param():
         "network(laplace)": ac_laplace_network,
         "network(scaled)": ac_scale_network,
         "network(scaled+laplace)": ac_scale_laplace_network,
+        #"calibration model": ac_offline
     }
     random = ac_rnd
     te = {"true": ac_true_temp}
-    plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_top", outer=30, res_scale=-1)#, ylim=[-100, 0])
+    #te = {"true": ac_true}
+    #cem = {"calibration (cem)": ac_cemOffline}
+    #plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_top", outer=30, res_scale=-1)#, ylim=[-100, 0])
+    #plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_top", cem, outer=30, res_scale=-1)
+    plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_top", outer=30, res_scale=-1)
+    
 
 def sweep_model():
     calibration = {
@@ -28,6 +34,6 @@ def sweep_model():
 
 
 if __name__ == '__main__':
-    ranges = [0, 0.05, 0.1, 0.2, 0.5]
+    ranges = [0]
     top_param()
     #sweep_model()

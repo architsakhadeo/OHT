@@ -25,8 +25,10 @@ const (
 	maxAngle           = 12 * 2 * math.Pi / 360
 	maxAngularVelocity = 3.5
 
-	// Acrobot constants
+	// Acrobot and puddleworld constants
+	minFeature1 = 0.0
 	maxFeature1 = 1.0
+	minFeature2 = 0.0
 	maxFeature2 = 1.0
 	maxFeature3 = 1.0
 	maxFeature4 = 1.0
@@ -227,8 +229,8 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 	} else if agent.EsarsaSettings.EnvName == "puddleworld" {
 		agent.NumActions = 4 // 5
 		scalers := []util.Scaler{
-			util.NewScaler(-maxFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
-			util.NewScaler(-maxFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(minFeature1, maxFeature1, agent.EsarsaSettings.NumTiles),
+			util.NewScaler(minFeature2, maxFeature2, agent.EsarsaSettings.NumTiles),
 		}
 
 		agent.tiler, err = util.NewMultiTiler(2, agent.EsarsaSettings.NumTilings, scalers)
