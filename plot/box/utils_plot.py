@@ -381,7 +381,7 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
     for i in range(len(thrd)):
         ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
         #ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [-26.11002104240409 * res_scale]*2, color="black", linewidth=2.0)
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [-139.3 * res_scale]*2, color="black", linewidth=2.0)
+        #ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [-139.3 * res_scale]*2, color="black", linewidth=2.0)
 
     xtcs = []
     for loc in xlocations:
