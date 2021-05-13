@@ -19,8 +19,8 @@ type acSettings struct {
 	NumTilings  int     `json:"tilings"`
 	NumTiles    int     `json:"tiles"`
 	Gamma       float64 `json:"gamma"`
-	ActorAlpha  float64 `json:"actor-alpha"`
 	CriticAlpha float64 `json:"critic-alpha"`
+	AlphaRatio  float64 `json:"alpha-ratio"`
 	EnvName     string  `json:"env-name"`
 
 	StateDim int `json:"state-len"`
@@ -207,7 +207,7 @@ func (agent *ActorCritic) Initialize(run uint, expAttr, envAttr rlglue.Attribute
 	}
 
 	agent.actor = Actor{}
-	err = agent.actor.Init(agent.tiler.NumberOfIndices(), agent.NumActions, agent.ActorAlpha, agent.rng)
+	err = agent.actor.Init(agent.tiler.NumberOfIndices(), agent.NumActions, agent.AlphaRatio*agent.CriticAlpha, agent.rng)
 	if err != nil {
 		return err
 	}
