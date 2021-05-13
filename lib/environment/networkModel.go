@@ -182,6 +182,9 @@ func (env *networkModelEnv) Initialize(run uint, attr rlglue.Attributes) error {
 	env.offlineModel = transModel.New()
 	var trainingData [][]float64
 	var nnFolder string
+	if env.rewardBound[0][0] == env.rewardBound[0][0] {
+		env.ScaleReward = false
+	}
 	if env.ScaleState || env.ScaleReward {
 		trainingData = env.ScaleTrans(env.offlineDataRep, env.inputStateBound, env.outputStateBound, env.rewardBound)
 		if env.repSettings.RepName == "Laplace" {
