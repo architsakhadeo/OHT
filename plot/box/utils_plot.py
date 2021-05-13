@@ -23,10 +23,11 @@ c_dict = {
     "no Adversarial": '#984ea3',
     "no Ensemble": '#999999',
 
-    "10k": "red",
-    "5k": "tab:blue",
-    "2k": "mediumseagreen",
-    "1k": "orange",
+    "15k": "#377eb8",
+    "10k": "#a65628",
+    "5k": "#dede00",
+    "2k": "#4daf4a",
+    "1k": "#984ea3",
 
     "eps 0": "tab:blue",
     "eps 0.25": "lightgreen",
@@ -46,12 +47,19 @@ c_dict = {
 
     "random data": '#e41a1c',
 
-    "knn": '#377eb8',
-    "knn(laplace)": '#f781bf',
+    "knn": '#f781bf',
+    "knn(laplace)": '#377eb8',
     "network": '#4daf4a',
     "network(laplace)": '#dede00',
-    "network(scaled)": '#e41a1c',
-    "network(scaled+laplace)": '#984ea3',
+    "network(scaled)": '#984ea3',
+    "network(scaled+laplace)": '#e41a1c',
+
+    "15k knn(laplace)": '#377eb8',
+    "15k network(scaled+laplace)": '#e41a1c',
+    "10k knn(laplace)": '#984ea3',
+    "10k network(scaled+laplace)": '#dede00',
+    "5k knn(laplace)": '#f781bf',
+    "5k network(scaled+laplace)": '#4daf4a',
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
