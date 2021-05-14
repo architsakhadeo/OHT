@@ -96,6 +96,7 @@ type KnnModelEnv struct {
 	stateRange      []float64
 	//neighbor_prob   []float64
 	rewardBound   []float64
+	returnBound   []float64
 	stateBound    [][]float64
 	PickStartFunc EpStartFunc
 	PickNextFunc  ChooseNeighborFunc
@@ -266,6 +267,8 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 	allStates := make([][]float64, len(allTransStr)-1)     // current states
 	allNextStates := make([][]float64, len(allTransStr)-1) // next states
 	allTermin := make([]float64, len(allTransStr)-1)
+	var allReturns []float64
+	rTemp := 0.0
 	for i := 1; i < len(allTransStr); i++ { // remove first str (title of column)
 		trans := allTransStr[i]
 		row := make([]float64, env.stateDim*2+3)
@@ -290,10 +293,15 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 			} else if j == 3 { //reward
 				row[env.stateDim*2+1], _ = strconv.ParseFloat(num, 64)
 				rewards[i-1] = row[env.stateDim*2+1]
+				rTemp += rewards[i-1]
 
 			} else if j == 4 { //termination
 				row[env.stateDim*2+2], _ = strconv.ParseFloat(num, 64)
 				allTermin[i-1], _ = strconv.ParseFloat(num, 64)
+				if allTermin[i-1] == 1 {
+					allReturns = append(allReturns, rTemp)
+					rTemp = 0
+				}
 			}
 		}
 		allTransObs[i-1] = row
@@ -358,17 +366,22 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 		//fmt.Println(allTransObs[i-1], "\n")
 	}
 
-	env.rewardBound = make([]float64, 2)
-	env.rewardBound[0], _ = ao.ArrayMin(rewards)
-	env.rewardBound[1], _ = ao.ArrayMax(rewards)
-	env.stateBound = make([][]float64, 2)
-	for i := 0; i < len(allStates[0]); i++ {
-		mn, _ := ao.ColumnMin(allStates, i)
-		mx, _ := ao.ColumnMax(allStates, i)
-		env.stateBound[0] = append(env.stateBound[0], mn)
-		env.stateBound[1] = append(env.stateBound[1], mx)
+	if len(env.rewardBound)==0 {
+		env.rewardBound = make([]float64, 2)
+		env.rewardBound[0], _ = ao.ArrayMin(rewards)
+		env.rewardBound[1], _ = ao.ArrayMax(rewards)
+		env.stateBound = make([][]float64, 2)
+		for i := 0; i < len(allStates[0]); i++ {
+			mn, _ := ao.ColumnMin(allStates, i)
+			mx, _ := ao.ColumnMax(allStates, i)
+			env.stateBound[0] = append(env.stateBound[0], mn)
+			env.stateBound[1] = append(env.stateBound[1], mx)
+		}
+		env.maxSDist = env.Distance(env.stateBound[0], env.stateBound[1])
+		env.returnBound = make([]float64, 2)
+		env.returnBound[0], _ = ao.ArrayMin(allReturns)
+		env.returnBound[1], _ = ao.ArrayMax(allReturns)
 	}
-	env.maxSDist = env.Distance(env.stateBound[0], env.stateBound[1])
 
 	if env.NoisyS != 0 {
 		for i := 0; i < len(allTransRep); i++ {
@@ -516,13 +529,10 @@ func (env *KnnModelEnv) Step(act rlglue.Action, randomizeStartStateCondition boo
 	actInt, _ := tpo.GetInt(act)
 
 	if env.offlineModel.TreeSize(actInt) == 0 {
-		log.Printf("Warning: There is no data for action %d, terminating the episode\n", act)
+		//log.Printf("Warning: There is no data for action %d, terminating the episode, reward %f \n", act, env.returnBound[0])
 		startReturn, _ := env.Start(randomizeStartStateCondition)
-		return startReturn, env.rewardBound[0], true, ""
+		return startReturn, env.returnBound[0], true, ""
 	}
-	//fmt.Println("Before target:", env.state)
-	//fmt.Println(env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num))
-	//_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.state, actInt, env.Neighbor_num)
 	_, _, rewards, terminals, distances, repIdxs := env.offlineModel.SearchTree(env.rep, actInt, env.Neighbor_num)
 	states := make([][]float64, len(repIdxs))
 	nextStates := make([][]float64, len(repIdxs))
