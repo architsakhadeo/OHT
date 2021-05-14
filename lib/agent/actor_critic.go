@@ -276,7 +276,8 @@ func (agent *ActorCritic) End(state rlglue.State, reward float64) {
 
 	newAction, probs := agent.actor.Act(feat)
 
-	delta := reward + agent.Gamma*agent.critic.ValueAt(feat) - agent.critic.ValueAt(agent.oldStateActiveFeatures)
+	// gamma == 0 at termination
+	delta := reward - agent.critic.ValueAt(agent.oldStateActiveFeatures)
 
 	agent.actor.Update(agent.oldStateActiveFeatures, delta, agent.oldAction, agent.oldProbs)
 	agent.critic.Update(agent.oldStateActiveFeatures, delta)

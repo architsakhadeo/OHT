@@ -9,8 +9,8 @@
 		"sweep": {
 			"tilings": [16],
 			"tiles": [8],
-			"alpha-ratio": [1e-1, 1e-3, 1e-5, 1e-7],
-			"critic-alpha": [1e-1, 1e-3, 1e-5, 1e-7]
+			"alpha-ratio": [1e-1, 3e-1, 1e-2, 1e-3],
+			"critic-alpha": [1e-2, 3e-2, 1e-3, 3e-3]
 		},
 		"lock-weight": false,
     	"enable-debug": false,
@@ -27,7 +27,7 @@
 		"max-run-length-episodic": 30000,
 		"data-path": "data/hyperparam_v5/puddlerand/online_learning/ac/step30k/sweep/",
 		"should-log-totals": true,
-		"should-log-returns": true,
+		"should-log-returns": false,
 		"debug-interval": 0
 	}
 }
