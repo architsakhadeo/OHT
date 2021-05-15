@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
-	"math/rand"
-
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
+	"math"
+	"math/rand"
 )
 
 const (
@@ -31,7 +30,19 @@ type AcrobotSettings struct {
 	Seed         int64     `json:"seed"`
 	Delays       []int     `json:"delays"`
 	PercentNoise []float64 `json:"percent_noise"`
+	LinkLength1	 float64   `json:"link_len_1"`
+	LinkMass1	 float64   `json:"link_mass_1"`
 	//RandomizeStartState bool      `json:"randomize_start_state"`
+}
+
+func DefaultAcrobotSettings(as AcrobotSettings) AcrobotSettings {
+	if as.LinkLength1 == 0 {
+		as.LinkLength1 = 1.0
+	}
+	if as.LinkMass1 == 0 {
+		as.LinkMass1 = 1.0
+	}
+	return as
 }
 
 type Acrobot struct {
@@ -63,7 +74,7 @@ func (env *Acrobot) Initialize(run uint, attr rlglue.Attributes) error {
 		return err
 	}
 	set.Seed += int64(run)
-
+	set = DefaultAcrobotSettings(set)
 	return env.InitializeWithSettings(set)
 }
 
@@ -193,7 +204,6 @@ func (env *Acrobot) Step(act rlglue.Action, randomizeStartStateCondition bool) (
 	action := act.(int)
 	torque := env.availTorqueActions[action]
 	sAugmented := append(s, torque)
-
 	ns := env.rk4(sAugmented, [2]float64{0.0, dt})
 	ns = ns[:4]
 
@@ -269,9 +279,9 @@ func (env *Acrobot) bound(x float64, min float64, max float64) float64 {
 }
 
 func (env *Acrobot) dsdt(saugmented rlglue.State) []float64 {
-	m1 := linkMass1
+	m1 := env.AcrobotSettings.LinkMass1 //linkMass1
 	m2 := linkMass2
-	l1 := linkLength1
+	l1 := env.AcrobotSettings.LinkLength1 //linkLength1
 	lc1 := linkCOMPOS1
 	lc2 := linkCOMPOS2
 	I1 := linkMOI

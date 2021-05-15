@@ -1,0 +1,65 @@
+{
+	"agent-name": "esarsa",
+	"environment-name": "networkModel",
+	"agent-settings": {
+		"gamma": 1.0,
+		"state-len": 2,
+		"env-name": "puddleworld",
+		"sweep": {
+			"tilings": [16],
+			"tiles": [8],
+			"is-stepsize-adaptive": [true],
+			"alpha": [0.0],
+			"lambda": [0.14345759728429092],
+			"epsilon": [0.0],
+			"adaptive-alpha": [0.00039242850405476045],
+			"beta1": [0.0, 0.9],
+			"softmax-temp": [1.0],
+			"weight-init": [0.0]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1,
+		"total-logs": 30
+	},
+	"environment-settings": {
+		"seed": 1,
+		"total-logs": 30,
+		"neighbor-num": 3,
+		"datalog": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step1k/optimalfixed_eps0/param_0/",
+		"ensemble-seed": 0,
+		"drop-percent": 0,
+		"pick-start-state": "random-init",
+
+		"train-separated": true,
+		"scale-state": true,
+		"scale-reward": true,
+		"clip-prediction": true,
+		"train-epoch": 100,
+		"train-batch": 16,
+		"train-hidden-layer": [128,128],
+		"train-learning-rate": 0.0001,
+
+		"model-save": true,
+		"model-save-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/step1k/nn_scale",
+		"model-load": false,
+		"model-load-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/step1k/nn_scale"
+
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": false,
+		"steps": 0,
+		"episodes": 1000000,
+		"max-run-length-episodic": 80000,
+		"steps-in-episode": 500,
+
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/step1k/nn_scale",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": true,
+		"should-log-returns": false,
+		"debug-interval": 0
+	}
+}
