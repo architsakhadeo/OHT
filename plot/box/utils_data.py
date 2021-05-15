@@ -57,14 +57,17 @@ def percentile_worst(ranked, perc, metric):
         idx = max(min(math.ceil(len(ranked[rk]) * perc), len(ranked[rk])-1), 1)
         # target = ranked[rk][idx]
         # filtered.append([rk, target[0], target[1]])  # run number, parameter, performance
+
         filtered += [[rk, kv[0], kv[1]] for kv in ranked[rk][0: idx]] # run number, parameter, performance
 
         all_perf = np.array([kv[1] for kv in ranked[rk][idx-1: ]]) # including the x_th percentile
         same = np.where(all_perf == filtered[-1][2])[0] + (idx-1)
         break_tie = []
+
         for i in same:
             kv = ranked[rk][i]
             break_tie += [[rk, kv[0], kv[1]]]
+        
         np.random.seed(int(rk.split("n")[1]))
         chosen = np.random.randint(0, len(break_tie))
         filtered[-1] = break_tie[chosen] # break tie

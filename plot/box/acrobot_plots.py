@@ -26,14 +26,19 @@ def top_param():
 
 def sweep_model():
     calibration = {
-        "calibration model": ac_offline,
+        "bad (network)": ac_subsuboptim_network,
+        "average (network)": ac_suboptim_network,
+        "optimal (network)": ac_optim_network,
+        "bad (knn)": ac_subsuboptim_knn,
+        "average (knn)": ac_suboptim_knn,
+        "optimal (knn)": ac_optim_knn
     }
     te = {"true": ac_true}
-    #plot_generation(te, calibration, ranges, "totals", "../img/acrobot_model", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
-    plot_each_run(te, calibration, "totals", "../img/acrobot_run", outer=30, sparse_reward=-1, max_len=1000)
+    plot_generation(te, calibration, ranges, "totals", "../img/acrobot_model", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
+    #plot_each_run(te, calibration, "totals", "../img/acrobot_model", outer=30, sparse_reward=-1, max_len=1000)
 
 
 if __name__ == '__main__':
     ranges = [0]
-    top_param()
-    #sweep_model()
+    #top_param()
+    sweep_model()
