@@ -145,10 +145,23 @@ ac_cemOffline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap
 ac_cemOnline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/list/CEMonline_onlineEvaluation/esarsa/step15k/sweep/"]
 
 ac_true_temp = ["../../data/hyperparam_v5/acrobot/online_learning/esarsa/step15k/sweep/"]
-ac_knn = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout400/esarsa/step15k_env/data_optimal/drop0/sweep_rep1/"]
-ac_laplace_knn = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout400/esarsa/step15k_env/data_optimal/drop0/sweep_rep1/"]
+ac_knn = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/esarsa/step15k_env/data_optimal/drop0/sweep/"]
+ac_laplace_knn = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step15k_env/data_optimal/drop0/sweep_rep1/"]
 
-ac_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_separated/timeout400/esarsa/step15k_env/data_optimal/sweep"]
-ac_scale_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_separated/timeout400/esarsa/step15k_env/data_optimal/sweep"]
-ac_laplace_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_laplace_separated/timeout400/esarsa/step15k_env/data_optimal/sweep"]
-ac_scale_laplace_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout400/esarsa/step15k_env/data_optimal/sweep"]
+ac_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_separated/timeout500/esarsa/step15k_env/data_optimal/sweep"]
+ac_scale_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_separated/timeout500/esarsa/step15k_env/data_optimal/sweep"]
+ac_laplace_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_laplace_separated/timeout500/esarsa/step15k_env/data_optimal/sweep"]
+ac_scale_laplace_network = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step15k_env/data_optimal/sweep"]
+
+ac_knn_10k = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/esarsa/step10k_env/data_optimal/drop0/sweep/"]
+ac_knn_5k = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep/"]
+ac_knn_1k = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/esarsa/step1k_env/data_optimal/drop0/sweep/"]
+ac_knn_500 = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/esarsa/step500_env/data_optimal/drop0/sweep/"]
+
+ac_laplace_knn_10k = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step10k_env/data_optimal/drop0/sweep_rep1/"]
+ac_laplace_knn_5k = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
+ac_laplace_knn_1k = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step1k_env/data_optimal/drop0/sweep_rep1/"]
+ac_laplace_knn_500 = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step500_env/data_optimal/drop0/sweep_rep1/"]
+
+ac_scale_laplace_network_10k = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step10k_env/data_optimal/sweep"]
+ac_scale_laplace_network_5k = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step5k_env/data_optimal/sweep"]
