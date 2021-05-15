@@ -116,6 +116,7 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 	info = ""
 	countStep := true
 	var prevState rlglue.State
+
 	if exp.Settings.CountAfterLock {
 		countStep = exp.agent.GetLock()
 	}
@@ -161,6 +162,15 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 				break
 			}
 		}
+
+		if exp.Settings.TrainingStepsBeforeLock != 0 {
+			if exp.stepBeforeCount == exp.Settings.TrainingStepsBeforeLock {
+				countStep = true
+			} else {
+				countStep = false
+			}
+		}
+
 		if countStep {
 			exp.numStepsTaken += 1
 			numStepsThisEpisode += 1
