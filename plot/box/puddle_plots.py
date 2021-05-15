@@ -7,21 +7,32 @@ from plot.box.paths_puddle import *
 
 def top_param():
     calibration = {
-        "calibration model": pd_offline
+        "optimal (knn)": pd_optim_knn,
+        "average (knn)": pd_suboptim_knn,
+        "bad (knn)": pd_subsuboptim_knn,
+        "optimal (network)": pd_optim_network,
+        "average (network)": pd_suboptim_network,
+        "bad (network)": pd_subsuboptim_network,
     }
     random = pd_rnd
     te = {"true": pd_true}
-    cem = {"calibration (cem)": pd_cemOffline}
+    #cem = {"calibration (cem)": pd_cemOffline}
     #plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_lognegate_ylim", outer=30, yscale="log", res_scale=-1, ylim=[-100, 0])
-    plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_ylim", cem, outer=30, ylim=[-100, 0])
+    plot_compare_top(te, calibration, None, random, "totals", "../img/puddle_top_ylim", None, outer=30, ylim=[-100, 0])
 
 def sweep_model():
     calibration = {
-        "calibration model": pd_offline,
+        "bad (network)": pd_subsuboptim_network,
+        "average (network)": pd_suboptim_network,
+        "optimal (network)": pd_optim_network,
+        "bad (knn)": pd_subsuboptim_knn,
+        "average (knn)": pd_suboptim_knn,
+        "optimal (knn)": pd_optim_knn
     }
+    random = pd_rnd
     te = {"true": pd_true}
-    #plot_generation(te, calibration, ranges, "totals", "../img/puddle_model_ylim", outer=30, sparse_reward=-1, max_len=1000)
-    plot_each_run(te, calibration, "totals", "../img/puddleworld_run", outer=30, sparse_reward=-1, max_len=1000)
+    plot_generation(te, calibration, ranges, "totals", "../img/puddle_model_ylim", ylim = [-100, -20], outer=30, sparse_reward=-1, max_len=1000)
+    #plot_each_run(te, calibration, "totals", "../img/puddleworld_run", outer=30, sparse_reward=-1, max_len=1000)
 
 def data_density():
     datasets = {
@@ -42,6 +53,6 @@ def data_density():
 
 if __name__ == '__main__':
     ranges = [0]
-    top_param()
-    #sweep_model()
+    #top_param()
+    sweep_model()
     #data_density()

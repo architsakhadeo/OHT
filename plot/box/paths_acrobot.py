@@ -136,15 +136,16 @@ data10k_eps50_k5_p20_ens = [
 "../../data/hyperparam/acrobot/offline_learning/knn-ensemble/k5/esarsa/step10k/drop0.2/ensembleseed5/transfer_optimalfixed_eps50"
 ]
 '''
-
+'''
 ac_true = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/online_learning/esarsa/step15k/sweep/"]
 ac_rnd = [34, 4, 43, 30, 24, 32, 40, 11, 20, 30, 3, 16, 53, 45, 0, 21, 43, 23, 44, 50, 9, 41, 37, 37, 11, 2, 26, 33, 18, 20]
 
 ac_offline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/offline_learning/k3_timeout750/esarsa/step15k/optimalfixed_eps0/sweep/"]
 ac_cemOffline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/list/CEMoffline_onlineEvaluation/esarsa/step15k/sweep/"]
 ac_cemOnline = ["../../../../../../Downloads/transferabledata/new/hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/list/CEMonline_onlineEvaluation/esarsa/step15k/sweep/"]
-
+'''
 ac_true_temp = ["../../data/hyperparam_v5/acrobot/online_learning/esarsa/step15k/sweep/"]
+
 ac_knn = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/esarsa/step15k_env/data_optimal/drop0/sweep/"]
 ac_laplace_knn = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step15k_env/data_optimal/drop0/sweep_rep1/"]
 
@@ -165,3 +166,16 @@ ac_laplace_knn_500 = ["../../data/hyperparam_v5/acrobot/offline_learning/knn/lea
 
 ac_scale_laplace_network_10k = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step10k_env/data_optimal/sweep"]
 ac_scale_laplace_network_5k = ["../../data/hyperparam_v5/acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step5k_env/data_optimal/sweep"]
+
+
+ac_rnd = [34, 4, 43, 30, 24, 32, 40, 11, 20, 30, 3, 16, 53, 45, 0, 21, 43, 23, 44, 50, 9, 41, 37, 37, 11, 2, 26, 33, 18, 20]
+basepath = "../../../../../../Downloads/transferabledata/new/data_dcp/final/data/hyperparam_v5/"
+ac_true = [basepath + "acrobot/online_learning/esarsa/step15k/sweep/"]
+
+ac_optim_knn = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step15k_env/data_optimal/drop0/sweep_rep1/"]
+ac_suboptim_knn = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step15k_env/data_suboptimal/drop0/sweep_rep1/"]
+ac_subsuboptim_knn = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step15k_env/data_subsuboptimal/drop0/sweep_rep1/"]
+
+ac_optim_network = [basepath + "acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step15k_env/data_optimal/sweep/"]
+ac_suboptim_network = [basepath + "acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step15k_env/data_suboptimal/sweep/"]
+ac_subsuboptim_network = [basepath + "acrobot/offline_learning/network/learning/clip_scale_laplace_separated/timeout500/esarsa/step15k_env/data_subsuboptimal/sweep/"]
