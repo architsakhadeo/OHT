@@ -41,7 +41,7 @@
 		"rep-hidden": [128, 128],
 		"rep-dim": 4,
 		"rep-test-forward": 0,
-		"rep-name": "Laplace"
+		"rep-name": null
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
@@ -51,12 +51,12 @@
 		"max-run-length-episodic": 80000,
 		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/k3/timeout500/esarsa/step15k_env/data_optimal/drop0/temp",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/learning/temp",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
 		"should-log-totals": true,
-		"should-log-returns": true,
+		"should-log-returns": false,
 		"debug-interval": 0
 	}
 }

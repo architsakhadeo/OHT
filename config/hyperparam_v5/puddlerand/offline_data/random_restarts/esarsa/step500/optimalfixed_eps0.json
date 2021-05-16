@@ -36,9 +36,9 @@
 		"randomize_start_state_afterLock": true,
 		"steps": 0,
 		"episodes": 10000000,
-		"total-step-after-lock": 1000,
+		"total-step-after-lock": 500,
 		"count-step-after-lock": true,
-		"data-path": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step1k/optimalfixed_eps0/",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step500/optimalfixed_eps0/",
 		"should-log-traces": true,
 		"should-log-episode-lengths": false,
 		"debug-interval": 0

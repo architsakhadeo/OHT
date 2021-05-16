@@ -33,7 +33,7 @@
 		"max-run-length-episodic": 30000,
 		"data-path": "data/hyperparam_v5/puddlerand/online_learning/esarsa/step30k/sweep/",
 		"should-log-totals": true,
-		"should-log-returns": true,
+		"should-log-returns": false,
 		"debug-interval": 0
 	}
 }

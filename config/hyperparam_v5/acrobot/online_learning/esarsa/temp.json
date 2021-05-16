@@ -32,7 +32,8 @@
 		"episodes": 1000000,
 		"max-run-length-episodic": 15000,
 		"steps-in-episode": 750,
-		"data-path": "data/hyperparam_v5/acrobot/online_learning/esarsa/step15k/sweep/",
+		"data-path": "data/hyperparam_v5/acrobot/online_learning/esarsa/temp/",
+
 		"should-log-totals": true,
 		"debug-interval": 0
 	}

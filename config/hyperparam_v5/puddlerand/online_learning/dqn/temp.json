@@ -1,10 +1,10 @@
 {
 	"agent-name": "dqn",
-	"environment-name": "cartpole",
+	"environment-name": "puddleworld",
 	"agent-settings": {
 		"decreasing-epsilon": "None",
-		"gamma": 0.9,
-		"state-len": 4,
+		"gamma": 1.0,
+		"state-len": 2,
 		"buffer-type": "random",
 		"optimizer": "Adam",
 		"dqn-adamBeta1": 0.9,
@@ -25,16 +25,17 @@
 		"seed": 1
 	},
 	"environment-settings": {
-		"seed": 1,
-		"sweep": {
-			"delays":[[0]]
-		}
+		"seed": 1
 	},
 	"experiment-settings": {
-		"steps": 50000,
-		"data-path": "data/hyperparam/cartpole/online_learning/dqn-adam/step50k/temp",
-		"should-log-traces": false,
-		"should-log-episode-lengths": true,
-		"debug-interval": 1000
+		"randomize_start_state_beforeLock": true,
+		"randomize_start_state_afterLock": true,
+		"steps": 0,
+		"episodes": 10000000,
+		"max-run-length-episodic": 30000,
+		"data-path": "data/hyperparam_v5/puddlerand/online_learning/dqn/temp/",
+		"should-log-totals": true,
+		"should-log-returns": false,
+		"debug-interval": 0
 	}
 }

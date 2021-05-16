@@ -46,7 +46,7 @@
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
 		"should-log-totals": true,
-		"should-log-returns": true,
+		"should-log-returns": false,
 		"debug-interval": 0
 	}
 }

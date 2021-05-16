@@ -44,7 +44,7 @@
 
     "model-save": false,
     "model-load": true,
-    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step15k/nn_scale/"
+    "model-load-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step15k/optimalfixed_eps0/nn_scale/"
   },
   "experiment-settings": {
     "randomize_start_state_beforeLock": false,
@@ -59,7 +59,7 @@
     "should-log-episode-lengths": false,
     "should-log-rewards": false,
     "should-log-totals": true,
-    "should-log-returns": true,
+    "should-log-returns": false,
     "debug-interval": 0
   }
 }

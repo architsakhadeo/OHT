@@ -36,9 +36,9 @@
 		"randomize_start_state_afterLock": true,
 		"steps": 0,
 		"episodes": 10000000,
-		"total-step-after-lock": 5000,
+		"total-step-after-lock": 1000,
 		"count-step-after-lock": true,
-		"data-path": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step5k/optimalfixed_eps0/",
+		"data-path": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step1k/optimalfixed_eps0/",
 		"should-log-traces": true,
 		"should-log-episode-lengths": false,
 		"debug-interval": 0
