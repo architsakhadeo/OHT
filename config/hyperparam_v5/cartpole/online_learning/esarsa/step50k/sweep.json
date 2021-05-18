@@ -28,7 +28,7 @@
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
-    "randomize_start_state_afterLock": false,
+    	"randomize_start_state_afterLock": false,
 		"steps": 50000,
 		"data-path": "data/hyperparam_v5/cartpole/online_learning/esarsa/step50k/sweep/",
 		"should-log-totals": true,
