@@ -100,6 +100,7 @@ type ESarsa struct {
 	accumulatingbeta2      float64
 	EsarsaSettings
 
+	stateRange				[][]float64
 	bf   *buffer.Buffer
 	lw   lockweight.LockWeight
 	lock bool
@@ -222,6 +223,21 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 4)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = -maxPosition
+		agent.stateRange[0][1] = maxPosition
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = -maxVelocity
+		agent.stateRange[1][1] = maxVelocity
+		agent.stateRange[2] = make([]float64, 2)
+		agent.stateRange[2][0] = -maxAngle
+		agent.stateRange[2][1] = maxAngle
+		agent.stateRange[3] = make([]float64, 2)
+		agent.stateRange[3][0] = -maxAngularVelocity
+		agent.stateRange[3][1] = maxAngularVelocity
+
 	} else if agent.EsarsaSettings.EnvName == "acrobot" {
 		agent.NumActions = 2 //3
 		scalers := []util.Scaler{
@@ -232,11 +248,31 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 			util.NewScaler(-maxFeature5, maxFeature5, agent.EsarsaSettings.NumTiles),
 			util.NewScaler(-maxFeature6, maxFeature6, agent.EsarsaSettings.NumTiles),
 		}
-
 		agent.tiler, err = util.NewMultiTiler(6, agent.EsarsaSettings.NumTilings, scalers)
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 6)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = -maxFeature1
+		agent.stateRange[0][1] = maxFeature1
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = -maxFeature2
+		agent.stateRange[1][1] = maxFeature2
+		agent.stateRange[2] = make([]float64, 2)
+		agent.stateRange[2][0] = -maxFeature3
+		agent.stateRange[2][1] = maxFeature3
+		agent.stateRange[3] = make([]float64, 2)
+		agent.stateRange[3][0] = -maxFeature4
+		agent.stateRange[3][1] = maxFeature4
+		agent.stateRange[4] = make([]float64, 2)
+		agent.stateRange[4][0] = -maxFeature5
+		agent.stateRange[4][1] = maxFeature5
+		agent.stateRange[5] = make([]float64, 2)
+		agent.stateRange[5][0] = -maxFeature6
+		agent.stateRange[5][1] = maxFeature6
+
 	} else if agent.EsarsaSettings.EnvName == "puddleworld" {
 		agent.NumActions = 4 // 5
 		scalers := []util.Scaler{
@@ -248,6 +284,15 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 2)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = minFeature1
+		agent.stateRange[0][1] = maxFeature1
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = minFeature2
+		agent.stateRange[1][1] = maxFeature2
+
 	} else if agent.EsarsaSettings.EnvName == "gridworld" {
 		agent.NumActions = 4 // 5
 		scalers := []util.Scaler{
@@ -259,7 +304,18 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 2)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = minCoord
+		agent.stateRange[0][1] = maxCoord
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = minCoord
+		agent.stateRange[1][1] = maxCoord
+
 	}
+
+	agent.FillHashTable()
 
 	agent.weights = make([][]float64, agent.NumActions) // one weight slice for each action
 	for i := 0; i < agent.NumActions; i++ {
@@ -298,6 +354,29 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.EsarsaSettings))
 
 	return nil
+}
+
+func (agent *ESarsa) FillHashTable() {
+	var fixedCoord []float64
+	agent.generateMedians(fixedCoord, 0)
+}
+
+func (agent *ESarsa) generateMedians(fixedCoord []float64, dim int) {
+	maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+	minS := agent.stateRange[dim][0]
+	numBlock := agent.NumTilings * agent.NumTiles
+	blockLen := maxRange / float64(numBlock)
+	if dim == agent.StateDim - 1 {
+		for i:=0; i<numBlock-1; i++ {
+			final := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
+			agent.tiler.Tile(final)
+		}
+	} else {
+		for i:=0; i<numBlock-1; i++ {
+			fixed := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
+			agent.generateMedians(fixed, dim+1)
+		}
+	}
 }
 
 // Start provides an initial observation to the agent and returns the agent's action.
