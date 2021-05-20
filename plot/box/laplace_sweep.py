@@ -23,6 +23,7 @@ def env_param_eval(path, eval_key):
 # print("\nAcrobot network")
 # env_param_eval(acrobot_network, "Averaged loss = ")
 
+'''
 print("\nAcrobot network scaled")
 env_param_eval(acrobot_scale_network, "Averaged loss = ")
 
@@ -43,3 +44,7 @@ env_param_eval(pdrand_laplace_network, "Averaged loss = ")
 
 print("\nPuddlerand network scaled laplace")
 env_param_eval(pdrand_scale_laplace_network, "Averaged loss = ")
+'''
+
+print("\nCartpole Laplace\n")
+env_param_eval(cartpole_laplace_test1, "Dynamic awareness = ")

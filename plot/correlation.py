@@ -17,7 +17,7 @@ modelKNN3Info = [('param_62', -0.5293864212943578), ('param_61', -0.529386421294
 # Real AUC, Models bottom 10th%
 
 # Real online env, AUC
-realInfo = [('param_25', -285.8124695485127), ('param_16', -308.22540630357304), ('param_26', -313.6040946356895), ('param_13', -314.9741063953518), ('param_24', -331.5340815005979), ('param_23', -347.6194235783255), ('param_17', -360.106786245317), ('param_22', -374.7081285437368), ('param_14', -394.5975930386011), ('param_15', -395.34422109788943), ('param_11', -402.47112043780675), ('param_21', -498.91428957157666), ('param_10', -537.0473539391037), ('param_12', -621.8647194155847), ('param_18', -662.8414555071835), ('param_9', -788.6560894099841), ('param_19', -943.5648699237646), ('param_0', -2256.3771957815), ('param_3', -2551.6604838237713), ('param_6', -2570.1085502376236), ('param_20', -2774.2912733175585), ('param_7', -2909.53175425217), ('param_8', -2933.799559750072), ('param_4', -2997.4951209820333), ('param_5', -3107.8013434923473), ('param_1', -3303.218339723092), ('param_2', -3379.934509131741)]
+#realInfo = [('param_25', -285.8124695485127), ('param_16', -308.22540630357304), ('param_26', -313.6040946356895), ('param_13', -314.9741063953518), ('param_24', -331.5340815005979), ('param_23', -347.6194235783255), ('param_17', -360.106786245317), ('param_22', -374.7081285437368), ('param_14', -394.5975930386011), ('param_15', -395.34422109788943), ('param_11', -402.47112043780675), ('param_21', -498.91428957157666), ('param_10', -537.0473539391037), ('param_12', -621.8647194155847), ('param_18', -662.8414555071835), ('param_9', -788.6560894099841), ('param_19', -943.5648699237646), ('param_0', -2256.3771957815), ('param_3', -2551.6604838237713), ('param_6', -2570.1085502376236), ('param_20', -2774.2912733175585), ('param_7', -2909.53175425217), ('param_8', -2933.799559750072), ('param_4', -2997.4951209820333), ('param_5', -3107.8013434923473), ('param_1', -3303.218339723092), ('param_2', -3379.934509131741)]
 
 # Random, 5K
 #modelKNN1Info = [('param_26', -12.764177522868314), ('param_25', -13.117898414084209), ('param_17', -14.269629629925085), ('param_23', -16.233607700933497), ('param_16', -16.38793850765555), ('param_14', -18.200305734683216), ('param_22', -18.282720883089066), ('param_13', -21.766668211028758), ('param_20', -24.542928746398132), ('param_15', -31.64927558262611), ('param_11', -32.84418935795326), ('param_24', -34.78774530792752), ('param_10', -46.67702929906538), ('param_19', -56.687794740292766), ('param_21', -59.94960442847311), ('param_12', -64.00543361373003), ('param_18', -76.95831262637489), ('param_9', -93.89674044505414), ('param_7', -340.722291338904), ('param_8',  -343.8097408409277), ('param_2', -368.8279121847484), ('param_5', -384.8351164609141), ('param_4', -442.5031281366773), ('param_6', -507.192349892928), ('param_1', -516.2735385635699), ('param_3', -598.4641806584592), ('param_0', -682.433239703506)]
@@ -47,21 +47,40 @@ realInfo = [('param_25', -285.8124695485127), ('param_16', -308.22540630357304),
 #modelKNN1Info = [('param_25', -32.23615308913506), ('param_26', -35.89667910275274), ('param_17', -36.67286012192482), ('param_16', -43.74959390384386), ('param_14', -45.936522664751436), ('param_23', -49.56386601579181), ('param_13', -50.4825284896432), ('param_22', -53.415273478491535), ('param_24', -60.01024486863375), ('param_11', -61.45737369980077), ('param_15', -64.65688581604803), ('param_21', -71.44338070678359), ('param_10', -78.49594909182903), ('param_20', -80.47506083516234), ('param_9', -83.23908009748678), ('param_12', -83.44771786406537), ('param_18', -88.17945126527704), ('param_19', -89.0470097619032), ('param_0', -241.49803315680464), ('param_2', -293.9067675645362), ('param_3', -294.81378669727053), ('param_5', -354.3732474938825), ('param_1', -356.9820271404869), ('param_4', -368.380539881307), ('param_7', -372.2856720756736), ('param_8', -387.96524542981905), ('param_6', -402.83772183602053)]
 
 # Learning, eps = 0.3, 50K
-modelKNN1Info = [('param_23', -7.175310791525495), ('param_25', -7.8320042334248985), ('param_26', -9.392312030772196), ('param_17', -11.996750877722002), ('param_18', -13.19087570649321), ('param_21', -13.621739045961856), ('param_24', -13.84682340572606), ('param_14', -14.486031076799646), ('param_16', -15.204716813878713), ('param_13', -16.52759334711725), ('param_11', -17.229811321295035), ('param_15', -19.143009584048407), ('param_20', -23.642208317430015), ('param_9', -24.048035529212328), ('param_22', -24.111134391832262), ('param_12', -26.513751902257304), ('param_19', -28.007337014733224), ('param_10', -35.306458650245084), ('param_0', -121.33473241969152), ('param_3', -138.6853920562479), ('param_7', -148.2370908538695), ('param_2', -148.65543149334607), ('param_5', -150.9463592675911), ('param_6', -174.86137148307444), ('param_8', -177.13002139383292), ('param_1', -177.28674112545954), ('param_4', -184.57772193519702)]
+#modelKNN1Info = [('param_23', -7.175310791525495), ('param_25', -7.8320042334248985), ('param_26', -9.392312030772196), ('param_17', -11.996750877722002), ('param_18', -13.19087570649321), ('param_21', -13.621739045961856), ('param_24', -13.84682340572606), ('param_14', -14.486031076799646), ('param_16', -15.204716813878713), ('param_13', -16.52759334711725), ('param_11', -17.229811321295035), ('param_15', -19.143009584048407), ('param_20', -23.642208317430015), ('param_9', -24.048035529212328), ('param_22', -24.111134391832262), ('param_12', -26.513751902257304), ('param_19', -28.007337014733224), ('param_10', -35.306458650245084), ('param_0', -121.33473241969152), ('param_3', -138.6853920562479), ('param_7', -148.2370908538695), ('param_2', -148.65543149334607), ('param_5', -150.9463592675911), ('param_6', -174.86137148307444), ('param_8', -177.13002139383292), ('param_1', -177.28674112545954), ('param_4', -184.57772193519702)]
 
-realkeys = [key for (key, value) in realInfo]
-realvalues = [value for (key, value) in realInfo]
-modelKNN1keys = [key for (key, value) in modelKNN1Info]
-modelKNN1values = [value for (key, value) in modelKNN1Info]
+dataset = 0
+realInfo = {'param_19': -1311.1666666666667, 'param_28': -1353.5333333333333, 'param_20': -1370.8666666666666, 'param_29': -1751.6666666666667, 'param_18': -1806.9, 'param_9': -1834.4333333333334, 'param_0': -1836.5333333333333, 'param_27': -1839.5666666666666, 'param_40': -2162.866666666667, 'param_41': -2170.9333333333334, 'param_39': -2179.0666666666666, 'param_30': -2206.1, 'param_12': -2207.8, 'param_21': -2211.4333333333334, 'param_3': -2211.6666666666665, 'param_50': -2211.7, 'param_31': -2222.2, 'param_48': -2222.5, 'param_49': -2224.266666666667, 'param_22': -2230.6, 'param_32': -2236.7, 'param_23': -2238.233333333333, 'param_24': -2240.6, 'param_43': -2240.766666666667, 'param_34': -2241.0333333333333, 'param_6': -2242.733333333333, 'param_53': -2243.5666666666666, 'param_42': -2243.8333333333335, 'param_52': -2244.133333333333, 'param_15': -2246.9666666666667, 'param_44': -2247.233333333333, 'param_25': -2249.3, 'param_33': -2251.766666666667, 'param_35': -2253.233333333333, 'param_26': -2253.5, 'param_51': -2257.133333333333, 'param_7': -2281.5333333333333, 'param_16': -2282.5666666666666, 'param_8': -2374.9, 'param_17': -2376.733333333333, 'param_4': -2524.8333333333335, 'param_13': -2525.266666666667, 'param_10': -2797.4666666666667, 'param_1': -2803.733333333333, 'param_5': -3195.0, 'param_14': -3196.8333333333335, 'param_38': -3255.1666666666665, 'param_2': -4122.766666666666, 'param_11': -4124.5, 'param_37': -4919.1, 'param_47': -4952.566666666667, 'param_36': -5000.333333333333, 'param_45': -5068.433333333333, 'param_46': -5163.5}
+KNNoptimalInfo = {'param_45': -9.8, 'param_46': -15.6, 'param_37': -206.7, 'param_47': -267.8, 'param_36': -394.2, 'param_20': -440.1, 'param_29': -536.3, 'param_38': -590.1, 'param_27': -735.1, 'param_9': -759.2, 'param_0': -765.1, 'param_18': -786.6, 'param_28': -835.2, 'param_30': -859.2, 'param_3': -871.4, 'param_19': -871.9, 'param_34': -872.0, 'param_33': -875.1, 'param_22': -875.7, 'param_6': -876.9, 'param_12': -879.0, 'param_15': -879.5, 'param_24': -880.6, 'param_48': -882.6, 'param_21': -883.6, 'param_43': -883.7, 'param_52': -885.6, 'param_35': -886.6, 'param_53': -886.6, 'param_17': -887.9, 'param_25': -887.9, 'param_44': -888.2, 'param_49': -888.3, 'param_41': -889.0, 'param_8': -889.3, 'param_16': -889.6, 'param_50': -889.7, 'param_42': -890.0, 'param_51': -890.2, 'param_7': -891.1, 'param_31': -894.7, 'param_26': -896.0, 'param_40': -901.3, 'param_39': -907.6, 'param_23': -912.2, 'param_32': -914.6, 'param_13': -924.1, 'param_4': -937.0, 'param_14': -954.3, 'param_5': -964.5, 'param_10': -1122.4, 'param_1': -1135.1, 'param_11': -1223.8, 'param_2': -1234.9}
+KNNrandomInfo = {'param_27': -3161.4, 'param_18': -3405.2, 'param_0': -3485.8, 'param_9': -3506.1, 'param_28': -3794.9, 'param_19': -4162.3, 'param_39': -5273.2, 'param_49': -5330.2, 'param_50': -5333.0, 'param_41': -5353.3, 'param_21': -5355.9, 'param_3': -5388.4, 'param_30': -5392.5, 'param_36': -5398.5, 'param_12': -5422.8, 'param_48': -5436.4, 'param_40': -5443.2, 'param_22': -5538.4, 'param_31': -5543.3, 'param_51': -5641.5, 'param_42': -5665.2, 'param_52': -5671.5, 'param_44': -5680.7, 'param_24': -5682.1, 'param_15': -5686.7, 'param_53': -5696.9, 'param_6': -5701.9, 'param_43': -5703.4, 'param_25': -5715.1, 'param_33': -5717.7, 'param_32': -5728.2, 'param_34': -5741.5, 'param_35': -5754.5, 'param_26': -5766.7, 'param_23': -5802.3, 'param_16': -5817.6, 'param_7': -5837.9, 'param_8': -6079.9, 'param_17': -6081.4, 'param_13': -6445.9, 'param_4': -6480.1, 'param_29': -6507.8, 'param_45': -6557.5, 'param_37': -6788.3, 'param_20': -6976.6, 'param_5': -7788.7, 'param_14': -7802.4, 'param_46': -8049.0, 'param_38': -8141.5, 'param_10': -8308.1, 'param_1': -8469.5, 'param_47': -9820.4, 'param_2': -10430.9, 'param_11': -10598.0}
+
+#realkeys = [key for (key, value) in realInfo]
+#realvalues = [value for (key, value) in realInfo]
+#modelKNN1keys = [key for (key, value) in modelKNN1Info]
+#modelKNN1values = [value for (key, value) in modelKNN1Info]
 #modelKNN3keys = [key for (key, value) in modelKNN3Info]
 #modelKNN3values = [value for (key, value) in modelKNN3Info]
 
-rankingUnderReal = [i for i in range(len(realkeys))]
-rankingUnderModelKNN1 = [realkeys.index(modelKNN1keys[i]) for i in range(len(modelKNN1keys))]
-#rankingUnderModelKNN3 = [realkeys.index(modelKNN3keys[i]) for i in range(len(modelKNN3keys))]
+realkeys = list(realInfo.keys())
+realvalues = list(realInfo.values())
+KNNoptimalInfokeys = list(KNNoptimalInfo.keys())
+KNNoptimalInfovalues = list(KNNoptimalInfo.values())
+KNNrandomInfokeys = list(KNNrandomInfo.keys())
+KNNrandomInfovalues = list(KNNrandomInfo.values())
 
-correlation = np.corrcoef(rankingUnderReal, rankingUnderModelKNN1)
-print(correlation)
+for i in range(len(realvalues)):
+    realvalues[i] *= -1
+for i in range(len(KNNoptimalInfovalues)):
+    KNNoptimalInfovalues[i] *= -1
+for i in range(len(KNNrandomInfovalues)):
+    KNNrandomInfovalues[i] *= -1
+
+rankingUnderReal = [i for i in range(len(realkeys))]
+rankingUnderModelKNN1 = [realkeys.index(KNNoptimalInfokeys[i]) for i in range(len(KNNoptimalInfokeys))]
+rankingUnderModelKNN3 = [realkeys.index(KNNrandomInfokeys[i]) for i in range(len(KNNrandomInfokeys))]
+
+#correlation = np.corrcoef(rankingUnderReal, rankingUnderModelKNN1)
+#print(correlation)
 
 
 def plotCorrelationPlot(rankingUnderReal, rankingUnderModelKNN1, plt):
@@ -100,33 +119,34 @@ def plotPerformances(realvalues, modelKNN1values, plt):
 
 def plotPerformancesMultiple(realvalues, modelKNN1values, modelKNN3values, plt):
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    #plt.scatter([i+1 for i in range(len(realvalues))], np.array(realvalues)/250000, label='Performance in\nthe real environment', s = 5)
+    plt.scatter([i+1 for i in range(len(realvalues))], np.array(realvalues), label='Performance in\nthe real environment', s = 5)
     modelKNN1valuesRankedByRealRanking = [modelKNN1values[rankingUnderModelKNN1.index(rankingUnderReal[i])] for i in range(len(rankingUnderReal))]
-    plt.scatter([i+1 for i in range(len(modelKNN1values))], np.array(modelKNN1valuesRankedByRealRanking)/250000, label='Performance in\nthe offline model KNN1', s = 5, color=colors[1])
+    plt.scatter([i+1 for i in range(len(modelKNN1values))], np.array(modelKNN1valuesRankedByRealRanking), label='Performance in\nthe offline model (optimal)', s = 5, color=colors[1])
     #plt.scatter([realkeys.index(modelKNN1keys[0])+1], np.array(modelKNN1valuesRankedByRealRanking[realkeys.index(modelKNN1keys[0])]/250000), color=colors[1])
-    plt.scatter([realkeys.index(modelKNN1keys[0])+1], np.array(modelKNN1valuesRankedByRealRanking[realkeys.index(modelKNN1keys[0])]/250000), facecolors='none', edgecolors=colors[1], s=160)
+    #plt.scatter([realkeys.index(modelKNN1keys[0])+1], np.array(modelKNN1valuesRankedByRealRanking[realkeys.index(modelKNN1keys[0])]/250000), facecolors='none', edgecolors=colors[1], s=160)
 
     modelKNN3valuesRankedByRealRanking = [modelKNN3values[rankingUnderModelKNN3.index(rankingUnderReal[i])] for i in range(len(rankingUnderReal))]
-    plt.scatter([i+1 for i in range(len(modelKNN3values))], np.array(modelKNN3valuesRankedByRealRanking)/250000, label='Performance in\nthe offline model KNN3', s = 5, color=colors[2])
+    plt.scatter([i+1 for i in range(len(modelKNN3values))], np.array(modelKNN3valuesRankedByRealRanking), label='Performance in\nthe offline model (random)', s = 5, color=colors[2])
     #plt.scatter([12], np.array(modelKNN3valuesRankedByRealRanking[11]/250000), color=colors[2])
-    plt.scatter([realkeys.index(modelKNN3keys[0])+1], np.array(modelKNN3valuesRankedByRealRanking[realkeys.index(modelKNN1keys[0])]/250000), facecolors='none', edgecolors=colors[2], s=160)
+    #plt.scatter([realkeys.index(modelKNN3keys[0])+1], np.array(modelKNN3valuesRankedByRealRanking[realkeys.index(modelKNN1keys[0])]/250000), facecolors='none', edgecolors=colors[2], s=160)
 
     #plt.plot([i+1 for i in range(len(realvalues))], [-0.005 for i in range(len(realvalues))], '--', color='black', linewidth=0.75)
 
     #plt.scatter([i for i in range(len(modelKNN1values))], np.array(modelKNN1values)/50000, label='Average reward in the offline modelKNN1')
     plt.xlabel('Hyperparameter ranking in the real environment', labelpad=35)
-    plt.ylabel('Average reward\nof each\nhyperparameter setting\n(AUC)', rotation=0, labelpad=55)
+    plt.ylabel('# Failures\nof each\nhyperparameter\nsetting\n(AUC)', rotation=0, labelpad=55)
     plt.rcParams['figure.figsize'] = [16, 8]
     #plt.arrow(15, -0.04, -3, 0.035, color='black', width=0.00005, length_includes_head=True, head_length=0.002, head_width=0.002)
     #plt.text(5, -0.05, 'Hyperparameters chosen\nby the offline modelKNN1', fontsize=8)
-    plt.legend(loc=(0.01, 0.1), prop={'size': 8})
-    #plt.tight_layout()
-    plt.savefig('../img/performancesKNN1,3.png',dpi=300, bbox_inches='tight')
+    #plt.legend(loc=(0.01, 0.1), prop={'size': 8})
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('../img/modelHyperparamComparison.png',dpi=300, bbox_inches='tight')
     #plt.show()
 
 
 #plotCorrelationPlot(rankingUnderReal, rankingUnderModelKNN1, plt)
 
-plotPerformances(realvalues, modelKNN1values, plt)
+#plotPerformances(realvalues, modelKNN1values, plt)
 
-#plotPerformancesMultiple(realvalues, modelKNN1values, modelKNN3values, plt)
+plotPerformancesMultiple(realvalues, KNNoptimalInfovalues, KNNrandomInfovalues, plt)
