@@ -1,11 +1,15 @@
 package agent
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
+	"path"
+	"strconv"
 
 	ao "github.com/stellentus/cartpoles/lib/util/array-opr"
 	"github.com/stellentus/cartpoles/lib/util/buffer"
@@ -64,6 +68,11 @@ type EsarsaSettings struct {
 	WInit      float64 `json:"weight-init"`
 
 	RandomizeStartActionAfterLock bool `json:"randomize_start_action_afterLock"`
+
+	LoadW 			bool `json:"weight-load"`
+	LoadPath 		string `json:"weight-load-path"`
+	SaveW 			bool `json:"weight-save"`
+	SavePath 		string `json:"weight-save-path"`
 }
 
 // Expected sarsa-lambda with tile coding
@@ -71,6 +80,7 @@ type ESarsa struct {
 	logger.Debug
 	rng   *rand.Rand
 	tiler util.MultiTiler
+	runNum int
 
 	// Agent accessible parameters
 	weights                [][]float64 // weights is a slice of weights for each action
@@ -90,6 +100,7 @@ type ESarsa struct {
 	accumulatingbeta2      float64
 	EsarsaSettings
 
+	stateRange				[][]float64
 	bf   *buffer.Buffer
 	lw   lockweight.LockWeight
 	lock bool
@@ -148,6 +159,7 @@ func DefaultESarsaSettings() EsarsaSettings {
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
 func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+	agent.runNum = int(run)
 	set := DefaultESarsaSettings()
 	err := json.Unmarshal(expAttr, &set)
 	if err != nil {
@@ -177,7 +189,7 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 	agent.lw = lw
 
 	agent.bf = buffer.NewBuffer()
-	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.Seed)
+	agent.bf.Initialize(agent.Btype, agent.Bsize, agent.StateDim, agent.EsarsaSettings.Seed)
 	agent.lw = agent.InitLockWeight(agent.lw)
 
 	if agent.EsarsaSettings.IsStepsizeAdaptive == false {
@@ -211,6 +223,21 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 4)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = -maxPosition
+		agent.stateRange[0][1] = maxPosition
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = -maxVelocity
+		agent.stateRange[1][1] = maxVelocity
+		agent.stateRange[2] = make([]float64, 2)
+		agent.stateRange[2][0] = -maxAngle
+		agent.stateRange[2][1] = maxAngle
+		agent.stateRange[3] = make([]float64, 2)
+		agent.stateRange[3][0] = -maxAngularVelocity
+		agent.stateRange[3][1] = maxAngularVelocity
+
 	} else if agent.EsarsaSettings.EnvName == "acrobot" {
 		agent.NumActions = 2 //3
 		scalers := []util.Scaler{
@@ -221,11 +248,31 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 			util.NewScaler(-maxFeature5, maxFeature5, agent.EsarsaSettings.NumTiles),
 			util.NewScaler(-maxFeature6, maxFeature6, agent.EsarsaSettings.NumTiles),
 		}
-
 		agent.tiler, err = util.NewMultiTiler(6, agent.EsarsaSettings.NumTilings, scalers)
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 6)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = -maxFeature1
+		agent.stateRange[0][1] = maxFeature1
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = -maxFeature2
+		agent.stateRange[1][1] = maxFeature2
+		agent.stateRange[2] = make([]float64, 2)
+		agent.stateRange[2][0] = -maxFeature3
+		agent.stateRange[2][1] = maxFeature3
+		agent.stateRange[3] = make([]float64, 2)
+		agent.stateRange[3][0] = -maxFeature4
+		agent.stateRange[3][1] = maxFeature4
+		agent.stateRange[4] = make([]float64, 2)
+		agent.stateRange[4][0] = -maxFeature5
+		agent.stateRange[4][1] = maxFeature5
+		agent.stateRange[5] = make([]float64, 2)
+		agent.stateRange[5][0] = -maxFeature6
+		agent.stateRange[5][1] = maxFeature6
+
 	} else if agent.EsarsaSettings.EnvName == "puddleworld" {
 		agent.NumActions = 4 // 5
 		scalers := []util.Scaler{
@@ -237,6 +284,15 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 2)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = minFeature1
+		agent.stateRange[0][1] = maxFeature1
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = minFeature2
+		agent.stateRange[1][1] = maxFeature2
+
 	} else if agent.EsarsaSettings.EnvName == "gridworld" {
 		agent.NumActions = 4 // 5
 		scalers := []util.Scaler{
@@ -248,7 +304,35 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 2)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = minCoord
+		agent.stateRange[0][1] = maxCoord
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = minCoord
+		agent.stateRange[1][1] = maxCoord
+
 	}
+
+	agent.FillHashTable()
+	//test := make([]float64, agent.StateDim)
+	//for j := 0; j < 10; j++ {
+	//	for i := 0; i < agent.StateDim; i++ {
+	//		test[i] = agent.rng.Float64()
+	//	}
+	//	agent.tiler.Tile(test)
+	//}
+	//test = []float64{0.1, 0.2, -0.1, -0.2, 0.5, 5.5}
+	//idx, _ := agent.tiler.Tile(test)
+	//fmt.Println(idx)
+	//test = []float64{-0.1, -0.2, -0.1, -0.2, -0.5, 1.5}
+	//idx, _ = agent.tiler.Tile(test)
+	//fmt.Println(idx)
+	//test = []float64{-0.7, 0.9, -0.6, -0.8, 0.5, -1.5}
+	//idx, _ = agent.tiler.Tile(test)
+	//fmt.Println(idx)
+	//os.Exit(1)
 
 	agent.weights = make([][]float64, agent.NumActions) // one weight slice for each action
 	for i := 0; i < agent.NumActions; i++ {
@@ -272,15 +356,98 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 
 	agent.timesteps = 0
 
-	for i := 0; i < len(agent.weights); i++ {
-		for j := 0; j < len(agent.weights[0]); j++ {
-			agent.weights[i][j] = agent.EsarsaSettings.WInit / float64(agent.EsarsaSettings.NumTilings)
+	if agent.LoadW {
+		err := agent.LoadWeights(agent.LoadPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		for i := 0; i < len(agent.weights); i++ {
+			for j := 0; j < len(agent.weights[0]); j++ {
+				agent.weights[i][j] = agent.EsarsaSettings.WInit / float64(agent.EsarsaSettings.NumTilings)
+			}
 		}
 	}
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.EsarsaSettings))
 
 	return nil
 }
+
+func (agent *ESarsa) FillHashTable() {
+	//var fixedCoord []float64
+	//fmt.Println(agent.generateAllPoints(fixedCoord, 0, 0))
+
+	//fmt.Println(agent.generateAllPoints())
+	agent.generateAllPoints()
+}
+
+func (agent *ESarsa) generateAllPoints() int {
+	tempS := make([]float64, agent.StateDim)
+	count := 0
+	for dim:=0; dim<agent.StateDim; dim++ {
+		maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+		minS := agent.stateRange[dim][0]
+		numBlock := agent.NumTilings * agent.NumTiles
+		blockLen := maxRange / float64(numBlock)
+		for k:=0; k<agent.StateDim; k++ {
+			tempS[k] = 0
+		}
+		for i:=0; i<numBlock+1; i++ {
+			tempS[dim] = minS + float64(i) * blockLen
+			agent.tiler.Tile(tempS)
+			count += 1
+		}
+	}
+	for dim:=0; dim<agent.StateDim; dim++ {
+		maxRange0 := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+		for pair:=dim+1; pair<agent.StateDim; pair++ {
+			maxRange1 := agent.stateRange[pair][1] - agent.stateRange[pair][0]
+			minS0 := agent.stateRange[dim][0]
+			minS1 := agent.stateRange[pair][0]
+			numBlock := agent.NumTilings * agent.NumTiles
+			blockLen0 := maxRange0 / float64(numBlock)
+			blockLen1 := maxRange1 / float64(numBlock)
+			for i:=0; i<numBlock+1; i++ {
+				for j:=0; j<numBlock+1; j++ {
+
+					for k:=0; k<agent.StateDim; k++ {
+						tempS[k] = 0
+					}
+					tempS[dim] = minS0 + float64(i)*blockLen0
+					tempS[pair] = minS1 + float64(j)*blockLen1
+					agent.tiler.Tile(tempS)
+
+					//fmt.Println(tempS[dim], minS0 + float64(i)*blockLen0,  tempS[pair], minS1 + float64(j)*blockLen1)
+					count += 1
+				}
+			}
+		}
+	}
+	return count
+}
+//func (agent *ESarsa) generateAllPoints(fixedCoord []float64, dim, count int) int {
+//	maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+//	minS := agent.stateRange[dim][0]
+//	numBlock := agent.NumTilings * agent.NumTiles
+//	blockLen := maxRange / float64(numBlock)
+//	if dim == agent.StateDim - 1 {
+//		for i:=0; i<numBlock+1; i++ {
+//			//final := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
+//			final := append(fixedCoord, minS+float64(i)*blockLen)
+//			agent.tiler.Tile(final)
+//			count += 1
+//			//fmt.Println(count)
+//		}
+//		return count
+//	} else {
+//		for i:=0; i<numBlock+1; i++ {
+//			//fixed := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
+//			fixed := append(fixedCoord, minS+float64(i)*blockLen)
+//			count = agent.generateAllPoints(fixed, dim+1, count)
+//		}
+//		return count
+//	}
+//}
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
@@ -334,7 +501,9 @@ func (agent *ESarsa) Step(state rlglue.State, reward float64) rlglue.Action {
 	newAction, epsilons := agent.SoftmaxPolicy(newStateActiveFeatures) // Exp-Sarsa-L policy
 
 	if agent.lw.UseLock {
-		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.EsarsaSettings.Gamma)
+		if agent.lw.LockCondition != "beginning" {
+			agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, agent.EsarsaSettings.Gamma)
+		}
 		agent.lock = agent.lw.CheckChange()
 		if agent.lock == true {
 			agent.Epsilon = agent.EpsilonAfterLock
@@ -404,7 +573,9 @@ func (agent *ESarsa) End(state rlglue.State, reward float64) {
 	newAction, epsilons := agent.SoftmaxPolicy(newStateActiveFeatures) // Exp-Sarsa-L policy
 
 	if agent.lw.UseLock {
-		agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, 0.0)
+		if agent.lw.LockCondition != "beginning" {
+			agent.bf.Feed(agent.oldState, agent.oldAction, state, reward, 0.0)
+		}
 		agent.lock = agent.lw.CheckChange()
 		if agent.lock == true {
 			agent.Epsilon = agent.EpsilonAfterLock
@@ -512,6 +683,17 @@ func (agent *ESarsa) EpsilonGreedyPolicy(tileCodedStateActiveFeatures []int) (rl
 
 // SoftmaxPolicy returns action based on tile coded state using softmax policy
 func (agent *ESarsa) SoftmaxPolicy(tileCodedStateActiveFeatures []int) (rlglue.Action, []float64) {
+	//// debug
+	//randomv := agent.rng.Float64()
+	//if randomv < agent.Epsilon {
+	//	prob := make([]float64, agent.NumActions)
+	//	for i:=0; i<agent.NumActions; i++ {
+	//		prob[i] = 1.0 / float64(agent.NumActions)
+	//	}
+	//	fmt.Println("DEBUGGING: epsilon =", agent.Epsilon)
+	//	return agent.rng.Int() % agent.NumActions, prob
+	//}
+
 	// Calculates action values
 	actionValues := make([]float64, agent.NumActions)
 	for i := 0; i < agent.NumActions; i++ {
@@ -533,6 +715,7 @@ func (agent *ESarsa) SoftmaxPolicy(tileCodedStateActiveFeatures []int) (rlglue.A
 	for i := 0; i < agent.NumActions; i++ {
 		expActionValues[i] = math.Exp(actionValues[i] / agent.SoftmaxTemperature)
 	}
+	//fmt.Println(expActionValues)
 
 	var sumExpActionValues float64
 	for i := 0; i < agent.NumActions; i++ {
@@ -581,6 +764,8 @@ func (agent *ESarsa) ActionValue(tileCodedStateActiveFeatures []int, action rlgl
 	var actionValue float64
 
 	// Calculates action value as linear function (dot product) between weights and binary featured state
+	//fmt.Println(agent.weights[0][0], agent.weights[0][len(agent.weights[0])-1], agent.weights[len(agent.weights)-1][0], agent.weights[len(agent.weights)-1][len(agent.weights[0])-1])
+
 	for _, value := range tileCodedStateActiveFeatures {
 		a, _ := tpo.GetInt(action)
 		actionValue += agent.weights[a][value]
@@ -796,8 +981,117 @@ func (agent *ESarsa) Count(array []float64, number float64) int {
 	return count
 }
 
+func (agent *ESarsa) LoadWeights(loadFromBase string) error {
+	//f, _ := os.Create(path.Join(loadFromBase, "param_0/tempBeforeLoad-"+strconv.Itoa(agent.runNum)+".txt"))
+	//for i:=0; i<len(agent.weights); i++ {
+	//	for j:=0; j<len(agent.weights[i]); j++ {
+	//		f.WriteString(fmt.Sprintf("%f, ", agent.weights[i][j]))
+	//	}
+	//	f.WriteString("\n")
+	//}
+	//f.Close()
+	if agent.LoadW {
+
+		fileW, err := os.Open(path.Join(loadFromBase, "param_0/weight-"+strconv.Itoa(agent.runNum)+".pkl"))
+		if err != nil {
+			return err
+		}
+		decoderW := gob.NewDecoder(fileW)
+		agent.weights = [][]float64{}
+		err = decoderW.Decode(&agent.weights)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		err = fileW.Close()
+
+		//pathT := path.Join(loadFromBase, "param_0/tileCoder-"+strconv.Itoa(agent.runNum)+".pkl")
+		//fmt.Println(agent.tiler, pathT)
+		//err = sl.Load(pathT, agent.tiler)
+		//fmt.Println(agent.tiler)
+
+		//fileT, err := os.Open(path.Join(loadFromBase, "param_0/tileCoder-"+strconv.Itoa(agent.runNum)+".pkl"))
+		//if err != nil {
+		//	return err
+		//}
+		//decoderT := gob.NewDecoder(fileT)
+		//temp := make([]util.MultiTiler, 1)
+		//agent.tiler = temp[0]
+		//err = decoderT.Decode(&agent.tiler)
+		//if err != nil {
+		//	fmt.Println(err)
+		//	return err
+		//}
+		//err = fileT.Close()
+
+		//fmt.Println(agent.weights[0][0], agent.weights[0][len(agent.weights[0])-1], agent.weights[len(agent.weights)-1][0], agent.weights[len(agent.weights)-1][len(agent.weights[0])-1])
+		//file, err = os.Create(path.Join(loadFromBase, "param_0/tempAfterLoad-"+strconv.Itoa(agent.runNum)+".txt"))
+		//if err != nil {
+		//	return err
+		//}
+		//for i:=0; i<len(agent.weights); i++ {
+		//	for j:=0; j<len(agent.weights[i]); j++ {
+		//		file.WriteString(fmt.Sprintf("%f, ", agent.weights[i][j]))
+		//	}
+		//	file.WriteString("\n")
+		//}
+		//file.Close()
+		return err
+	} else {
+		return nil
+	}
+}
+
 func (agent *ESarsa) SaveWeights(basePath string) error {
-	return nil
+	if agent.SaveW {
+
+		fileW, err := os.Create(path.Join(agent.SavePath, basePath, "weight-"+strconv.Itoa(agent.runNum)+".pkl"))
+		if err != nil {
+			return err
+		}
+		encoderW := gob.NewEncoder(fileW)
+		err = encoderW.Encode(agent.weights)
+		if err != nil {
+			return err
+		}
+		err = fileW.Close()
+
+		//pathT := path.Join(agent.SavePath, basePath, "tileCoder-"+strconv.Itoa(agent.runNum)+".pkl")
+		//err = sl.Save(pathT, agent.tiler)
+		//if err != nil {
+		//	return err
+		//}
+
+		//gob.Register(tile.IndexingTiler{})
+		//fileT, err := os.Create(path.Join(agent.SavePath, basePath, "tileCoder-"+strconv.Itoa(agent.runNum)+".pkl"))
+		//if err != nil {
+		//	return err
+		//}
+		//encoderT := gob.NewEncoder(fileT)
+		//err = encoderT.Encode(agent.tiler)
+		//if err != nil {
+		//	return err
+		//}
+		//err = fileT.Close()
+
+		//fmt.Println(agent.weights[0][0], agent.weights[0][len(agent.weights[0])-1], agent.weights[len(agent.weights)-1][0], agent.weights[len(agent.weights)-1][len(agent.weights[0])-1])
+
+		//file, err = os.Create(path.Join(agent.SavePath, basePath, "temp-"+strconv.Itoa(agent.runNum)+".txt"))
+		//if err != nil {
+		//	return err
+		//}
+		//for i:=0; i<len(agent.weights); i++ {
+		//	for j:=0; j<len(agent.weights[i]); j++ {
+		//		file.WriteString(fmt.Sprintf("%f, ", agent.weights[i][j]))
+		//	}
+		//	file.WriteString("\n")
+		//}
+		//file.Close()
+
+		return err
+	} else {
+		return nil
+	}
 }
 
 func (agent *ESarsa) GetLearnProg() float64 {

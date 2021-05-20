@@ -20,18 +20,13 @@
       "softmax-temp": [1]
     },
 
-    "weight-load": true,
-    "weight-load-path": "data/hyperparam_v5/acrobot_shift/online_learning/default/esarsa/step50k/best/",
-
-    "lock-weight": true,
-    "lock-condition": "beginning",
-
+    "weight-save": true,
+    "weight-save-path": "data/hyperparam_v5/acrobot_shift/online_learning/default/esarsa/step50k/best/",
+    "lock-weight": false,
     "enable-debug": false,
     "seed": 1
   },
   "environment-settings": {
-    "link_len_1": 2,
-    "link_mass_1": 2,
     "seed": 1
   },
   "experiment-settings": {
@@ -39,8 +34,8 @@
     "randomize_start_state_afterLock": false,
     "steps": 0,
     "episodes": 1000000,
-    "max-run-length-episodic": 15000,
-    "data-path": "data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_default/esarsa/best/",
+    "max-run-length-episodic": 50000,
+    "data-path": "data/hyperparam_v5/acrobot_shift/online_learning/default/esarsa/step50k/best/",
 
     "should-log-totals": true,
     "should-log-episode-lengths": true,
