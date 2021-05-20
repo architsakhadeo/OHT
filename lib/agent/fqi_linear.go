@@ -19,7 +19,6 @@ import (
 	"github.com/stellentus/cartpoles/lib/util/convformat"
 	"github.com/stellentus/cartpoles/lib/util/lockweight"
 	"github.com/stellentus/cartpoles/lib/util/network"
-	"github.com/stellentus/cartpoles/lib/util/normalizer"
 	"github.com/stellentus/cartpoles/lib/util/optimizer"
 )
 
@@ -54,7 +53,7 @@ type fqiLinearSettings struct {
 	BatchSize  int  `json:"fqi-batch"`
 	IncreaseBS bool `json:"increasing-batch"`
 
-	StateRange []float64 `json:"StateRange"`
+	// StateRange []float64 `json:"StateRange"`
 
 	OptName string `json:"optimizer"`
 
@@ -80,8 +79,9 @@ type FqiLinear struct {
 	learning  bool
 	//stepNum   int
 
-	nml normalizer.Normalizer
-	bf  *buffer.Buffer
+	stateRange [][]float64
+	// nml normalizer.Normalizer
+	bf *buffer.Buffer
 
 	learningNet network.Network
 	targetNet   network.Network
@@ -213,6 +213,21 @@ func (agent *FqiLinear) InitTiler() error {
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 4)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = -maxPosition
+		agent.stateRange[0][1] = maxPosition
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = -maxVelocity
+		agent.stateRange[1][1] = maxVelocity
+		agent.stateRange[2] = make([]float64, 2)
+		agent.stateRange[2][0] = -maxAngle
+		agent.stateRange[2][1] = maxAngle
+		agent.stateRange[3] = make([]float64, 2)
+		agent.stateRange[3][0] = -maxAngularVelocity
+		agent.stateRange[3][1] = maxAngularVelocity
+
 	} else if agent.fqiLinearSettings.EnvName == "acrobot" {
 		agent.fqiLinearSettings.NumberOfActions = 2 //3
 		scalers := []util.Scaler{
@@ -228,6 +243,27 @@ func (agent *FqiLinear) InitTiler() error {
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 6)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = -maxFeature1
+		agent.stateRange[0][1] = maxFeature1
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = -maxFeature2
+		agent.stateRange[1][1] = maxFeature2
+		agent.stateRange[2] = make([]float64, 2)
+		agent.stateRange[2][0] = -maxFeature3
+		agent.stateRange[2][1] = maxFeature3
+		agent.stateRange[3] = make([]float64, 2)
+		agent.stateRange[3][0] = -maxFeature4
+		agent.stateRange[3][1] = maxFeature4
+		agent.stateRange[4] = make([]float64, 2)
+		agent.stateRange[4][0] = -maxFeature5
+		agent.stateRange[4][1] = maxFeature5
+		agent.stateRange[5] = make([]float64, 2)
+		agent.stateRange[5][0] = -maxFeature6
+		agent.stateRange[5][1] = maxFeature6
+
 	} else if agent.fqiLinearSettings.EnvName == "puddleworld" {
 		agent.fqiLinearSettings.NumberOfActions = 4 // 5
 		scalers := []util.Scaler{
@@ -239,12 +275,97 @@ func (agent *FqiLinear) InitTiler() error {
 		if err != nil {
 			return err
 		}
+
+		agent.stateRange = make([][]float64, 2)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = minFeature1
+		agent.stateRange[0][1] = maxFeature1
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = minFeature2
+		agent.stateRange[1][1] = maxFeature2
+
+	} else if agent.fqiLinearSettings.EnvName == "gridworld" {
+		agent.fqiLinearSettings.NumberOfActions = 4 // 5
+		scalers := []util.Scaler{
+			util.NewScaler(minCoord, maxCoord, agent.fqiLinearSettings.NumTiles),
+			util.NewScaler(minCoord, maxCoord, agent.fqiLinearSettings.NumTiles),
+		}
+
+		agent.tiler, err = util.NewMultiTiler(2, agent.fqiLinearSettings.NumTilings, scalers)
+		if err != nil {
+			return err
+		}
+
+		agent.stateRange = make([][]float64, 2)
+		agent.stateRange[0] = make([]float64, 2)
+		agent.stateRange[0][0] = minCoord
+		agent.stateRange[0][1] = maxCoord
+		agent.stateRange[1] = make([]float64, 2)
+		agent.stateRange[1][0] = minCoord
+		agent.stateRange[1][1] = maxCoord
+
 	} else {
 		return errors.New("Environment NotImplemented")
 	}
+
+	agent.FillHashTable()
+
 	agent.tilerNumIndices = agent.tiler.NumberOfIndices()
 
 	return nil
+}
+
+func (agent *FqiLinear) FillHashTable() {
+	//var fixedCoord []float64
+	//fmt.Println(agent.generateAllPoints(fixedCoord, 0, 0))
+
+	//fmt.Println(agent.generateAllPoints())
+	agent.generateAllPoints()
+}
+
+func (agent *FqiLinear) generateAllPoints() int {
+	tempS := make([]float64, agent.StateDim)
+	count := 0
+	for dim := 0; dim < agent.StateDim; dim++ {
+		maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+		minS := agent.stateRange[dim][0]
+		numBlock := agent.NumTilings * agent.NumTiles
+		blockLen := maxRange / float64(numBlock)
+		for k := 0; k < agent.StateDim; k++ {
+			tempS[k] = 0
+		}
+		for i := 0; i < numBlock+1; i++ {
+			tempS[dim] = math.Max(math.Min(minS+float64(i)*blockLen, agent.stateRange[dim][1]), agent.stateRange[dim][0])
+			agent.tiler.Tile(tempS)
+			count += 1
+		}
+	}
+	for dim := 0; dim < agent.StateDim; dim++ {
+		maxRange0 := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+		for pair := dim + 1; pair < agent.StateDim; pair++ {
+			maxRange1 := agent.stateRange[pair][1] - agent.stateRange[pair][0]
+			minS0 := agent.stateRange[dim][0]
+			minS1 := agent.stateRange[pair][0]
+			numBlock := agent.NumTilings * agent.NumTiles
+			blockLen0 := maxRange0 / float64(numBlock)
+			blockLen1 := maxRange1 / float64(numBlock)
+			for i := 0; i < numBlock+1; i++ {
+				for j := 0; j < numBlock+1; j++ {
+
+					for k := 0; k < agent.StateDim; k++ {
+						tempS[k] = 0
+					}
+					tempS[dim] = math.Max(math.Min(minS0+float64(i)*blockLen0, agent.stateRange[dim][1]), agent.stateRange[dim][0])
+					tempS[pair] = math.Max(math.Min(minS1+float64(j)*blockLen1, agent.stateRange[dim][1]), agent.stateRange[dim][0])
+					agent.tiler.Tile(tempS)
+
+					//fmt.Println(tempS[dim], minS0 + float64(i)*blockLen0,  tempS[pair], minS1 + float64(j)*blockLen1)
+					count += 1
+				}
+			}
+		}
+	}
+	return count
 }
 
 // Start provides an initial observation to the agent and returns the agent's action.
