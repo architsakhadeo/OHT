@@ -393,7 +393,6 @@ func (agent *ESarsa) generateAllPoints() int {
 			tempS[k] = 0
 		}
 		for i := 0; i < numBlock+1; i++ {
-			//tempS[dim] = minS + float64(i)*blockLen
 			tempS[dim] = math.Max(math.Min(minS+float64(i)*blockLen, agent.stateRange[dim][1]), agent.stateRange[dim][0])
 			agent.tiler.Tile(tempS)
 			count += 1
@@ -414,8 +413,6 @@ func (agent *ESarsa) generateAllPoints() int {
 					for k := 0; k < agent.StateDim; k++ {
 						tempS[k] = 0
 					}
-					//tempS[dim] = minS0 + float64(i)*blockLen0
-					//tempS[pair] = minS1 + float64(j)*blockLen1
 					tempS[dim] = math.Max(math.Min(minS0+float64(i)*blockLen0, agent.stateRange[dim][1]), agent.stateRange[dim][0])
 					tempS[pair] = math.Max(math.Min(minS1+float64(j)*blockLen1, agent.stateRange[dim][1]), agent.stateRange[dim][0])
 					agent.tiler.Tile(tempS)
