@@ -31,7 +31,7 @@
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
-		"randomize_start_state_afterLock": true,
+		"randomize_start_state_afterLock": false,
 		"steps": 0,
 		"episodes": 10000000,
 		"training-steps-before-lock": 1,
