@@ -316,6 +316,23 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 	}
 
 	agent.FillHashTable()
+	//test := make([]float64, agent.StateDim)
+	//for j := 0; j < 10; j++ {
+	//	for i := 0; i < agent.StateDim; i++ {
+	//		test[i] = agent.rng.Float64()
+	//	}
+	//	agent.tiler.Tile(test)
+	//}
+	//test = []float64{0.1, 0.2, -0.1, -0.2, 0.5, 5.5}
+	//idx, _ := agent.tiler.Tile(test)
+	//fmt.Println(idx)
+	//test = []float64{-0.1, -0.2, -0.1, -0.2, -0.5, 1.5}
+	//idx, _ = agent.tiler.Tile(test)
+	//fmt.Println(idx)
+	//test = []float64{-0.7, 0.9, -0.6, -0.8, 0.5, -1.5}
+	//idx, _ = agent.tiler.Tile(test)
+	//fmt.Println(idx)
+	//os.Exit(1)
 
 	agent.weights = make([][]float64, agent.NumActions) // one weight slice for each action
 	for i := 0; i < agent.NumActions; i++ {
@@ -357,27 +374,80 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 }
 
 func (agent *ESarsa) FillHashTable() {
-	var fixedCoord []float64
-	agent.generateMedians(fixedCoord, 0)
+	//var fixedCoord []float64
+	//fmt.Println(agent.generateAllPoints(fixedCoord, 0, 0))
+
+	//fmt.Println(agent.generateAllPoints())
+	agent.generateAllPoints()
 }
 
-func (agent *ESarsa) generateMedians(fixedCoord []float64, dim int) {
-	maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
-	minS := agent.stateRange[dim][0]
-	numBlock := agent.NumTilings * agent.NumTiles
-	blockLen := maxRange / float64(numBlock)
-	if dim == agent.StateDim - 1 {
-		for i:=0; i<numBlock-1; i++ {
-			final := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
-			agent.tiler.Tile(final)
+func (agent *ESarsa) generateAllPoints() int {
+	tempS := make([]float64, agent.StateDim)
+	count := 0
+	for dim:=0; dim<agent.StateDim; dim++ {
+		maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+		minS := agent.stateRange[dim][0]
+		numBlock := agent.NumTilings * agent.NumTiles
+		blockLen := maxRange / float64(numBlock)
+		for k:=0; k<agent.StateDim; k++ {
+			tempS[k] = 0
 		}
-	} else {
-		for i:=0; i<numBlock-1; i++ {
-			fixed := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
-			agent.generateMedians(fixed, dim+1)
+		for i:=0; i<numBlock+1; i++ {
+			tempS[dim] = minS + float64(i) * blockLen
+			agent.tiler.Tile(tempS)
+			count += 1
 		}
 	}
+	for dim:=0; dim<agent.StateDim; dim++ {
+		maxRange0 := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+		for pair:=dim+1; pair<agent.StateDim; pair++ {
+			maxRange1 := agent.stateRange[pair][1] - agent.stateRange[pair][0]
+			minS0 := agent.stateRange[dim][0]
+			minS1 := agent.stateRange[pair][0]
+			numBlock := agent.NumTilings * agent.NumTiles
+			blockLen0 := maxRange0 / float64(numBlock)
+			blockLen1 := maxRange1 / float64(numBlock)
+			for i:=0; i<numBlock+1; i++ {
+				for j:=0; j<numBlock+1; j++ {
+
+					for k:=0; k<agent.StateDim; k++ {
+						tempS[k] = 0
+					}
+					tempS[dim] = minS0 + float64(i)*blockLen0
+					tempS[pair] = minS1 + float64(j)*blockLen1
+					agent.tiler.Tile(tempS)
+
+					//fmt.Println(tempS[dim], minS0 + float64(i)*blockLen0,  tempS[pair], minS1 + float64(j)*blockLen1)
+					count += 1
+				}
+			}
+		}
+	}
+	return count
 }
+//func (agent *ESarsa) generateAllPoints(fixedCoord []float64, dim, count int) int {
+//	maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
+//	minS := agent.stateRange[dim][0]
+//	numBlock := agent.NumTilings * agent.NumTiles
+//	blockLen := maxRange / float64(numBlock)
+//	if dim == agent.StateDim - 1 {
+//		for i:=0; i<numBlock+1; i++ {
+//			//final := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
+//			final := append(fixedCoord, minS+float64(i)*blockLen)
+//			agent.tiler.Tile(final)
+//			count += 1
+//			//fmt.Println(count)
+//		}
+//		return count
+//	} else {
+//		for i:=0; i<numBlock+1; i++ {
+//			//fixed := append(fixedCoord, minS+blockLen/2.0+float64(i)*blockLen)
+//			fixed := append(fixedCoord, minS+float64(i)*blockLen)
+//			count = agent.generateAllPoints(fixed, dim+1, count)
+//		}
+//		return count
+//	}
+//}
 
 // Start provides an initial observation to the agent and returns the agent's action.
 func (agent *ESarsa) Start(state rlglue.State) rlglue.Action {
