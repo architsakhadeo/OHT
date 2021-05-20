@@ -160,8 +160,8 @@ func (env *Cartpole) randomizeState(randomizeStartStateCondition bool, startS bo
 	}
 
 	if randomizeStartStateCondition == true {
-		env.state[0] = env.randFloat(-xThreshold/2.0, xThreshold/2.0, startS)
-		env.state[2] = env.randFloat(-thetaRhresholdRadians/2.0, thetaRhresholdRadians/2.0, startS)
+		env.state[0] = env.randFloat(-xThreshold/3.0, xThreshold/3.0, startS)
+		env.state[2] = env.randFloat(-thetaRhresholdRadians/3.0, thetaRhresholdRadians/3.0, startS)
 	}
 	//fmt.Println("Randomize Start State: ", env.state)
 }
