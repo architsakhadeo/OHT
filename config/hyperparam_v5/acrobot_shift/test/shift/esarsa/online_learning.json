@@ -25,11 +25,11 @@
 
     "lock-weight": true,
     "lock-condition": "onetime-epstep-lessthan",
-    "lock-condition-epstep-lessthan": 150,
+    "lock-condition-epstep-lessthan": 200,
     "enable-debug": false,
     "seed": 1,
 
-    "weight-save": false,
+    "weight-save": true,
     "weight-save-path": "data/hyperparam_v5/acrobot_shift/test/shift/esarsa/online_learning/"
   },
   "environment-settings": {
@@ -42,7 +42,6 @@
     "randomize_start_state_afterLock": false,
     "steps": 0,
     "episodes": 10000000,
-    "training-steps-before-lock": 6000,
     "total-step-after-lock": 15000,
     "count-step-after-lock": true,
     "data-path": "data/hyperparam_v5/acrobot_shift/test/shift/esarsa/online_learning/",

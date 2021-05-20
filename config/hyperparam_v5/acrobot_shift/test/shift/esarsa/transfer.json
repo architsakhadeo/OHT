@@ -21,7 +21,7 @@
     },
 
     "weight-load": true,
-    "weight-load-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/best/",
+    "weight-load-path": "data/hyperparam_v5/acrobot_shift/test/shift/esarsa/online_learning/",
 
     "lock-weight": true,
     "lock-condition": "beginning",
@@ -41,7 +41,7 @@
     "episodes": 1000000,
     "max-run-length-episodic": 15000,
     "steps-in-episode": 1000,
-    "data-path": "data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_shift/esarsa/best/",
+    "data-path": "data/hyperparam_v5/acrobot_shift/test/shift/esarsa/transfer/",
 
     "should-log-totals": true,
     "should-log-episode-lengths": true,
