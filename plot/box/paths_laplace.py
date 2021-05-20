@@ -1,3 +1,5 @@
+cartpole_laplace_test1 = "../../data/hyperparam_v5/cartpole/offline_learning/knn/env_sweep/laplace_param_test1"
+
 acrobot_laplace_test0 = "../../data/hyperparam_v5/acrobot/offline_learning/knn/env_sweep/laplace_param_test0"
 acrobot_laplace_test1 = "../../data/hyperparam_v5/acrobot/offline_learning/knn/env_sweep/laplace_param_test1"
 

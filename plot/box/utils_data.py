@@ -198,7 +198,11 @@ def load_total(paths, source, outer=None):
                 elif source=="return":
                     res = t_rwd / num_ep
                 elif source=="pure-total-reward":
-                    res = t_rwd    
+                    res = t_rwd 
+                elif source == "cartpole-steps":
+                    res = 50000 / ((-1.0 * t_rwd)+1)
+                elif source == "cartpole-failures":
+                    res = (t_rwd)
                 else:
                     raise NotImplementedError
 
@@ -207,11 +211,12 @@ def load_total(paths, source, outer=None):
                     all_runs[rk] = [res] # {run number: auc / total step}
                 else:
                     all_runs[rk].append(res)
-                # print(rk, log, run_num, all_runs[rk])
 
             if outer is not None:
                 for rk in all_runs.keys():
                     all_runs[rk] = np.mean(np.array(all_runs[rk]))
+            
+            #print(path, log, param, all_runs['run0'])
 
             for rk in all_runs.keys():
                 if rk not in data.keys():
@@ -219,6 +224,7 @@ def load_total(paths, source, outer=None):
                 if p_key not in data[rk].keys():
                     data[rk][p_key] = []
                 data[rk][p_key].append(all_runs[rk])
+    print(path, data)
     return data
 
 def load_rewards(paths, outer=None):
@@ -470,6 +476,10 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
             data = load_total(paths, "return", outer=outer)
         elif source == "pure-total-reward":
             data = load_total(paths, "pure-total-reward", outer=outer)
+        elif source == "cartpole-steps":
+            data = load_total(paths, "cartpole-steps", outer=outer)
+        elif source == "cartpole-failures":
+            data = load_total(paths, "cartpole-failures", outer=outer)
         elif source == "totals":
             data = load_total(paths, "return", outer=outer)
         else:
