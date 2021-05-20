@@ -23,8 +23,8 @@ def env_param_eval(path, eval_key):
 # print("\nAcrobot network")
 # env_param_eval(acrobot_network, "Averaged loss = ")
 
-print("\nAcrobot network scaled")
-env_param_eval(acrobot_scale_network, "Averaged loss = ")
+# print("\nAcrobot network scaled")
+# env_param_eval(acrobot_scale_network, "Averaged loss = ")
 
 print("\nAcrobot network laplace")
 env_param_eval(acrobot_laplace_network, "Averaged loss = ")
@@ -35,11 +35,11 @@ env_param_eval(acrobot_scale_laplace_network, "Averaged loss = ")
 # print("\nPuddlerand network")
 # env_param_eval(pdrand_network, "Averaged loss = ")
 
-print("\nPuddlerand network scaled")
-env_param_eval(pdrand_scale_network, "Averaged loss = ")
-
-print("\nPuddlerand network laplace")
-env_param_eval(pdrand_laplace_network, "Averaged loss = ")
-
-print("\nPuddlerand network scaled laplace")
-env_param_eval(pdrand_scale_laplace_network, "Averaged loss = ")
+# print("\nPuddlerand network scaled")
+# env_param_eval(pdrand_scale_network, "Averaged loss = ")
+#
+# print("\nPuddlerand network laplace")
+# env_param_eval(pdrand_laplace_network, "Averaged loss = ")
+#
+# print("\nPuddlerand network scaled laplace")
+# env_param_eval(pdrand_scale_laplace_network, "Averaged loss = ")

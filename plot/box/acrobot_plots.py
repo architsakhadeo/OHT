@@ -7,51 +7,65 @@ from plot.box.paths_acrobot import *
 
 def top_param():
     calibration = {
-        "knn": ac_knn,
-        "knn(laplace)": ac_laplace_knn,
-        "network": ac_network,
-        "network(laplace)": ac_laplace_network,
-        "network(scaled)": ac_scale_network,
-        "network(scaled+laplace)": ac_scale_laplace_network,
+        "knn": ac_knn_5k,
+        "knn(laplace)": ac_laplace_knn_5k,
+        # "network": ac_network_5k,
+        # "network(laplace)": ac_laplace_network_5k,
+        "network(scaled)": ac_scale_network_5k,
+        "network(scaled+laplace)": ac_scale_laplace_network_5k,
     }
     random = ac_rnd
     te = {"true": ac_true_temp}
-    # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_top", outer=30, res_scale=-1)
+    fqi = {"fqi": ac_fqi_eps0p1}
+    plot_compare_top(te, calibration, fqi, random, "totals", "../img/acrobot_top_fqi0.1", outer=30, res_scale=-1)
 
     calibration = {
-        "15k knn(laplace)": ac_laplace_knn,
-        "15k network(scaled+laplace)": ac_scale_laplace_network,
-
-        "10k knn(laplace)": ac_laplace_knn_10k,
-        "10k network(scaled+laplace)": ac_scale_laplace_network_10k,
-
-        "5k knn(laplace)": ac_laplace_knn_5k,
-        "5k network(scaled+laplace)": ac_scale_laplace_network_5k,
-    }
-    random = ac_rnd
-    te = {"true": ac_true_temp}
-    # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_size", outer=30, res_scale=-1)
-
-    calibration = {
-        "15k knn": ac_knn,
-        "10k knn": ac_knn_10k,
+        "15k knn": ac_knn_15k,
+        # "10k knn": ac_knn_10k,
         "5k knn": ac_knn_5k,
-        "1k knn": ac_knn_1k,
-        "500 knn": ac_knn_500,
+        "2.5k knn": ac_knn_2p5k,
+        # "1k knn": ac_knn_1k,
+        # "500 knn": ac_knn_500,
     }
     random = ac_rnd
     te = {"true": ac_true_temp}
-    plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_knn_size", outer=30, res_scale=-1, ylim=[80, 300])
+    # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_knn_size", outer=30, res_scale=-1, ylim=[80, 300])
+
     calibration = {
-        "15k knn(laplace)": ac_laplace_knn,
+        "15k knn(laplace)": ac_laplace_knn_15k,
         "10k knn(laplace)": ac_laplace_knn_10k,
         "5k knn(laplace)": ac_laplace_knn_5k,
+        "2.5k knn(laplace)": ac_laplace_knn_2p5k,
         "1k knn(laplace)": ac_laplace_knn_1k,
         "500 knn(laplace)": ac_laplace_knn_500,
     }
     random = ac_rnd
     te = {"true": ac_true_temp}
-    plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_knn_laplace_size", outer=30, res_scale=-1, ylim=[80, 300])
+    # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_knn_laplace_size", outer=30, res_scale=-1, ylim=[80, 300])
+
+    calibration = {
+        "15k network(laplace)": ac_scale_laplace_network_15k,
+        "10k network(laplace)": ac_scale_laplace_network_10k,
+        "5k network(laplace)": ac_scale_laplace_network_5k,
+        "2.5k network(laplace)": ac_scale_laplace_network_2p5k,
+        "1k network(laplace)": ac_scale_laplace_network_1k,
+        "500 network(laplace)": ac_scale_laplace_network_500,
+    }
+    random = ac_rnd
+    te = {"true": ac_true_temp}
+    # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_network_laplace_size", outer=30, res_scale=-1, ylim=[80, 1000])
+
+    calibration = {
+        "15k network": ac_scale_network_15k,
+        # "10k network": ac_scale_network_10k,
+        "5k network": ac_scale_network_5k,
+        "2.5k network": ac_scale_network_2p5k,
+        # "1k network": ac_scale_network_1k,
+        # "500 network": ac_scale_network_500,
+    }
+    random = ac_rnd
+    te = {"true": ac_true_temp}
+    # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_network_size", outer=30, res_scale=-1, ylim=[80, 1000])
 
 def sweep_model():
     calibration = {
@@ -89,6 +103,6 @@ def data_density():
 if __name__ == '__main__':
     ranges = [0]
     top_param()
-    sweep_model()
+    # sweep_model()
     # data_density()
     #top_param()

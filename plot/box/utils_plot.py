@@ -54,12 +54,35 @@ c_dict = {
     "network(scaled)": '#984ea3',
     "network(scaled+laplace)": '#e41a1c',
 
-    "15k knn(laplace)": '#377eb8',
-    "15k network(scaled+laplace)": '#e41a1c',
-    "10k knn(laplace)": '#984ea3',
-    "10k network(scaled+laplace)": '#dede00',
-    "5k knn(laplace)": '#f781bf',
-    "5k network(scaled+laplace)": '#4daf4a',
+    "15k knn": c_default[0],
+    "15k knn(laplace)": c_default[0],
+    # "15k network(scaled+laplace)": c_default[1],
+    "10k knn": c_default[2],
+    "10k knn(laplace)": c_default[2],
+    # "10k network(scaled+laplace)": c_default[3],
+    "5k knn": c_default[4],
+    "5k knn(laplace)": c_default[4],
+    # "5k network(scaled+laplace)": c_default[5],
+    "2.5k knn": c_default[6],
+    "2.5k knn(laplace)": c_default[6],
+    "1k knn": c_default[7],
+    "1k knn(laplace)": c_default[7],
+    "500 knn": c_default[8],
+    "500 knn(laplace)": c_default[8],
+
+    "15k network": c_default[0],
+    "15k network(laplace)": c_default[0],
+    "10k network": c_default[2],
+    "10k network(laplace)": c_default[2],
+    "5k network": c_default[4],
+    "5k network(laplace)": c_default[4],
+    "2.5k network": c_default[6],
+    "2.5k network(laplace)": c_default[6],
+    "1k network": c_default[7],
+    "1k network(laplace)": c_default[7],
+    "500 network": c_default[8],
+    "500 network(laplace)": c_default[8],
+
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -240,7 +263,6 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
         ranks = models_rank[model]
-
         filtered[model] = []
         for perc in ranges:
             target = percentile_worst(ranks, perc, te_data)
@@ -380,7 +402,7 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
         positions_group = [x-(width+0.01)*idx for x in xlocations]
-        # print(perct,all_models[idx], "---")
+        # print(perct,all_models[idx], positions_group, "---")
         vp = ax.violinplot(perct, positions=positions_group, widths=width)
         set_voilin_color(vp, cmap(all_models[idx], idx/len(all_models)))
 
@@ -603,3 +625,37 @@ def plot_termination_perc(datasets, types, run, title):
         plt.close()
         plt.clf()
     return
+
+def plot_learning_perform(paths, source, title, ylim=None, yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1):
+    data = loading_average(paths, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    models_rank = ranking_allruns(data)
+    filtered = {}
+    for model in data.keys():
+        ranks = models_rank[model]
+        filtered[model] = [[]]
+        for run in ranks:
+            filtered[model][0].append(ranks[run][0][1])
+
+    plot_violins(filtered, [], "", title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+
+def plot_param_sweep(paths, source, title, ylim=None, yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1):
+    assert len(list(paths.keys())) == 1
+    # data = loading_average(paths, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    # models_rank = ranking_allruns(data)
+    # filtered = {}
+    # for model in data.keys():
+    #     ranks = models_rank[model]
+    #     filtered[model] = []
+    #     for e in ranks[list(ranks.keys())[0]]:
+    #         filtered[model].append([])
+    #     for run in ranks:
+    #         for e in ranks[run]:
+    #             param = int(e[0].split("_")[1])
+    #             filtered[model][param].append(ranks[run][param][1])
+    # plot_violins(filtered, [], "", title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+
+    avg_data = loading_average(paths, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    avg_data = average_run(avg_data[list(paths.keys())[0]])
+    ranked = sorted(avg_data.items(), key=lambda item: item[1])
+    print("ranked")
+    print(ranked)
