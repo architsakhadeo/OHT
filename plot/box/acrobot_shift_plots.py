@@ -7,13 +7,14 @@ from plot.box.paths_acrobot_shift import *
 
 def learning_curve():
     paths = {
-        # "shift-online-test": acshift_test_online,
-        # "shift-trans-test": acshift_test_trans,
+        "calibration-trans": acshift_pitrans_calibration_fixed,
+        "calibration-trans (learning 15k)": acshift_pitrans_calibration_learning15k,
+        "calibration-trans (learning 50k)": acshift_pitrans_calibration_learning50k,
         "shift-online (15k)": acshift_online_shift_15k,
-        "shift-online (50k)": acshift_online_shift_50k,
+        # "shift-online (50k)": acshift_online_shift_50k,
         # "shift-trans": acshift_pitrans_shift,
         # "default-online": acshift_online_default,
-        "default-trans(timeout1000)": acshift_pitrans_timeout1000_default,
+        # "default-trans(timeout1000)": acshift_pitrans_timeout1000_default,
         "default-trans": acshift_pitrans_default,
     }
     plot_learning_perform(paths, "totals", "../img/acshift_total_zoomin", res_scale=-1, ylim=[80, 1000])
