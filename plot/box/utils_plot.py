@@ -16,7 +16,7 @@ c_default =  ['#377eb8', '#ff7f00', '#4daf4a',
 c_dict = {
     "calibration": '#377eb8',
     "calibration (grid search)": '#377eb8',
-    "random": '#ff7f00',
+    "random baseline": '#ff7f00',
     "fqi": '#4daf4a',
     "cem": '#f781bf',
     "calibration (cem)": '#a65628',
@@ -251,15 +251,15 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
     if cem is not None and fqi is not None:
-        filtered = {"random": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
+        filtered = {"random baseline": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
     elif fqi is not None:
-        filtered = {"random": [rand_data], "fqi": [fqi_data]}
+        filtered = {"random baseline": [rand_data], "fqi": [fqi_data]}
     elif cem is not None:
-        filtered = {"random": [rand_data], "calibration (cem)": [cem_data]}
+        filtered = {"random baseline": [rand_data], "calibration (cem)": [cem_data]}
     else:
-        filtered = {"random": [rand_data]}
+        filtered = {"random baseline": [rand_data]}
 
-    #filtered = {"random": [rand_data]}
+    #filtered = {"random baseline": [rand_data]}
     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -297,8 +297,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #     for perc in ranges:
 #         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 #
-#     filtered = {"random": [rand_data], "fqi": [fqi_data]}
-#     # filtered = {"random": [rand_data]}
+#     filtered = {"random baseline": [rand_data], "fqi": [fqi_data]}
+#     # filtered = {"random baseline": [rand_data]}
 #     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
 #     models_rank = ranking_allruns(cms_data)
 #     for model in cms_data.keys():
