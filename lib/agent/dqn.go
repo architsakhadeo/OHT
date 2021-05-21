@@ -258,7 +258,7 @@ func (agent *Dqn) Update() {
 		for j := 0; j < agent.NumberOfActions; j++ {
 			loss[i][j] = 0
 		}
-		loss[i][lastActions[i]] = rewards[i][0] + gammas[i][0]*targetActionValue[i] - lastActionValue[i]
+		loss[i][lastActions[i]] = -1 * (rewards[i][0] + gammas[i][0]*targetActionValue[i] - lastActionValue[i])
 	}
 	avgLoss := make([][]float64, 1)
 	avgLoss[0] = make([]float64, agent.NumberOfActions)
@@ -271,7 +271,6 @@ func (agent *Dqn) Update() {
 	}
 
 	agent.learningNet.Backward(loss, agent.opt)
-	//agent.learningNet.Backward(avgLoss)
 	agent.updateNum += 1
 }
 

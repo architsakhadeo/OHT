@@ -1,27 +1,34 @@
 {
-	"agent-name": "actorcritic",
+	"agent-name": "dqn",
 	"environment-name": "knnModel",
 	"agent-settings": {
+		"decreasing-epsilon": "None",
 		"gamma": 1.0,
 		"state-len": 2,
-		"env-name": "acrobot",
+		"buffer-type": "random",
+		"optimizer": "Adam",
+		"dqn-adamBeta1": 0.9,
+		"dqn-adamBeta2": 0.999,
+		"dqn-adamEps": 1e-8,
 		"sweep": {
-			"tilings": [16],
-			"tiles": [8],
-			"alpha-ratio": [1e-1, 3e-1, 1e-2, 3e-2, 1e-3, 3e-3],
-			"critic-alpha": [1e-1, 3e-1, 1e-2, 3e-2, 1e-3, 3e-3]
+			"alpha": [1e-2, 1e-3, 1e-4, 1e-5],
+			"dqn-hidden": [
+				[32, 32], [64, 64], [128, 128]
+			],
+			"dqn-sync":[512],
+			"dqn-batch":[128, 256],
+			"buffer-size":[2500],
+			"epsilon": [0.1]
 		},
 		"lock-weight": false,
 		"enable-debug": false,
-		"seed": 1,
-		"total-logs": 30
+		"seed": 1
 	},
 	"environment-settings": {
 		"seed": 1,
 		"total-logs": 30,
 		"neighbor-num": 3,
 		"datalog": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
-		"true-start-log": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
 		"ensemble-seed": 0,
 		"drop-percent": 0,
 		"pick-start-state": "random-init"
@@ -31,10 +38,10 @@
 		"randomize_start_state_afterLock": false,
 		"steps": 0,
 		"episodes": 1000000,
-		"max-run-length-episodic": 15000,
+		"max-run-length-episodic": 30000,
 		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3/timeout500/ac/step15k_env/data_optimal/drop0/sweep",
+		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/dqn/step15k_env/data_optimal/drop0/sweep",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,

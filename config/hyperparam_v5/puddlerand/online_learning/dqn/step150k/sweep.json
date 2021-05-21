@@ -11,12 +11,12 @@
 		"dqn-adamBeta2": 0.999,
 		"dqn-adamEps": 1e-8,
 		"sweep": {
-			"alpha": [1e-3],
+			"alpha": [1e-2, 1e-3, 1e-4, 1e-5],
 			"dqn-hidden": [
-				[64, 64]
+				[32, 32], [64, 64], [128, 128]
 			],
 			"dqn-sync":[512],
-			"dqn-batch":[64],
+			"dqn-batch":[128, 256],
 			"buffer-size":[2500],
 			"epsilon": [0.1]
 		},
@@ -32,10 +32,10 @@
 		"randomize_start_state_afterLock": true,
 		"steps": 0,
 		"episodes": 10000000,
-		"max-run-length-episodic": 30000,
-		"data-path": "data/hyperparam_v5/puddlerand/online_learning/dqn/temp/",
+		"max-run-length-episodic": 150000,
+		"data-path": "data/hyperparam_v5/puddlerand/online_learning/dqn/step150k/sweep/",
 		"should-log-totals": true,
-		"should-log-returns": false,
+		"should-log-returns": true,
 		"debug-interval": 0
 	}
 }
