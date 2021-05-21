@@ -46,9 +46,9 @@
 		"rep-test-forward": 1,
 
 		"rep-save": true,
-		"rep-save-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/optimalfixed_eps0/rep_laplace",
+		"rep-save-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/suboptimalfixed_eps0/rep_laplace",
 		"rep-load": false,
-		"rep-load-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/optimalfixed_eps0/rep_laplace",
+		"rep-load-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/suboptimalfixed_eps0/rep_laplace",
 
 		"rep-is-test": false
 	},
@@ -60,7 +60,7 @@
 		"max-run-length-episodic": 80000,
 		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/optimalfixed_eps0/rep_laplace",
+		"data-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/suboptimalfixed_eps0/rep_laplace",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
