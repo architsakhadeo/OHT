@@ -5,6 +5,7 @@ sys.path.insert(0, cwd+'/../..')
 from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 # c_default = matplotlib.cm.get_cmap('cool')
 # c_default = matplotlib.cm.get_cmap('hsv')
 
@@ -396,7 +397,8 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
-    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    # fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 2.5))
 
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
@@ -433,10 +435,14 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
 
     plt.yscale(yscale)
 
-    plt.legend(loc=1)
-    plt.tight_layout()
+    plt.legend(ncol=3)
+    fig.tight_layout(pad=1.0)
+    fontP = FontProperties()
+    # fontP.set_size('xx-small')
+    plt.legend(bbox_to_anchor=(0.5, 1.18), loc='center', prop=fontP)
     # plt.show()
-    plt.savefig("{}.png".format(title))
+    # plt.savefig("{}.png".format(title))
+    plt.savefig("{}.pdf".format(title), dpi=300, bbox_inches='tight')
     plt.close()
     plt.clf()
     return
