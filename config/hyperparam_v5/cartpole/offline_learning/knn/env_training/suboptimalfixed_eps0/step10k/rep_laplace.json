@@ -2,9 +2,9 @@
 	"agent-name": "esarsa",
 	"environment-name": "knnModel",
 	"agent-settings": {
-		"gamma": 1.0,
-		"state-len": 6,
-		"env-name": "acrobot",
+		"gamma": 0.9,
+		"state-len": 4,
+		"env-name": "cartpole",
 		"sweep": {
 			"epsilon": [0.0],
 			"epsilon-after-lock": [0.0],

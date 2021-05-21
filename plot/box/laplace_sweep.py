@@ -46,5 +46,11 @@ print("\nPuddlerand network scaled laplace")
 env_param_eval(pdrand_scale_laplace_network, "Averaged loss = ")
 '''
 
-print("\nCartpole Laplace\n")
-env_param_eval(cartpole_laplace_test1, "Dynamic awareness = ")
+print("\nCartpole Laplace Optimal\n")
+env_param_eval(cartpole_laplace_test1_optimal, "Dynamic awareness = ")
+
+print("\nCartpole Laplace Suboptimal\n")
+env_param_eval(cartpole_laplace_test1_suboptimal, "Dynamic awareness = ")
+
+print("\nCartpole Laplace Random\n")
+env_param_eval(cartpole_laplace_test1_random, "Dynamic awareness = ")
