@@ -29,6 +29,7 @@
 		"total-logs": 30,
 		"neighbor-num": 3,
 		"datalog": "data/hyperparam_v5/cartpole/offline_data/random_restarts/esarsa/step10k/suboptimalfixed_eps0/param_0/",
+		"true-start-log": "data/hyperparam_v5/cartpole/offline_data/true_restarts/esarsa/step10k/suboptimalfixed_eps0/param_0/",
 		"ensemble-seed": 0,
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
