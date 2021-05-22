@@ -55,10 +55,10 @@
 		"randomize_start_state_afterLock": false,
 		"steps": 0,
 		"episodes": 1000000,
-		"max-run-length-episodic": 600000,
-		"steps-in-episode": 20000,
+		"max-run-length-episodic": 60000,
+		"steps-in-episode": 2000,
 
-		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout20k/dqn/step5k_env/data_optimal/drop0/sweep_rep1",
+		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout2k/dqn/step5k_env/data_optimal/drop0/sweep_rep1",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
