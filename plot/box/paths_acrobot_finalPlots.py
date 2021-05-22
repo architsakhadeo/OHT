@@ -11,6 +11,12 @@ ac_knnlaplace_optim_1k_plot2 = [basepath + "acrobot/offline_learning/knn/learnin
 ac_knnlaplace_optim_2500_plot2 = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step2.5k_env/data_optimal/drop0/sweep_rep1/"]
 ac_knnlaplace_optim_5k_plot2 = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
 
+# PLOT 3
+
+ac_knnlaplace_optim_5k_plot3 = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
+ac_knnlaplace_suboptim_5k_plot3 = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_suboptimal/drop0/sweep_rep1/"]
+ac_knnlaplace_subsuboptim_5k_plot3 = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_subsuboptimal/drop0/sweep_rep1/"]
+
 # PLOT 4
 
 ac_knnlaplace_optim_5k_plot4 = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
