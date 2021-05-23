@@ -17,7 +17,7 @@
 			"alpha": [0.0],
 			"weight-init": [4.270180451447466],
 			"is-stepsize-adaptive": [true],
-			"adaptive-alpha": [0.002943213780410703],
+			"adaptive-alpha": [0.03531856536492844],
 			"beta1": [0.3423875317143536],
 			"softmax-temp": [0.12194088114632218]
 		},
