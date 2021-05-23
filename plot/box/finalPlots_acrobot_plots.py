@@ -29,7 +29,7 @@ def top_param():
     true = {"true": ac_true}
     #fqi = {"fqi": ac_fqi}
     #cem = {"cem": ac_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot4/plot4_scaled_laplace_boxplot", outer=30, res_scale=-1)#, ylim=[110, 200])
+    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot4/plot4_scaled_laplace_boxplot_testing", outer=30, res_scale=-1)#, ylim=[110, 200])
     
 
 def sweep_model():
@@ -42,9 +42,8 @@ def sweep_model():
         "size = 5000": ac_knnlaplace_optim_5k_plot2
     }
     true = {"true": ac_true}
-    plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot2/plot2_boxplot", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
+    plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot2/plot2_boxplot_testing", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
     '''
-
     '''
     # PLOT 3
     calibration = {
@@ -53,7 +52,7 @@ def sweep_model():
         "bad policy": ac_knnlaplace_subsuboptim_5k_plot3
     }
     true = {"true": ac_true}
-    plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot3/plot3_boxplot", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
+    plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot3/plot3_boxplot_testing", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
     '''
 
 
