@@ -13,10 +13,15 @@ from matplotlib.font_manager import FontProperties
 c_default =  ['#377eb8', '#ff7f00', '#4daf4a',
               '#f781bf', '#a65628', '#984ea3',
               '#999999', '#e41a1c', '#dede00']
+
+c_default_Adam = ["#0077bb", "#33bbee", "#009988", "#ee7733", "#cc3311", "#ee3377", "#bbbbbb"]
+
+
+# "random baseline": '#ff7f00',
 c_dict = {
     "calibration": '#377eb8',
     "calibration (grid search)": '#377eb8',
-    "random baseline": '#ff7f00',
+    
     "fqi": '#4daf4a',
     "cem": '#f781bf',
     "calibration (cem)": '#a65628',
@@ -84,6 +89,18 @@ c_dict = {
     "500 network": c_default[8],
     "500 network(laplace)": c_default[8],
 
+    "size = 500": c_default_Adam[0],
+    "size = 1000": c_default_Adam[2],
+    "size = 2500": c_default_Adam[4],
+    "size = 5000": c_default_Adam[6],
+
+    "optimal policy": c_default_Adam[0],
+    "average policy": c_default_Adam[3],
+    "bad policy": c_default_Adam[6], 
+
+    "KNN (laplace)": c_default_Adam[0],
+    "network (laplace)": c_default_Adam[3],
+    "random baseline": c_default_Adam[6],
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -211,8 +228,8 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
@@ -271,8 +288,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
             data = [item[2] for item in target]
             filtered[model].append(data)
     # print(filtered)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 # def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
 #     ranges = [0]
@@ -377,7 +394,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     plt.legend()
     plt.tight_layout()
     # plt.show()
-    plt.savefig("{}.png".format(title))
+    plt.savefig("{}.pdf".format(title))
     plt.close()
     plt.clf()
     return
@@ -386,11 +403,12 @@ def set_box_color(bp, color):
     plt.setp(bp['boxes'], color=color)
     plt.setp(bp['whiskers'], color=color)
     plt.setp(bp['caps'], color=color)
-    plt.setp(bp['medians'], color=color)
+    plt.setp(bp['medians'], color="black")
     plt.setp(bp["fliers"], markeredgecolor=color)
 
-    # for patch in bp['boxes']:
-    #     patch.set_facecolor(color)
+    #for patch in bp['boxes']:
+        #patch.set_facecolor(color)
+        #patch.set(facecolor=color)
 
 def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_scale=1):
     all_models = list(filtered.keys())

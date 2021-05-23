@@ -15,7 +15,7 @@ def top_param():
     }
     random = cart_rnd
     true = {"true": cart_true}
-    plot_compare_top(true, calibration, None, random, "cartpole-failures", "../img/finalPlots/cartpole/plot7/plot7_violinplot", outer=30, res_scale=-1)
+    plot_compare_top(true, calibration, None, random, "cartpole-failures", "../img/finalPlots/cartpole/plot7/plot7_violinplot_testing", outer=30, res_scale=-1)
 
 
 def sweep_model():
