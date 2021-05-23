@@ -39,9 +39,38 @@ def data_density():
         run = "traces-{}".format(i)
         plot_dataset(datasets, key, dimension, group, run, "../img/puddlehard_data_density")
 
+def return_per_ep():
+    from numpy import genfromtxt
+    paths = [
+        "../../data/hyperparam_v5/puddlerand/online_learning/dqn/temp"
+    ]
+    for path in paths:
+        plt.figure()
+        params = os.listdir(path)
+        for parm in params:
+            files = os.listdir(os.path.join(path, parm))
+            rtns = []
+            total_ep = []
+            for f in files:
+                if "returns" in f:
+                    rtn = genfromtxt(os.path.join(path, parm, f), delimiter=',')
+                    if len(rtn)>30:
+                        rtns.append(rtn[1:31])
+                        total_ep.append(len(rtn)-1)
+            rtns = np.array(rtns)
+            # print(rtns)
+            # print(total_ep)
+            # print()
+            if len(rtns)>1:
+                print(os.path.join(path, parm), rtns.mean(axis=0), rtns.mean(axis=0).sum(), np.array(total_ep).mean())
+            plt.plot(rtns.mean(axis=0))
+        plt.savefig("{}.png".format(paths.index(path)))
+
+
 
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
-    top_param()
+    # top_param()
     # sweep_model()
     # data_density()
+    return_per_ep()
