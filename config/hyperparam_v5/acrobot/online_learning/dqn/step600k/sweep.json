@@ -13,11 +13,11 @@
 		"sweep": {
 			"alpha": [1e-2, 1e-3, 1e-4, 1e-5],
 			"dqn-hidden": [
-				[32, 32], [64, 64], [128, 128]
+				[32, 32]
 			],
 			"dqn-sync":[512],
 			"dqn-batch":[128, 256],
-			"buffer-size":[2500],
+			"buffer-size":[1000, 2500, 5000],
 			"epsilon": [0.1]
 		},
 		"lock-weight": false,
