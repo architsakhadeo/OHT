@@ -28,23 +28,23 @@ def top_param():
     }
     # plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_knn_size", outer=30, ylim=[-45, -25]) #None)#
     calibration = {
-        "15k knn(laplace)": pdrand_laplace_knn_test1_15k,
-        "10k knn(laplace)": pdrand_laplace_knn_test1_10k,
+        # "15k knn(laplace)": pdrand_laplace_knn_test1_15k,
+        # "10k knn(laplace)": pdrand_laplace_knn_test1_10k,
         "5k knn(laplace)": pdrand_laplace_knn_test1_5k,
         "2.5k knn(laplace)": pdrand_laplace_knn_test1_2p5k,
         "1k knn(laplace)": pdrand_laplace_knn_test1_1k,
         "500 knn(laplace)": pdrand_laplace_knn_test1_500,
     }
-    # plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_knn_laplace_size", outer=30, ylim=[-45, -25]) #None)#
+    plot_compare_top(te, calibration, None, [], "totals", "../img/puddlerand_knn_laplace_size", outer=30, ylim=[-37.5, -27.5]) #None)#
     calibration = {
-        "15k network(laplace)": pdrand_scale_laplace_network_15k,
-        "10k network(laplace)": pdrand_scale_laplace_network_10k,
+        # "15k network(laplace)": pdrand_scale_laplace_network_15k,
+        # "10k network(laplace)": pdrand_scale_laplace_network_10k,
         "5k network(laplace)": pdrand_scale_laplace_network_5k,
         "2.5k network(laplace)": pdrand_scale_laplace_network_2p5k,
         "1k network(laplace)": pdrand_scale_laplace_network_1k,
         "500 network(laplace)": pdrand_scale_laplace_network_500,
     }
-    plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_network_laplace_size", outer=30, ylim=[-7000, -25]) #None)#
+    # plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_network_laplace_size", outer=30, ylim=[-7000, -25]) #None)#
     calibration = {
         "15k network": pdrand_scale_network_15k,
         # "10k network": pdrand_scale_network_10k,
@@ -53,7 +53,7 @@ def top_param():
         # "1k network": pdrand_scale_network_1k,
         # "500 network": pdrand_scale_network_500,
     }
-    plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_network_size", outer=30, ylim=[-7000, -25]) #None)#
+    # plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_network_size", outer=30, ylim=[-7000, -25]) #None)#
 
 # def sweep_model():
 #     k3_close_cms = {
@@ -96,9 +96,18 @@ def return_per_ep():
             plt.plot(rtns.mean(axis=0))
         plt.savefig("{}.png".format(paths.index(path)))
 
+def dqn():
+    calibration = {
+        "5k knn(laplace)": pdrand_laplace_knn_test1_5k_dqn,
+    }
+    random = np.array(pdrand_rnd) % 24
+    te = {"true": pdrand_true_dqn}
+    plot_compare_top(te, calibration, None, random, "totals", "../img/puddlerand_dqn", outer=30, res_scale=-1)
+
 if __name__ == '__main__':
     ranges = [0, 0.05, 0.1, 0.2, 0.5, 0.7, 0.9]
-    # top_param()
+    top_param()
+    # dqn()
     # sweep_model()
     # data_density()
-    return_per_ep()
+    # return_per_ep()
