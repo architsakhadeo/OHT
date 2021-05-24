@@ -38,7 +38,7 @@
 		"train-epoch": 100,
 		"train-batch": 16,
 		"train-hidden-layer": [128,128],
-		"train-learning-rate": 0.0001,
+		"train-learning-rate": 0.001,
 
 		"model-save": true,
 		"model-save-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/step500/suboptimalfixed_eps0/nn_scale",

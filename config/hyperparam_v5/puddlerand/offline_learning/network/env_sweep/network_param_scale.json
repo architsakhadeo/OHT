@@ -26,7 +26,7 @@
 		"seed": 1,
 		"total-logs": 30,
 		"neighbor-num": 3,
-		"datalog": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
+		"datalog": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step5k/optimalfixed_eps0/param_0/",
 		"ensemble-seed": 0,
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
