@@ -32,8 +32,8 @@
 		"randomize_start_state_afterLock": true,
 		"steps": 0,
 		"episodes": 10000000,
-		"max-run-length-episodic": 600000,
-		"data-path": "data/hyperparam_v5/acrobot/online_learning/dqn/step600k/sweep/",
+		"max-run-length-episodic": 150000,
+		"data-path": "data/hyperparam_v5/acrobot/online_learning/dqn/step150k/sweep/",
 		"should-log-totals": true,
 		"should-log-returns": true,
 		"debug-interval": 0

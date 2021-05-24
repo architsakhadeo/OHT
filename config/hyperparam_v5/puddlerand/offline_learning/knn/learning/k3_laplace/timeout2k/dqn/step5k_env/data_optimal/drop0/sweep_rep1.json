@@ -13,11 +13,11 @@
 		"sweep": {
 			"alpha": [1e-2, 1e-3, 1e-4, 1e-5],
 			"dqn-hidden": [
-				[32, 32]
+				[32, 32], [64, 64], [128, 128]
 			],
 			"dqn-sync":[512],
 			"dqn-batch":[128, 256],
-			"buffer-size":[1000, 2500, 5000],
+			"buffer-size":[2500],
 			"epsilon": [0.1]
 		},
 		"lock-weight": false,
@@ -57,7 +57,7 @@
 		"max-run-length-episodic": 60000,
 		"steps-in-episode": 2000,
 
-		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/learning/k3_laplace/timeout2k/dqn/step5k_env/data_optimal/drop0/sweep_rep1",
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/learning/k3_laplace/timeout20k/dqn/step5k_env/data_optimal/drop0/sweep_rep1",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
