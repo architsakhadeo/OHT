@@ -51,7 +51,7 @@ c_dict = {
     "return -360": '#4daf4a',
     "return -45": '#dede00',
 
-    "random data": '#e41a1c',
+    "random data": c_default_Adam[5],
 
     "knn": '#f781bf',
     "knn(laplace)": '#377eb8',
@@ -60,34 +60,34 @@ c_dict = {
     "network(scaled)": '#984ea3',
     "network(scaled+laplace)": '#e41a1c',
 
-    "15k knn": c_default[0],
-    "15k knn(laplace)": c_default[0],
-    # "15k network(scaled+laplace)": c_default[1],
-    "10k knn": c_default[2],
-    "10k knn(laplace)": c_default[2],
-    # "10k network(scaled+laplace)": c_default[3],
-    "5k knn": c_default[4],
-    "5k knn(laplace)": c_default[4],
-    # "5k network(scaled+laplace)": c_default[5],
-    "2.5k knn": c_default[6],
-    "2.5k knn(laplace)": c_default[6],
-    "1k knn": c_default[7],
-    "1k knn(laplace)": c_default[7],
-    "500 knn": c_default[8],
-    "500 knn(laplace)": c_default[8],
+    "15k knn": c_default_Adam[1],
+    "15k knn(laplace)": c_default_Adam[1],
+    # "15k network(scaled+laplace)": c_default_Adam[1],
+    "10k knn": c_default_Adam[3],
+    "10k knn(laplace)": c_default_Adam[3],
+    # "10k network(scaled+laplace)": c_default_Adam[3],
+    "5k knn": c_default_Adam[0],
+    "5k knn(laplace)": c_default_Adam[0],
+    # "5k network(scaled+laplace)": c_default_Adam[0],
+    "2.5k knn": c_default_Adam[2],
+    "2.5k knn(laplace)": c_default_Adam[2],
+    "1k knn": c_default_Adam[4],
+    "1k knn(laplace)": c_default_Adam[4],
+    "500 knn": c_default_Adam[5],
+    "500 knn(laplace)": c_default_Adam[5],
 
-    "15k network": c_default[0],
-    "15k network(laplace)": c_default[0],
-    "10k network": c_default[2],
-    "10k network(laplace)": c_default[2],
-    "5k network": c_default[4],
-    "5k network(laplace)": c_default[4],
-    "2.5k network": c_default[6],
-    "2.5k network(laplace)": c_default[6],
-    "1k network": c_default[7],
-    "1k network(laplace)": c_default[7],
-    "500 network": c_default[8],
-    "500 network(laplace)": c_default[8],
+    "15k network": c_default_Adam[1],
+    "15k network(laplace)": c_default_Adam[1],
+    "10k network": c_default_Adam[3],
+    "10k network(laplace)": c_default_Adam[3],
+    "5k network": c_default_Adam[0],
+    "5k network(laplace)": c_default_Adam[0],
+    "2.5k network": c_default_Adam[2],
+    "2.5k network(laplace)": c_default_Adam[2],
+    "1k network": c_default_Adam[4],
+    "1k network(laplace)": c_default_Adam[4],
+    "500 network": c_default_Adam[6],
+    "500 network(laplace)": c_default_Adam[6],
 
     "size = 500": c_default_Adam[0],
     "size = 1000": c_default_Adam[2],
@@ -260,7 +260,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                 cem_data.append(cem_data_all[rk][pk])
 
     # random data list
-    rand_data = performance_by_param(rand_lst, te_data)
+    if rand_lst != []:
+        rand_data = performance_by_param(rand_lst, te_data)
 
     # top true env data performance
     te_thrd = []
@@ -273,8 +274,10 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
         filtered = {"random baseline": [rand_data], "fqi": [fqi_data]}
     elif cem is not None:
         filtered = {"random baseline": [rand_data], "calibration (cem)": [cem_data]}
-    else:
+    elif rand_lst != []:
         filtered = {"random baseline": [rand_data]}
+    else:
+        filtered = {}
 
     #filtered = {"random baseline": [rand_data]}
     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -351,30 +354,41 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
-    width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
+    width = 0.4 / len(all_models) if len(xlocations) > 2 else 0.1
 
     fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
 
     for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
+        # ax.plot([-(width+0.1)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
+        ax.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
 
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
-        positions_group = [x-(width+0.01)*idx for x in xlocations]
+        # positions_group = [x-(width+0.1)*idx for x in xlocations]
+        positions_group = [x+(width+0.1)*idx for x in xlocations]
 
-        # bp = ax.boxplot(perct, positions=positions_group, widths=width, patch_artist=True)
-        bp = ax.boxplot(perct, positions=positions_group, widths=width)
+        bp = ax.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
+        # bp = ax.boxplot(perct, positions=positions_group, widths=width)
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
 
     xtcs = []
-    for loc in xlocations:
-        xtcs.append(loc - 0.35)
+    # for loc in xlocations:
+    #     xtcs.append(loc - 0.35)
     ax.set_xticks(xtcs)
-    ax.set_xticklabels(xlabel)
-    
+    # ax.set_xticklabels(xlabel)
+
+    ymin, ymax = ax.get_ylim()
+    ytcs = []
+    ytcs.append(ymin)
+    for i in range(len(thrd)):
+        ytcs.append(thrd[i] * res_scale)
+    ytcs.append(ymax)
+    ax.set_yticks(ytcs)
+    ax.set_yticklabels(ytcs)
+
     # Acrobot plotting (Please do not delete)
     #loc, labels = plt.yticks()
     #labels = [str(-1.0 *loc[i]) for i in range(len(loc))]
@@ -382,7 +396,10 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     #plt.title('Acrobot: ' + title.split('/')[-1])
     #plt.xlabel('Top percentile', labelpad=35)
     #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
-    ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
+
+    # ax.set_xlim([-(width+0.1)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
+    ax.set_xlim([xlocations[0]-width-0.1, (width+0.1)*len(all_models)])
+
     #if ylim is not None:
     #    ax.set_ylim(ylim)
 
@@ -400,15 +417,15 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     return
 
 def set_box_color(bp, color):
-    plt.setp(bp['boxes'], color=color)
-    plt.setp(bp['whiskers'], color=color)
-    plt.setp(bp['caps'], color=color)
-    plt.setp(bp['medians'], color="black")
+    # plt.setp(bp['boxes'], color=color)
+    # plt.setp(bp['whiskers'], color=color)
+    # plt.setp(bp['caps'], color=color)
+    plt.setp(bp['medians'], color="black", linewidth=2)
     plt.setp(bp["fliers"], markeredgecolor=color)
 
-    #for patch in bp['boxes']:
-        #patch.set_facecolor(color)
-        #patch.set(facecolor=color)
+    for patch in bp['boxes']:
+        patch.set_facecolor(color)
+        patch.set(facecolor=color)
 
 def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_scale=1):
     all_models = list(filtered.keys())

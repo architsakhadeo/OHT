@@ -106,9 +106,18 @@ def data_density():
         run = "traces-{}".format(i)
         plot_dataset(datasets, key, dimension, group, run, "../img/data_density")
 
+def dqn():
+    calibration = {
+        "5k knn(laplace)": ac_laplace_knn_5k_dqn,
+    }
+    random = np.array(ac_rnd) % 24
+    te = {"true": ac_true_dqn}
+    plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_dqn", outer=30, res_scale=-1)
+
 if __name__ == '__main__':
     ranges = [0]
     top_param()
+    # dqn()
     # sweep_model()
     # data_density()
     #top_param()
