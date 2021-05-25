@@ -17,7 +17,7 @@
 			"alpha": [0.0],
 			"weight-init": [4.270180451447466],
 			"is-stepsize-adaptive": [true],
-			"adaptive-alpha": [0.3531856536492844],
+			"adaptive-alpha": [0.03531856536492844],
 			"beta1": [0.3423875317143536],
 			"softmax-temp": [0.12194088114632218]
 		},
@@ -36,7 +36,7 @@
 		"randomize_start_state_afterLock": true,
 		"steps": 0,
 		"episodes": 10000000,
-		"training-steps-before-lock": 1000,
+		"training-steps-before-lock": 4000,
 		"total-step-after-lock": 2500,
 		"count-step-after-lock": true,
 		"data-path": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step2500/subsuboptimalfixed_eps0/",

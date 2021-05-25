@@ -38,7 +38,7 @@
 		"rep-train-beta": 5,
 		"rep-train-delta": 0.05,
 		"rep-train-lambda": 0.8,
-		"rep-train-traj-len": 10,
+		"rep-train-traj-len": 50,
 		"rep-train-batch": 128,
 		"rep-train-learning-rate": 3e-05,
 		"rep-hidden": [128, 128],
