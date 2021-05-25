@@ -86,6 +86,6 @@ func (agent *Random) SaveWeights(basePath string) error {
 	return nil
 }
 
-func (agent *Random) GetLearnProg() float64 {
-	return float64(0)
+func (agent *Random) GetLearnProg() string {
+	return "0"
 }

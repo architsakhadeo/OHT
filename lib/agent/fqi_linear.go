@@ -779,7 +779,7 @@ func (agent *FqiLinear) SaveWeights(basePath string) error {
 }
 
 // Mean squared TD error of a full pass over the whole dataset.
-func (agent *FqiLinear) GetLearnProg() float64 {
+func (agent *FqiLinear) GetLearnProg() string {
 	lastStates, lastActionsFloat, states, rewards, gammas := agent.bf.Content()
 	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(lastActionsFloat))
 
@@ -793,5 +793,5 @@ func (agent *FqiLinear) GetLearnProg() float64 {
 		diff := rewards[i][0] + gammas[i][0]*targetActionValue[i] - lastActionValue[i]
 		loss += math.Pow(diff, 2)
 	}
-	return loss / float64(len(lastQ))
+	return strconv.FormatFloat(loss/float64(len(lastQ)), 'f', -1, 64)
 }

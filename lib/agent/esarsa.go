@@ -69,17 +69,17 @@ type EsarsaSettings struct {
 
 	RandomizeStartActionAfterLock bool `json:"randomize_start_action_afterLock"`
 
-	LoadW 			bool `json:"weight-load"`
-	LoadPath 		string `json:"weight-load-path"`
-	SaveW 			bool `json:"weight-save"`
-	SavePath 		string `json:"weight-save-path"`
+	LoadW    bool   `json:"weight-load"`
+	LoadPath string `json:"weight-load-path"`
+	SaveW    bool   `json:"weight-save"`
+	SavePath string `json:"weight-save-path"`
 }
 
 // Expected sarsa-lambda with tile coding
 type ESarsa struct {
 	logger.Debug
-	rng   *rand.Rand
-	tiler util.MultiTiler
+	rng    *rand.Rand
+	tiler  util.MultiTiler
 	runNum int
 
 	// Agent accessible parameters
@@ -100,10 +100,10 @@ type ESarsa struct {
 	accumulatingbeta2      float64
 	EsarsaSettings
 
-	stateRange				[][]float64
-	bf   *buffer.Buffer
-	lw   lockweight.LockWeight
-	lock bool
+	stateRange [][]float64
+	bf         *buffer.Buffer
+	lw         lockweight.LockWeight
+	lock       bool
 }
 
 func init() {
@@ -384,37 +384,37 @@ func (agent *ESarsa) FillHashTable() {
 func (agent *ESarsa) generateAllPoints() int {
 	tempS := make([]float64, agent.StateDim)
 	count := 0
-	for dim:=0; dim<agent.StateDim; dim++ {
+	for dim := 0; dim < agent.StateDim; dim++ {
 		maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
 		minS := agent.stateRange[dim][0]
 		numBlock := agent.NumTilings * agent.NumTiles
 		blockLen := maxRange / float64(numBlock)
-		for k:=0; k<agent.StateDim; k++ {
+		for k := 0; k < agent.StateDim; k++ {
 			tempS[k] = 0
 		}
-		for i:=0; i<numBlock+1; i++ {
-			tempS[dim] = math.Max(math.Min(minS + float64(i) * blockLen, agent.stateRange[dim][1]), agent.stateRange[dim][0])
+		for i := 0; i < numBlock+1; i++ {
+			tempS[dim] = math.Max(math.Min(minS+float64(i)*blockLen, agent.stateRange[dim][1]), agent.stateRange[dim][0])
 			agent.tiler.Tile(tempS)
 			count += 1
 		}
 	}
-	for dim:=0; dim<agent.StateDim; dim++ {
+	for dim := 0; dim < agent.StateDim; dim++ {
 		maxRange0 := agent.stateRange[dim][1] - agent.stateRange[dim][0]
-		for pair:=dim+1; pair<agent.StateDim; pair++ {
+		for pair := dim + 1; pair < agent.StateDim; pair++ {
 			maxRange1 := agent.stateRange[pair][1] - agent.stateRange[pair][0]
 			minS0 := agent.stateRange[dim][0]
 			minS1 := agent.stateRange[pair][0]
 			numBlock := agent.NumTilings * agent.NumTiles
 			blockLen0 := maxRange0 / float64(numBlock)
 			blockLen1 := maxRange1 / float64(numBlock)
-			for i:=0; i<numBlock+1; i++ {
-				for j:=0; j<numBlock+1; j++ {
+			for i := 0; i < numBlock+1; i++ {
+				for j := 0; j < numBlock+1; j++ {
 
-					for k:=0; k<agent.StateDim; k++ {
+					for k := 0; k < agent.StateDim; k++ {
 						tempS[k] = 0
 					}
-					tempS[dim] = math.Max(math.Min(minS0 + float64(i)*blockLen0, agent.stateRange[dim][1]), agent.stateRange[dim][0])
-					tempS[pair] = math.Max(math.Min(minS1 + float64(j)*blockLen1, agent.stateRange[dim][1]), agent.stateRange[dim][0])
+					tempS[dim] = math.Max(math.Min(minS0+float64(i)*blockLen0, agent.stateRange[dim][1]), agent.stateRange[dim][0])
+					tempS[pair] = math.Max(math.Min(minS1+float64(j)*blockLen1, agent.stateRange[dim][1]), agent.stateRange[dim][0])
 					agent.tiler.Tile(tempS)
 
 					//fmt.Println(tempS[dim], minS0 + float64(i)*blockLen0,  tempS[pair], minS1 + float64(j)*blockLen1)
@@ -425,6 +425,7 @@ func (agent *ESarsa) generateAllPoints() int {
 	}
 	return count
 }
+
 //func (agent *ESarsa) generateAllPoints(fixedCoord []float64, dim, count int) int {
 //	maxRange := agent.stateRange[dim][1] - agent.stateRange[dim][0]
 //	minS := agent.stateRange[dim][0]
@@ -1094,6 +1095,6 @@ func (agent *ESarsa) SaveWeights(basePath string) error {
 	}
 }
 
-func (agent *ESarsa) GetLearnProg() float64 {
-	return float64(0)
+func (agent *ESarsa) GetLearnProg() string {
+	return "0"
 }
