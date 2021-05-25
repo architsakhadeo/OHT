@@ -234,7 +234,7 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
-                     ylabel=None):
+                     ylabel=None, right_ax=None):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -269,18 +269,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    if cem is not None and fqi is not None:
-        filtered = {"random baseline": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
-    elif fqi is not None:
-        filtered = {"random baseline": [rand_data], "fqi": [fqi_data]}
-    elif cem is not None:
-        filtered = {"random baseline": [rand_data], "calibration (cem)": [cem_data]}
-    elif rand_lst != []:
-        filtered = {"random baseline": [rand_data]}
-    else:
-        filtered = {}
-
-    #filtered = {"random baseline": [rand_data]}
+    filtered = {}
     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -291,9 +280,24 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
+
+
+    if cem is not None and fqi is not None:
+        bsl = {"random baseline": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
+    elif fqi is not None:
+        bsl = {"random baseline": [rand_data], "fqi": [fqi_data]}
+    elif cem is not None:
+        bsl = {"random baseline": [rand_data], "calibration (cem)": [cem_data]}
+    elif rand_lst != []:
+        bsl = {"random baseline": [rand_data]}
+    else:
+        bsl = {}
+    for k in bsl:
+        filtered[k] = bsl[k]
+
     # print(filtered)
     #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax)
 # def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
 #     ranges = [0]
@@ -351,39 +355,41 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None, right_ax=[]):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
-    width = 0.4 / len(all_models) if len(xlocations) > 2 else 0.1
+    width = 0.2 / len(all_models) if len(xlocations) > 2 else 0.05
+    space = 0.1
 
     # fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6.4*max(1, len(all_models)/5), 4.8), sharex=True)
+    fig, ax = plt.subplots(figsize=(6*max(1, len(all_models)/5), 4.8))
+    rhs_axs = ax.twinx()
 
     for i in range(len(thrd)):
-        # ax.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
-        ax1.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
-        ax2.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
+        ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=1)
+    plt.plot([], "--", c="black", label="true performance")
 
+    vertline = None
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
-        positions_group = [x+(width+0.1)*idx for x in xlocations]
-
-        # bp = ax.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
-        bp = ax1.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
-        set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
-        bp = ax2.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
+        # positions_group = np.array([x+(width+space)*idx for x in xlocations])
+        positions_group = np.array([x+(width*2)*idx for x in xlocations])
+        if all_models[idx] in right_ax:
+            vertline = positions_group[0] - width if vertline is None else vertline
+            bp = rhs_axs.boxplot(perct, positions=positions_group+space, widths=width, patch_artist=True, vert=True)
+        else:
+            bp = ax.boxplot(perct, positions=positions_group-space, widths=width, patch_artist=True, vert=True)
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
 
+    if vertline:
+        plt.axvline(x=vertline, color='grey', linestyle='-.', linewidth=0.7)
+
     xtcs = []
-    # for loc in xlocations:
-    #     xtcs.append(loc - 0.35)
-    # ax.set_xticks(xtcs)
-    ax1.set_xticks(xtcs)
-    ax2.set_xticks(xtcs)
+    ax.set_xticks(xtcs)
     # ax.set_xticklabels(xlabel)
 
     # ymin, ymax = ax1.get_ylim()
@@ -405,37 +411,24 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     #plt.xlabel('Top percentile', labelpad=35)
     #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
 
-    ax1.set_xlim([xlocations[0]-width-0.1, (width+0.1)*len(all_models)])
-    ax2.set_xlim([xlocations[0]-width-0.1, (width+0.1)*len(all_models)])
+    ax.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
+    rhs_axs.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
 
     #if ylim is not None:
     #    ax.set_ylim(ylim)
 
     if ylim != [] and yscale != "log":
         if type(ylim[0]) == list:
-            ax1.set_ylim(ylim[0])
-            ax2.set_ylim(ylim[1])
-            # hide the spines between ax and ax2
-            ax1.spines.bottom.set_visible(False)
-            ax2.spines.top.set_visible(False)
-            ax1.xaxis.tick_top()
-            ax1.tick_params(labeltop=False)  # don't put tick labels at the top
-            ax2.xaxis.tick_bottom()
-
-            d = .5  # proportion of vertical to horizontal extent of the slanted line
-            kwargs = dict(marker=[(-1, -d), (1, d)], markersize=12,
-                          linestyle="none", color='k', mec='k', mew=1, clip_on=False)
-            ax1.plot([0, 1], [0, 0], transform=ax1.transAxes, **kwargs)
-            ax2.plot([0, 1], [1, 1], transform=ax2.transAxes, **kwargs)
-
+            ax.set_ylim(ylim[0])
+            # rhs_axs.set_ylim(ylim[1])
+            align_yaxis(ax, thrd[0] * res_scale, rhs_axs, thrd[0] * res_scale)
         else:
-            ax1.set_ylim(ylim)
-            ax2.set_ylim(ylim)
+            ax.set_ylim(ylim)
 
     plt.yscale(yscale)
 
-    # if ylabel is not None:
-    #     plt.ylabel(ylabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
     plt.legend()
     plt.tight_layout()
@@ -444,6 +437,16 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     plt.close()
     plt.clf()
     return
+
+# https://stackoverflow.com/questions/10481990/matplotlib-axis-with-two-scales-shared-origin
+def align_yaxis(ax1, v1, ax2, v2):
+    """adjust ax2 ylimit so that v2 in ax2 is aligned to v1 in ax1"""
+    _, y1 = ax1.transData.transform((0, v1))
+    _, y2 = ax2.transData.transform((0, v2))
+    inv = ax2.transData.inverted()
+    _, dy = inv.transform((0, 0)) - inv.transform((0, y1-y2))
+    miny, maxy = ax2.get_ylim()
+    ax2.set_ylim(miny+dy, maxy+dy)
 
 def set_box_color(bp, color):
     # plt.setp(bp['boxes'], color=color)
