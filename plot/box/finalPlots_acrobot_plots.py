@@ -6,31 +6,42 @@ from plot.box.utils_plot import *
 from plot.box.paths_acrobot_finalPlots import *
 
 def top_param():
-    '''
     # PLOT 1
-
     calibration = {
-        "KNN (laplace)": ac_knnlaplace_optim_5k_plot1
+        "Calibration": ac_knnlaplace_optim_5k,
+        "Calibration (raw)": ac_knnraw_optim_5k,
+        "NN Calibration (raw)": ac_networkscaledraw_optim_5k,
+        "NN Calibration (laplace)": ac_networkscaledlaplace_optim_5k
     }
     random = ac_rnd
     true = {"true": ac_true}
-    #fqi = {"fqi": ac_fqi}
+    fqi = {"FQI": ac_fqi_tc}
     #cem = {"cem": ac_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot1/plot1_zoomed_boxplot", outer=30, res_scale=-1, ylim=[110, 200])
-    '''
-    
-    # PLOT 4
+    plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/acrobot/plot1/plot1_model_learning",
+                     outer=30, res_scale=-1, ylim=[[112, 250], [112, 500]], ylabel="Step per episode", right_ax=["network (raw)", "network (laplace)", "FQI", "Random selection"],
+                     label_ncol=6)
+
+    # PLOT 2
+    calibration = {
+        "Calibration (5k)": ac_knnlaplace_optim_5k_new,
+        "Calibration (2.5k)": ac_knnlaplace_optim_5k_new,
+        "Calibration (1k)": ac_knnlaplace_optim_5k_new,
+        "Calibration (500)": ac_knnlaplace_optim_5k_new,
+    }
+    true = {"true": ac_true}
+    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_size",
+                     outer=30, res_scale=-1, ylim=[], ylabel="Step per episode", right_ax=[],
+                     label_ncol=4)
 
     calibration = {
-        "KNN (laplace)": ac_knnlaplace_optim_5k_plot4,
-        "network (laplace)": ac_networkscaledlaplace_optim_5k_plot4
+        "Calibration (optimal)": ac_knnlaplace_optim_5k_new,
+        "Calibration (average)": ac_knnlaplace_avg_5k_new,
+        "Calibration (bad)": ac_knnlaplace_bad_5k_new,
     }
-    random = ac_rnd
-    true = {"true": ac_true}
-    #fqi = {"fqi": ac_fqi}
-    #cem = {"cem": ac_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot4/plot4_scaled_laplace_boxplot_testing", outer=30, res_scale=-1)#, ylim=[110, 200])
-    
+    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_policy",
+                     outer=30, res_scale=-1, ylim=[], ylabel="Step per episode", right_ax=[],
+                     label_ncol=4)
+
 
 def sweep_model():
     '''

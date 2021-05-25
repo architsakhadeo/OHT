@@ -17,7 +17,6 @@ c_default =  ['#377eb8', '#ff7f00', '#4daf4a',
 c_default_Adam = ["#0077bb", "#33bbee", "#009988", "#ee7733", "#cc3311", "#ee3377", "#bbbbbb"]
 
 
-# "random baseline": '#ff7f00',
 c_dict = {
     "calibration": '#377eb8',
     "calibration (grid search)": '#377eb8',
@@ -89,6 +88,13 @@ c_dict = {
     "500 network": c_default_Adam[6],
     "500 network(laplace)": c_default_Adam[6],
 
+
+    "Calibration (raw)": c_default_Adam[1],
+    "Calibration": c_default_Adam[0],
+    "NN Calibration (raw)": c_default_Adam[2],
+    "NN Calibration (laplace)": c_default_Adam[3],
+    "FQI": c_default_Adam[4],
+
     "size = 500": c_default_Adam[0],
     "size = 1000": c_default_Adam[2],
     "size = 2500": c_default_Adam[4],
@@ -100,7 +106,7 @@ c_dict = {
 
     "KNN (laplace)": c_default_Adam[0],
     "network (laplace)": c_default_Adam[3],
-    "random baseline": c_default_Adam[6],
+    "Random selection": c_default_Adam[6],
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -207,7 +213,7 @@ def plot_scatters_one_run(data, label, title):
     plt.clf()
 
 def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", res_scale=1,
-                    outer=None, sparse_reward=None, max_len=np.inf):
+                    outer=None, sparse_reward=None, max_len=np.inf, label_ncol=10):
 
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
@@ -228,13 +234,13 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, label_ncol=label_ncol)
     #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
-                     ylabel=None, right_ax=None):
+                     ylabel=None, right_ax=None, label_ncol=10):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -244,7 +250,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     # fqi data
     # # all performance
     if fqi is not None:
-        fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
+        fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
         fqi_data = []
         for rk in fqi_data_all.keys():
             for pk in fqi_data_all[rk].keys():
@@ -283,13 +289,13 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 
 
     if cem is not None and fqi is not None:
-        bsl = {"random baseline": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
+        bsl = {"Random selection": [rand_data], "FQI": [fqi_data], "calibration (cem)": [cem_data]}
     elif fqi is not None:
-        bsl = {"random baseline": [rand_data], "fqi": [fqi_data]}
+        bsl = {"Random selection": [rand_data], "FQI": [fqi_data]}
     elif cem is not None:
-        bsl = {"random baseline": [rand_data], "calibration (cem)": [cem_data]}
+        bsl = {"Random selection": [rand_data], "calibration (cem)": [cem_data]}
     elif rand_lst != []:
-        bsl = {"random baseline": [rand_data]}
+        bsl = {"Random selection": [rand_data]}
     else:
         bsl = {}
     for k in bsl:
@@ -297,7 +303,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 
     # print(filtered)
     #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
 # def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
 #     ranges = [0]
@@ -307,8 +313,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #
 #     # fqi data
 #     # all performance
-#     fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["fqi"] # 30 runs in total, but different parameters
-#     # fqi_rank = ranking_allruns(fqi_data_all)["fqi"]
+#     fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
+#     # fqi_rank = ranking_allruns(fqi_data_all)["FQI"]
 #     fqi_data = []
 #     for rk in fqi_data_all.keys():
 #         for pk in fqi_data_all[rk].keys():
@@ -322,8 +328,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #     for perc in ranges:
 #         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 #
-#     filtered = {"random baseline": [rand_data], "fqi": [fqi_data]}
-#     # filtered = {"random baseline": [rand_data]}
+#     filtered = {"Random selection": [rand_data], "FQI": [fqi_data]}
+#     # filtered = {"Random selection": [rand_data]}
 #     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
 #     models_rank = ranking_allruns(cms_data)
 #     for model in cms_data.keys():
@@ -355,7 +361,7 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None, right_ax=[]):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None, right_ax=[], label_ncol=10):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
@@ -366,9 +372,11 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     fig, ax = plt.subplots(figsize=(6*max(1, len(all_models)/5), 4.8))
     rhs_axs = ax.twinx()
 
+    info = {}
     for i in range(len(thrd)):
         ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=1)
-    plt.plot([], "--", c="black", label="true performance")
+    # plt.plot([], "--", c="black", label="true performance")
+    info["true performance"] = {"color": "black", "style": "--"}
 
     vertline = None
     for idx in range(len(all_models)):
@@ -383,7 +391,8 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
             bp = ax.boxplot(perct, positions=positions_group-space, widths=width, patch_artist=True, vert=True)
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
-        plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
+        # plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
+        info[all_models[idx]] = {"color": cmap(all_models[idx], idx/len(all_models)), "style": "-"}
 
     if vertline:
         plt.axvline(x=vertline, color='grey', linestyle='-.', linewidth=0.7)
@@ -430,13 +439,27 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     if ylabel is not None:
         ax.set_ylabel(ylabel)
 
-    plt.legend()
+    # plt.legend()
     plt.tight_layout()
     # plt.show()
     plt.savefig("{}.pdf".format(title))
     plt.close()
     plt.clf()
+
+    draw_label(info, title, label_ncol)
     return
+
+def draw_label(info, save_path, ncol):
+    plt.figure(figsize=(0.05, 2.5))
+    for label in info:
+        plt.plot([], color=info[label]["color"], linestyle=info[label]["style"], label=label)
+    plt.axis('off')
+    plt.legend(ncol=ncol)
+    plt.savefig("{}_labels.pdf".format(save_path), dpi=300, bbox_inches='tight')
+    # plt.savefig("plot/img/{}.png".format(save_path), dpi=300, bbox_inches='tight')
+    # plt.show()
+    plt.close()
+    plt.clf()
 
 # https://stackoverflow.com/questions/10481990/matplotlib-axis-with-two-scales-shared-origin
 def align_yaxis(ax1, v1, ax2, v2):
