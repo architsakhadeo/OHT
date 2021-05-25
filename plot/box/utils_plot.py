@@ -233,7 +233,8 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
-                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
+                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
+                     ylabel=None):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -292,7 +293,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
             filtered[model].append(data)
     # print(filtered)
     #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel)
 # def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
 #     ranges = [0]
@@ -350,26 +351,29 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_scale=1):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.4 / len(all_models) if len(xlocations) > 2 else 0.1
 
-    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    # fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6.4*max(1, len(all_models)/5), 4.8), sharex=True)
 
     for i in range(len(thrd)):
-        # ax.plot([-(width+0.1)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
-        ax.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
+        # ax.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
+        ax1.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
+        ax2.plot([xlocations[0]-width-0.1, (width+0.1)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75, label="true performance")
 
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
-        # positions_group = [x-(width+0.1)*idx for x in xlocations]
         positions_group = [x+(width+0.1)*idx for x in xlocations]
 
-        bp = ax.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
-        # bp = ax.boxplot(perct, positions=positions_group, widths=width)
+        # bp = ax.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
+        bp = ax1.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
+        set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
+        bp = ax2.boxplot(perct, positions=positions_group, widths=width, patch_artist=True, vert=True)
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
@@ -377,17 +381,21 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     xtcs = []
     # for loc in xlocations:
     #     xtcs.append(loc - 0.35)
-    ax.set_xticks(xtcs)
+    # ax.set_xticks(xtcs)
+    ax1.set_xticks(xtcs)
+    ax2.set_xticks(xtcs)
     # ax.set_xticklabels(xlabel)
 
-    ymin, ymax = ax.get_ylim()
-    ytcs = []
-    ytcs.append(ymin)
-    for i in range(len(thrd)):
-        ytcs.append(thrd[i] * res_scale)
-    ytcs.append(ymax)
-    ax.set_yticks(ytcs)
-    ax.set_yticklabels(ytcs)
+    # ymin, ymax = ax1.get_ylim()
+    # ytcs = []
+    # ytcs.append(ymin)
+    # for i in range(len(thrd)):
+    #     ytcs.append(thrd[i] * res_scale)
+    # ytcs.append(ymax)
+    # ax1.set_yticks(ytcs)
+    # ax1.set_yticklabels(ytcs)
+    # ax2.set_yticks(ytcs)
+    # ax2.set_yticklabels(ytcs)
 
     # Acrobot plotting (Please do not delete)
     #loc, labels = plt.yticks()
@@ -397,16 +405,37 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     #plt.xlabel('Top percentile', labelpad=35)
     #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
 
-    # ax.set_xlim([-(width+0.1)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
-    ax.set_xlim([xlocations[0]-width-0.1, (width+0.1)*len(all_models)])
+    ax1.set_xlim([xlocations[0]-width-0.1, (width+0.1)*len(all_models)])
+    ax2.set_xlim([xlocations[0]-width-0.1, (width+0.1)*len(all_models)])
 
     #if ylim is not None:
     #    ax.set_ylim(ylim)
 
-    if ylim is not None and yscale != "log":
-        ax.set_ylim(ylim)
+    if ylim != [] and yscale != "log":
+        if type(ylim[0]) == list:
+            ax1.set_ylim(ylim[0])
+            ax2.set_ylim(ylim[1])
+            # hide the spines between ax and ax2
+            ax1.spines.bottom.set_visible(False)
+            ax2.spines.top.set_visible(False)
+            ax1.xaxis.tick_top()
+            ax1.tick_params(labeltop=False)  # don't put tick labels at the top
+            ax2.xaxis.tick_bottom()
+
+            d = .5  # proportion of vertical to horizontal extent of the slanted line
+            kwargs = dict(marker=[(-1, -d), (1, d)], markersize=12,
+                          linestyle="none", color='k', mec='k', mew=1, clip_on=False)
+            ax1.plot([0, 1], [0, 0], transform=ax1.transAxes, **kwargs)
+            ax2.plot([0, 1], [1, 1], transform=ax2.transAxes, **kwargs)
+
+        else:
+            ax1.set_ylim(ylim)
+            ax2.set_ylim(ylim)
 
     plt.yscale(yscale)
+
+    # if ylabel is not None:
+    #     plt.ylabel(ylabel)
 
     plt.legend()
     plt.tight_layout()
