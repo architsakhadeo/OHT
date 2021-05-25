@@ -1,4 +1,6 @@
-cartpole_laplace_test1 = "../../data/hyperparam_v5/cartpole/offline_learning/knn/env_sweep/laplace_param_test1"
+cartpole_laplace_test1_optimal = "../../data/hyperparam_v5/cartpole/offline_learning/knn/env_sweep/optimal/laplace_param_test1"
+cartpole_laplace_test1_suboptimal = "../../data/hyperparam_v5/cartpole/offline_learning/knn/env_sweep/suboptimal/laplace_param_test1"
+cartpole_laplace_test1_random = "../../data/hyperparam_v5/cartpole/offline_learning/knn/env_sweep/random/laplace_param_test1"
 
 acrobot_laplace_test0 = "../../data/hyperparam_v5/acrobot/offline_learning/knn/env_sweep/laplace_param_test0"
 acrobot_laplace_test1 = "../../data/hyperparam_v5/acrobot/offline_learning/knn/env_sweep/laplace_param_test1"

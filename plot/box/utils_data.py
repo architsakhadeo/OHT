@@ -131,7 +131,7 @@ def average_run(data):
             group_by_param[pk].append(data[rk][pk])
     for pk in all_params:
         group_by_param[pk] = np.array(group_by_param[pk]).mean()
-    print(group_by_param)
+    # print(group_by_param)
     return group_by_param
 
 # def average_param(data):
@@ -224,7 +224,7 @@ def load_total(paths, source, outer=None):
                 if p_key not in data[rk].keys():
                     data[rk][p_key] = []
                 data[rk][p_key].append(all_runs[rk])
-    print(path, data)
+    # print(path, data)
     return data
 
 def load_rewards(paths, outer=None):

@@ -34,7 +34,7 @@
 		"randomize_start_state_afterLock": false,
 		"steps": 0,
 		"episodes": 10000000,
-		"training-steps-before-lock": 100000,
+		"training-steps-before-lock": 5000,
 		"total-step-after-lock": 10000,
 		"count-step-after-lock": true,
 		"data-path": "data/hyperparam_v5/cartpole/offline_data/true_restarts/esarsa/step10k/optimalfixed_eps0/",

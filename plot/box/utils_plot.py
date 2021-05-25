@@ -5,6 +5,7 @@ sys.path.insert(0, cwd+'/../..')
 from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 # c_default = matplotlib.cm.get_cmap('cool')
 # c_default = matplotlib.cm.get_cmap('hsv')
 
@@ -12,10 +13,15 @@ import matplotlib.pyplot as plt
 c_default =  ['#377eb8', '#ff7f00', '#4daf4a',
               '#f781bf', '#a65628', '#984ea3',
               '#999999', '#e41a1c', '#dede00']
+
+c_default_Adam = ["#0077bb", "#33bbee", "#009988", "#ee7733", "#cc3311", "#ee3377", "#bbbbbb"]
+
+
+# "random baseline": '#ff7f00',
 c_dict = {
     "calibration": '#377eb8',
     "calibration (grid search)": '#377eb8',
-    "random": '#ff7f00',
+    
     "fqi": '#4daf4a',
     "cem": '#f781bf',
     "calibration (cem)": '#a65628',
@@ -45,7 +51,7 @@ c_dict = {
     "return -360": '#4daf4a',
     "return -45": '#dede00',
 
-    "random data": '#e41a1c',
+    "random data": c_default_Adam[5],
 
     "knn": '#f781bf',
     "knn(laplace)": '#377eb8',
@@ -54,35 +60,47 @@ c_dict = {
     "network(scaled)": '#984ea3',
     "network(scaled+laplace)": '#e41a1c',
 
-    "15k knn": c_default[0],
-    "15k knn(laplace)": c_default[0],
-    # "15k network(scaled+laplace)": c_default[1],
-    "10k knn": c_default[2],
-    "10k knn(laplace)": c_default[2],
-    # "10k network(scaled+laplace)": c_default[3],
-    "5k knn": c_default[4],
-    "5k knn(laplace)": c_default[4],
-    # "5k network(scaled+laplace)": c_default[5],
-    "2.5k knn": c_default[6],
-    "2.5k knn(laplace)": c_default[6],
-    "1k knn": c_default[7],
-    "1k knn(laplace)": c_default[7],
-    "500 knn": c_default[8],
-    "500 knn(laplace)": c_default[8],
+    "15k knn": c_default_Adam[1],
+    "15k knn(laplace)": c_default_Adam[1],
+    # "15k network(scaled+laplace)": c_default_Adam[1],
+    "10k knn": c_default_Adam[3],
+    "10k knn(laplace)": c_default_Adam[3],
+    # "10k network(scaled+laplace)": c_default_Adam[3],
+    "5k knn": c_default_Adam[0],
+    "5k knn(laplace)": c_default_Adam[0],
+    # "5k network(scaled+laplace)": c_default_Adam[0],
+    "2.5k knn": c_default_Adam[2],
+    "2.5k knn(laplace)": c_default_Adam[2],
+    "1k knn": c_default_Adam[4],
+    "1k knn(laplace)": c_default_Adam[4],
+    "500 knn": c_default_Adam[5],
+    "500 knn(laplace)": c_default_Adam[5],
 
-    "15k network": c_default[0],
-    "15k network(laplace)": c_default[0],
-    "10k network": c_default[2],
-    "10k network(laplace)": c_default[2],
-    "5k network": c_default[4],
-    "5k network(laplace)": c_default[4],
-    "2.5k network": c_default[6],
-    "2.5k network(laplace)": c_default[6],
-    "1k network": c_default[7],
-    "1k network(laplace)": c_default[7],
-    "500 network": c_default[8],
-    "500 network(laplace)": c_default[8],
+    "15k network": c_default_Adam[1],
+    "15k network(laplace)": c_default_Adam[1],
+    "10k network": c_default_Adam[3],
+    "10k network(laplace)": c_default_Adam[3],
+    "5k network": c_default_Adam[0],
+    "5k network(laplace)": c_default_Adam[0],
+    "2.5k network": c_default_Adam[2],
+    "2.5k network(laplace)": c_default_Adam[2],
+    "1k network": c_default_Adam[4],
+    "1k network(laplace)": c_default_Adam[4],
+    "500 network": c_default_Adam[6],
+    "500 network(laplace)": c_default_Adam[6],
 
+    "size = 500": c_default_Adam[0],
+    "size = 1000": c_default_Adam[2],
+    "size = 2500": c_default_Adam[4],
+    "size = 5000": c_default_Adam[6],
+
+    "optimal policy": c_default_Adam[0],
+    "average policy": c_default_Adam[3],
+    "bad policy": c_default_Adam[6], 
+
+    "KNN (laplace)": c_default_Adam[0],
+    "network (laplace)": c_default_Adam[3],
+    "random baseline": c_default_Adam[6],
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -210,12 +228,13 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
-    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
-                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
+                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
+                     ylabel=None, right_ax=None):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -242,23 +261,15 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                 cem_data.append(cem_data_all[rk][pk])
 
     # random data list
-    rand_data = performance_by_param(rand_lst, te_data)
+    if rand_lst != []:
+        rand_data = performance_by_param(rand_lst, te_data)
 
     # top true env data performance
     te_thrd = []
     for perc in ranges:
         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 
-    if cem is not None and fqi is not None:
-        filtered = {"random": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
-    elif fqi is not None:
-        filtered = {"random": [rand_data], "fqi": [fqi_data]}
-    elif cem is not None:
-        filtered = {"random": [rand_data], "calibration (cem)": [cem_data]}
-    else:
-        filtered = {"random": [rand_data]}
-
-    #filtered = {"random": [rand_data]}
+    filtered = {}
     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(cms_data)
     for model in cms_data.keys():
@@ -269,9 +280,24 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
             # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
+
+
+    if cem is not None and fqi is not None:
+        bsl = {"random baseline": [rand_data], "fqi": [fqi_data], "calibration (cem)": [cem_data]}
+    elif fqi is not None:
+        bsl = {"random baseline": [rand_data], "fqi": [fqi_data]}
+    elif cem is not None:
+        bsl = {"random baseline": [rand_data], "calibration (cem)": [cem_data]}
+    elif rand_lst != []:
+        bsl = {"random baseline": [rand_data]}
+    else:
+        bsl = {}
+    for k in bsl:
+        filtered[k] = bsl[k]
+
     # print(filtered)
-    plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-    #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax)
 # def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
 #     ranges = [0]
@@ -296,8 +322,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 #     for perc in ranges:
 #         te_thrd.append(percentile_avgeraged_run(te_data, perc))
 #
-#     filtered = {"random": [rand_data], "fqi": [fqi_data]}
-#     # filtered = {"random": [rand_data]}
+#     filtered = {"random baseline": [rand_data], "fqi": [fqi_data]}
+#     # filtered = {"random baseline": [rand_data]}
 #     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
 #     models_rank = ranking_allruns(cms_data)
 #     for model in cms_data.keys():
@@ -329,34 +355,54 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_scale=1):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None, right_ax=[]):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
-    width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
+    width = 0.2 / len(all_models) if len(xlocations) > 2 else 0.05
+    space = 0.1
 
-    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    # fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    fig, ax = plt.subplots(figsize=(6*max(1, len(all_models)/5), 4.8))
+    rhs_axs = ax.twinx()
 
     for i in range(len(thrd)):
-        ax.plot([-(width+0.01)*len(all_models), xlocations[-1]+width], [thrd[i] * res_scale]*2, "--", color="black", linewidth=0.75)
+        ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=1)
+    plt.plot([], "--", c="black", label="true performance")
 
+    vertline = None
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
-        positions_group = [x-(width+0.01)*idx for x in xlocations]
-
-        # bp = ax.boxplot(perct, positions=positions_group, widths=width, patch_artist=True)
-        bp = ax.boxplot(perct, positions=positions_group, widths=width)
+        # positions_group = np.array([x+(width+space)*idx for x in xlocations])
+        positions_group = np.array([x+(width*2)*idx for x in xlocations])
+        if all_models[idx] in right_ax:
+            vertline = positions_group[0] - width if vertline is None else vertline
+            bp = rhs_axs.boxplot(perct, positions=positions_group+space, widths=width, patch_artist=True, vert=True)
+        else:
+            bp = ax.boxplot(perct, positions=positions_group-space, widths=width, patch_artist=True, vert=True)
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
         plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
 
+    if vertline:
+        plt.axvline(x=vertline, color='grey', linestyle='-.', linewidth=0.7)
+
     xtcs = []
-    for loc in xlocations:
-        xtcs.append(loc - 0.35)
     ax.set_xticks(xtcs)
-    ax.set_xticklabels(xlabel)
-    
+    # ax.set_xticklabels(xlabel)
+
+    # ymin, ymax = ax1.get_ylim()
+    # ytcs = []
+    # ytcs.append(ymin)
+    # for i in range(len(thrd)):
+    #     ytcs.append(thrd[i] * res_scale)
+    # ytcs.append(ymax)
+    # ax1.set_yticks(ytcs)
+    # ax1.set_yticklabels(ytcs)
+    # ax2.set_yticks(ytcs)
+    # ax2.set_yticklabels(ytcs)
+
     # Acrobot plotting (Please do not delete)
     #loc, labels = plt.yticks()
     #labels = [str(-1.0 *loc[i]) for i in range(len(loc))]
@@ -364,39 +410,62 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=None, yscale='linear', res_sca
     #plt.title('Acrobot: ' + title.split('/')[-1])
     #plt.xlabel('Top percentile', labelpad=35)
     #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
-    ax.set_xlim([-(width+0.01)*len(all_models)-width, xlocations[-1]+width*len(all_models)])
+
+    ax.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
+    rhs_axs.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
+
     #if ylim is not None:
     #    ax.set_ylim(ylim)
 
-    if ylim is not None and yscale != "log":
-        ax.set_ylim(ylim)
+    if ylim != [] and yscale != "log":
+        if type(ylim[0]) == list:
+            ax.set_ylim(ylim[0])
+            # rhs_axs.set_ylim(ylim[1])
+            align_yaxis(ax, thrd[0] * res_scale, rhs_axs, thrd[0] * res_scale)
+        else:
+            ax.set_ylim(ylim)
 
     plt.yscale(yscale)
+
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
     plt.legend()
     plt.tight_layout()
     # plt.show()
-    plt.savefig("{}.png".format(title))
+    plt.savefig("{}.pdf".format(title))
     plt.close()
     plt.clf()
     return
 
+# https://stackoverflow.com/questions/10481990/matplotlib-axis-with-two-scales-shared-origin
+def align_yaxis(ax1, v1, ax2, v2):
+    """adjust ax2 ylimit so that v2 in ax2 is aligned to v1 in ax1"""
+    _, y1 = ax1.transData.transform((0, v1))
+    _, y2 = ax2.transData.transform((0, v2))
+    inv = ax2.transData.inverted()
+    _, dy = inv.transform((0, 0)) - inv.transform((0, y1-y2))
+    miny, maxy = ax2.get_ylim()
+    ax2.set_ylim(miny+dy, maxy+dy)
+
 def set_box_color(bp, color):
-    plt.setp(bp['boxes'], color=color)
-    plt.setp(bp['whiskers'], color=color)
-    plt.setp(bp['caps'], color=color)
-    plt.setp(bp['medians'], color=color)
+    # plt.setp(bp['boxes'], color=color)
+    # plt.setp(bp['whiskers'], color=color)
+    # plt.setp(bp['caps'], color=color)
+    plt.setp(bp['medians'], color="black", linewidth=2)
     plt.setp(bp["fliers"], markeredgecolor=color)
 
-    # for patch in bp['boxes']:
-    #     patch.set_facecolor(color)
+    for patch in bp['boxes']:
+        patch.set_facecolor(color)
+        patch.set(facecolor=color)
 
 def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_scale=1):
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.8 / len(all_models) if len(xlocations) > 2 else 0.2
 
-    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    # fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
+    fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 2.5))
 
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
@@ -433,10 +502,14 @@ def plot_violins(filtered, thrd, xlabel, title, ylim=None, yscale="linear", res_
 
     plt.yscale(yscale)
 
-    plt.legend(loc=1)
-    plt.tight_layout()
+    plt.legend(ncol=3)
+    fig.tight_layout(pad=1.0)
+    fontP = FontProperties()
+    # fontP.set_size('xx-small')
+    plt.legend(bbox_to_anchor=(0.5, 1.18), loc='center', prop=fontP)
     # plt.show()
-    plt.savefig("{}.png".format(title))
+    # plt.savefig("{}.png".format(title))
+    plt.savefig("{}.pdf".format(title), dpi=300, bbox_inches='tight')
     plt.close()
     plt.clf()
     return

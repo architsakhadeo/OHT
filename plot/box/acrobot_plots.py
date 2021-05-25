@@ -6,6 +6,7 @@ from plot.box.utils_plot import *
 from plot.box.paths_acrobot import *
 
 def top_param():
+    '''
     calibration = {
         "knn": ac_knn_5k,
         "knn(laplace)": ac_laplace_knn_5k,
@@ -66,6 +67,9 @@ def top_param():
     random = ac_rnd
     te = {"true": ac_true_temp}
     # plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_network_size", outer=30, res_scale=-1, ylim=[80, 1000])
+    '''
+    
+    
 
 def sweep_model():
     calibration = {
@@ -77,6 +81,8 @@ def sweep_model():
         "optimal (knn)": ac_optim_knn
     }
     te = {"true": ac_true}
+    #fqi = {"fqi": ac_fqi}
+    #cem = {"cem": ac_cem}
     plot_generation(te, calibration, ranges, "totals", "../img/acrobot_model", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
     #plot_each_run(te, calibration, "totals", "../img/acrobot_model", outer=30, sparse_reward=-1, max_len=1000)
 
@@ -100,9 +106,18 @@ def data_density():
         run = "traces-{}".format(i)
         plot_dataset(datasets, key, dimension, group, run, "../img/data_density")
 
+def dqn():
+    calibration = {
+        "5k knn(laplace)": ac_laplace_knn_5k_dqn,
+    }
+    random = np.array(ac_rnd) % 24
+    te = {"true": ac_true_dqn}
+    plot_compare_top(te, calibration, None, random, "totals", "../img/acrobot_dqn", outer=30, res_scale=-1)
+
 if __name__ == '__main__':
     ranges = [0]
     top_param()
+    # dqn()
     # sweep_model()
     # data_density()
     #top_param()

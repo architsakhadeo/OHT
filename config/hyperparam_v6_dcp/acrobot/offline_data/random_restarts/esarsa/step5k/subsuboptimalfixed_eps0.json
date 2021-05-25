@@ -17,7 +17,7 @@
 			"alpha": [0.0],
 			"weight-init": [4.025999372129175],
 			"is-stepsize-adaptive": [true],
-			"adaptive-alpha": [0.04733074230606279],
+			"adaptive-alpha": [0.00018932296922425116],
 			"beta1": [0.4047351414189722],
 			"softmax-temp": [0.33830515991058824]
 		},
@@ -36,7 +36,7 @@
 		"randomize_start_state_afterLock": true,
 		"steps": 0,
 		"episodes": 10000000,
-		"training-steps-before-lock": 1500,
+		"training-steps-before-lock": 6000,
 		"total-step-after-lock": 5000,
 		"count-step-after-lock": true,
 		"data-path": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step5k/subsuboptimalfixed_eps0/",

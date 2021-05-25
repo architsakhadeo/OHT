@@ -315,7 +315,7 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 
 	}
 
-	agent.FillHashTable()
+	//agent.FillHashTable()
 	//test := make([]float64, agent.StateDim)
 	//for j := 0; j < 10; j++ {
 	//	for i := 0; i < agent.StateDim; i++ {

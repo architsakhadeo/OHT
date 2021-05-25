@@ -26,6 +26,9 @@ pdhard_return45 = ["../../data/hyperparam_v4/puddlehard/offline_learning/knn-ens
 pdrand_rnd = [34, 4, 43, 30, 24, 32, 40, 11, 20, 30, 3, 16, 53, 45, 0, 21, 43, 23, 44, 50, 9, 41, 37, 37, 11, 2, 26, 33, 18, 20]
 pdrand_true = ["../../data/hyperparam_v5/puddlerand/online_learning/esarsa/step30k/sweep"]
 
+pdrand_true_dqn = ["../../data/hyperparam_v5/puddlerand/online_learning/dqn/step600k/sweep"]
+pdrand_laplace_knn_test1_5k_dqn = ["../../data/hyperparam_v5/puddlerand/offline_learning/knn/learning/k3_laplace/timeout20k/dqn/step5k_env/data_optimal/drop0/sweep_rep1/"]
+
 pdrand_network_15k = ["../../data/hyperparam_v5/puddlerand/offline_learning/network/learning/clip_separated/timeout1000/esarsa/step15k_env/data_optimal/sweep"]
 pdrand_laplace_network_15k = ["../../data/hyperparam_v5/puddlerand/offline_learning/network/learning/clip_laplace_separated/timeout1000/esarsa/step15k_env/data_optimal/sweep"]
 

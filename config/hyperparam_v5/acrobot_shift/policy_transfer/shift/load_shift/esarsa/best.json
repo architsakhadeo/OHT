@@ -40,8 +40,7 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 15000,
-    "steps-in-episode": 1000,
-    "data-path": "data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_shift/esarsa/timeout1000/",
+    "data-path": "data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_shift/esarsa/best/",
 
     "should-log-totals": true,
     "should-log-episode-lengths": true,

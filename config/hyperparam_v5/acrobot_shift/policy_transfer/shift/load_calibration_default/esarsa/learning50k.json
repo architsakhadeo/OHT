@@ -1,0 +1,49 @@
+{
+  "comment": "This is the config file for expected SARSA lambda agent for the continuing cartpole environment.",
+  "agent-name": "esarsa",
+  "environment-name": "acrobot",
+  "agent-settings": {
+    "gamma": 1.0,
+    "state-len": 6,
+    "env-name": "acrobot",
+    "sweep": {
+      "epsilon": [0.0],
+      "epsilon-after-lock": [0.0],
+      "tilings": [16],
+      "tiles": [8],
+      "lambda": [0.8],
+      "alpha": [0.0],
+      "weight-init": [0],
+      "is-stepsize-adaptive": [true],
+      "adaptive-alpha": [0.03],
+      "beta1": [0],
+      "softmax-temp": [1]
+    },
+
+    "weight-load": true,
+    "weight-load-path": "data/hyperparam_v5/acrobot_shift/calibration_learning/default/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/step50k/",
+
+    "lock-weight": false,
+
+    "enable-debug": false,
+    "seed": 1
+  },
+  "environment-settings": {
+    "link_len_1": 2,
+    "link_mass_1": 2,
+    "seed": 1
+  },
+  "experiment-settings": {
+    "randomize_start_state_beforeLock": false,
+    "randomize_start_state_afterLock": false,
+    "steps": 0,
+    "episodes": 1000000,
+    "max-run-length-episodic": 50000,
+    "data-path": "data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_calibration_default/esarsa/learning50k/",
+
+    "should-log-totals": true,
+    "should-log-episode-lengths": true,
+    "debug-interval": 0
+  }
+}
+

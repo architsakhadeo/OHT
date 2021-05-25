@@ -39,7 +39,7 @@
 
     "rep-train-num-step": 30000,
     "rep-train-beta": 5,
-    "rep-train-delta": 0.5,
+    "rep-train-delta": 0.05,
     "rep-train-lambda": 0.8,
     "rep-train-traj-len": 20,
     "rep-train-batch": 128,

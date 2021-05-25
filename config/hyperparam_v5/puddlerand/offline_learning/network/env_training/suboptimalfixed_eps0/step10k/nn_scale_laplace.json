@@ -37,10 +37,10 @@
 		"rep-train-lambda": 0.8,
 		"rep-train-traj-len": 5,
 		"rep-train-batch": 128,
-		"rep-train-learning-rate": 0.0003,
+		"rep-train-learning-rate": 0.0001,
 		"rep-hidden": [128, 128],
 		"rep-dim": 4,
-		"rep-test-forward": 0,
+		"rep-test-forward": 1,
 		"rep-name": "Laplace",
 
 		"rep-save": false,
@@ -54,7 +54,7 @@
 		"train-epoch": 100,
 		"train-batch": 16,
 		"train-hidden-layer": [128,128],
-		"train-learning-rate": 0.0001,
+		"train-learning-rate": 0.001,
 
 		"model-save": true,
 		"model-save-path": "data/hyperparam_v5/puddlerand/offline_learning/network/env_training/step10k/suboptimalfixed_eps0/nn_scale_laplace",

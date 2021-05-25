@@ -1,0 +1,66 @@
+{
+	"agent-name": "esarsa",
+	"environment-name": "knnModel",
+	"agent-settings": {
+		"gamma": 0.9,
+		"state-len": 4,
+		"env-name": "cartpole",
+		"sweep": {
+			"tilings": [16],
+			"tiles": [8],
+			"is-stepsize-adaptive": [true],
+			"alpha": [0.0],
+			"lambda": [0.023],
+			"epsilon": [0.0],
+			"adaptive-alpha": [0.03, 0.1, 0.3],
+			"beta1": [0.0, 0.9],
+			"softmax-temp": [0.1, 1.0, 10.0],
+			"weight-init": [0.0, 6.0, 12.0]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"seed": 1,
+
+		"total-logs": 30
+	},
+	"environment-settings": {
+		"seed": 1,
+		"total-logs": 30,
+		"neighbor-num": 3,
+		"datalog": "data/hyperparam_v5/cartpole/offline_data/random_restarts/esarsa/step10k/suboptimalfixed_eps0/param_0/",
+		"true-start-log": "data/hyperparam_v5/cartpole/offline_data/true_restarts/esarsa/step10k/suboptimalfixed_eps0/param_0/",
+		"ensemble-seed": 0,
+		"drop-percent": 0,
+		"pick-start-state": "random-init",
+
+		"rep-train-num-step": 30000,
+		"rep-train-beta": 5,
+		"rep-train-delta": 0.05,
+		"rep-train-lambda": 0.8,
+		"rep-train-traj-len": 50,
+		"rep-train-batch": 128,
+		"rep-train-learning-rate": 3e-05,
+		"rep-hidden": [128, 128],
+		"rep-dim": 8,
+		"rep-name": "Laplace",
+		"rep-test-forward": 1,
+
+		"rep-save": false,
+		"rep-load": true,
+		"rep-load-path": "data/hyperparam_v5/cartpole/offline_learning/knn/env_training/step10k/suboptimalfixed_eps0/rep_laplace"
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": false,
+		"steps": 50000,
+		"steps-in-episode": 1666,
+
+		"data-path": "data/hyperparam_v5/cartpole/offline_learning/knn/learning/k3_laplace/timeout1666/esarsa/step10k_env/data_suboptimal/drop0/sweep_rep1",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": true,
+		"should-log-returns": false,
+		"debug-interval": 0
+	}
+}

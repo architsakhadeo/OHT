@@ -6,14 +6,14 @@
       "gamma": 0.9,
       "state-len": 4,
       "sweep": {
-        "weight-init": [0.0],
-        "epsilon": [0.0],
+        "epsilon": [0.081],
+        "epsilon-after-lock": [0.081],
         "tilings": [16],
         "tiles": [2],
-        "lambda": [0.8],
-        "alpha": [0.0],
-        "is-stepsize-adaptive": [true],
-        "adaptive-alpha": [0.0034099557897287833]
+        "lambda": [0.942],
+        "alpha": [0.00067, 0.0067],
+        "is-stepsize-adaptive": [false],
+        "adaptive-alpha": [0]
       },
       "lock-weight": false,
       "enable-debug": false,
@@ -21,20 +21,17 @@
     },
     "environment-settings": {
       "seed": 1,
-      "percent_noise_action": 0.01,
-      "sweep": {
-        "delays":[[0]]
-      }
+      "percent_noise_action": 0.01
     },
     "experiment-settings": {
       "randomize_start_state_beforeLock": false,
       "randomize_start_state_afterLock": false,
-      "steps": 50000,
-      "data-path": "data/best/cartpole_noise/",
+      "steps": 8000,
+      "data-path": "data/best/cartpoleSubOptimal/",
       "should-log-traces": false,
       "should-log-episode-lengths": true,
-      "should-log-rewards": false,
-      "should-log-totals": true,
+      "should-log-rewards": true,
+      "should-log-totals": false,
       "debug-interval": 1000
     }
   }
