@@ -10,35 +10,36 @@ def top_param():
     calibration = {
         "Calibration": pr_knnlaplace_optim_5k,
         "Calibration (raw)": pr_knnraw_optim_5k,
-        "NN Calibration (raw)": pr_networkscaledraw_optim_5k,
         "NN Calibration (laplace)": pr_networkscaledlaplace_optim_5k,
+        "NN Calibration (raw)": pr_networkscaledraw_optim_5k,
     }
     random = pr_rnd
     true = {"true": pr_true}
     fqi = {"FQI": pr_fqi_nn}
     #cem = {"cem": pr_cem}
-    plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_model_learning",
-                     outer=30, ylim=[], ylabel="Return per episode", right_ax=["NN Calibration (raw)", "NN Calibration (laplace)", "FQI", "Random selection"],
-                     label_ncol=6)
+    # plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models",
+    #                  outer=30, ylim=[[-100, -20], []], ylabel="Return per episode", right_ax=["NN Calibration (raw)", "FQI", "Random selection"],
+    #                  label_ncol=6)
 
     # PLOT 2
     calibration = {
-        "Calibration (5k)": pr_knnlaplace_optim_5k_new,
-        "Calibration (2.5k)": pr_knnlaplace_optim_5k_new,
-        "Calibration (1k)": pr_knnlaplace_optim_5k_new,
-        "Calibration (500)": pr_knnlaplace_optim_5k_new,
+        "Size = 5000": pr_knnlaplace_avg_5k_new,
+        "Size = 2500": pr_knnlaplace_avg_2500_new,
+        "Size = 1000": pr_knnlaplace_avg_1k_new,
+        "Size = 500": pr_knnlaplace_avg_500_new,
     }
     true = {"true": pr_true}
     plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
-                     outer=30, ylim=[], ylabel="Return per episode", right_ax=[], label_ncol=4)
+                     outer=30, ylim=[-34, -27], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3)
 
     calibration = {
-        "Calibration (optimal)": pr_knnlaplace_optim_5k_new,
-        "Calibration (average)": pr_knnlaplace_avg_5k_new,
-        "Calibration (bad)": pr_knnlaplace_bad_5k_new,
+        "Optimal policy": pr_knnlaplace_optim_5k_new,
+        "Average policy": pr_knnlaplace_avg_5k_new,
+        "Bad policy": pr_knnlaplace_bad_5k_new,
     }
     plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
-                     outer=30, ylim=[], ylabel="Step per episode", right_ax=[],
+                     outer=30, ylim=[-34, -27], ylabel="Return per episode", right_ax=[],
                      label_ncol=3)
 
 

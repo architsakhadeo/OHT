@@ -6,6 +6,8 @@ from plot.box.utils_data import *
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import FormatStrFormatter
+
 # c_default = matplotlib.cm.get_cmap('cool')
 # c_default = matplotlib.cm.get_cmap('hsv')
 
@@ -95,18 +97,21 @@ c_dict = {
     "NN Calibration (laplace)": c_default_Adam[3],
     "FQI": c_default_Adam[4],
 
-    "size = 500": c_default_Adam[0],
-    "size = 1000": c_default_Adam[2],
-    "size = 2500": c_default_Adam[4],
-    "size = 5000": c_default_Adam[6],
+    "Size = 5000": c_default_Adam[0],
+    "Size = 2500": c_default_Adam[2],
+    "Size = 1000": c_default_Adam[4],
+    "Size = 500": c_default_Adam[6],
 
-    "optimal policy": c_default_Adam[0],
-    "average policy": c_default_Adam[3],
-    "bad policy": c_default_Adam[6], 
+    "Optimal policy": c_default_Adam[0],
+    "Average policy": c_default_Adam[3],
+    "Bad policy": c_default_Adam[6],
 
     "KNN (laplace)": c_default_Adam[0],
     "network (laplace)": c_default_Adam[3],
     "Random selection": c_default_Adam[6],
+
+    "Esarsa transfer (true)": c_default_Adam[2],
+    "Esarsa transfer (calibration)": c_default_Adam[6],
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -240,12 +245,11 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
 def plot_compare_top(te, cms, fqi, rand_lst, source, title,
                      cem=None,
                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
-                     ylabel=None, right_ax=None, label_ncol=10):
+                     ylabel="", right_ax=None, label_ncol=10):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
-    # print(te_data)
 
     # fqi data
     # # all performance
@@ -283,68 +287,31 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
         filtered[model] = []
         for perc in ranges:
             target = percentile_worst(ranks, perc, te_data)
-            # data = [te_data[item[1]] for item in target]
             data = [item[2] for item in target]
             filtered[model].append(data)
 
 
-    if cem is not None and fqi is not None:
-        bsl = {"Random selection": [rand_data], "FQI": [fqi_data], "calibration (cem)": [cem_data]}
-    elif fqi is not None:
-        bsl = {"Random selection": [rand_data], "FQI": [fqi_data]}
-    elif cem is not None:
-        bsl = {"Random selection": [rand_data], "calibration (cem)": [cem_data]}
-    elif rand_lst != []:
-        bsl = {"Random selection": [rand_data]}
-    else:
-        bsl = {}
+    # if cem is not None and fqi is not None and rand_lst != []:
+    #     bsl = {"Random selection": [rand_data], "FQI": [fqi_data], "calibration (cem)": [cem_data]}
+    # elif fqi is not None and rand_lst != []:
+    #     bsl = {"Random selection": [rand_data], "FQI": [fqi_data]}
+    # elif cem is not None and rand_lst != []:
+    #     bsl = {"Random selection": [rand_data], "calibration (cem)": [cem_data]}
+    # elif rand_lst != []:
+    #     bsl = {"Random selection": [rand_data]}
+    # else:
+    #     bsl = {}
+    bsl = {}
+    if rand_lst != []:
+        bsl["Random selection"] = [rand_data]
+    if cem is not None:
+        bsl["calibration (cem)"] = [cem_data]
+    if fqi is not None:
+        bsl["FQI"] = [fqi_data]
     for k in bsl:
         filtered[k] = bsl[k]
 
-    # print(filtered)
-    #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
-# def plot_compare_top(te, cms, fqi, rand_lst, source, title,
-#                      ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf):
-#     ranges = [0]
-#     # true env data dictionary
-#     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-#     te_data = average_run(te_data["true"])
-#
-#     # fqi data
-#     # all performance
-#     fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
-#     # fqi_rank = ranking_allruns(fqi_data_all)["FQI"]
-#     fqi_data = []
-#     for rk in fqi_data_all.keys():
-#         for pk in fqi_data_all[rk].keys():
-#             fqi_data.append(fqi_data_all[rk][pk])
-#
-#     # random data list
-#     rand_data = performance_by_param(rand_lst, te_data)
-#
-#     # top true env data performance
-#     te_thrd = []
-#     for perc in ranges:
-#         te_thrd.append(percentile_avgeraged_run(te_data, perc))
-#
-#     filtered = {"Random selection": [rand_data], "FQI": [fqi_data]}
-#     # filtered = {"Random selection": [rand_data]}
-#     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-#     models_rank = ranking_allruns(cms_data)
-#     for model in cms_data.keys():
-#         ranks = models_rank[model]
-#         # print(model)
-#         filtered[model] = []
-#         for perc in ranges:
-#             target = percentile_worst(ranks, perc, te_data)
-#             # data = [te_data[item[1]] for item in target]
-#             data = [item[2] for item in target]
-#             filtered[model].append(data)
-#     # print(filtered)
-#     plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-#     #plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
-
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -361,7 +328,7 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel=None, right_ax=[], label_ncol=10):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel="", right_ax=[], label_ncol=10):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
@@ -375,10 +342,14 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     info = {}
     for i in range(len(thrd)):
         ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=1)
-    # plt.plot([], "--", c="black", label="true performance")
-    info["true performance"] = {"color": "black", "style": "--"}
+    if len(thrd) > 0:
+        # plt.plot([], "--", c="black", label="true performance")
+        info["true performance"] = {"color": "black", "style": "--"}
 
     vertline = None
+    min_x = np.inf
+    max_x = -np.inf
+
     for idx in range(len(all_models)):
         perct = filtered[all_models[idx]]
         perct = [np.array(x) * res_scale for x in perct]
@@ -386,9 +357,15 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
         positions_group = np.array([x+(width*2)*idx for x in xlocations])
         if all_models[idx] in right_ax:
             vertline = positions_group[0] - width if vertline is None else vertline
-            bp = rhs_axs.boxplot(perct, positions=positions_group+space, widths=width, patch_artist=True, vert=True)
+            temp_pos = positions_group+space
+            bp = rhs_axs.boxplot(perct, positions=temp_pos, widths=width, patch_artist=True, vert=True)
         else:
-            bp = ax.boxplot(perct, positions=positions_group-space, widths=width, patch_artist=True, vert=True)
+            temp_pos = positions_group-space
+            bp = ax.boxplot(perct, positions=temp_pos, widths=width, patch_artist=True, vert=True)
+        if temp_pos.min() < min_x:
+            min_x = temp_pos.min()
+        if temp_pos.max() > max_x:
+            max_x = temp_pos.max()
         set_box_color(bp, cmap(all_models[idx], idx/len(all_models)))
 
         # plt.plot([], c=cmap(all_models[idx], idx/len(all_models)), label=all_models[idx])
@@ -401,17 +378,6 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     ax.set_xticks(xtcs)
     # ax.set_xticklabels(xlabel)
 
-    # ymin, ymax = ax1.get_ylim()
-    # ytcs = []
-    # ytcs.append(ymin)
-    # for i in range(len(thrd)):
-    #     ytcs.append(thrd[i] * res_scale)
-    # ytcs.append(ymax)
-    # ax1.set_yticks(ytcs)
-    # ax1.set_yticklabels(ytcs)
-    # ax2.set_yticks(ytcs)
-    # ax2.set_yticklabels(ytcs)
-
     # Acrobot plotting (Please do not delete)
     #loc, labels = plt.yticks()
     #labels = [str(-1.0 *loc[i]) for i in range(len(loc))]
@@ -420,24 +386,43 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     #plt.xlabel('Top percentile', labelpad=35)
     #plt.ylabel('Steps to\nsuccess (AUC)', rotation=0, labelpad=55)
 
-    ax.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
-    rhs_axs.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
-
-    #if ylim is not None:
-    #    ax.set_ylim(ylim)
+    # ax.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
+    # rhs_axs.set_xlim([xlocations[0]-width*2-space, (width+space)*len(all_models)-width])
+    ax.set_xlim([min_x-space, max_x+space])
+    rhs_axs.set_xlim([min_x-space, max_x+space])
 
     if ylim != [] and yscale != "log":
-        if type(ylim[0]) == list:
-            ax.set_ylim(ylim[0])
-            # rhs_axs.set_ylim(ylim[1])
-            align_yaxis(ax, thrd[0] * res_scale, rhs_axs, thrd[0] * res_scale)
-        else:
-            ax.set_ylim(ylim)
+        ax.set_ylim(ylim[0])
+        # ax.set_ybound(lower=ylim[0][0], upper=ylim[0][1])
+    if not vertline:
+        rhs_axs.set_visible(False)
+    elif vertline and len(thrd)>0:
+        align_yaxis(ax, thrd[0] * res_scale, rhs_axs, thrd[0] * res_scale)
 
     plt.yscale(yscale)
 
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
+    ymin, ymax = ax.get_ylim()
+    ytcs = []
+    ytcs.append(ymin)
+    for i in range(len(thrd)):
+        ytcs.append(thrd[i] * res_scale)
+    ytcs.append(ymax)
+    ax.set_yticks(ytcs)
+    ax.set_yticklabels(ytcs)
+    ymin, ymax = rhs_axs.get_ylim()
+    ytcs = []
+    ytcs.append(ymin)
+    for i in range(len(thrd)):
+        ytcs.append(thrd[i] * res_scale)
+    ytcs.append(ymax)
+    rhs_axs.set_yticks(ytcs)
+    # rhs_axs.set_yticklabels(ytcs)
+
+    ax.set_ylabel(ylabel, fontsize=15)
+
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    plt.setp(ax.get_yticklabels(), fontsize=15)
+    plt.setp(rhs_axs.get_yticklabels(), fontsize=15)
 
     # plt.legend()
     plt.tight_layout()
@@ -722,7 +707,9 @@ def plot_termination_perc(datasets, types, run, title):
         plt.clf()
     return
 
-def plot_learning_perform(paths, source, title, ylim=None, yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1):
+def plot_learning_perform(paths, source, title, ylim=[], yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1,
+                          ylabel="", right_ax=None, label_ncol=10,
+                          fqi=None):
     data = loading_average(paths, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     models_rank = ranking_allruns(data)
     filtered = {}
@@ -732,7 +719,19 @@ def plot_learning_perform(paths, source, title, ylim=None, yscale="linear", oute
         for run in ranks:
             filtered[model][0].append(ranks[run][0][1])
 
-    plot_violins(filtered, [], "", title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    bsl = {}
+    if fqi is not None:
+        fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
+        fqi_data = []
+        for rk in fqi_data_all.keys():
+            for pk in fqi_data_all[rk].keys():
+                fqi_data.append(fqi_data_all[rk][pk])
+        bsl["FQI"] = [fqi_data]
+    for k in bsl:
+        filtered[k] = bsl[k]
+
+    # plot_violins(filtered, [], "", title, ylim=ylim, yscale=yscale, res_scale=res_scale)
+    plot_boxs(filtered, [], "", title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
 
 def plot_param_sweep(paths, source, title, ylim=None, yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1):
     assert len(list(paths.keys())) == 1

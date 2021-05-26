@@ -7,23 +7,23 @@ pr_fqi_tc = [basepath + "puddlerand/offline_learning/random_restarts/fqi-linear/
 pr_fqi_nn = [basepath + "puddlerand/offline_learning/random_restarts/fqi/fqi-adam/alpha_hidden_epsilon/step5k_env/optimalfixed_eps0/earlystop/lambda1e-3/lockat_baseline_online/"]
 
 # PLOT 1
-pr_knnraw_optim_5k = [basepath + "puddlerand/offline_learning/knn/learning/k3/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep/"]
 pr_knnlaplace_optim_5k = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
+pr_knnraw_optim_5k = [basepath + "puddlerand/offline_learning/knn/learning/k3/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep/"]
 pr_networkscaledlaplace_optim_5k = [basepath + "puddlerand/offline_learning/network/learning/clip_scale_laplace_separated/timeout1000/esarsa/step5k_env/data_optimal/sweep/"]
 pr_networkscaledraw_optim_5k = [basepath + "puddlerand/offline_learning/network/learning/clip_scale_separated/timeout1000/esarsa/step5k_env/data_optimal/sweep/"]
 
 # PLOT 2
-pr_knnlaplace_optim_5k_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
-pr_knnlaplace_optim_2500_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step2.5k_env/data_optimal/drop0/sweep_rep1/"]
-pr_knnlaplace_optim_1k_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step1k_env/data_optimal/drop0/sweep_rep1/"]
-pr_knnlaplace_optim_500_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step500_env/data_optimal/drop0/sweep_rep1/"]
-
 pr_knnlaplace_avg_5k_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_suboptimal/drop0/sweep_rep1/"]
+pr_knnlaplace_avg_2500_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step2.5k_env/data_suboptimal/drop0/sweep_rep1/"]
+pr_knnlaplace_avg_1k_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step1k_env/data_suboptimal/drop0/sweep_rep1/"]
+pr_knnlaplace_avg_500_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step500_env/data_suboptimal/drop0/sweep_rep1/"]
+
+pr_knnlaplace_optim_5k_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
 pr_knnlaplace_bad_5k_new = [basepath_new + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_subsuboptimal/drop0/sweep_rep1/"]
 
-# PLOT 3
+# PLOT 4
 
-pr_knnlaplace_optim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
-pr_knnlaplace_suboptim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_suboptimal/drop0/sweep_rep1/"]
-pr_knnlaplace_subsuboptim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_subsuboptimal/drop0/sweep_rep1/"]
+# pr_knnlaplace_optim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
+# pr_knnlaplace_suboptim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_suboptimal/drop0/sweep_rep1/"]
+# pr_knnlaplace_subsuboptim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_subsuboptimal/drop0/sweep_rep1/"]
 
