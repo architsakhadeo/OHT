@@ -293,8 +293,8 @@ func (agent *ActorCritic) SaveWeights(basePath string) error {
 	return nil
 }
 
-func (agent *ActorCritic) GetLearnProg() float64 {
-	return float64(0)
+func (agent *ActorCritic) GetLearnProg() string {
+	return "0"
 }
 
 func (agent *ActorCritic) GetLock() bool {

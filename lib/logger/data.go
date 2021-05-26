@@ -65,7 +65,7 @@ type DataLogger struct {
 	actions   []rlglue.Action
 	terminals []int
 	others    [][]float64
-	learnProg []float64
+	learnProg []string
 	info      []string
 
 	// file is used for writing out the trace.
@@ -103,7 +103,7 @@ func NewDataWithExtraVariables(debug Debug, config DataConfig, headers ...string
 	}
 
 	if lg.ShouldLogLearnProg {
-		lg.learnProg = []float64{}
+		lg.learnProg = []string{}
 	}
 
 	if lg.BasePath == "" {
@@ -223,7 +223,7 @@ func (lg *DataLogger) LogStepMulti(prevState, currState rlglue.State, action rlg
 }
 
 // LogLearnProg add information about learning progress. The information could be MSTDE for batch RL.
-func (lg *DataLogger) LogLearnProg(progress float64) {
+func (lg *DataLogger) LogLearnProg(progress string) {
 	if !lg.ShouldLogLearnProg {
 		return
 	}
@@ -231,7 +231,7 @@ func (lg *DataLogger) LogLearnProg(progress float64) {
 }
 
 func (lg *DataLogger) logStep(prevState, currState rlglue.State, action rlglue.Action, reward float64, terminal bool, info string) string {
-	if lg.ShouldLogRewards || lg.ShouldLogReturns{
+	if lg.ShouldLogRewards || lg.ShouldLogReturns {
 		lg.rewards = append(lg.rewards, reward)
 	}
 
@@ -359,7 +359,7 @@ func (lg *DataLogger) SaveLog() error {
 
 		// Write remaining rows
 		for _, prg := range lg.learnProg {
-			_, err = file.WriteString(fmt.Sprintf("%v\n", strconv.FormatFloat(prg, 'f', -1, 64)))
+			_, err = file.WriteString(fmt.Sprintf("%v\n", prg))
 			if err != nil {
 				return err
 			}

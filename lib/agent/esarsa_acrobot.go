@@ -300,6 +300,6 @@ func (agent *ESarsaAcrobot) SaveWeights(basePath string) error {
 	return nil
 }
 
-func (agent *ESarsaAcrobot) GetLearnProg() float64 {
-	return float64(0)
+func (agent *ESarsaAcrobot) GetLearnProg() string {
+	return "0"
 }

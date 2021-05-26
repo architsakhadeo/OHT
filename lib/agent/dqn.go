@@ -409,6 +409,6 @@ func (agent *Dqn) SaveWeights(basePath string) error {
 	return nil
 }
 
-func (agent *Dqn) GetLearnProg() float64 {
-	return float64(0)
+func (agent *Dqn) GetLearnProg() string {
+	return "0"
 }

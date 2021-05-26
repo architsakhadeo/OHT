@@ -3,8 +3,9 @@ package agent
 import (
 	"encoding/json"
 	"errors"
-	"github.com/stellentus/cartpoles/lib/util/loss"
 	"math/rand"
+
+	"github.com/stellentus/cartpoles/lib/util/loss"
 
 	"github.com/stellentus/cartpoles/lib/logger"
 	"github.com/stellentus/cartpoles/lib/rlglue"
@@ -221,6 +222,6 @@ func (agent *Ddpg) SaveWeights(basePath string) error {
 	return nil
 }
 
-func (agent *Ddpg) GetLearnProg() float64 {
-	return float64(0)
+func (agent *Ddpg) GetLearnProg() string {
+	return "0"
 }

@@ -1095,6 +1095,6 @@ func (agent *ESarsa) SaveWeights(basePath string) error {
 	}
 }
 
-func (agent *ESarsa) GetLearnProg() float64 {
-	return float64(0)
+func (agent *ESarsa) GetLearnProg() string {
+	return "0"
 }
