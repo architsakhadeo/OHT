@@ -29,19 +29,33 @@ def top_param():
         "Size = 500": pr_knnlaplace_avg_500_new,
     }
     true = {"true": pr_true}
-    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
-                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
-                     label_ncol=3, plot="bar")
+    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
+    #                  outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+    #                  label_ncol=3, plot="bar")
 
     calibration = {
         "Optimal policy": pr_knnlaplace_optim_5k_new,
         "Medium policy": pr_knnlaplace_avg_5k_new,
         "Bad policy": pr_knnlaplace_bad_5k_new,
     }
-    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
-                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
-                     label_ncol=3, plot="bar")
+    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
+    #                  outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+    #                  label_ncol=3, plot="bar")
 
+    # PLOT Agents
+    calibration = {
+        "Esarsa": pr_knnlaplace_optim_5k,
+        "DQN": pr_dqn_knnlaplace_optim,
+        "AC": pr_actorcritic_knnlaplace_optim,
+    }
+    true = {
+        "Esarsa": pr_true,
+        "DQN": pr_dqn,
+        "AC": pr_actorcritic,
+    }
+    plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot_agents",
+                        outer=30, ylim=[[-3000, 100]], ylabel="Return per episode", right_ax=[],
+                        label_ncol=3)
 
 def sweep_model():
     '''

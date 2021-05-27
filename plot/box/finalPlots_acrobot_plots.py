@@ -64,14 +64,14 @@ def top_param():
     }
     fqi = {"FQI": acshift_fqi_tc_optim_5k}
     true = {"true": acshift_true}
-    plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
-                          ylabel="Step per episode", right_ax=[],
-                          label_ncol=5,
-                          fqi=fqi, true_perf=true)
+    # plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
+    #                       ylabel="Step per episode", right_ax=[],
+    #                       label_ncol=2,
+    #                       fqi=fqi, true_perf=true)
 
     # PLOT Agents
     calibration = {
-        "Esarsa": ac_knnlaplace_avg_5k_new,
+        "Esarsa": ac_knnlaplace_optim_5k,
         "DQN": ac_dqn_knnlaplace_optim,
         "AC": ac_actorcritic_knnlaplace_optim,
     }
@@ -80,10 +80,9 @@ def top_param():
         "DQN": ac_dqn,
         "AC": ac_actorcritic,
     }
-    # plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_size",
-    #                     outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
-    #                     label_ncol=3, plot="bar")
-
+    plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot_agents",
+                        outer=30, res_scale=-1, ylim=[[0, 500]], ylabel="Step per episode", right_ax=[],
+                        label_ncol=3)
 
     # info = {
     #

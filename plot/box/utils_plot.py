@@ -320,80 +320,37 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     elif plot == "bar":
         plot_bars(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
 
-# def plot_compare_agents(te, cms, fqi, rand_lst, source, title,
-#                         cem=None, ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
-#                         ylabel="", right_ax=None, label_ncol=10, plot="box"):
-#     ranges = [0]
-#     # true env data dictionary
-#     te_data_all = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-#     te_data = {}
-#     for agent in te_data_all:
-#         te_data[agent] = average_run(te_data[agent])
-#
-#     # fqi data
-#     # # all performance
-#     if fqi is not None:
-#         fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
-#         fqi_data = []
-#         for rk in fqi_data_all.keys():
-#             for pk in fqi_data_all[rk].keys():
-#                 fqi_data.append(fqi_data_all[rk][pk])
-#
-#
-#     if cem is not None:
-#         # cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["cem"] # 30 runs in total, but different parameters
-#         cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["calibration (cem)"] # 30 runs in total, but different parameters
-#         # cem_rank = ranking_allruns(cem_data_all)["cem"]
-#         cem_data = []
-#         for rk in cem_data_all.keys():
-#             for pk in cem_data_all[rk].keys():
-#                 cem_data.append(cem_data_all[rk][pk])
-#
-#     # # random data list
-#     # if rand_lst != []:
-#     #     rand_data = performance_by_param(rand_lst, te_data)
-#
-#     # top true env data performance
-#     te_thrd = []
-#     for perc in ranges:
-#         te_thrd.append(percentile_avgeraged_run(te_data, perc))
-#
-#     filtered = {}
-#     cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-#     models_rank = ranking_allruns(cms_data)
-#     for model in cms_data.keys():
-#         ranks = models_rank[model]
-#         filtered[model] = []
-#         for perc in ranges:
-#             target = percentile_worst(ranks, perc, te_data)
-#             data = [item[2] for item in target]
-#             filtered[model].append(data)
-#
-#
-#     # if cem is not None and fqi is not None and rand_lst != []:
-#     #     bsl = {"Random selection": [rand_data], "FQI": [fqi_data], "calibration (cem)": [cem_data]}
-#     # elif fqi is not None and rand_lst != []:
-#     #     bsl = {"Random selection": [rand_data], "FQI": [fqi_data]}
-#     # elif cem is not None and rand_lst != []:
-#     #     bsl = {"Random selection": [rand_data], "calibration (cem)": [cem_data]}
-#     # elif rand_lst != []:
-#     #     bsl = {"Random selection": [rand_data]}
-#     # else:
-#     #     bsl = {}
-#     bsl = {}
-#     if rand_lst != []:
-#         bsl["Random"] = [rand_data]
-#     if cem is not None:
-#         bsl["Calibration (cem)"] = [cem_data]
-#     if fqi is not None:
-#         bsl["FQI"] = [fqi_data]
-#     for k in bsl:
-#         filtered[k] = bsl[k]
-#
-#     if plot == "box":
-#         plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
-#     elif plot == "bar":
-#         plot_bars(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
+def plot_compare_agents(te, cms, fqi, rand_lst, source, title,
+                        cem=None, ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
+                        ylabel="", right_ax=None, label_ncol=10, plot="box"):
+    # ranges = [0]
+    # true env data dictionary
+    te_data_all = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    te_data = {}
+    for agent in te_data_all:
+        te_data[agent] = average_run(te_data_all[agent])
+
+    # top true env data performance
+    te_thrd = []
+    for agent in te_data:
+        te_thrd.append(percentile_avgeraged_run(te_data[agent], 0))
+
+    filtered = {}
+    cms_data = loading_average(cms, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+    models_rank = ranking_allruns(cms_data)
+    for model in cms_data.keys():
+        ranks = models_rank[model]
+        filtered[model] = []
+        target = percentile_worst(ranks, 0, te_data[model])
+        data = [item[2] for item in target]
+        filtered[model].append(data)
+
+    if plot == "box":
+        plot_boxs(filtered, te_thrd, [0], title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol,
+                  thrd_color_same=False)
+    elif plot == "bar":
+        plot_bars(filtered, te_thrd, [0], title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol,
+                  thrd_color_same=False)
 
 def performance_by_param(rand_lst, data):
     perf = []
@@ -474,12 +431,16 @@ input:
         }
     thrd: [10 percentile threshold, 20 percentile threshold, 30 percentile threshold]
 """
-def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel="", right_ax=[], label_ncol=10):
+def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel="", right_ax=[], label_ncol=10, thrd_color_same=True):
 
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.2 / len(all_models) if len(xlocations) > 2 else 0.05
     space = 0.1
+    if thrd_color_same:
+        thrd_color = ["black"] * len(thrd)
+    else:
+        thrd_color = [cmap(all_models[idx], idx/len(all_models)) for idx in range(len(all_models))]
 
     # fig, ax = plt.subplots(figsize=(6.4*max(1, len(all_models)/5), 4.8))
     fig, ax = plt.subplots(figsize=(6*max(1, len(all_models)/5), 4.8))
@@ -487,7 +448,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
 
     info = {}
     for i in range(len(thrd)):
-        ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color="black", linewidth=1.4)
+        ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color=thrd_color[i], linewidth=1.4)
     # if len(thrd) > 0:
     #     # plt.plot([], "--", c="black", label="true performance")
     #     info["true performance"] = {"color": "black", "style": "--"}

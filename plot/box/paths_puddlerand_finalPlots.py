@@ -27,3 +27,8 @@ pr_knnlaplace_bad_5k_new = [basepath_new + "puddlerand/offline_learning/knn/lear
 # pr_knnlaplace_suboptim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_suboptimal/drop0/sweep_rep1/"]
 # pr_knnlaplace_subsuboptim_5k_plot3 = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/esarsa/step5k_env/data_subsuboptimal/drop0/sweep_rep1/"]
 
+# PLOT temp
+pr_dqn = [basepath + "puddlerand/online_learning/dqn/step600k/sweep/"]
+pr_actorcritic = [basepath + "puddlerand/online_learning/ac/step30k/sweep/"]
+pr_dqn_knnlaplace_optim = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout2k/dqn/step5k_env/data_optimal/drop0/sweep_rep1/"]
+pr_actorcritic_knnlaplace_optim = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/ac/step30k_env/data_optimal/drop0/sweep_rep0/"]
