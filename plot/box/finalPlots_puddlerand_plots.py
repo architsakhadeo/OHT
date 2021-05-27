@@ -8,17 +8,17 @@ from plot.box.paths_puddlerand_finalPlots import *
 def top_param():
     # PLOT 1
     calibration = {
-        "Calibration": pr_knnlaplace_optim_5k,
-        "Calibration (raw)": pr_knnraw_optim_5k,
-        "NN Calibration (laplace)": pr_networkscaledlaplace_optim_5k,
-        "NN Calibration (raw)": pr_networkscaledraw_optim_5k,
+        "Calibration-KNN": pr_knnlaplace_optim_5k,
+        # "Calibration (raw)": pr_knnraw_optim_5k,
+        "Calibration-NN": pr_networkscaledlaplace_optim_5k,
+        # "NN Calibration (raw)": pr_networkscaledraw_optim_5k,
     }
     random = pr_rnd
     true = {"true": pr_true}
     fqi = {"FQI": pr_fqi_nn}
     #cem = {"cem": pr_cem}
     # plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models",
-    #                  outer=30, ylim=[[-100, -20], []], ylabel="Return per episode", right_ax=["NN Calibration (raw)", "FQI", "Random selection"],
+    #                  outer=30, ylim=[[-100, -20], []], ylabel="Return per episode", right_ax=["FQI", "Random"],
     #                  label_ncol=6)
 
     # PLOT 2
@@ -30,17 +30,17 @@ def top_param():
     }
     true = {"true": pr_true}
     plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
-                     outer=30, ylim=[-34, -27], ylabel="Return per episode", right_ax=[],
-                     label_ncol=3)
+                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3, plot="bar")
 
     calibration = {
         "Optimal policy": pr_knnlaplace_optim_5k_new,
-        "Average policy": pr_knnlaplace_avg_5k_new,
+        "Medium policy": pr_knnlaplace_avg_5k_new,
         "Bad policy": pr_knnlaplace_bad_5k_new,
     }
     plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
-                     outer=30, ylim=[-34, -27], ylabel="Return per episode", right_ax=[],
-                     label_ncol=3)
+                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3, plot="bar")
 
 
 def sweep_model():
