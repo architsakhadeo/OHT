@@ -19,18 +19,19 @@ def top_param():
 
     # PLOT 1
     calibration = {
-        "Calibration-KNN": ac_knnlaplace_optim_5k,
+        "Calibration-KNN": ac_knnlaplace_optim_5k
         # "KNN (raw)": ac_knnraw_optim_5k,
         # "NN (raw)": ac_networkscaledraw_optim_5k,
-        "Calibration-NN": ac_networkscaledlaplace_optim_5k,
+        #"Calibration-NN": ac_networkscaledlaplace_optim_5k,
     }
     random = ac_rnd
     true = {"true": ac_true}
-    fqi = {"FQI": ac_fqi_tc}
-    #cem = {"cem": ac_cem}
+    #fqi = {"FQI": ac_fqi_tc}
+    #cem = {"CEM": ac_cem}
     # plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/acrobot/plot1/plot1_models",
     #                  outer=30, res_scale=-1, ylim=[[100, 250], []], ylabel="Step per episode", right_ax=["Calibration-NN", "FQI", "Random"],
     #                  label_ncol=6)
+
 
 
     # PLOT 2
@@ -64,10 +65,10 @@ def top_param():
     }
     fqi = {"FQI": acshift_fqi_tc_optim_5k}
     true = {"true": acshift_true}
-    plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
-                          ylabel="Step per episode", right_ax=[],
-                          label_ncol=5,
-                          fqi=fqi, true_perf=true)
+    #plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
+    #                      ylabel="Step per episode", right_ax=[],
+    #                      label_ncol=5,
+    #                      fqi=fqi, true_perf=true)
 
     # PLOT Agents
     calibration = {
@@ -98,6 +99,20 @@ def top_param():
     # }
     # draw_label(info, "../img/finalPlots/acrobot/plot2/plot2_labels", 5)
 
+    # PLOT CEM
+
+    calibration = {
+        "Calibration-KNN": ac_knnlaplace_optim_5k
+    }
+    
+    random = ac_rnd
+    true = {"true": ac_true}
+    cem = {"calibration (cem)": ac_cemlaplace_optim_5k}
+    #fqi = {"FQI": ac_fqi_tc}
+    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot1/plot1_models_CEM_KNNlaplace", cem=cem,
+                      outer=30, res_scale=-1, ylim=[[80, 250], []], ylabel="Steps per episode", right_ax=[], plot ='box')
+    #plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot1/plot1_models_CEM", ylim=[], outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
+
 def sweep_model():
     '''
     # PLOT 2
@@ -120,6 +135,23 @@ def sweep_model():
     true = {"true": ac_true}
     plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot3/plot3_boxplot_testing", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
     '''
+
+    # PLOT CEM
+
+    #calibration = {
+    #    "Calibration-KNN": ac_knnlaplace_optim_5k,
+    #    "calibration (cem)": ac_cemlaplace_optim_5k
+    #}
+
+    calibration = {
+        "Calibration-KNN": ac_knnraw_optim_5k_old,
+        "calibration (cem)": ac_cemraw_optim_5k_old
+    }
+    
+    #random = ac_rnd
+    true = {"true": ac_true_old}
+    #fqi = {"FQI": ac_fqi_tc}
+    plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot1/plot1_models_CEM", ylim=[], outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
 
 
 def data_density():

@@ -35,3 +35,12 @@ ac_dqn = [basepath + "acrobot/online_learning/dqn/step600k/sweep/"]
 ac_actorcritic = [basepath + "acrobot/online_learning/ac/step30k/sweep/"]
 ac_dqn_knnlaplace_optim = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout2k/dqn/step15k_env/data_optimal/drop0/sweep_rep1/"]
 ac_actorcritic_knnlaplace_optim = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/ac/step30k_env/data_optimal/drop0/sweep_rep1/"]
+
+# PLOT CEM
+
+ac_knnlaplace_optim_5k = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
+ac_cemlaplace_optim_5k = [basepath + "acrobot/list/CEMofflineList_KNNlaplace/esarsa/step15k/sweep/"]
+
+ac_true_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/online_learning/esarsa/step15k/sweep/"]
+ac_knnraw_optim_5k_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/offline_learning/k3_timeout750/esarsa/step15k/optimalfixed_eps0/sweep/"]
+ac_cemraw_optim_5k_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/acrobot/list/CEMoffline_onlineEvaluation/esarsa/step15k/sweep/"]

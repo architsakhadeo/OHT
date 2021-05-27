@@ -29,19 +29,30 @@ def top_param():
         "Size = 500": pr_knnlaplace_avg_500_new,
     }
     true = {"true": pr_true}
-    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
-                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
-                     label_ncol=3, plot="bar")
+    #plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
+    #                 outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+    #                 label_ncol=3, plot="bar")
 
     calibration = {
         "Optimal policy": pr_knnlaplace_optim_5k_new,
         "Medium policy": pr_knnlaplace_avg_5k_new,
         "Bad policy": pr_knnlaplace_bad_5k_new,
     }
-    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
-                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
-                     label_ncol=3, plot="bar")
+    #plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
+    #                 outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+    #                 label_ncol=3, plot="bar")
 
+    # PLOT CEM
+    calibration = {
+        "Calibration-KNN": pr_knnlaplace_optim_5k
+    }
+    
+    random = pr_rnd
+    true = {"true": pr_true}
+    cem = {"calibration (cem)": pr_cemlaplace_optim_5k}
+    #fqi = {"FQI": ac_fqi_tc}
+    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models_CEM_KNNlaplace", cem=cem,
+                      outer=30, ylim=[[-80, -20],[]], ylabel="Return per episode", right_ax=[], plot ='box')
 
 def sweep_model():
     '''
@@ -55,7 +66,7 @@ def sweep_model():
     true = {"true": pr_true}
     plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/puddlerand/plot2/plot2_boxplot", outer=30, sparse_reward=-1, max_len=1000)
     '''
-    
+    '''
     # PLOT 3
     calibration = {
         "optimal policy": pr_knnlaplace_optim_5k_plot3,
@@ -64,8 +75,20 @@ def sweep_model():
     }
     true = {"true": pr_true}
     plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/puddlerand/plot3/plot3_boxplot", outer=30, sparse_reward=-1, max_len=1000)
-    
+    '''
 
+    '''
+    # PLOT CEM
+
+    calibration = {
+        "Calibration-KNN": pr_knnraw_optim_5k_old,
+        "calibration (cem)": pr_cemraw_optim_5k_old
+    }
+    #random = ac_rnd
+    true = {"true": pr_true_old}
+    #fqi = {"FQI": ac_fqi_tc}
+    plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models_CEM", ylim=[], outer=30, sparse_reward=-1, max_len=1000)
+    '''
 
 def data_density():
     datasets = {
@@ -87,5 +110,5 @@ def data_density():
 if __name__ == '__main__':
     ranges = [0]
     top_param()
-    # sweep_model()
+    #sweep_model()
     #data_density()
