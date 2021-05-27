@@ -24,7 +24,7 @@ def top_param():
     # PLOT 2
     calibration = {
         "Size = 5000": pr_knnlaplace_avg_5k_new,
-        "Size = 2500": pr_knnlaplace_avg_2500_new,
+        # "Size = 2500": pr_knnlaplace_avg_2500_new,
         "Size = 1000": pr_knnlaplace_avg_1k_new,
         "Size = 500": pr_knnlaplace_avg_500_new,
     }
@@ -36,7 +36,7 @@ def top_param():
     calibration = {
         "Optimal policy": pr_knnlaplace_optim_5k_new,
         "Medium policy": pr_knnlaplace_avg_5k_new,
-        "Bad policy": pr_knnlaplace_bad_5k_new,
+        "Naive policy": pr_knnlaplace_bad_5k_new,
     }
     # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
     #                  outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
@@ -74,7 +74,7 @@ def sweep_model():
     calibration = {
         "optimal policy": pr_knnlaplace_optim_5k_plot3,
         "average policy": pr_knnlaplace_suboptim_5k_plot3,
-        "bad policy": pr_knnlaplace_subsuboptim_5k_plot3
+        "Naive policy": pr_knnlaplace_subsuboptim_5k_plot3
     }
     true = {"true": pr_true}
     plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/puddlerand/plot3/plot3_boxplot", outer=30, sparse_reward=-1, max_len=1000)

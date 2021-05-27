@@ -103,9 +103,11 @@ c_dict = {
     "Size = 500": c_default_Adam[6],
 
     "Optimal policy": c_default_Adam[0],
+    "Near-optimal policy": c_default_Adam[0],
     # "Average policy": c_default_Adam[3],
     "Medium policy": c_default_Adam[3],
-    "Bad policy": c_default_Adam[6],
+    "Naive policy": c_default_Adam[6],
+    "Random policy": c_default_Adam[4],
 
     "KNN (laplace)": c_default_Adam[0],
     "network (laplace)": c_default_Adam[3],
