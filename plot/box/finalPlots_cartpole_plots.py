@@ -14,11 +14,11 @@ def top_param():
         "Near-optimal policy": cart_knnlaplace_optim_10k_plot7,
         # "learning policy": cart_knnlaplace_learningpolicy_10k_plot7
     }
+    #"suboptimal policy": cart_knnlaplace_suboptim_10k_plot7,
     random = cart_rnd
     true = {"true": cart_true}
     plot_compare_top(true, calibration, None, random, "cartpole-failures", "../img/finalPlots/cartpole/plot4/plot4_cartpole",
                      outer=30, res_scale=-1, ylabel="Return per episode", ylim=[[-418, 5408]], right_ax=[],label_ncol=4)
-
 
 def sweep_model():
     calibration = {
