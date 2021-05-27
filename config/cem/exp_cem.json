@@ -1,0 +1,17 @@
+{
+	"ScoreType": "average-return-per-episode",
+	"NumWorkers": -1,
+	"NumIterations": 50,
+	"NumSamples": 20,
+	"NumRuns": 3,
+	"PercentEliteCov": 0.5,
+	"PercentEliteMean": 0.25,
+	"PercentEliteRetain": 0.1,
+	"Criteria": 0.1,
+	"Window": 5,
+	"Seed": 42,
+	"ExpAvg": true,
+	"ExpAvgStepSize": 0.001
+}
+
+
