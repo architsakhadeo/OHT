@@ -86,7 +86,7 @@ func (agent *launcherAgent) SaveWeights(basePath string) error {
 	return nil
 }
 
-func (agent *launcherAgent) GetLearnProg() float64 {
+func (agent *launcherAgent) GetLearnProg() string {
 	panic("Not implemented")
-	return 0
+	return "0"
 }

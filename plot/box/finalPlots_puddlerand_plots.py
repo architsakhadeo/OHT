@@ -6,33 +6,42 @@ from plot.box.utils_plot import *
 from plot.box.paths_puddlerand_finalPlots import *
 
 def top_param():
-    
-    '''
     # PLOT 1
-
     calibration = {
-        "KNN (laplace)": pr_knnlaplace_optim_5k_plot1
+        "Calibration-KNN": pr_knnlaplace_optim_5k,
+        # "Calibration (raw)": pr_knnraw_optim_5k,
+        "Calibration-NN": pr_networkscaledlaplace_optim_5k,
+        # "NN Calibration (raw)": pr_networkscaledraw_optim_5k,
     }
     random = pr_rnd
     true = {"true": pr_true}
-    #fqi = {"fqi": pr_fqi}
+    fqi = {"FQI": pr_fqi_nn}
     #cem = {"cem": pr_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_boxplot", outer=30)#, ylim=[-200, 0])
-    '''
-    
-    '''
-    # PLOT 4
+    # plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models",
+    #                  outer=30, ylim=[[-100, -20], []], ylabel="Return per episode", right_ax=["FQI", "Random"],
+    #                  label_ncol=6)
+
+    # PLOT 2
+    calibration = {
+        "Size = 5000": pr_knnlaplace_avg_5k_new,
+        "Size = 2500": pr_knnlaplace_avg_2500_new,
+        "Size = 1000": pr_knnlaplace_avg_1k_new,
+        "Size = 500": pr_knnlaplace_avg_500_new,
+    }
+    true = {"true": pr_true}
+    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
+                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3, plot="bar")
 
     calibration = {
-        "KNN (laplace)": pr_knnlaplace_optim_5k_plot4,
-        "network (raw)": pr_networkscaledraw_optim_5k_plot4
+        "Optimal policy": pr_knnlaplace_optim_5k_new,
+        "Medium policy": pr_knnlaplace_avg_5k_new,
+        "Bad policy": pr_knnlaplace_bad_5k_new,
     }
-    random = pr_rnd
-    true = {"true": pr_true}
-    #fqi = {"fqi": pr_fqi}
-    #cem = {"cem": pr_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/puddlerand/plot4/plot4_scaled_raw_boxplot", outer=30)#, ylim=[-200, 0])
-    '''
+    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
+                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3, plot="bar")
+
 
 def sweep_model():
     '''
@@ -77,6 +86,6 @@ def data_density():
 
 if __name__ == '__main__':
     ranges = [0]
-    #top_param()
-    sweep_model()
+    top_param()
+    # sweep_model()
     #data_density()

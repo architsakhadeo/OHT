@@ -39,7 +39,7 @@
 
     "rep-train-num-step": 30000,
     "rep-train-beta": 5,
-    "rep-train-delta": 0.5,
+    "rep-train-delta": 0.05,
     "rep-train-lambda": 0.8,
     "rep-train-traj-len": 20,
     "rep-train-batch": 128,
@@ -47,6 +47,7 @@
     "rep-hidden": [128, 128],
     "rep-dim": 8,
     "rep-name": "Laplace",
+    "rep-test-forward": 1,
 
     "rep-save": false,
     "rep-load": true,
@@ -59,7 +60,7 @@
     "train-epoch": 100,
     "train-batch": 16,
     "train-hidden-layer": [128,128],
-    "train-learning-rate": 0.0003,
+    "train-learning-rate": 0.001,
 
     "model-save": true,
     "model-save-path": "data/hyperparam_v5/acrobot/offline_learning/network/env_training/step10k/optimalfixed_eps0/nn_scale_laplace",

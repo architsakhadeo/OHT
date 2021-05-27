@@ -26,7 +26,7 @@
 		"seed": 1,
 		"total-logs": 30,
 		"neighbor-num": 3,
-		"datalog": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step15k/optimalfixed_eps0/param_0/",
+		"datalog": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step5k/optimalfixed_eps0/param_0/",
 		"ensemble-seed": 0,
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
@@ -37,15 +37,15 @@
 		"rep-train-lambda": 0.8,
 		"rep-train-traj-len": 10,
 		"rep-train-batch": 128,
-		"rep-train-learning-rate": 0.0003,
+		"rep-train-learning-rate": 0.0001,
 		"rep-hidden": [128, 128],
 		"rep-dim": 4,
-		"rep-test-forward": 0,
+		"rep-test-forward": 1,
 		"rep-name": "Laplace",
 
 		"rep-save": false,
 		"rep-load": true,
-		"rep-load-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/step15k/rep_laplace/",
+		"rep-load-path": "data/hyperparam_v5/puddlerand/offline_learning/knn/env_training/step5k/optimalfixed_eps0/rep_laplace",
 
 		"is-test": true,
 		"sweep": {

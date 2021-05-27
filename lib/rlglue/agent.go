@@ -21,6 +21,6 @@ type Agent interface {
 	SaveWeights(basePath string) error
 
 	// GetLearnProg gets information about the agent's learning progress, eg MSTDE for batch RL,
-	// or the agent's estimation of some other quantity.
-	GetLearnProg() float64
+	// or the agent's estimation of some other quantity. It should be comma-separated numeric values as strings.
+	GetLearnProg() string
 }

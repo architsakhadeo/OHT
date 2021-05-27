@@ -6,31 +6,97 @@ from plot.box.utils_plot import *
 from plot.box.paths_acrobot_finalPlots import *
 
 def top_param():
-    '''
+    # # Test code
+    # calibration = {
+    #     "Calibration-KNN": ac_knnlaplace_optim_5k,
+    #     "Calibration-NN": ac_networkscaledlaplace_optim_5k,
+    # }
+    # random = ac_rnd
+    # true = {"true": ac_true}
+    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/test",
+    #                  outer=30, res_scale=-1, ylim=[[100, 250], []], ylabel="Step per episode", right_ax=["Calibration-NN", "FQI", "Random"],
+    #                  label_ncol=7)
+
     # PLOT 1
-
     calibration = {
-        "KNN (laplace)": ac_knnlaplace_optim_5k_plot1
+        "Calibration-KNN": ac_knnlaplace_optim_5k,
+        # "KNN (raw)": ac_knnraw_optim_5k,
+        # "NN (raw)": ac_networkscaledraw_optim_5k,
+        "Calibration-NN": ac_networkscaledlaplace_optim_5k,
     }
     random = ac_rnd
     true = {"true": ac_true}
-    #fqi = {"fqi": ac_fqi}
+    fqi = {"FQI": ac_fqi_tc}
     #cem = {"cem": ac_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot1/plot1_zoomed_boxplot", outer=30, res_scale=-1, ylim=[110, 200])
-    '''
-    
-    # PLOT 4
+    # plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/acrobot/plot1/plot1_models",
+    #                  outer=30, res_scale=-1, ylim=[[100, 250], []], ylabel="Step per episode", right_ax=["Calibration-NN", "FQI", "Random"],
+    #                  label_ncol=6)
+
+
+    # PLOT 2
+    calibration = {
+        "Size = 5000": ac_knnlaplace_avg_5k_new,
+        "Size = 2500": ac_knnlaplace_avg_2500_new,
+        "Size = 1000": ac_knnlaplace_avg_1k_new,
+        "Size = 500": ac_knnlaplace_avg_500_new,
+    }
+    true = {"true": ac_true}
+    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_size",
+    #                  outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
+    #                  label_ncol=3, plot="bar")
+
 
     calibration = {
-        "KNN (laplace)": ac_knnlaplace_optim_5k_plot4,
-        "network (laplace)": ac_networkscaledlaplace_optim_5k_plot4
+        "Optimal policy": ac_knnlaplace_optim_5k_new,
+        "Medium policy": ac_knnlaplace_avg_5k_new,
+        "Bad policy": ac_knnlaplace_bad_5k_new,
     }
-    random = ac_rnd
-    true = {"true": ac_true}
-    #fqi = {"fqi": ac_fqi}
-    #cem = {"cem": ac_cem}
-    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/acrobot/plot4/plot4_scaled_laplace_boxplot_testing", outer=30, res_scale=-1)#, ylim=[110, 200])
-    
+    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_policy",
+    #                  outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
+    #                  label_ncol=3, plot="bar")
+
+    # PLOT 3
+    paths = {
+        "Calibration": acshift_knnlaplace_optim_5k,
+        # "Calibration (50k)": acshift_knnlaplace_optim_5k_50kstep,
+        "Esarsa transfer (true)": acshift_esarsa_true_trans,
+        "Esarsa transfer (calibration)": acshift_esarsa_calibration_trans,
+    }
+    fqi = {"FQI": acshift_fqi_tc_optim_5k}
+    true = {"true": acshift_true}
+    plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
+                          ylabel="Step per episode", right_ax=[],
+                          label_ncol=5,
+                          fqi=fqi, true_perf=true)
+
+    # PLOT Agents
+    calibration = {
+        "Esarsa": ac_knnlaplace_avg_5k_new,
+        "DQN": ac_dqn_knnlaplace_optim,
+        "AC": ac_actorcritic_knnlaplace_optim,
+    }
+    true = {
+        "Esarsa": ac_true,
+        "DQN": ac_dqn,
+        "AC": ac_actorcritic,
+    }
+    # plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_size",
+    #                     outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
+    #                     label_ncol=3, plot="bar")
+
+
+    # info = {
+    #
+    #     "Optimal policy": {"color": c_dict["Optimal policy"], "style": "-"},
+    #     "Medium policy": {"color": c_dict["Medium policy"], "style": "-"},
+    #     "Bad policy": {"color": c_dict["Bad policy"], "style": "-"},
+    #
+    #     "Size = 5000": {"color": c_dict["Size = 5000"], "style": "-"},
+    #     "Size = 2500": {"color": c_dict["Size = 2500"], "style": "-"},
+    #     "Size = 1000": {"color": c_dict["Size = 1000"], "style": "-"},
+    #     "Size = 500": {"color": c_dict["Size = 500"], "style": "-"},
+    # }
+    # draw_label(info, "../img/finalPlots/acrobot/plot2/plot2_labels", 5)
 
 def sweep_model():
     '''
