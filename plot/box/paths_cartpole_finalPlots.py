@@ -6,3 +6,7 @@ cart_knnlaplace_optim_10k_plot7 = [basepath + "cartpole/offline_learning/knn/lea
 cart_knnlaplace_suboptim_10k_plot7 = [basepath + "cartpole/offline_learning/knn/learning/k3_laplace/timeout1666/esarsa/step10k_env/data_suboptimal/drop0/sweep_rep1/"]
 cart_knnlaplace_random_10k_plot7 = [basepath + "cartpole/offline_learning/knn/learning/k3_laplace/timeout1666/esarsa/step10k_env/data_random/drop0/sweep_rep1/"]
 cart_knnlaplace_learningpolicy_10k_plot7 = [basepath + "cartpole/offline_learning/knn/learning/k3_laplace/timeout1666/esarsa/step10k_env/data_learningpolicy/drop0/sweep_rep1/"]
+
+cart_knn_combined_15k_plot7 = ["../../data/hyperparam_v5/cartpole/offline_learning/knn/learning/k3/timeout1666/esarsa/step15k_env/data_mixed/drop0/sweep"]
+cart_knn_suboptrand_15k_drop20 = ["../../data/hyperparam_v5/cartpole/offline_learning/knn/learning/k3/timeout1666/esarsa/step10k_env/data_subopt_random/drop20/sweep"]
+cart_knnlaplace_random_10k_drop20 = ["../../data/hyperparam_v5/cartpole/offline_learning/knn/learning/k3_laplace/timeout1666/esarsa/step10k_env/data_random/drop20/sweep_rep1"]
