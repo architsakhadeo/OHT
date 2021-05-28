@@ -251,6 +251,15 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 	numRetain := 0 // At first there are no elite samples
 	var buffer []float64
 
+	covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
+	mu_ave_RealValues := mat.NewDense(1, cem.numHyperparams, nil)
+	mu_old_ave_RealValues := mat.NewDense(1, cem.numHyperparams, nil)
+
+	for col := 0; col < cem.numHyperparams; col++ {
+		mu_ave_RealValues.Set(0, col, 0.0)
+		mu_old_ave_RealValues.Set(0, col, 2.0*cem.Criteria)
+	}
+
 	for iteration := 0; iteration < cem.NumIterations; iteration++ {
 		startIteration := time.Now()
 		fmt.Println("Criteria:", cem.Criteria, cem.Window)
@@ -345,7 +354,6 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 		cov := mat.NewSymDense(cem.numHyperparams, nil)
 		stat.CovarianceMatrix(cov, elitesRealVals, nil)
 
-		covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
 		for row := 0; row < cem.numHyperparams; row++ {
 			for col := 0; col < cem.numHyperparams; col++ {
 				if cem.Settings.ExpAvg {
@@ -370,29 +378,50 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 			fmt.Fprintf(cem.debugWriter, "--------------------------------------------------\n")
 		}
 
-		if iteration < cem.Window+1 {
-			//buffer[iteration] = meanScore
-			buffer = append(buffer, meanScore)
-		} else {
-			for shift := 0; shift < cem.Window; shift++ {
-				buffer[shift] = buffer[shift+1]
+		if cem.Settings.ExpAvg {
+			for col := 0; col < cem.numHyperparams; col++ {
+				mu_old_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col))
 			}
-			buffer[cem.Window] = meanScore
-		}
-
-		if iteration >= cem.Window {
-			totalDiff := 0.0
-			for shift := 0; shift < cem.Window; shift++ {
-				totalDiff += math.Abs(buffer[shift] - buffer[shift+1])
+			for col := 0; col < cem.numHyperparams; col++ {
+				mu_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col)+(meanRealValues.At(0, col)-mu_ave_RealValues.At(0, col))/float64(iteration))
 			}
 
-			avgDiff := totalDiff / float64(cem.Window)
-			fmt.Println("Average diff:", avgDiff)
-			if avgDiff <= cem.Criteria {
+			difference := 0.0
+			for col := 0; col < cem.numHyperparams; col++ {
+				difference += math.Pow((mu_ave_RealValues.At(0, col) - mu_old_ave_RealValues.At(0, col)), 2)
+			}
+			difference = math.Pow(difference, 0.5)
+			if difference <= cem.Criteria {
 				return mean.RawRowView(0), nil
 			}
+
+		} else {
+			if iteration < cem.Window+1 {
+				//buffer[iteration] = meanScore
+				buffer = append(buffer, meanScore)
+			} else {
+				for shift := 0; shift < cem.Window; shift++ {
+					buffer[shift] = buffer[shift+1]
+				}
+				buffer[cem.Window] = meanScore
+			}
+
+			if iteration >= cem.Window {
+				totalDiff := 0.0
+				for shift := 0; shift < cem.Window; shift++ {
+					totalDiff += math.Abs(buffer[shift] - buffer[shift+1])
+				}
+
+				avgDiff := totalDiff / float64(cem.Window)
+				fmt.Println("Average diff:", avgDiff)
+				if avgDiff <= cem.Criteria {
+					return mean.RawRowView(0), nil
+				}
+			}
+
+			fmt.Println("Buffer:", buffer)
 		}
-		fmt.Println("Buffer:", buffer)
+
 	}
 
 	return mean.RawRowView(0), nil
