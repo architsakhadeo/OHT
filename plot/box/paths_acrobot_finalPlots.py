@@ -33,8 +33,8 @@ acshift_fqi_nn_optim_5k = [basepath + "acrobot_shift/policy_transfer/shift/load_
 # PLOT temp
 ac_dqn = [basepath + "acrobot/online_learning/dqn/step600k/sweep/"]
 ac_actorcritic = [basepath + "acrobot/online_learning/ac/step30k/sweep/"]
-ac_dqn_knnlaplace_optim = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout2k/dqn/step15k_env/data_optimal/drop0/sweep_rep1/"]
-ac_actorcritic_knnlaplace_optim = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/ac/step30k_env/data_optimal/drop0/sweep_rep1/"]
+ac_dqn_knnlaplace_optim = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout2k/dqn/step5k_env/data_optimal/drop0/sweep_rep1/"]
+ac_actorcritic_knnlaplace_optim = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/ac/step5k_env/data_optimal/drop0/sweep_rep1/"]
 
 # PLOT CEM
 

@@ -37,20 +37,20 @@ def top_param():
     # PLOT 2
     calibration = {
         "Size = 5000": ac_knnlaplace_avg_5k_new,
-        "Size = 2500": ac_knnlaplace_avg_2500_new,
+        # "Size = 2500": ac_knnlaplace_avg_2500_new,
         "Size = 1000": ac_knnlaplace_avg_1k_new,
         "Size = 500": ac_knnlaplace_avg_500_new,
     }
     true = {"true": ac_true}
     # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_size",
-    #                  outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
+    #                  outer=30, res_scale=-1, ylim=[[110, 115]], ylabel="Step per episode (Median)", right_ax=[],
     #                  label_ncol=3, plot="bar")
 
 
     calibration = {
         "Optimal policy": ac_knnlaplace_optim_5k_new,
         "Medium policy": ac_knnlaplace_avg_5k_new,
-        "Bad policy": ac_knnlaplace_bad_5k_new,
+        "Naive policy": ac_knnlaplace_bad_5k_new,
     }
     # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_policy",
     #                  outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
@@ -65,14 +65,15 @@ def top_param():
     }
     fqi = {"FQI": acshift_fqi_tc_optim_5k}
     true = {"true": acshift_true}
-    #plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
-    #                      ylabel="Step per episode", right_ax=[],
-    #                      label_ncol=5,
-    #                      fqi=fqi, true_perf=true)
+    # plot_learning_perform(paths, "totals", "../img/finalPlots/acrobot/plot3/plot3_shift", res_scale=-1, yscale="log", #ylim=[0, 15000],
+    #                       ylabel="Step per episode", right_ax=[],
+    #                       label_ncol=2,
+    #                       fqi=fqi, true_perf=true)
+
 
     # PLOT Agents
     calibration = {
-        "Esarsa": ac_knnlaplace_avg_5k_new,
+        "Esarsa": ac_knnlaplace_optim_5k,
         "DQN": ac_dqn_knnlaplace_optim,
         "AC": ac_actorcritic_knnlaplace_optim,
     }
@@ -81,16 +82,15 @@ def top_param():
         "DQN": ac_dqn,
         "AC": ac_actorcritic,
     }
-    # plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot2/plot2_size",
-    #                     outer=30, res_scale=-1, ylim=[[110, 123]], ylabel="Step per episode (Median)", right_ax=[],
-    #                     label_ncol=3, plot="bar")
-
+    plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot_agents",
+                        outer=30, res_scale=-1, ylim=[[0, 500]], ylabel="Step per episode", right_ax=[],
+                        label_ncol=3)
 
     # info = {
     #
     #     "Optimal policy": {"color": c_dict["Optimal policy"], "style": "-"},
     #     "Medium policy": {"color": c_dict["Medium policy"], "style": "-"},
-    #     "Bad policy": {"color": c_dict["Bad policy"], "style": "-"},
+    #     "Naive policy": {"color": c_dict["Naive policy"], "style": "-"},
     #
     #     "Size = 5000": {"color": c_dict["Size = 5000"], "style": "-"},
     #     "Size = 2500": {"color": c_dict["Size = 2500"], "style": "-"},
@@ -130,7 +130,7 @@ def sweep_model():
     calibration = {
         "optimal policy": ac_knnlaplace_optim_5k_plot3,
         "average policy": ac_knnlaplace_suboptim_5k_plot3,
-        "bad policy": ac_knnlaplace_subsuboptim_5k_plot3
+        "Naive policy": ac_knnlaplace_subsuboptim_5k_plot3
     }
     true = {"true": ac_true}
     plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/acrobot/plot3/plot3_boxplot_testing", outer=30, sparse_reward=-1, max_len=1000, res_scale=-1)
