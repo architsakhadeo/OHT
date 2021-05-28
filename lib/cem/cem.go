@@ -382,7 +382,7 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 				mu_old_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col))
 			}
 			for col := 0; col < cem.numHyperparams; col++ {
-				mu_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col)+(meanRealValues.At(0, col)-mu_ave_RealValues.At(0, col))/float64(iteration))
+				mu_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col)+(meanRealValues.At(0, col)-mu_ave_RealValues.At(0, col))/float64(iteration+1))
 			}
 
 			difference := 0.0
