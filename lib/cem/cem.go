@@ -251,7 +251,6 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
 	numRetain := 0 // At first there are no elite samples
 	var buffer []float64
 
-	covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
 	mu_ave_RealValues := mat.NewDense(1, cem.numHyperparams, nil)
 	mu_old_ave_RealValues := mat.NewDense(1, cem.numHyperparams, nil)
 
