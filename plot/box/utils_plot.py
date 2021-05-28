@@ -540,7 +540,8 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
         for i in range(len(thrd)):
             ytcs.append(thrd[i] * res_scale)
         for j in np.arange(ymin+step, ymax+step, step):
-            ytcs.append(j)
+            if np.abs(j - thrd[i] * res_scale) > (ymax-ymin)*0.05:
+                ytcs.append(j)
 
         ax.set_yticks(ytcs)
         ax.set_yticklabels(ytcs)
@@ -571,7 +572,8 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
         for i in range(len(thrd)):
             ytcs.append(thrd[i] * res_scale)
         for j in np.arange(ymin+step, ymax+step, step):
-            ytcs.append(j)
+            if np.abs(j - thrd[i] * res_scale) > (ymax-ymin)*0.05:
+                ytcs.append(j)
         rhs_axs.set_yticks(ytcs)
         # rhs_axs.set_yticklabels(ytcs)
 
