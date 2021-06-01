@@ -31,7 +31,7 @@ func NewRandom(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Random) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
+func (agent *Random) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	err := json.Unmarshal(expAttr, &agent.randomSettings)
 	if err != nil {
 		agent.Message("warning", "agent.Random settings weren't available: "+err.Error())
@@ -88,4 +88,8 @@ func (agent *Random) SaveWeights(basePath string) error {
 
 func (agent *Random) GetLearnProg() string {
 	return "0"
+}
+
+func (agent *Random) PassInfo(info string, value float64) interface{} {
+	return nil
 }

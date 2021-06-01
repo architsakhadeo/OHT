@@ -78,7 +78,7 @@ func NewDdpg(logger logger.Debug) (rlglue.Agent, error) {
 	return &Ddpg{Debug: logger}, nil
 }
 
-func (agent *Ddpg) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
+func (agent *Ddpg) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	err := json.Unmarshal(expAttr, &agent.ddpgSettings)
 	if err != nil {
 		return errors.New("DDPG agent attributes were not valid: " + err.Error())
@@ -224,4 +224,8 @@ func (agent *Ddpg) SaveWeights(basePath string) error {
 
 func (agent *Ddpg) GetLearnProg() string {
 	return "0"
+}
+
+func (agent *Ddpg) PassInfo(info string, value float64) interface{} {
+	return nil
 }

@@ -47,7 +47,7 @@ func NewHandController(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *HandController) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
+func (agent *HandController) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	// Set defaults, which will be overridden if the JSON contains different values.
 	agent.handControllerSettings = handControllerSettings{
 		PlanDuration: 2,
@@ -170,4 +170,8 @@ func (agent *HandController) SaveWeights(basePath string) error {
 
 func (agent *HandController) GetLearnProg() string {
 	return "0"
+}
+
+func (agent *HandController) PassInfo(info string, value float64) interface{} {
+	return nil
 }

@@ -159,7 +159,7 @@ func DefaultESarsaSettings() EsarsaSettings {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
+func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	agent.runNum = int(run)
 	set := DefaultESarsaSettings()
 	err := json.Unmarshal(expAttr, &set)
@@ -181,7 +181,6 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sw
 	if err != nil {
 		return errors.New("ESarsa agent LockWeight attributes were not valid: " + err.Error())
 	}
-	agent.sweepIdx = sweepIdx
 	return agent.InitializeWithSettings(set, lw)
 }
 
@@ -357,16 +356,9 @@ func (agent *ESarsa) InitializeWithSettings(set EsarsaSettings, lw lockweight.Lo
 
 	agent.timesteps = 0
 
-	if agent.LoadW {
-		err := agent.LoadWeights(agent.LoadPath)
-		if err != nil {
-			return err
-		}
-	} else {
-		for i := 0; i < len(agent.weights); i++ {
-			for j := 0; j < len(agent.weights[0]); j++ {
-				agent.weights[i][j] = agent.EsarsaSettings.WInit / float64(agent.EsarsaSettings.NumTilings)
-			}
+	for i := 0; i < len(agent.weights); i++ {
+		for j := 0; j < len(agent.weights[0]); j++ {
+			agent.weights[i][j] = agent.EsarsaSettings.WInit / float64(agent.EsarsaSettings.NumTilings)
 		}
 	}
 	agent.Message("esarsa settings", fmt.Sprintf("%+v", agent.EsarsaSettings))
@@ -992,18 +984,20 @@ func (agent *ESarsa) LoadWeights(loadFromBase string) error {
 	//	f.WriteString("\n")
 	//}
 	//f.Close()
+
 	if agent.LoadW {
 		fileP := path.Join(loadFromBase, "param_"+strconv.Itoa(agent.sweepIdx)+"/weight-"+strconv.Itoa(agent.runNum)+".pkl")
 		fileW, err := os.Open(fileP)
 		agent.Message("Load weight from", fileP)
 		if err != nil {
+			agent.Message(err)
 			return err
 		}
 		decoderW := gob.NewDecoder(fileW)
 		agent.weights = [][]float64{}
 		err = decoderW.Decode(&agent.weights)
 		if err != nil {
-			fmt.Println(err)
+			agent.Message(err)
 			return err
 		}
 		err = fileW.Close()
@@ -1099,4 +1093,15 @@ func (agent *ESarsa) SaveWeights(basePath string) error {
 
 func (agent *ESarsa) GetLearnProg() string {
 	return "0"
+}
+
+func (agent *ESarsa) PassInfo(info string, value float64) interface{} {
+	if info == "LoadWeight" {
+		agent.sweepIdx = int(value)
+		err := agent.LoadWeights(agent.LoadPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

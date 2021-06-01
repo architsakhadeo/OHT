@@ -61,10 +61,11 @@ func Execute(run uint, conf config.Config, sweepIdx int) error {
 		err = errors.New("Could not initialize wrapper: " + err.Error())
 	}
 
-	agnt, err := InitializeAgent(conf.AgentName, run, agentAttr, env, debugLogger, sweepIdx)
+	agnt, err := InitializeAgent(conf.AgentName, run, agentAttr, env, debugLogger)
 	if err != nil {
 		return err
 	}
+	agnt.PassInfo("LoadWeight", float64(sweepIdx))
 
 	expr, err := New(agnt, env, conf.Experiment, debugLogger, dataLogger)
 	if err != nil {
@@ -96,7 +97,7 @@ func InitializeEnvironment(name string, run uint, attr rlglue.Attributes, debug 
 	return env, err
 }
 
-func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug, sweepIdx int) (rlglue.Agent, error) {
+func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.Environment, debug logger.Debug) (rlglue.Agent, error) {
 	var err error
 	defer debug.Error(&err)
 
@@ -105,7 +106,7 @@ func InitializeAgent(name string, run uint, attr rlglue.Attributes, env rlglue.E
 		err = errors.New("Could not create agent: " + err.Error())
 		return nil, err
 	}
-	err = agnt.Initialize(run, attr, env.GetAttributes(), sweepIdx)
+	err = agnt.Initialize(run, attr, env.GetAttributes())
 	if err != nil {
 		err = errors.New("Could not initialize agent: " + err.Error())
 	}

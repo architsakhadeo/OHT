@@ -115,7 +115,7 @@ func (agent *FqiLinear) InitLockWeight(lw lockweight.LockWeight) lockweight.Lock
 	return lw
 }
 
-func (agent *FqiLinear) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
+func (agent *FqiLinear) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
 	err := json.Unmarshal(expAttr, &agent.fqiLinearSettings)
 	if err != nil {
 		return errors.New("FQILinear agent attributes were not valid: " + err.Error())
@@ -794,4 +794,8 @@ func (agent *FqiLinear) GetLearnProg() string {
 		loss += math.Pow(diff, 2)
 	}
 	return strconv.FormatFloat(loss/float64(len(lastQ)), 'f', -1, 64)
+}
+
+func (agent *FqiLinear) PassInfo(info string, value float64) interface{} {
+	return nil
 }
