@@ -224,7 +224,8 @@ def load_total(paths, source, outer=None):
                 if p_key not in data[rk].keys():
                     data[rk][p_key] = []
                 data[rk][p_key].append(all_runs[rk])
-    # print(path, data)
+    
+    #print(path, data)
     return data
 
 def load_rewards(paths, outer=None):
@@ -494,7 +495,7 @@ def loading_average(models_paths, source="reward", outer=None, sparse_reward=Non
                         print("param doesn't exist", rk, pk)
             else:
                 print("run doesn't exist", rk)
-
+        
         models_data[model] = data
     return models_data
 

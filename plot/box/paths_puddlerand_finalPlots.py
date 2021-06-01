@@ -1,6 +1,8 @@
 pr_rnd = [34, 4, 43, 30, 24, 32, 40, 11, 20, 30, 3, 16, 53, 45, 0, 21, 43, 23, 44, 50, 9, 41, 37, 37, 11, 2, 26, 33, 18, 20]
+pr_rnd_30 = [16, 28, 19, 6, 18, 26, 28, 11, 14, 0, 9, 22, 11, 15, 18, 15, 1, 11, 20, 20, 9, 17, 1, 1, 11, 20, 2, 3, 18, 26]
 basepath = "../../data/finalPlots/data/hyperparam_v5/"
 basepath_new = "../../data/finalPlots/data/hyperparam_v5_newData/"
+basepath_cem = "../../data/puddleCEMKNN/"
 
 pr_true = [basepath + "puddlerand/online_learning/esarsa/step30k/sweep/"]
 pr_fqi_tc = [basepath + "puddlerand/offline_learning/random_restarts/fqi-linear/fqi-adam/alpha_hidden_epsilon/step5k_env/optimalfixed_eps0/lambda1e-5/lockat_baseline_online/"]
@@ -34,8 +36,20 @@ pr_dqn_knnlaplace_optim = [basepath + "puddlerand/offline_learning/knn/learning/
 pr_actorcritic_knnlaplace_optim = [basepath + "puddlerand/offline_learning/knn/learning/k3_laplace/timeout1000/ac/step5k_env/data_optimal/drop0/sweep_rep1/"]
 
 # PLOT CEM
-pr_cemlaplace_optim_5k = [basepath + "puddlerand/list/CEMofflineList_KNNlaplace/esarsa/step30k/sweep/"]
+#pr_cemlaplace_optim_5k = [basepath + "puddlerand/list/CEMofflineList_KNNlaplace/esarsa/step30k/sweep/"]
 
-pr_true_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/puddleworld/online_learning/esarsa/step30k/sweep/"]
-pr_knnraw_optim_5k_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/puddleworld/offline_learning/k3_timeout400/esarsa/step30k/optimalfixed_eps0/sweep/"]
-pr_cemraw_optim_5k_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/puddleworld/list/CEMoffline_onlineEvaluation/esarsa/step30k/sweep/"]
+#pr_true_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/puddleworld/online_learning/esarsa/step30k/sweep/"]
+#pr_knnraw_optim_5k_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/puddleworld/offline_learning/k3_timeout400/esarsa/step30k/optimalfixed_eps0/sweep/"]
+#pr_cemraw_optim_5k_old = [basepath + "hyperparam_ap_CEM_gridsearch/data/hyperparam_ap/puddleworld/list/CEMoffline_onlineEvaluation/esarsa/step30k/sweep/"]
+
+ 
+pr_true_cem = [basepath_cem + "onlineLearning/data/puddleworld/sweep/"]
+
+pr_k3_suboptim_500data = [basepath_cem + "offlineLearning/puddleKNNresults/data/hyperparam_v5/puddlerand/offline_learning/knn/learning/k3/timeout500/esarsa/step500_env/data_suboptimal/drop0/sweep/"]
+pr_k3_laplace_suboptim_500data = [basepath_cem + "offlineLearning/puddleKNNresults/data/hyperparam_v5/puddlerand/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step500_env/data_suboptimal/drop0/sweep_rep1/"]
+
+pr_CEM_k3_suboptim_500data_50iters = [basepath_cem + "onlineLearning/data/hyperparam_ap/puddleworld/list/CEMofflineList/esarsa/step15k/cem_k3_online/sweep_50iters/"]
+pr_CEM_k3_laplace_suboptim_500data_50iters = [basepath_cem + "onlineLearning/data/hyperparam_ap/puddleworld/list/CEMofflineList/esarsa/step15k/cem_k3_laplace_online/sweep_50iters/"]
+
+pr_CEM_k3_suboptim_500data_100iters = [basepath_cem + "onlineLearning/data/hyperparam_ap/puddleworld/list/CEMofflineList/esarsa/step15k/cem_k3_online/sweep_100iters/"]
+pr_CEM_k3_laplace_suboptim_500data_100iters = [basepath_cem + "onlineLearning/data/hyperparam_ap/puddleworld/list/CEMofflineList/esarsa/step15k/cem_k3_laplace_online/sweep_100iters/"]

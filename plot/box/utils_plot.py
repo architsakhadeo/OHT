@@ -118,6 +118,9 @@ c_dict = {
 
     "Esarsa transfer (true)": c_default_Adam[2],
     "Esarsa transfer (calibration)": c_default_Adam[6],
+
+    "Calibration (CEM)": c_default_Adam[5],
+    "Calibration (Grid search)": c_default_Adam[0]
 }
 m_default = [".", "^", "+", "*", "s", "D", "h", "H", "."]
 m_dict = {
@@ -256,6 +259,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
+    print(te_data)
 
     # fqi data
     # # all performance
@@ -269,12 +273,24 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
 
     if cem is not None:
         # cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["cem"] # 30 runs in total, but different parameters
-        cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["calibration (cem)"] # 30 runs in total, but different parameters
+        cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["Calibration (CEM)"] # 30 runs in total, but different parameters
         # cem_rank = ranking_allruns(cem_data_all)["cem"]
+        total_cem_data = {}
         cem_data = []
+        #for rk in cem_data_all.keys():
+        #    for pk in cem_data_all[rk].keys():
+        #        cem_data.append(cem_data_all[rk][pk])
         for rk in cem_data_all.keys():
             for pk in cem_data_all[rk].keys():
-                cem_data.append(cem_data_all[rk][pk])
+                if pk not in total_cem_data:
+                    total_cem_data[pk] = [cem_data_all[rk][pk]]
+                else:
+                    total_cem_data[pk].append(cem_data_all[rk][pk])
+
+        for pk in total_cem_data.keys():
+            cem_data.append(np.mean(total_cem_data[pk]))
+        
+        print(cem_data)
 
     # random data list
     if rand_lst != []:
@@ -311,7 +327,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     if rand_lst != []:
         bsl["Random"] = [rand_data]
     if cem is not None:
-        bsl["Calibration (cem)"] = [cem_data]
+        bsl["Calibration (CEM)"] = [cem_data]
     if fqi is not None:
         bsl["FQI"] = [fqi_data]
     for k in bsl:
@@ -518,7 +534,10 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
         for i in range(len(thrd)):
             ytcs.append(thrd[i] * res_scale)
         for j in np.arange(ymin+step, ymax+step, step):
-            ytcs.append(j)
+            #ytcs.append(j)
+            if np.abs(j - thrd[i] * res_scale) > (ymax-ymin)*0.05:
+                ytcs.append(j)
+
 
         ax.set_yticks(ytcs)
         ax.set_yticklabels(ytcs)
@@ -530,7 +549,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
                 # true_perf_pos = ymin
             else:
                 true_perf_pos += (ymax - true_perf_pos)*0.05
-            ax.text(min_x-space, true_perf_pos, "True performance", c="black", fontsize=15)
+            #ax.text(min_x-space, true_perf_pos, "True performance", c="black", fontsize=15)
 
         ymin, ymax = rhs_axs.get_ylim()
         ytcs = []

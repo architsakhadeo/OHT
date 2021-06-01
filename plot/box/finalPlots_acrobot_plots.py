@@ -82,9 +82,9 @@ def top_param():
         "DQN": ac_dqn,
         "AC": ac_actorcritic,
     }
-    plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot_agents",
-                        outer=30, res_scale=-1, ylim=[[0, 500]], ylabel="Step per episode", right_ax=[],
-                        label_ncol=3)
+    #plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/acrobot/plot_agents",
+    #                    outer=30, res_scale=-1, ylim=[[0, 500]], ylabel="Step per episode", right_ax=[],
+    #                    label_ncol=3)
 
     # info = {
     #

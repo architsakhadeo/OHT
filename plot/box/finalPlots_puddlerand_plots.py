@@ -6,6 +6,7 @@ from plot.box.utils_plot import *
 from plot.box.paths_puddlerand_finalPlots import *
 
 def top_param():
+    '''
     # PLOT 1
     calibration = {
         "Calibration-KNN": pr_knnlaplace_optim_5k,
@@ -53,10 +54,11 @@ def top_param():
         "DQN": pr_dqn,
         "AC": pr_actorcritic,
     }
-    plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot_agents",
-                        outer=30, ylim=[[-3000, 100]], ylabel="Return per episode", right_ax=[],
-                        label_ncol=3)
-
+    #plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot_agents",
+    #                    outer=30, ylim=[[-3000, 100]], ylabel="Return per episode", right_ax=[],
+    #                    label_ncol=3)
+    
+    
     # PLOT CEM
     calibration = {
         "Calibration-KNN": pr_knnlaplace_optim_5k
@@ -68,6 +70,18 @@ def top_param():
     #fqi = {"FQI": ac_fqi_tc}
     plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models_CEM_KNNlaplace", cem=cem,
                       outer=30, ylim=[[-80, -20],[]], ylabel="Return per episode", right_ax=[], plot ='box')
+    '''
+    
+    calibration = {
+        "Calibration (grid search)": pr_k3_laplace_suboptim_500data
+    }
+    #random = pr_rnd_30
+    random = []
+    true = {"true": pr_true_cem}
+    cem = {"Calibration (CEM)": pr_CEM_k3_laplace_suboptim_500data_100iters}
+    #fqi = {"FQI": ac_fqi_tc}
+    plot_compare_top(true, calibration, None, random, "totals", "../img/finalPlots/puddlerand/cem/cem_k3_laplace_100iters_ylim", cem=cem,
+                      outer=30, ylim=[[-40, -25]], ylabel="Return per episode", right_ax=[], plot ='box')
 
 
 def sweep_model():
