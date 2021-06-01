@@ -7,21 +7,20 @@
     "state-len": 6,
     "env-name": "acrobot",
     "sweep": {
-      "epsilon": [0.0],
-      "epsilon-after-lock": [0.0],
       "tilings": [16],
       "tiles": [8],
-      "lambda": [0.8],
-      "alpha": [0.0],
-      "weight-init": [0],
       "is-stepsize-adaptive": [true],
-      "adaptive-alpha": [0.03],
-      "beta1": [0],
-      "softmax-temp": [1]
+      "alpha": [0.0],
+      "lambda": [0.8],
+      "epsilon": [0.0],
+      "adaptive-alpha": [0.003, 0.03, 0.3],
+      "beta1": [0.0, 0.9],
+      "softmax-temp": [1.0, 10.0, 100.0],
+      "weight-init": [0.0, 8.0, 16.0]
     },
 
-    "weight-save": true,
-    "weight-save-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/best/",
+    "weight-save": false,
+    "weight-save-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/sweep/",
     "lock-weight": false,
     "enable-debug": false,
     "seed": 1
@@ -37,7 +36,7 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 15000,
-    "data-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/best/",
+    "data-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/sweep/",
 
     "should-log-totals": true,
     "should-log-episode-lengths": true,
