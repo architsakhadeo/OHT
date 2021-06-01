@@ -12,10 +12,10 @@
 			"alpha": [0.0],
 			"lambda": [0.8],
 			"epsilon": [0.0],
-			"adaptive-alpha": [0.003, 0.03, 0.3],
-			"beta1": [0.0, 0.9],
-			"softmax-temp": [1.0, 10.0, 100.0],
-			"weight-init": [0.0, 8.0, 16.0]
+			"adaptive-alpha": [0.001, 0.003, 0.01, 0.03, 0.1],
+			"beta1": [0.0],
+			"softmax-temp": [1.0, 2.0, 4.0, 6.0, 8.0, 10.0],
+			"weight-init": [0.0]
 		},
 		"lock-weight": false,
 		"enable-debug": false,
@@ -27,8 +27,8 @@
 		"seed": 1,
 		"total-logs": 30,
 		"neighbor-num": 3,
-		"datalog": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step500/optimalfixed_eps0/param_0/",
-		"true-start-log": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step500/optimalfixed_eps0/param_0/",
+		"datalog": "data/hyperparam_v5/acrobot/offline_data/random_restarts/esarsa/step500/suboptimalfixed_eps0/param_0/",
+		"true-start-log": "data/hyperparam_v5/acrobot/offline_data/true_restarts/esarsa/step500/suboptimalfixed_eps0/param_0/",
 		"ensemble-seed": 0,
 		"drop-percent": 0,
 		"pick-start-state": "random-init",
@@ -42,11 +42,12 @@
 		"rep-train-learning-rate": 0.00003,
 		"rep-hidden": [128, 128],
 		"rep-dim": 8,
+		"rep-test-forward": 1,
 		"rep-name": "Laplace",
 
 		"rep-save": false,
 		"rep-load": true,
-		"rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/step500/optimalfixed_eps0/rep_laplace"
+		"rep-load-path": "data/hyperparam_v5/acrobot/offline_learning/knn/env_training/step500/suboptimalfixed_eps0/rep_laplace"
 	},
 	"experiment-settings": {
 		"randomize_start_state_beforeLock": false,
@@ -56,7 +57,7 @@
 		"max-run-length-episodic": 15000,
 		"steps-in-episode": 500,
 
-		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step500_env/data_optimal/drop0/sweep_rep1",
+		"data-path": "data/hyperparam_v5/acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step500_env/data_suboptimal/drop0/sweep_rep1",
 		"should-log-traces": false,
 		"should-log-episode-lengths": false,
 		"should-log-rewards": false,
