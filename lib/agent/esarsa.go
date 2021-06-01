@@ -104,7 +104,7 @@ type ESarsa struct {
 	bf         *buffer.Buffer
 	lw         lockweight.LockWeight
 	lock       bool
-	sweepIdx       int
+	sweepIdx   int
 }
 
 func init() {

@@ -42,6 +42,11 @@ type Settings struct {
 
         // Window is the number of iterations of buffer to have to calculate the change in performance
         Window int
+
+        // ExpAvg is the flag that determines whether the CEM uses exponential average
+        ExpAvg bool
+
+        ExpAvgStepSize float64
 }
 
 type Cem struct {
@@ -49,8 +54,8 @@ type Cem struct {
         rng *rand.Rand
 
         numHyperparams int
-        numEliteCov       int
-        numEliteMean int
+        numEliteCov    int
+        numEliteMean   int
         numEliteRetain int
 
         hypers []Hyperparameter
@@ -78,15 +83,15 @@ const e = 10.e-8
 
 func DefaultSettings() Settings {
         return Settings{
-                NumWorkers:    runtime.NumCPU(),
-                NumIterations: 3,
-                NumSamples:    10,
-                NumRuns:       2,
-                Criteria: 0.05,
-                PercentEliteCov:  0.5,
-                PercentEliteMean: 0.25,
+                NumWorkers:         runtime.NumCPU(),
+                NumIterations:      3,
+                NumSamples:         10,
+                NumRuns:            2,
+                Criteria:           0.05,
+                PercentEliteCov:    0.5,
+                PercentEliteMean:   0.25,
                 PercentEliteRetain: 0.1,
-                Window: 5,
+                Window:             5,
         }
 }
 
@@ -106,9 +111,9 @@ func New(run RunFunc, hypers []Hyperparameter, datasetSeed uint, settings Settin
                 hypers:         hypers,
                 numHyperparams: len(hypers),
                 Settings:       settings,
-                numEliteCov:       int(float64(settings.NumSamples) * settings.PercentEliteCov),
-                numEliteMean:       int(float64(settings.NumSamples) * settings.PercentEliteMean),
-                numEliteRetain:       int(float64(settings.NumSamples) * settings.PercentEliteRetain),
+                numEliteCov:    int(float64(settings.NumSamples) * settings.PercentEliteCov),
+                numEliteMean:   int(float64(settings.NumSamples) * settings.PercentEliteMean),
+                numEliteRetain: int(float64(settings.NumSamples) * settings.PercentEliteRetain),
                 debugWriter:    noopWriter,
         }
 
@@ -246,6 +251,14 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
         numRetain := 0 // At first there are no elite samples
         var buffer []float64
 
+        mu_ave_RealValues := mat.NewDense(1, cem.numHyperparams, nil)
+        mu_old_ave_RealValues := mat.NewDense(1, cem.numHyperparams, nil)
+
+        for col := 0; col < cem.numHyperparams; col++ {
+                mu_ave_RealValues.Set(0, col, 0.0)
+                mu_old_ave_RealValues.Set(0, col, 2.0*cem.Criteria)
+        }
+
         for iteration := 0; iteration < cem.NumIterations; iteration++ {
                 startIteration := time.Now()
                 fmt.Println("Criteria:", cem.Criteria, cem.Window)
@@ -320,7 +333,12 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
                                 average += elitesRealVals.At(sample, col)
                         }
                         average /= float64(cem.numEliteMean)
-                        meanRealValues.Set(0, col, average)
+                        if cem.Settings.ExpAvg {
+                                oldMean := meanRealValues.At(0, col)
+                                meanRealValues.Set(0, col, (1-cem.Settings.ExpAvgStepSize)*oldMean+cem.Settings.ExpAvgStepSize*average)
+                        } else {
+                                meanRealValues.Set(0, col, average)
+                        }
                 }
                 mean.SetRow(0, meanRealValues.RawRowView(0))
                 cem.updateDiscretes(0, mean, meanRealValues)
@@ -335,14 +353,22 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
                 cov := mat.NewSymDense(cem.numHyperparams, nil)
                 stat.CovarianceMatrix(cov, elitesRealVals, nil)
 
-                covariance = mat.NewDense(cem.numHyperparams, cem.numHyperparams, nil)
                 for row := 0; row < cem.numHyperparams; row++ {
                         for col := 0; col < cem.numHyperparams; col++ {
-                                if row == col {
-                                        covariance.Set(row, col, cov.At(row, col)+e)
+                                if cem.Settings.ExpAvg {
+                                        if row == col {
+                                                covariance.Set(row, col, (1-cem.Settings.ExpAvgStepSize)*covariance.At(row, col)+cem.Settings.ExpAvgStepSize*cov.At(row, col)+e)
+                                        } else {
+                                                covariance.Set(row, col, (1-cem.Settings.ExpAvgStepSize)*covariance.At(row, col)+cem.Settings.ExpAvgStepSize*cov.At(row, col)-e)
+                                        }
                                 } else {
-                                        covariance.Set(row, col, cov.At(row, col)-e)
+                                        if row == col {
+                                                covariance.Set(row, col, cov.At(row, col)+e)
+                                        } else {
+                                                covariance.Set(row, col, cov.At(row, col)-e)
+                                        }
                                 }
+
                         }
                 }
 
@@ -351,29 +377,50 @@ func (cem Cem) Run(datasetSeed uint) ([]float64, error) {
                         fmt.Fprintf(cem.debugWriter, "--------------------------------------------------\n")
                 }
 
-                if iteration < cem.Window + 1 {
-                        //buffer[iteration] = meanScore
-                        buffer = append(buffer, meanScore)
-                } else {
-                        for shift := 0; shift < cem.Window; shift++ {
-                                buffer[shift] = buffer[shift+1]
+                if cem.Settings.ExpAvg {
+                        for col := 0; col < cem.numHyperparams; col++ {
+                                mu_old_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col))
                         }
-                        buffer[cem.Window] = meanScore
-                }
-
-                if iteration >= cem.Window {
-                        totalDiff := 0.0
-                        for shift := 0; shift < cem.Window; shift++ {
-                                totalDiff += math.Abs(buffer[shift] - buffer[shift+1])
+                        for col := 0; col < cem.numHyperparams; col++ {
+                                mu_ave_RealValues.Set(0, col, mu_ave_RealValues.At(0, col)+(meanRealValues.At(0, col)-mu_ave_RealValues.At(0, col))/float64(iteration+1))
                         }
 
-                        avgDiff := totalDiff/float64(cem.Window)
-                        fmt.Println("Average diff:", avgDiff)
-                        if avgDiff <= cem.Criteria {
+                        difference := 0.0
+                        for col := 0; col < cem.numHyperparams; col++ {
+                                difference += math.Pow((mu_ave_RealValues.At(0, col) - mu_old_ave_RealValues.At(0, col)), 2)
+                        }
+                        difference = math.Pow(difference, 0.5)
+                        if difference <= cem.Criteria {
                                 return mean.RawRowView(0), nil
                         }
+
+                } else {
+                        if iteration < cem.Window+1 {
+                                //buffer[iteration] = meanScore
+                                buffer = append(buffer, meanScore)
+                        } else {
+                                for shift := 0; shift < cem.Window; shift++ {
+                                        buffer[shift] = buffer[shift+1]
+                                }
+                                buffer[cem.Window] = meanScore
+                        }
+
+                        if iteration >= cem.Window {
+                                totalDiff := 0.0
+                                for shift := 0; shift < cem.Window; shift++ {
+                                        totalDiff += math.Abs(buffer[shift] - buffer[shift+1])
+                                }
+
+                                avgDiff := totalDiff / float64(cem.Window)
+                                fmt.Println("Average diff:", avgDiff)
+                                if avgDiff <= cem.Criteria {
+                                        return mean.RawRowView(0), nil
+                                }
+                        }
+
+                        fmt.Println("Buffer:", buffer)
                 }
-                fmt.Println("Buffer:", buffer)
+
         }
 
         return mean.RawRowView(0), nil

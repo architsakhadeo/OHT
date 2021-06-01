@@ -2,11 +2,14 @@
 	"ScoreType": "episode-longer-is-better",
 	"NumWorkers": -1,
 	"NumIterations": 100,
-	"NumSamples": 192,
-	"NumRuns": 3,
-	"PercentEliteCov": 0.5,
-	"PercentEliteMean": 0.25,
-	"PercentEliteRetain": 0.1,
-	"Criteria": 0.25,
+	"NumSamples": 32,
+	"NumRuns": 5,
+	"PercentEliteCov": 0.125,
+	"PercentEliteMean": 0.125,
+	"PercentEliteRetain": 0.0,
+	"Criteria": 0.0000000000001,
 	"Window": 5,
-	"Seed": 42}
+	"Seed": 42,
+	"ExpAvg": true,
+	"ExpAvgStepSize": 0.1
+}
