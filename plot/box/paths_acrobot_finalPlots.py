@@ -22,13 +22,17 @@ ac_knnlaplace_optim_5k_new = [basepath_new + "acrobot/offline_learning/knn/learn
 ac_knnlaplace_bad_5k_new = [basepath_new + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_subsuboptimal/drop0/sweep_rep1/"]
 
 # PLOT 3
-acshift_true = [basepath + "acrobot/online_learning/esarsa/step15k/sweep/"]
-acshift_knnlaplace_optim_5k_50kstep = [basepath + "acrobot_shift/online_learning/shift/esarsa/step50k/best/"]
-acshift_knnlaplace_optim_5k = [basepath + "acrobot_shift/online_learning/shift/esarsa/step15k/best/"]
-acshift_esarsa_true_trans = [basepath + "acrobot_shift/policy_transfer/shift/load_default/esarsa/best/"]
-acshift_esarsa_calibration_trans = [basepath + "acrobot_shift/policy_transfer/shift/load_calibration_default/esarsa/fixed/"]
+acshift_true = ["../../data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/sweep/"]
+# acshift_knnlaplace_optim_5k_50kstep = [basepath + "acrobot_shift/online_learning/shift/esarsa/step50k/best/"]
+# acshift_knnlaplace_optim_5k = [basepath + "acrobot_shift/online_learning/shift/esarsa/step15k/all/"]
+acshift_knnlaplace_optim_5k = [basepath + "acrobot/offline_learning/knn/learning/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/sweep_rep1/"]
+acshift_esarsa_true_trans = ["../../data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_default/esarsa/all/"]
+acshift_esarsa_calibration_trans = ["../../data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_calibration_default/esarsa/fixed_all/"]
 acshift_fqi_tc_optim_5k = [basepath + "acrobot_shift/policy_transfer/shift/load_default/fqi-linear/lambda1e-3/"]
 acshift_fqi_nn_optim_5k = [basepath + "acrobot_shift/policy_transfer/shift/load_default/fqi/lambda1e-3/"]
+# acshift_knnlaplace_optim_5k = [basepath + "acrobot_shift/online_learning/shift/esarsa/step15k/best/"]
+# acshift_esarsa_true_trans = [basepath + "acrobot_shift/policy_transfer/shift/load_default/esarsa/best/"]
+# acshift_esarsa_calibration_trans = [basepath + "acrobot_shift/policy_transfer/shift/load_calibration_default/esarsa/fixed/"]
 
 # PLOT temp
 ac_dqn = [basepath + "acrobot/online_learning/dqn/step600k/sweep/"]
