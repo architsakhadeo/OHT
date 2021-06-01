@@ -19,9 +19,12 @@
       "weight-init": [0.0, 8.0, 16.0]
     },
 
-    "weight-save": false,
-    "weight-save-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/sweep/",
-    "lock-weight": false,
+    "weight-load": true,
+    "weight-load-path": "data/hyperparam_v5/acrobot_shift/calibration_learning/default/k3_laplace/timeout500/esarsa/step5k_env/data_optimal/drop0/step50k_all/",
+
+    "lock-weight": true,
+    "lock-condition": "beginning",
+
     "enable-debug": false,
     "seed": 1
   },
@@ -36,7 +39,7 @@
     "steps": 0,
     "episodes": 1000000,
     "max-run-length-episodic": 15000,
-    "data-path": "data/hyperparam_v5/acrobot_shift/online_learning/shift/esarsa/step15k/sweep/",
+    "data-path": "data/hyperparam_v5/acrobot_shift/policy_transfer/shift/load_calibration_default/esarsa/fixed_all/",
 
     "should-log-totals": true,
     "should-log-episode-lengths": true,

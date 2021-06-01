@@ -36,7 +36,7 @@ func NewExample(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *Example) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+func (agent *Example) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
 	err := json.Unmarshal(expAttr, &agent.exampleSettings)
 	if err != nil {
 		agent.Message("warning", "agent.Example settings weren't available: "+err.Error())

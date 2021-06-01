@@ -96,7 +96,7 @@ func (agent *Dqn) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight
 	return lw
 }
 
-func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+func (agent *Dqn) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
 	err := json.Unmarshal(expAttr, &agent.dqnSettings)
 	if err != nil {
 		return errors.New("DQN agent attributes were not valid: " + err.Error())

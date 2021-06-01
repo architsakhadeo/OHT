@@ -137,7 +137,7 @@ func (critic *Critic) Update(x []float64, delta float64) error {
 }
 
 // Initialize initializes the ActorCritic Agent following the rlglue framework
-func (agent *ActorCritic) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+func (agent *ActorCritic) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
 	err := json.Unmarshal(expAttr, &agent.acSettings)
 	if err != nil {
 		return errors.New("ActorCritic experiment attributes are not valid: " + err.Error())

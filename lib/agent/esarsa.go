@@ -104,6 +104,7 @@ type ESarsa struct {
 	bf         *buffer.Buffer
 	lw         lockweight.LockWeight
 	lock       bool
+	sweepIdx       int
 }
 
 func init() {
@@ -158,7 +159,7 @@ func DefaultESarsaSettings() EsarsaSettings {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
 	agent.runNum = int(run)
 	set := DefaultESarsaSettings()
 	err := json.Unmarshal(expAttr, &set)
@@ -180,7 +181,7 @@ func (agent *ESarsa) Initialize(run uint, expAttr, envAttr rlglue.Attributes) er
 	if err != nil {
 		return errors.New("ESarsa agent LockWeight attributes were not valid: " + err.Error())
 	}
-
+	agent.sweepIdx = sweepIdx
 	return agent.InitializeWithSettings(set, lw)
 }
 
@@ -992,8 +993,9 @@ func (agent *ESarsa) LoadWeights(loadFromBase string) error {
 	//}
 	//f.Close()
 	if agent.LoadW {
-
-		fileW, err := os.Open(path.Join(loadFromBase, "param_0/weight-"+strconv.Itoa(agent.runNum)+".pkl"))
+		fileP := path.Join(loadFromBase, "param_"+strconv.Itoa(agent.sweepIdx)+"/weight-"+strconv.Itoa(agent.runNum)+".pkl")
+		fileW, err := os.Open(fileP)
+		agent.Message("Load weight from", fileP)
 		if err != nil {
 			return err
 		}

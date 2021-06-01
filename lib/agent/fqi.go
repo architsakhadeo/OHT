@@ -109,7 +109,7 @@ func (agent *Fqi) InitLockWeight(lw lockweight.LockWeight) lockweight.LockWeight
 	return lw
 }
 
-func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+func (agent *Fqi) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
 	err := json.Unmarshal(expAttr, &agent.fqiSettings)
 	if err != nil {
 		return errors.New("FQI agent attributes were not valid: " + err.Error())
