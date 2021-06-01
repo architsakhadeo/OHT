@@ -48,12 +48,16 @@ for numrun in range(30):
 
 import matplotlib.pyplot as plt
 plt.figure()
-plt.rcParams['figure.figsize'] = [10, 6]
+# plt.rcParams['figure.figsize'] = [10, 6]
+fig, ax = plt.subplots(figsize=(6, 4.8))
 plt.xlim([0.25, 2.25])
 # plt.xticks([0.5, 1.0, 1.5, 2.0], ['random', 'suboptimal', 'optimal', 'true'])
 plt.xticks([], [])
 # plt.ylabel("Number of\nfailures", rotation=0, labelpad=45)
-plt.ylabel("Number of failures")
+plt.ylabel("Number of failures", fontsize=20)
+plt.ylim(0, 6000)
+plt.yticks([0, 2000, 4000, 6000], [0, 2000, 4000, 6000], fontsize=15)
+
 plt.tight_layout()
 # colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 

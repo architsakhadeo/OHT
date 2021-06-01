@@ -102,12 +102,12 @@ c_dict = {
     "Size = 1000": c_default_Adam[4],
     "Size = 500": c_default_Adam[6],
 
-    "Optimal policy": c_default_Adam[0],
-    "Near-optimal policy": c_default_Adam[0],
+    "Optimal": c_default_Adam[0],
+    "Near-optimal": c_default_Adam[0],
     # "Average policy": c_default_Adam[3],
-    "Medium policy": c_default_Adam[3],
-    "Naive policy": c_default_Adam[6],
-    "Random policy": c_default_Adam[4],
+    "Medium": c_default_Adam[3],
+    "Naive": c_default_Adam[6],
+    "Random": c_default_Adam[4],
 
     "KNN (laplace)": c_default_Adam[0],
     "network (laplace)": c_default_Adam[3],
@@ -251,10 +251,9 @@ def plot_generation(te, cms, ranges, source, title, ylim=None, yscale="linear", 
     plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, label_ncol=label_ncol)
     #plot_violins(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale)
 
-def plot_compare_top(te, cms, fqi, rand_lst, source, title,
-                     cem=None,
-                     ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
-                     ylabel="", right_ax=None, label_ncol=10, plot="box"):
+def plot_compare_top(te, cms, fqi, rand_lst, source, title, cem=None, load_perf=None,
+                     ylim=[], yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf, discount=1,
+                     ylabel="", right_ax=[], label_ncol=10, plot="box", true_perf_label=True):
     ranges = [0]
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
@@ -265,16 +264,29 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     # # all performance
     if fqi is not None:
         fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
+        # fqi_data = []
+        # for rk in fqi_data_all.keys():
+        #     for pk in fqi_data_all[rk].keys():
+        #         fqi_data.append(fqi_data_all[rk][pk])
+        total_fqi_data = {}
         fqi_data = []
         for rk in fqi_data_all.keys():
             for pk in fqi_data_all[rk].keys():
-                fqi_data.append(fqi_data_all[rk][pk])
-
+                if pk not in total_fqi_data:
+                    total_fqi_data[pk] = [fqi_data_all[rk][pk]]
+                else:
+                    total_fqi_data[pk].append(fqi_data_all[rk][pk])
+        for pk in total_fqi_data.keys():
+            fqi_data.append(np.mean(total_fqi_data[pk]))
 
     if cem is not None:
         # cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["cem"] # 30 runs in total, but different parameters
         cem_data_all = loading_average(cem, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["Calibration (CEM)"] # 30 runs in total, but different parameters
         # cem_rank = ranking_allruns(cem_data_all)["cem"]
+        # cem_data = []
+        # for rk in cem_data_all.keys():
+        #     for pk in cem_data_all[rk].keys():
+        #         cem_data.append(cem_data_all[rk][pk])
         total_cem_data = {}
         cem_data = []
         #for rk in cem_data_all.keys():
@@ -312,6 +324,19 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
             data = [item[2] for item in target]
             filtered[model].append(data)
 
+    if load_perf is not None:
+        lp_avg = loading_average(load_perf, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+        for model in lp_avg.keys():
+            filtered[model] = []
+            temp_data = {}
+            for rk in lp_avg[model].keys():
+                for pk in lp_avg[model][rk].keys():
+                    if pk not in temp_data:
+                        temp_data[pk] = [lp_avg[model][rk][pk]]
+                    else:
+                        temp_data[pk].append(lp_avg[model][rk][pk])
+            for pk in temp_data.keys():
+                filtered[model].append(np.mean(temp_data[pk]))
 
     # if cem is not None and fqi is not None and rand_lst != []:
     #     bsl = {"Random selection": [rand_data], "FQI": [fqi_data], "calibration (cem)": [cem_data]}
@@ -336,7 +361,8 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title,
     if plot == "box":
         plot_boxs(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
     elif plot == "bar":
-        plot_bars(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
+        plot_bars(filtered, te_thrd, ranges, title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol,
+                  true_perf_label=true_perf_label)
 
 def plot_compare_agents(te, cms, fqi, rand_lst, source, title,
                         cem=None, ylim=None, yscale="linear", res_scale=1, outer=None, sparse_reward=None, max_len=np.inf,
@@ -347,6 +373,7 @@ def plot_compare_agents(te, cms, fqi, rand_lst, source, title,
     te_data = {}
     for agent in te_data_all:
         te_data[agent] = average_run(te_data_all[agent])
+        # print(dict(sorted(te_data[agent].items(), key=lambda item: item[1])))
 
     # top true env data performance
     te_thrd = []
@@ -362,6 +389,9 @@ def plot_compare_agents(te, cms, fqi, rand_lst, source, title,
         target = percentile_worst(ranks, 0, te_data[model])
         data = [item[2] for item in target]
         filtered[model].append(data)
+        params = [item[1] for item in target]
+        # print(model)
+        # print(params)
 
     if plot == "box":
         plot_boxs(filtered, te_thrd, [0], title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol,
@@ -377,7 +407,7 @@ def performance_by_param(rand_lst, data):
         perf.append(data[pk])
     return perf
 
-def plot_bars(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel="", right_ax=[], label_ncol=10):
+def plot_bars(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale=1, ylabel="", right_ax=[], label_ncol=10, true_perf_label=True):
     all_models = list(filtered.keys())
     xlocations = range(len(filtered[all_models[0]]))
     width = 0.2 / len(all_models) if len(xlocations) > 2 else 0.05
@@ -420,17 +450,17 @@ def plot_bars(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
         ax.set_ylim(ylim[0])
 
     ax.set_xlim([min_x-space, max_x+space])
-    if len(thrd) > 0:
+    if len(thrd) > 0 and true_perf_label:
         ymin, ymax = ax.get_ylim()
         xmin, xmax = ax.get_xlim()
 
         true_perf_pos = thrd[0] * res_scale
         if ymax - true_perf_pos > true_perf_pos - ymin:
-            true_perf_pos -= (true_perf_pos - ymin)*0.7
-            # true_perf_pos = ymin
+            # true_perf_pos -= (true_perf_pos - ymin)*0.7
+            true_perf_pos -= (ymax - ymin) / 17
         else:
             true_perf_pos += (ymax - true_perf_pos)*0.05
-        ax.text(xmin+(xmax-xmin)*0.005, true_perf_pos, "True performance", c="black", fontsize=15)
+        ax.text(xmin+(xmax-xmin)*0.005, true_perf_pos, "True perf.", c="black", fontsize=15)
 
     ax.set_ylabel(ylabel, fontsize=20)
     # plt.show()
@@ -466,7 +496,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
 
     info = {}
     for i in range(len(thrd)):
-        ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color=thrd_color[i], linewidth=1.4)
+        thrd_line = ax.plot([xlocations[0]-width-space*2, (width+space)*len(all_models)], [thrd[i] * res_scale]*2, "--", color=thrd_color[i], linewidth=1.4)
     # if len(thrd) > 0:
     #     # plt.plot([], "--", c="black", label="true performance")
     #     info["true performance"] = {"color": "black", "style": "--"}
@@ -526,31 +556,47 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
 
     ax.set_yscale(yscale)
     rhs_axs.set_yscale(yscale)
+    ymin, ymax = ax.get_ylim()
     if yscale!="log":
-        ymin, ymax = ax.get_ylim()
         ytcs = []
         ytcs.append(ymin)
         step = (ymax - ymin) / 3
         for i in range(len(thrd)):
             ytcs.append(thrd[i] * res_scale)
         for j in np.arange(ymin+step, ymax+step, step):
-            #ytcs.append(j)
-            if np.abs(j - thrd[i] * res_scale) > (ymax-ymin)*0.05:
+            if len(thrd) == 0 or np.abs(j - thrd[0] * res_scale) > (ymax-ymin)*0.05:
                 ytcs.append(j)
-
 
         ax.set_yticks(ytcs)
         ax.set_yticklabels(ytcs)
-
+    elif ylim != [] and yscale == "log":
         if len(thrd) > 0:
-            true_perf_pos = thrd[0] * res_scale
+            ytcs = [thrd_line[0].get_data()[1][0], 1000, 10000]
+        else:
+            ytcs = [ylim[0][0], 1000, 10000]
+        ax.set_ylim(ylim[0][0], ymax)
+        ax.set_yticks(ytcs)
+        ax.set_yticklabels(ytcs)
+
+    if len(thrd) > 0:
+
+        #     true_perf_pos = thrd[0] * res_scale
+        # else:
+        #     true_perf_pos = np.log(thrd[0] * res_scale)
+        true_perf_pos = thrd_line[0].get_data()[1][0]
+
+        if yscale!="log":
             if ymax - true_perf_pos > true_perf_pos - ymin:
-                true_perf_pos -= (true_perf_pos - ymin)*0.7
-                # true_perf_pos = ymin
+                # true_perf_pos -= (true_perf_pos - ymin)*0.7
+                true_perf_pos -= (ymax - ymin) / 22
             else:
                 true_perf_pos += (ymax - true_perf_pos)*0.05
-            #ax.text(min_x-space, true_perf_pos, "True performance", c="black", fontsize=15)
+        else:
+            true_perf_pos -= (true_perf_pos - ymin) * 0.8
 
+        ax.text(min_x-space, true_perf_pos, "True perf.", c="black", fontsize=15)
+
+    if yscale!="log":
         ymin, ymax = rhs_axs.get_ylim()
         ytcs = []
         ytcs.append(ymin)
@@ -558,7 +604,8 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
         for i in range(len(thrd)):
             ytcs.append(thrd[i] * res_scale)
         for j in np.arange(ymin+step, ymax+step, step):
-            ytcs.append(j)
+            if len(thrd) == 0 or np.abs(j - thrd[0] * res_scale) > (ymax-ymin)*0.05:
+                ytcs.append(j)
         rhs_axs.set_yticks(ytcs)
         # rhs_axs.set_yticklabels(ytcs)
 
@@ -853,39 +900,47 @@ def plot_termination_perc(datasets, types, run, title):
         plt.clf()
     return
 
-def plot_learning_perform(paths, source, title, ylim=[], yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1,
-                          ylabel="", right_ax=None, label_ncol=10,
-                          fqi=None, true_perf=None):
-    te_thrd = []
-    if true_perf:
-        # true env data dictionary
-        te_data = loading_average(true_perf, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-        te_data = average_run(te_data["true"])
-
-        # top true env data performance
-        te_thrd.append(percentile_avgeraged_run(te_data, 0))
-
-    data = loading_average(paths, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
-    models_rank = ranking_allruns(data)
-    filtered = {}
-    for model in data.keys():
-        ranks = models_rank[model]
-        filtered[model] = [[]]
-        for run in ranks:
-            filtered[model][0].append(ranks[run][0][1])
-
-    bsl = {}
-    if fqi is not None:
-        fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
-        fqi_data = []
-        for rk in fqi_data_all.keys():
-            for pk in fqi_data_all[rk].keys():
-                fqi_data.append(fqi_data_all[rk][pk])
-        bsl["FQI"] = [fqi_data]
-    for k in bsl:
-        filtered[k] = bsl[k]
-
-    plot_boxs(filtered, te_thrd, "", title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
+# def plot_learning_perform(true_perf, load_true, show_perform, source, title, ylim=[], yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1,
+#                           ylabel="", right_ax=[], label_ncol=10,
+#                           fqi=None):
+#
+#     te_thrd = []
+#     # true env data dictionary
+#     te_data = loading_average(true_perf, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+#     te_data = average_run(te_data["true"])
+#     # top true env data performance
+#     te_thrd.append(percentile_avgeraged_run(te_data, 0))
+#
+#     # ranked = sorted(te_data.items(), key=lambda item: item[1])
+#     # print(ranked)
+#
+#     perf_data = loading_average(show_perform, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+#
+#     filtered = {}
+#     for k in perf_data:
+#         filtered[k] = perf_data[k]
+#
+#     cms_data = loading_average(load_true, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
+#     models_rank = ranking_allruns(cms_data)
+#     for model in cms_data.keys():
+#         ranks = models_rank[model]
+#         filtered[model] = []
+#         target = percentile_worst(ranks, 0, te_data)
+#         data = [item[2] for item in target]
+#         filtered[model].append(data)
+#
+#     bsl = {}
+#     if fqi is not None:
+#         fqi_data_all = loading_average(fqi, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)["FQI"] # 30 runs in total, but different parameters
+#         fqi_data = []
+#         for rk in fqi_data_all.keys():
+#             for pk in fqi_data_all[rk].keys():
+#                 fqi_data.append(fqi_data_all[rk][pk])
+#         bsl["FQI"] = [fqi_data]
+#     for k in bsl:
+#         filtered[k] = bsl[k]
+#
+#     plot_boxs(filtered, te_thrd, "", title, ylim=ylim, yscale=yscale, res_scale=res_scale, ylabel=ylabel, right_ax=right_ax, label_ncol=label_ncol)
 
 def plot_param_sweep(paths, source, title, ylim=None, yscale="linear", outer=None, sparse_reward=None, max_len=np.inf, res_scale=1):
     assert len(list(paths.keys())) == 1

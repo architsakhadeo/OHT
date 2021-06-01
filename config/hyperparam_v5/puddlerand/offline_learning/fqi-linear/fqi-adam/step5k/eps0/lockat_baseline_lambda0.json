@@ -1,0 +1,52 @@
+{
+	"comment": "Run Fitted Q Iteration with generated dataset. Save NN weights to weightpath. Buffer size should be large enough to contain transitions from datalog. Agent.Seed corresponds to run (seed) of offline data.",
+	"agent-name": "fqilinear",
+	"environment-name": "futile",
+	"agent-settings": {
+		"env-name": "puddleworld",
+		"decreasing-epsilon": "None",
+		"gamma": 1.0,
+		"state-len": 2,
+		"buffer-type": "random",
+		"optimizer": "Adam",
+		"fqi-adamBeta1": 0.9,
+		"fqi-adamBeta2": 0.999,
+		"fqi-adamEps": 1e-8,
+		"fqi-l2Lambda": 0,
+		"fqi-hidden": [],
+		"sweep": {
+			"tilings": [16],
+      		"tiles": [2],
+			"alpha": [1e-2, 1e-3, 1e-4, 1e-5, 1e-6],
+			"fqi-batch":[128],
+			"fqi-sync":[512],
+			"buffer-size":[5000],
+			"epsilon": [0],
+			"fqi-numDataset": [30],
+			"seed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"datalog": "data/hyperparam_v5/puddlerand/offline_data/random_restarts/esarsa/step5k/optimalfixed_eps0/param_0/",
+		"weightpath": "weight/hyperparam_v5/puddlerand/random_restarts/fqi-linear/step5k_env/optimalfixed_eps0/lambda0/",
+		"offline-learn": true,
+		"online-learn": false
+	},
+	"environment-settings": {
+		"seed": 1,
+		"name": "puddleworld",
+		"sweep": {
+			"delays":[[0]]
+		}
+	},
+	"experiment-settings": {
+		"steps": 50000,
+		"data-path": "data/hyperparam_v5/puddlerand/offline_learning/random_restarts/fqi-linear/fqi-adam/alpha_hidden_epsilon/step5k_env/optimalfixed_eps0/lambda0/lockat_baseline/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": false,
+		"should-log-learn-progress": true,
+		"debug-interval": 1000
+	}
+}

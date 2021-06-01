@@ -16,11 +16,11 @@ def top_param():
     }
     random = pr_rnd
     true = {"true": pr_true}
-    fqi = {"FQI": pr_fqi_nn}
+    fqi = {"FQI": pr_fqi_tc}
     #cem = {"cem": pr_cem}
-    # plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models",
-    #                  outer=30, ylim=[[-100, -20], []], ylabel="Return per episode", right_ax=["FQI", "Random"],
-    #                  label_ncol=6)
+    plot_compare_top(true, calibration, fqi, random, "totals", "../img/finalPlots/puddlerand/plot1/plot1_models",
+                     outer=30, ylim=[[-100, -20], []], ylabel="Return per episode", right_ax=["FQI", "Random"],
+                     label_ncol=6)
 
     # PLOT 2
     calibration = {
@@ -30,41 +30,38 @@ def top_param():
         "Size = 500": pr_knnlaplace_avg_500_new,
     }
     true = {"true": pr_true}
-    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
-    #                  outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
-    #                  label_ncol=3, plot="bar")
+    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_size",
+                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3, plot="bar")
 
     calibration = {
-        "Optimal policy": pr_knnlaplace_optim_5k_new,
-        "Medium policy": pr_knnlaplace_avg_5k_new,
-        "Naive policy": pr_knnlaplace_bad_5k_new,
+        "Optimal": pr_knnlaplace_optim_5k_new,
+        "Medium": pr_knnlaplace_avg_5k_new,
+        "Naive": pr_knnlaplace_bad_5k_new,
     }
-    # plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
-    #                  outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
-    #                  label_ncol=3, plot="bar")
+    plot_compare_top(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot2/plot2_policy",
+                     outer=30, ylim=[[-34, -27]], ylabel="Return per episode", right_ax=[],
+                     label_ncol=3, plot="bar", true_perf_label=False)
 
     # PLOT Agents
     calibration = {
         "Esarsa": pr_knnlaplace_optim_5k,
-        "DQN": pr_dqn_knnlaplace_optim,
+        # "DQN": pr_dqn_knnlaplace_optim,
         "AC": pr_actorcritic_knnlaplace_optim,
     }
     true = {
         "Esarsa": pr_true,
-        "DQN": pr_dqn,
+        # "DQN": pr_dqn,
         "AC": pr_actorcritic,
     }
-    #plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot_agents",
-    #                    outer=30, ylim=[[-3000, 100]], ylabel="Return per episode", right_ax=[],
-    #                    label_ncol=3)
-    
-    
+    # plot_compare_agents(true, calibration, None, [], "totals", "../img/finalPlots/puddlerand/plot_agents",
+    #                     outer=30, ylim=[[-50, -25]], ylabel="Return per episode", right_ax=[],
+    #                     label_ncol=3)
+
     # PLOT CEM
     calibration = {
         "Calibration-KNN": pr_knnlaplace_optim_5k
     }
-    
-    random = pr_rnd
     true = {"true": pr_true}
     cem = {"calibration (cem)": pr_cemlaplace_optim_5k}
     #fqi = {"FQI": ac_fqi_tc}
@@ -99,9 +96,9 @@ def sweep_model():
     '''
     # PLOT 3
     calibration = {
-        "optimal policy": pr_knnlaplace_optim_5k_plot3,
+        "Optimal": pr_knnlaplace_optim_5k_plot3,
         "average policy": pr_knnlaplace_suboptim_5k_plot3,
-        "Naive policy": pr_knnlaplace_subsuboptim_5k_plot3
+        "Naive": pr_knnlaplace_subsuboptim_5k_plot3
     }
     true = {"true": pr_true}
     plot_generation(true, calibration, ranges, "totals", "../img/finalPlots/puddlerand/plot3/plot3_boxplot", outer=30, sparse_reward=-1, max_len=1000)

@@ -4,7 +4,7 @@ type Agent interface {
 	// Initialize configures the agent with the provided parameters and resets any internal state.
 	// The run number is used in case many agents are run simultaneously, e.g. to modify the random seed.
 	// The first attributes are experimental attributes; the second are environmental.
-	Initialize(run uint, experiment Attributes, environment Attributes) error
+	Initialize(run uint, experiment Attributes, environment Attributes, sweepIdx int) error
 
 	// Start provides an initial observation to the agent and returns the agent's action.
 	Start(state State) Action

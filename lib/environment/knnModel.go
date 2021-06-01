@@ -397,7 +397,6 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 	//if env.EnsembleSeed != 0 {
 	//	tempRnd := rand.New(rand.NewSource(int64(env.EnsembleSeed)))
 	if env.DropPerc != 0 {
-		//fmt.Println("HERE", env.DropPerc)
 		filteredLen := int(float64(len(allTransRep)) * (1 - env.DropPerc))
 		filteredIdx := env.rng.Perm(len(allTransRep))[:filteredLen]
 		//fmt.Println("HERE", filteredIdx[:5])
@@ -406,11 +405,14 @@ func (env *KnnModelEnv) LoadData(filename string) ([][]float64, [][]float64, int
 		for i := 0; i < filteredLen; i++ {
 			allTransRepKeep[i] = allTransRep[filteredIdx[i]]
 			allTransObsKeep[i] = allTransObs[filteredIdx[i]]
+			allTransRepKeep[i][len(allTransRepKeep[i])-1] = float64(i)
+			//fmt.Println(len(allTransRepKeep[i])-1, env.repSettings.RepLen*2+3)
 		}
 	} else {
 		allTransRepKeep = allTransRep
 		allTransObsKeep = allTransObs
 	}
+
 	return allTransObsKeep, allTransRepKeep, treeStateDim
 }
 

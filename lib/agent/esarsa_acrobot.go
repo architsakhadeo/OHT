@@ -68,7 +68,7 @@ func NewESarsaAcrobot(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Initialize configures the agent with the provided parameters and resets any internal state.
-func (agent *ESarsaAcrobot) Initialize(run uint, expAttr, envAttr rlglue.Attributes) error {
+func (agent *ESarsaAcrobot) Initialize(run uint, expAttr, envAttr rlglue.Attributes, sweepIdx int) error {
 	agent.esarsaAcrobotSettings = esarsaAcrobotSettings{
 		// These default settings will be used if the config doesn't set these values
 		NumTilings:         32,
