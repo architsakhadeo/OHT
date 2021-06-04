@@ -46,6 +46,8 @@ type ActorCritic struct {
 type Actor struct {
 	weight *mat.Dense
 	alpha  float64
+	I      float64
+	gamma  float64
 	rng    *rand.Rand
 }
 
@@ -63,9 +65,11 @@ func NewActorCritic(logger logger.Debug) (rlglue.Agent, error) {
 }
 
 // Init initializes an actor
-func (actor *Actor) Init(xdim int, actiondim int, alpha float64, rng *rand.Rand) error {
+func (actor *Actor) Init(xdim int, actiondim int, alpha float64, gamma float64, rng *rand.Rand) error {
 	actor.weight = mat.NewDense(actiondim, xdim, nil)
 	actor.alpha = alpha
+	actor.I = 1
+	actor.gamma = gamma
 	actor.rng = rng
 	return nil
 }
@@ -108,8 +112,9 @@ func (actor *Actor) Update(x []float64, delta float64, action rlglue.Action, pro
 	dLogPi.Sub(dLogPi, tmp)
 
 	// do the update
-	dLogPi.Scale(actor.alpha*delta, dLogPi)
+	dLogPi.Scale(actor.alpha*delta*actor.I, dLogPi)
 	actor.weight.Add(actor.weight, dLogPi)
+	actor.I = actor.I * actor.gamma
 	return nil
 }
 
@@ -207,7 +212,7 @@ func (agent *ActorCritic) Initialize(run uint, expAttr, envAttr rlglue.Attribute
 	}
 
 	agent.actor = Actor{}
-	err = agent.actor.Init(agent.tiler.NumberOfIndices(), agent.NumActions, agent.AlphaRatio*agent.CriticAlpha, agent.rng)
+	err = agent.actor.Init(agent.tiler.NumberOfIndices(), agent.NumActions, agent.AlphaRatio*agent.CriticAlpha, agent.Gamma, agent.rng)
 	if err != nil {
 		return err
 	}
@@ -228,6 +233,8 @@ func (agent *ActorCritic) Start(state rlglue.State) rlglue.Action {
 	}
 
 	feat := prepareFeatFromTC(xind, agent.tiler.NumberOfIndices())
+
+	agent.actor.I = 1.0
 
 	agent.oldAction, agent.oldProbs = agent.actor.Act(feat)
 	agent.oldStateActiveFeatures = feat
