@@ -311,6 +311,7 @@ func (agent *FqiLinear) InitTiler() error {
 	agent.FillHashTable()
 
 	agent.tilerNumIndices = agent.tiler.NumberOfIndices()
+	fmt.Println(agent.tilerNumIndices)
 
 	return nil
 }
@@ -783,9 +784,11 @@ func (agent *FqiLinear) GetLearnProg() string {
 	lastStates, lastActionsFloat, states, rewards, gammas := agent.bf.Content()
 	lastActions := ao.Flatten2DInt(ao.A64ToInt2D(lastActionsFloat))
 
-	lastQ := agent.learningNet.Forward(lastStates)
+	//lastQ := agent.learningNet.Forward(lastStates)
+	lastQ := agent.learningNet.Predict(lastStates)
 	lastActionValue := ao.RowIndexFloat(lastQ, lastActions)
-	targetQ := agent.targetNet.Predict(states)
+	//targetQ := agent.targetNet.Predict(states)
+	targetQ := agent.learningNet.Predict(states)
 	targetActionValue, _ := ao.RowIndexMax(targetQ)
 
 	loss := 0.0

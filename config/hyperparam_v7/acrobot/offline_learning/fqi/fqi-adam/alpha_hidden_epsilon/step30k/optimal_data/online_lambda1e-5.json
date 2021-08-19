@@ -1,0 +1,82 @@
+{
+	"comment": "Load NN weights and deploy Fitted Q Iteration online. Load NN weights from weightpath.",
+	"agent-name": "fqi",
+	"environment-name": "acrobot",
+	"agent-settings": {
+		"decreasing-epsilon": "None",
+		"gamma": 1.0,
+		"env-name": "acrobot",
+		"state-len": 6,
+		"buffer-type": "random",
+		"optimizer": "Adam",
+		"fqi-adamBeta1": 0.9,
+		"fqi-adamBeta2": 0.999,
+		"fqi-adamEps": 1e-8,
+		"fqi-l2Lambda": 0.01,
+		"sweep": {
+			"alpha": [1e-4],
+			"fqi-hidden": [
+				[64, 64]
+			],
+			"fqi-sync":[512],
+			"fqi-batch":[64],
+			"buffer-size":[2500],
+			"epsilon": [0.1],
+			"weightpath": [
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_0/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_31/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_2/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_33/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_64/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_65/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_36/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_37/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_38/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_39/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_40/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_41/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_12/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_73/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_74/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_15/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_16/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_17/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_78/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_79/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_50/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_51/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_52/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_23/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_54/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_55/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_26/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_57/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_58/",
+				"weight/hyperparam_v7/acrobot/random_restarts/fqi/step30k_env/optimal_eps0/earlystop/lambda1e-5/param_59/"
+			]
+		},
+		"enable-debug": false,
+		"seed": 1,
+		"offline-learn": false,
+		"online-learn": false
+	},
+	"environment-settings": {
+		"seed": 1,
+		"name": "acrobot",
+		"sweep": {
+			"delays":[[0]]
+		}
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": false,
+		"steps": 0,
+		"episodes": 1000000,
+		"max-run-length-episodic": 15000,
+		"data-path": "data/hyperparam_v7/acrobot/offline_learning/random_restarts/fqi/fqi-adam/alpha_hidden_epsilon/step30k_env/optimal_eps0/lambda1e-5/online/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": true,
+		"should-log-totals": true,
+		"debug-interval": 0
+	}
+}

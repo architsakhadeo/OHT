@@ -1,0 +1,82 @@
+{
+	"comment": "Load NN weights and deploy Fitted Q Iteration online. Load NN weights from weightpath.",
+	"agent-name": "fqi",
+	"environment-name": "puddleworld",
+	"agent-settings": {
+		"decreasing-epsilon": "None",
+		"gamma": 1.0,
+		"env-name": "puddleworld",
+		"state-len": 2,
+		"buffer-type": "random",
+		"optimizer": "Adam",
+		"fqi-adamBeta1": 0.9,
+		"fqi-adamBeta2": 0.999,
+		"fqi-adamEps": 1e-8,
+		"fqi-l2Lambda": 0.01,
+		"sweep": {
+			"alpha": [1e-4],
+			"fqi-hidden": [
+				[64, 64]
+			],
+			"fqi-sync":[512],
+			"fqi-batch":[64],
+			"buffer-size":[2500],
+			"epsilon": [0],
+			"weightpath": [
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_30/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_31/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_32/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_33/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_34/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_35/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_36/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_37/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_38/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_39/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_40/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_41/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_42/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_43/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_44/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_45/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_46/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_47/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_48/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_49/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_50/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_51/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_52/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_53/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_54/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_55/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_86/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_57/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_58/",
+				"weight/hyperparam_v7/puddlerand/random_restarts/fqi/step30k_env/mixed_eps0/earlystop/lambda1e-3/param_59/"
+			]
+		},
+		"enable-debug": false,
+		"seed": 1,
+		"offline-learn": false,
+		"online-learn": false
+	},
+	"environment-settings": {
+		"seed": 1,
+		"name": "puddleworld",
+		"sweep": {
+			"delays":[[0]]
+		}
+	},
+	"experiment-settings": {
+		"randomize_start_state_beforeLock": false,
+		"randomize_start_state_afterLock": false,
+		"steps": 0,
+		"episodes": 1000000,
+		"max-run-length-episodic": 30000,
+		"data-path": "data/hyperparam_v7/puddlerand/offline_learning/random_restarts/fqi/fqi-adam/alpha_hidden_epsilon/step30k_env/mixed_eps0/lambda1e-3/online/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": true,
+		"should-log-totals": true,
+		"debug-interval": 0
+	}
+}

@@ -1,0 +1,53 @@
+{
+	"comment": "Run Fitted Q Iteration with generated dataset. Save NN weights to weightpath. Buffer size should be large enough to contain transitions from datalog. Agent.Seed corresponds to run (seed) of offline data.",
+	"agent-name": "fqilinear",
+	"environment-name": "futile",
+	"agent-settings": {
+		"env-name": "acrobot",
+		"decreasing-epsilon": "None",
+		"gamma": 1.0,
+		"state-len": 6,
+		"buffer-type": "random",
+		"optimizer": "Adam",
+		"fqi-adamBeta1": 0.9,
+		"fqi-adamBeta2": 0.999,
+		"fqi-adamEps": 1e-8,
+		"fqi-l2Lambda": 1e-3,
+		"fqi-hidden": [],
+		"sweep": {
+			"tilings": [16],
+      		"tiles": [2],
+			"alpha": [1e-1, 1e-2, 1e-3, 1e-4, 1e-5],
+			"fqi-batch":[128],
+			"fqi-sync":[512],
+			"buffer-size":[30000],
+			"epsilon": [0],
+			"fqi-numDataset": [30],
+			"seed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+		},
+		"lock-weight": false,
+		"enable-debug": false,
+		"datalog": "data/hyperparam_v7/acrobot/offline_data/random_restarts/esarsa/step30k/optimal_eps0/param_0/",
+		"weightpath": "weight/hyperparam_v7/acrobot/random_restarts/fqi-linear/step30k_env/optimal_eps0/lambda1e-3/",
+		"offline-learn": true,
+		"online-learn": false
+	},
+	"environment-settings": {
+		"seed": 1,
+		"name": "acrobot",
+		"sweep": {
+			"delays":[[0]]
+		}
+	},
+	"experiment-settings": {
+		"steps": 50000,
+		"data-path": "data/hyperparam_v7/acrobot/offline_learning/random_restarts/fqi-linear/fqi-adam/alpha_hidden_epsilon/step30k_env/optimal_eps0/lambda1e-3/weights/",
+		"should-log-traces": false,
+		"should-log-episode-lengths": false,
+		"should-log-rewards": false,
+		"should-log-totals": false,
+		"should-log-learn-progress": true,
+		"debug-interval": 1000,
+		"early-stop": true
+	}
+}
