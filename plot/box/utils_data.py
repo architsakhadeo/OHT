@@ -535,3 +535,10 @@ def loading_info_all(path, eval_key):
         if res is not None:
             res_dict[idx] = res
     return res_dict
+
+def random_generator(total):
+    rnds = []
+    for i in range(30):
+        np.random.seed(i)
+        rnds.append(np.random.randint(total))
+    return rnds

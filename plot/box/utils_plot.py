@@ -95,7 +95,10 @@ c_dict = {
     "Calibration": c_default_Adam[0],
     "NN Calibration (raw)": c_default_Adam[2],
     "NN Calibration (laplace)": c_default_Adam[3],
+
     "FQI": c_default_Adam[4],
+    "FQI-TC": c_default_Adam[4],
+    "FQI-NN": c_default_Adam[6],
 
     "Size = 5000": c_default_Adam[0],
     "Size = 2500": c_default_Adam[2],
@@ -107,12 +110,18 @@ c_dict = {
     # "Average policy": c_default_Adam[3],
     "Medium": c_default_Adam[3],
     "Naive": c_default_Adam[6],
-    "Random": c_default_Adam[4],
+    # "Random": c_default_Adam[4],
 
     "KNN (laplace)": c_default_Adam[0],
     "network (laplace)": c_default_Adam[3],
     "Calibration-KNN": c_default_Adam[0],
     "Calibration-NN": c_default_Adam[3],
+
+    "KNN-laplace":  c_default_Adam[0],
+    "KNN-raw":  c_default_Adam[1],
+    "NN-laplace":  c_default_Adam[3],
+    "NN-raw":  c_default_Adam[5],
+
     "Random": c_default_Adam[6],
     "Random selection": c_default_Adam[6],
 
@@ -258,7 +267,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title, cem=None, load_perf=
     # true env data dictionary
     te_data = loading_average(te, source, outer=outer, sparse_reward=sparse_reward, max_len=max_len)
     te_data = average_run(te_data["true"])
-    print(te_data)
+    # print(te_data)
 
     # fqi data
     # # all performance
@@ -302,7 +311,7 @@ def plot_compare_top(te, cms, fqi, rand_lst, source, title, cem=None, load_perf=
         for pk in total_cem_data.keys():
             cem_data.append(np.mean(total_cem_data[pk]))
         
-        print(cem_data)
+        # print(cem_data)
 
     # random data list
     if rand_lst != []:
@@ -620,6 +629,7 @@ def plot_boxs(filtered, thrd, xlabel, title, ylim=[], yscale='linear', res_scale
     # plt.legend()
     plt.tight_layout()
     # plt.show()
+    print(title)
     plt.savefig("{}.pdf".format(title))
     plt.close()
     plt.clf()
