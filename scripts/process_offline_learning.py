@@ -94,9 +94,9 @@ def process_results(data_path, weight_path, dataset_num=30, plot_prog=False):
         print(f'alpha={alpha}, nn_hidden={nn_hidden}')
         top_params.append(best_param)
 
-    # top_weights = [os.path.join(weight_path, f'param_{i}') for i in top_params]
-    # for best_weight in top_weights:
-    #     print(f'"{best_weight}",')
+    top_weights = [os.path.join(weight_path, f'param_{i}') for i in top_params]
+    for best_weight in top_weights:
+        print(f'"{best_weight}/",')
 
 
 if __name__ == "__main__":
@@ -156,13 +156,13 @@ if __name__ == "__main__":
     # process_results(puddle_data, puddle_weight, dataset_num=30)
 
     # Adam, early stop
-    envs = ['puddlerand']#['acrobot', 'puddlerand']
-    algs = ['fqi']#, 'fqi-linear']
-    num_steps = [5]#, 15]
-    l2reg_scales = [5]#[1, 3, 5]
+    envs = ['puddlerand','acrobot']#
+    algs = ['fqi-linear']
+    num_steps = [30]#, 15]
+    l2reg_scales = [5]
     for env, alg, num_step, l2reg_scale in product(envs, algs, num_steps, l2reg_scales):
-        earlystop_weight = f'weight/hyperparam_v5/{env}/random_restarts/{alg}/step{num_step}k_env/optimalfixed_eps0/earlystop/lambda1e-{l2reg_scale}/'
-        earlystop_data = f'data/hyperparam_v5/{env}/offline_learning/random_restarts/{alg}/fqi-adam/alpha_hidden_epsilon/step{num_step}k_env/optimalfixed_eps0/earlystop/lambda1e-{l2reg_scale}/lockat_baseline/'
+        earlystop_weight = f'weight/hyperparam_v7/{env}/random_restarts/{alg}/step{num_step}k_env/optimal_eps0/lambda1e-{l2reg_scale}/'
+        earlystop_data = f'data/hyperparam_v7/{env}/offline_learning/random_restarts/{alg}/fqi-adam/alpha_hidden_epsilon/step{num_step}k_env/optimal_eps0/lambda1e-{l2reg_scale}/weights/'
         print('best params for earlystop:')
         process_results(earlystop_data, earlystop_weight, dataset_num=30, plot_prog=True)
 

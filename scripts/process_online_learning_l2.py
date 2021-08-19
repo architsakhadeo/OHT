@@ -58,28 +58,29 @@ if __name__ == "__main__":
     # Linear TC
     envs = ['acrobot', 'puddlerand']
     algs = ['fqi-linear']   #['fqi', 'fqi-linear']
-    num_steps = [5]#, 15]
+    num_steps = [30]#, 15]
     l2reg_scales = [1, 3, 5]
 
-    for env, alg, num_step, l2reg_scale in product(envs, algs, num_steps, l2reg_scales):
-        print(f'env: {env}, alg: {alg}, num_step: {num_step}k, l2reg_scale: 1e-{l2reg_scale}')
-        data_path = (f'data/hyperparam_v5/{env}/offline_learning/random_restarts/'+
-                f'{alg}/fqi-adam/alpha_hidden_epsilon/step{num_step}k_env/'+
-                f'optimalfixed_eps0/lambda1e-{l2reg_scale}/lockat_baseline_online/')
-        if not os.path.isdir(os.path.abspath(data_path)):
-            print('Path not found.')
-            continue
-        process_online_l2(data_path=data_path, dataset_num=30)
+    # for env, alg, num_step, l2reg_scale in product(envs, algs, num_steps, l2reg_scales):
+    #     print(f'env: {env}, alg: {alg}, num_step: {num_step}k, l2reg_scale: 1e-{l2reg_scale}')
+    #     data_path = (f'data/hyperparam_v7/{env}/offline_learning/random_restarts/'+
+    #             f'{alg}/fqi-adam/alpha_hidden_epsilon/step{num_step}k_env/'+
+    #             f'optimalfixed_eps0/lambda1e-{l2reg_scale}/lockat_baseline_online/')
+    #     if not os.path.isdir(os.path.abspath(data_path)):
+    #         print('Path not found.')
+    #         continue
+    #     process_online_l2(data_path=data_path, dataset_num=30)
 
     print()
     # NN, early stopping
     algs = ['fqi']
 
     for env, alg, num_step, l2reg_scale in product(envs, algs, num_steps, l2reg_scales):
-        print(f'env: {env}, alg: {alg}, num_step: {num_step}k, l2reg_scale: 1e-{l2reg_scale}')
-        data_path = (f'data/hyperparam_v5/{env}/offline_learning/random_restarts/'+
+        print(f'\nenv: {env}, alg: {alg}, num_step: {num_step}k, l2reg_scale: 1e-{l2reg_scale}')
+        data_path = (f'data/hyperparam_v7/{env}/offline_learning/random_restarts/'+
                 f'{alg}/fqi-adam/alpha_hidden_epsilon/step{num_step}k_env/'+
-                f'optimalfixed_eps0/earlystop/lambda1e-{l2reg_scale}/lockat_baseline_online/')
+                f'mixed_eps0/earlystop/lambda1e-{l2reg_scale}/lockat_baseline_online/')
+        print('Checking:', data_path)
         if not os.path.isdir(os.path.abspath(data_path)):
             print('Path not found.')
             continue
