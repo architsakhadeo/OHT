@@ -44,6 +44,7 @@ type Experiment struct {
 	ShouldLogLearnProg            bool   `json:"should-log-learn-progress"`
 	// MaxCPUs, if set, specifies the maximum number of CPUs this experiment is allowed to use
 	MaxCPUs int `json:"max-cpus"`
+	EarlyStop bool `json:"early-stop"`
 }
 
 func (set *Experiment) SetToDefault() {
@@ -61,6 +62,7 @@ func (set *Experiment) SetToDefault() {
 	set.MaxCPUs = 0 // Does not change the default value
 	set.CountAfterLock = false
 	set.TotalAfterCount = 0
+	set.EarlyStop = false
 }
 
 // Parse parses a json.RawMessage. If the input is a JSON array, then that array as parsed as an array of config objects.

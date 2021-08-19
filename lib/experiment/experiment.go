@@ -3,6 +3,9 @@ package experiment
 import (
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/stellentus/cartpoles/lib/config"
@@ -27,6 +30,9 @@ type Experiment struct {
 
 	stepBeforeCount int
 	timeOut         bool
+
+	MstdeLog	[]float64
+	convergeCheck	int
 }
 
 func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experiment, debug logger.Debug, log logger.Data) (*Experiment, error) {
@@ -67,6 +73,9 @@ func New(agent rlglue.Agent, environment rlglue.Environment, set config.Experime
 //}
 
 func (exp *Experiment) Run() ([][]float64, error) {
+	exp.convergeCheck = 3
+	exp.MstdeLog = make([]float64, exp.convergeCheck)
+
 	var listOfListOfRewards [][]float64
 	if exp.Settings.MaxSteps != 0 {
 		listOfListOfRewards = exp.runContinuous()
@@ -75,7 +84,6 @@ func (exp *Experiment) Run() ([][]float64, error) {
 	}
 
 	// TODO Save the agent parameters (but for multiple runs, just do it once). They might need to be loaded from the agent in case it changed something?
-
 	//return exp.SaveLog()
 	//exp.environment.GetInfo("visitCount", 0.0)
 	return listOfListOfRewards, exp.SaveLog()
@@ -213,6 +221,19 @@ func (exp *Experiment) runSingleEpisode() []float64 {
 				(exp.Settings.CountAfterLock && countStep)) {
 			mstde := exp.agent.GetLearnProg()
 			exp.LogLearnProg(mstde)
+			if exp.Settings.EarlyStop {
+				//floatMstde, _ := type_opr.GetFloat(mstde)
+				validate := strings.Split(mstde, ",")[1]
+				floatValidate, _ := strconv.ParseFloat(validate, 64)
+				exp.MstdeLog[(exp.numStepsTaken-1) % exp.convergeCheck] = floatValidate
+				fmt.Println(exp.MstdeLog, floatValidate, mstde, exp.numStepsTaken % exp.convergeCheck)
+				if ((exp.numStepsTaken-1) > exp.convergeCheck) &&
+					(exp.MstdeLog[(exp.numStepsTaken-1) % exp.convergeCheck] > exp.MstdeLog[(exp.numStepsTaken-2) % exp.convergeCheck]) &&
+					(exp.MstdeLog[(exp.numStepsTaken-2) % exp.convergeCheck] > exp.MstdeLog[(exp.numStepsTaken-3) % exp.convergeCheck]) {
+					log.Println("Converged. Early stop at", exp.numStepsTaken)
+					break
+				}
+			}
 		}
 
 		if !episodeEnded {
