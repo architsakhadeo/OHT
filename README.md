@@ -1,5 +1,7 @@
 # cartpoles
 
+The original repository is https://github.com/stellentus/cartpoles.
+
 Cartpole agents and environments for real-world RL.
 
 ## Running Experiments
