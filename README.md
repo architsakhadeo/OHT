@@ -1,4 +1,4 @@
-# cartpoles
+# Offline Hyperparameter Tuning for Reinforcement Learning
 
 The original repository is https://github.com/stellentus/cartpoles.
 
